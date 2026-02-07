@@ -2,7 +2,7 @@
 
 ## Summary
 
-**Phases:** 2
+**Phases:** 3
 **Depth:** Standard
 **Coverage:** 7/7 requirements mapped ✓
 
@@ -10,6 +10,7 @@
 |-------|------|--------------|
 | 1 - Game Foundation | Users can launch the game and begin a new play session. | GAME-001, GAME-002 |
 | 2 - Core Gameplay Loop | Extend the basic framework with tile-based, turn-based mechanics and player party movement. | FEAT-003, FEAT-004, FEAT-005, FEAT-006, FEAT-007 |
+| 3 - Core Gameplay Mechanics | Implement key interactive gameplay systems like Fog of War and expanded player actions. | (deferred from Phase 2) |
 
 ## Success Criteria
 
@@ -26,11 +27,26 @@
 4. The game uses sprite-based graphics with multiple layers.
 5. The tile size is configurable.
 
+### Phase 3: Core Gameplay Mechanics
+1. The map is obscured by a Fog of War that is revealed through exploration.
+2. A clear visual indicator shows when it is the player's turn to act.
+3. The player can perform multiple types of actions on their turn (e.g., move, cast spell, use item).
+
 ## Plans
 
 ### Phase 1: Game Foundation
 **Plans:** 1 plan
-- [ ] 01-01-PLAN.md — Set up the basic structure of the game, including a functional title screen and the ability to start a new game.
+- [x] 01-01-PLAN.md — Set up the basic structure of the game, including a functional title screen and the ability to start a new game.
 
 ### Phase 2: Core Gameplay Loop
-**Plans:** 0 plans
+**Plans:** 4 plans
+- [x] 02-01-PLAN.md — Create the foundational data structures for the tile-based map system. (Revised)
+- [x] 02-02-PLAN.md — Implement the rendering of the tile-based world. (Revised)
+- [x] 02-03-PLAN.md — Introduce the concept of a player-controlled party. (Revised)
+- [ ] 02-04-PLAN.md — Introduce a fundamental turn-based system.
+
+### Phase 3: Core Gameplay Mechanics
+**Plans:** [To be planned]
+- [ ] Implement Fog of War
+- [ ] Implement Turn Indicator UI
+- [ ] Implement Expanded Player Action System (e.g., spells, items)
