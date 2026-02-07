@@ -56,6 +56,7 @@ class Game(GameState):
         super().__init__()
         self.map_container = None
         self.render_service = None
+        self.turn_service = None
         self.camera = None
         self.player = None
 
@@ -63,6 +64,7 @@ class Game(GameState):
         self.persist = persistent
         self.map_container = self.persist.get("map_container")
         self.render_service = self.persist.get("render_service")
+        self.turn_service = self.persist.get("turn_service")
         self.camera = self.persist.get("camera")
         
         if not self.persist.get("player"):
@@ -94,6 +96,9 @@ class Game(GameState):
             new_tile.sprites[SpriteLayer.ENTITIES] = self.player.sprite
 
     def get_event(self, event):
+        if self.turn_service and not self.turn_service.is_player_turn():
+            return
+
         if event.type == pygame.KEYDOWN:
             dx, dy = 0, 0
             if event.key == pygame.K_UP:
@@ -118,6 +123,9 @@ class Game(GameState):
             self.player.x = new_x
             self.player.y = new_y
             self._update_player_tile(old_pos, (new_x, new_y))
+            
+            if self.turn_service:
+                self.turn_service.end_player_turn()
 
     def update(self, dt):
         if self.camera and self.player:
