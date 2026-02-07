@@ -1,0 +1,4 @@
+# Game configuration
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+SCREEN_TITLE = "Rogue Like RPG"
