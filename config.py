@@ -5,6 +5,7 @@ from enum import Enum
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 SCREEN_TITLE = "Rogue Like RPG"
+TILE_SIZE = 32
 
 
 class SpriteLayer(Enum):
