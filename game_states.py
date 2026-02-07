@@ -35,6 +35,9 @@ class TitleScreen(GameState):
                 self.done = True
                 self.next_state = "GAME"
 
+    def update(self, dt):
+        pass
+
     def draw(self, surface):
         surface.blit(self.title_text, self.title_rect)
         pygame.draw.rect(surface, (100, 100, 100), self.button_rect)
@@ -44,9 +47,23 @@ class TitleScreen(GameState):
 class Game(GameState):
     def __init__(self):
         super().__init__()
+        self.map_container = None
+        self.render_service = None
+        self.camera = None
+
+    def startup(self, persistent):
+        self.persist = persistent
+        self.map_container = self.persist.get("map_container")
+        self.render_service = self.persist.get("render_service")
+        self.camera = self.persist.get("camera")
 
     def get_event(self, event):
         pass
 
+    def update(self, dt):
+        pass
+
     def draw(self, surface):
         surface.fill((0, 0, 0))
+        if self.render_service and self.map_container and self.camera:
+            self.render_service.render_map(surface, self.map_container, self.camera)

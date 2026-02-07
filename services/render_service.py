@@ -26,7 +26,7 @@ class RenderService:
                     screen_x, screen_y = camera.apply_to_pos(pixel_x, pixel_y)
                     
                     # Check if tile is on screen
-                    if -TILE_SIZE <= screen_x <= surface.get_width() and 
+                    if -TILE_SIZE <= screen_x <= surface.get_width() and \
                        -TILE_SIZE <= screen_y <= surface.get_height():
                         
                         # Sort sprites by layer order
