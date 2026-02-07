@@ -3,10 +3,10 @@
 ## Current Position
 
 Phase: 2 of 3 (02-core-gameplay-loop)
-Plan: 3 of 4
-Status: In progress
-Last activity: 2026-02-07 - Completed 02-03-PLAN.md
-Progress: [███░]
+Plan: 4 of 4
+Status: Phase complete
+Last activity: 2026-02-07 - Completed 02-04-PLAN.md
+Progress: [████]
 
 ## Key Decisions
 
@@ -17,6 +17,9 @@ Progress: [███░]
 | 2026-02-07 | 02-03 | The player character is placed on the ENTITIES layer of a tile. | Correctly positions the player within the multi-layered sprite system, rendering it above the ground but below top-level effects. |
 | 2026-02-07 | 02-03 | Tile walkability is checked before updating the player's position. | Ensures that player movement respects the physical constraints of the game world. |
 | 2026-02-07 | 02-03 | Updated Tile.walkable to return False if the GROUND sprite is a wall (#). | Necessary to prevent players from walking through walls in the current sample map implementation. |
+| 2026-02-07 | 02-04 | Introduced a TurnService to manage the transition between player and enemy turns. | Establishes a foundation for turn-based mechanics. |
+| 2026-02-07 | 02-04 | Used an Enum for GameStates to clearly define the current turn holder. | Provides a type-safe way to track game flow. |
+| 2026-02-07 | 02-04 | Enforced player input restrictions based on the current turn state in Game.get_event. | Ensures that the game flow follows the turn-based rules. |
 
 ## Blockers & Concerns
 
@@ -24,7 +27,12 @@ None.
 
 ## Session Continuity
 
+
+
 Last session: 2026-02-07
-Stopped at: Phase 02, Plan 3 completion.
-Resume with: 02-04-PLAN.md
+
+Stopped at: Phase 02 completion.
+
+Resume with: Phase 03
+
 Process Group PGID: 9239
