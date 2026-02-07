@@ -1,4 +1,6 @@
 import pygame
+from config import SpriteLayer
+from services.party_service import PartyService
 
 class GameState:
     def __init__(self):
@@ -50,18 +52,71 @@ class Game(GameState):
         self.map_container = None
         self.render_service = None
         self.camera = None
+        self.player = None
 
     def startup(self, persistent):
         self.persist = persistent
         self.map_container = self.persist.get("map_container")
         self.render_service = self.persist.get("render_service")
         self.camera = self.persist.get("camera")
+        
+        if not self.persist.get("player"):
+            party_service = PartyService()
+            # Start at 1,1 to avoid the wall at 0,0
+            self.player = party_service.create_initial_party(1, 1)
+            self.persist["player"] = self.player
+            
+            # Place player on map
+            self._update_player_tile(None, (self.player.x, self.player.y))
+        else:
+            self.player = self.persist.get("player")
+
+    def _get_tile(self, x, y):
+        if self.map_container and self.map_container.layers:
+            layer = self.map_container.layers[0] # Assume first layer for now
+            if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[0]):
+                return layer.tiles[y][x]
+        return None
+
+    def _update_player_tile(self, old_pos, new_pos):
+        if old_pos:
+            old_tile = self._get_tile(*old_pos)
+            if old_tile and SpriteLayer.ENTITIES in old_tile.sprites:
+                del old_tile.sprites[SpriteLayer.ENTITIES]
+        
+        new_tile = self._get_tile(*new_pos)
+        if new_tile:
+            new_tile.sprites[SpriteLayer.ENTITIES] = self.player.sprite
 
     def get_event(self, event):
-        pass
+        if event.type == pygame.KEYDOWN:
+            dx, dy = 0, 0
+            if event.key == pygame.K_UP:
+                dy = -1
+            elif event.key == pygame.K_DOWN:
+                dy = 1
+            elif event.key == pygame.K_LEFT:
+                dx = -1
+            elif event.key == pygame.K_RIGHT:
+                dx = 1
+            
+            if dx != 0 or dy != 0:
+                self.move_player(dx, dy)
+
+    def move_player(self, dx, dy):
+        new_x = self.player.x + dx
+        new_y = self.player.y + dy
+        
+        target_tile = self._get_tile(new_x, new_y)
+        if target_tile and target_tile.walkable:
+            old_pos = (self.player.x, self.player.y)
+            self.player.x = new_x
+            self.player.y = new_y
+            self._update_player_tile(old_pos, (new_x, new_y))
 
     def update(self, dt):
-        pass
+        if self.camera and self.player:
+            self.camera.update(self.player.x, self.player.y)
 
     def draw(self, surface):
         surface.fill((0, 0, 0))

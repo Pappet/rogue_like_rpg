@@ -12,5 +12,7 @@ class Tile:
 
     @property
     def walkable(self) -> bool:
-        """A tile is walkable if it has a ground sprite."""
-        return SpriteLayer.GROUND in self.sprites
+        """A tile is walkable if it has a ground sprite and it's not a wall."""
+        if SpriteLayer.GROUND not in self.sprites:
+            return False
+        return self.sprites[SpriteLayer.GROUND] != "#"
