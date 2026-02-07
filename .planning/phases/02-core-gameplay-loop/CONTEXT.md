@@ -4,10 +4,13 @@ This document captures the key decisions made for the implementation of the core
 
 ## Tile & Map Appearance
 
-- **Map Size:** Map sizes will be fully configurable by width and height.
-- **Level Transitions:** Transitions between levels (e.g., stairs, doors) should be possible and can have visual effects.
+- **Map Containers:** The game world is organized into "map containers", which represent areas like dungeons or towns. A container can hold multiple layers (levels).
+- **Map Layers:** Each container can have one or more layers, which are the individual tilemaps (e.g., floors of a building).
+- **Transitions:** Players can transition between layers within a container (e.g., using stairs) and between different containers (e.g., entering a house). These transitions can have visual effects.
+- **Map Generation:** Maps within a container will have determinate dimensions but can be generated in different sizes.
 - **Visual Style:** The game will use a tilemap-based visual style (e.g., pixel art).
 - **Fog of War:** The map will be covered by a "fog of war" that is revealed as the player explores.
+- **"See-Through" Feature:** It should be possible to see the layer below the player's current position through holes or other visual effects.
 - **Special Effects:** The game should support special effects animations on tiles, such as animated water, poison fog, cold areas, and explosions.
 
 ## Turn-Based Flow
