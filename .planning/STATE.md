@@ -3,16 +3,17 @@
 ## Current Position
 
 Phase: 1 of 2 (02-core-gameplay-loop)
-Plan: 1 of 4
+Plan: 2 of 4
 Status: In progress
-Last activity: 2024-05-14 - Completed 02-01-PLAN.md
-Progress: [█░░░]
+Last activity: 2024-05-14 - Completed 02-02-PLAN.md
+Progress: [██░░]
 
 ## Key Decisions
 
 | Date | Plan | Decision | Rationale |
 | --- | --- | --- | --- |
 | 2024-05-14 | 02-01 | A tile's walkability is a derived property based on the presence of a sprite on the GROUND layer. | To ensure that a tile's walkability is directly and dynamically tied to its ground layer sprite, which is a core game rule. |
+| 2024-05-14 | 02-02 | Rendering currently uses a text-based approach with Pygame's font module to represent sprite layers before full asset integration. | Allows for rapid development and testing of the multi-layer rendering logic and camera system without needing actual art assets. |
 
 ## Blockers & Concerns
 
