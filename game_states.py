@@ -1,6 +1,11 @@
 import pygame
+from enum import Enum, auto
 from config import SpriteLayer
 from services.party_service import PartyService
+
+class GameStates(Enum):
+    PLAYER_TURN = auto()
+    ENEMY_TURN = auto()
 
 class GameState:
     def __init__(self):
