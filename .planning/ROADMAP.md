@@ -46,7 +46,9 @@
 - [x] 02-04-PLAN.md — Introduce a fundamental turn-based system.
 
 ### Phase 3: Core Gameplay Mechanics
-**Plans:** [To be planned]
-- [ ] Implement Fog of War
-- [ ] Implement Turn Indicator UI
-- [ ] Implement Expanded Player Action System (e.g., spells, items)
+**Plans:** 5 plans
+- [ ] 03-01-PLAN.md — Refactor the core structure to use the `esper` ECS library.
+- [ ] 03-02-PLAN.md — Implement 4-state Fog of War and Recursive Shadowcasting LoS.
+- [ ] 03-03-PLAN.md — Build persistent UI Header and Sidebar for game state and actions.
+- [ ] 03-04-PLAN.md — Implement the Action System with targeting and resource consumption.
+- [ ] 03-05-PLAN.md — Implement map memory (Forgotten state) and transition logic.
