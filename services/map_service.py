@@ -29,3 +29,9 @@ class MapService:
         
         layer = MapLayer(tiles)
         return MapContainer([layer])
+
+    def change_map(self, current_map: MapContainer, new_map: MapContainer) -> MapContainer:
+        """Handles transition between maps, forgetting details of the current map."""
+        if current_map:
+            current_map.forget_all()
+        return new_map
