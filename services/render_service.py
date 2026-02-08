@@ -29,6 +29,14 @@ class RenderService:
                     if -TILE_SIZE <= screen_x <= surface.get_width() and \
                        -TILE_SIZE <= screen_y <= surface.get_height():
                         
+                        from map.tile import VisibilityState
+                        if tile.visibility_state == VisibilityState.UNEXPLORED:
+                            continue
+                        
+                        color = (255, 255, 255)
+                        if tile.visibility_state == VisibilityState.SHROUDED:
+                            color = (80, 80, 100) # Darker/bluer for shrouded
+                        
                         # Sort sprites by layer order
                         sorted_layers = sorted(tile.sprites.keys(), key=lambda l: l.value)
                         

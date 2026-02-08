@@ -7,6 +7,7 @@ from ecs.world import get_world
 from ecs.systems.render_system import RenderSystem
 from ecs.systems.movement_system import MovementSystem
 from ecs.systems.turn_system import TurnSystem
+from ecs.systems.visibility_system import VisibilitySystem
 from ecs.components import Position, MovementRequest, Renderable
 
 class GameState:
@@ -76,20 +77,22 @@ class Game(GameState):
         self.world = get_world()
         
         # Clear existing processors to avoid duplicates when re-entering state
-        for processor_type in [MovementSystem, TurnSystem]:
+        for processor_type in [VisibilitySystem, MovementSystem, TurnSystem]:
             try:
                 esper.remove_processor(processor_type)
             except KeyError:
                 pass
         
         # Initialize Systems
+        self.visibility_system = VisibilitySystem(self.map_container)
         self.movement_system = MovementSystem(self.map_container)
         self.turn_system = TurnSystem()
-        self.render_system = RenderSystem(self.camera)
+        self.render_system = RenderSystem(self.camera, self.map_container)
         
         # Add processors that should run automatically during esper.process()
-        esper.add_processor(self.movement_system)
-        esper.add_processor(self.turn_system)
+        esper.add_processor(self.visibility_system, priority=10) # Run visibility first
+        esper.add_processor(self.movement_system, priority=5)
+        esper.add_processor(self.turn_system, priority=0)
         
         if not self.persist.get("player_entity"):
             party_service = PartyService()

@@ -12,16 +12,18 @@ class MapService:
             for x in range(width):
                 # Basic ground sprite
                 sprites = {SpriteLayer.GROUND: "."}
+                transparent = True
                 
                 # Add some walls
                 if x == 0 or x == width - 1 or y == 0 or y == height - 1:
                     sprites[SpriteLayer.GROUND] = "#"
+                    transparent = False
                 
                 # Add some random decor
                 if x == 5 and y == 5:
                     sprites[SpriteLayer.DECOR_BOTTOM] = "T"
                 
-                tile = Tile(transparent=True, dark=False, sprites=sprites)
+                tile = Tile(transparent=transparent, dark=False, sprites=sprites)
                 row.append(tile)
             tiles.append(row)
         

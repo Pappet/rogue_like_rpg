@@ -2,10 +2,12 @@ import esper
 import pygame
 from ecs.components import Position, Renderable
 from config import TILE_SIZE
+from map.tile import VisibilityState
 
 class RenderSystem(esper.Processor):
-    def __init__(self, camera):
+    def __init__(self, camera, map_container):
         self.camera = camera
+        self.map_container = map_container
         pygame.font.init()
         self.font = pygame.font.SysFont('monospace', TILE_SIZE)
 
@@ -13,7 +15,16 @@ class RenderSystem(esper.Processor):
         # Get all entities with Position and Renderable components
         renderables = []
         for ent, (pos, rend) in esper.get_components(Position, Renderable):
-            renderables.append((rend.layer, pos, rend))
+            # Check if entity's position is visible
+            is_visible = False
+            for layer in self.map_container.layers:
+                if 0 <= pos.y < len(layer.tiles) and 0 <= pos.x < len(layer.tiles[pos.y]):
+                    if layer.tiles[pos.y][pos.x].visibility_state == VisibilityState.VISIBLE:
+                        is_visible = True
+                        break
+            
+            if is_visible:
+                renderables.append((rend.layer, pos, rend))
         
         # Sort by layer to ensure correct draw order
         renderables.sort(key=lambda x: x[0])

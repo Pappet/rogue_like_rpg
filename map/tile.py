@@ -1,6 +1,14 @@
+from enum import Enum, auto
 from typing import Optional
 
 from config import SpriteLayer
+
+
+class VisibilityState(Enum):
+    UNEXPLORED = auto()
+    VISIBLE = auto()
+    SHROUDED = auto()
+    FORGOTTEN = auto()
 
 
 class Tile:
@@ -9,6 +17,7 @@ class Tile:
         self.transparent = transparent
         self.dark = dark
         self.sprites = sprites if sprites is not None else {}
+        self.visibility_state = VisibilityState.UNEXPLORED
 
     @property
     def walkable(self) -> bool:
