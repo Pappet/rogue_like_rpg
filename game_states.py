@@ -1,11 +1,13 @@
 import pygame
+import esper
 from enum import Enum, auto
-from config import SpriteLayer
+from config import SpriteLayer, GameStates
 from services.party_service import PartyService
-
-class GameStates(Enum):
-    PLAYER_TURN = auto()
-    ENEMY_TURN = auto()
+from ecs.world import get_world
+from ecs.systems.render_system import RenderSystem
+from ecs.systems.movement_system import MovementSystem
+from ecs.systems.turn_system import TurnSystem
+from ecs.components import Position, MovementRequest, Renderable
 
 class GameState:
     def __init__(self):
@@ -56,47 +58,49 @@ class Game(GameState):
         super().__init__()
         self.map_container = None
         self.render_service = None
-        self.turn_service = None
         self.camera = None
-        self.player = None
+        self.player_entity = None
+        
+        # ECS Systems
+        self.render_system = None
+        self.movement_system = None
+        self.turn_system = None
 
     def startup(self, persistent):
         self.persist = persistent
         self.map_container = self.persist.get("map_container")
         self.render_service = self.persist.get("render_service")
-        self.turn_service = self.persist.get("turn_service")
         self.camera = self.persist.get("camera")
         
-        if not self.persist.get("player"):
+        # Initialize ECS
+        self.world = get_world()
+        
+        # Clear existing processors to avoid duplicates when re-entering state
+        for processor_type in [MovementSystem, TurnSystem]:
+            try:
+                esper.remove_processor(processor_type)
+            except KeyError:
+                pass
+        
+        # Initialize Systems
+        self.movement_system = MovementSystem(self.map_container)
+        self.turn_system = TurnSystem()
+        self.render_system = RenderSystem(self.camera)
+        
+        # Add processors that should run automatically during esper.process()
+        esper.add_processor(self.movement_system)
+        esper.add_processor(self.turn_system)
+        
+        if not self.persist.get("player_entity"):
             party_service = PartyService()
             # Start at 1,1 to avoid the wall at 0,0
-            self.player = party_service.create_initial_party(1, 1)
-            self.persist["player"] = self.player
-            
-            # Place player on map
-            self._update_player_tile(None, (self.player.x, self.player.y))
+            self.player_entity = party_service.create_initial_party(1, 1)
+            self.persist["player_entity"] = self.player_entity
         else:
-            self.player = self.persist.get("player")
-
-    def _get_tile(self, x, y):
-        if self.map_container and self.map_container.layers:
-            layer = self.map_container.layers[0] # Assume first layer for now
-            if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[0]):
-                return layer.tiles[y][x]
-        return None
-
-    def _update_player_tile(self, old_pos, new_pos):
-        if old_pos:
-            old_tile = self._get_tile(*old_pos)
-            if old_tile and SpriteLayer.ENTITIES in old_tile.sprites:
-                del old_tile.sprites[SpriteLayer.ENTITIES]
-        
-        new_tile = self._get_tile(*new_pos)
-        if new_tile:
-            new_tile.sprites[SpriteLayer.ENTITIES] = self.player.sprite
+            self.player_entity = self.persist.get("player_entity")
 
     def get_event(self, event):
-        if self.turn_service and not self.turn_service.is_player_turn():
+        if self.turn_system and not self.turn_system.is_player_turn():
             return
 
         if event.type == pygame.KEYDOWN:
@@ -114,28 +118,38 @@ class Game(GameState):
                 self.move_player(dx, dy)
 
     def move_player(self, dx, dy):
-        new_x = self.player.x + dx
-        new_y = self.player.y + dy
+        # Add movement request to player entity
+        esper.add_component(self.player_entity, MovementRequest(dx, dy))
         
-        target_tile = self._get_tile(new_x, new_y)
-        if target_tile and target_tile.walkable:
-            old_pos = (self.player.x, self.player.y)
-            self.player.x = new_x
-            self.player.y = new_y
-            self._update_player_tile(old_pos, (new_x, new_y))
-            
-            if self.turn_service:
-                self.turn_service.end_player_turn()
+        # For now, we end player turn immediately after requesting movement
+        # In the future, we might wait for movement to complete
+        if self.turn_system:
+            self.turn_system.end_player_turn()
 
     def update(self, dt):
-        if self.camera and self.player:
-            self.camera.update(self.player.x, self.player.y)
+        # Run ECS processing (MovementSystem, TurnSystem)
+        esper.process()
         
-        if self.turn_service and self.turn_service.current_state == GameStates.ENEMY_TURN:
+        # Update camera based on player position
+        if self.camera and self.player_entity:
+            try:
+                pos = esper.component_for_entity(self.player_entity, Position)
+                self.camera.update(pos.x, pos.y)
+            except KeyError:
+                pass # Entity might not have Position yet or was destroyed
+        
+        # Handle turns
+        if self.turn_system and not self.turn_system.is_player_turn():
             # Simple simulation of enemy turn: just flip it back for now
-            self.turn_service.end_enemy_turn()
+            self.turn_system.end_enemy_turn()
 
     def draw(self, surface):
         surface.fill((0, 0, 0))
+        
+        # 1. Render map
         if self.render_service and self.map_container and self.camera:
             self.render_service.render_map(surface, self.map_container, self.camera)
+        
+        # 2. Render entities via ECS
+        if self.render_system:
+            self.render_system.process(surface)
