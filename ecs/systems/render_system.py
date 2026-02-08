@@ -37,9 +37,9 @@ class RenderSystem(esper.Processor):
             # Apply camera to get screen position
             screen_x, screen_y = self.camera.apply_to_pos(pixel_x, pixel_y)
             
-            # Basic screen culling
-            if (-TILE_SIZE <= screen_x <= surface.get_width() and 
-                -TILE_SIZE <= screen_y <= surface.get_height()):
+            # Basic screen culling and viewport clipping
+            if (self.camera.offset_x - TILE_SIZE <= screen_x <= self.camera.offset_x + self.camera.width and 
+                self.camera.offset_y - TILE_SIZE <= screen_y <= self.camera.offset_y + self.camera.height):
                 
                 # Render the sprite (character)
                 text_surface = self.font.render(rend.sprite, True, rend.color)

@@ -7,6 +7,10 @@ SCREEN_HEIGHT = 600
 SCREEN_TITLE = "Rogue Like RPG"
 TILE_SIZE = 32
 
+# UI configuration
+HEADER_HEIGHT = 48
+SIDEBAR_WIDTH = 160
+
 
 class SpriteLayer(Enum):
 

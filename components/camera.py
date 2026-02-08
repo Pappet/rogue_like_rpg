@@ -1,24 +1,26 @@
 from config import TILE_SIZE
 
 class Camera:
-    def __init__(self, width, height):
+    def __init__(self, width, height, offset_x=0, offset_y=0):
         self.x = 0
         self.y = 0
         self.width = width
         self.height = height
+        self.offset_x = offset_x
+        self.offset_y = offset_y
 
     def apply(self, entity):
-        """Adjusts an entity's position based on the camera's position."""
-        return entity.x - self.x, entity.y - self.y
+        """Adjusts an entity's position based on the camera's position and offset."""
+        return entity.x - self.x + self.offset_x, entity.y - self.y + self.offset_y
 
     def apply_to_pos(self, x, y):
-        """Adjusts a world position (x, y) based on the camera's position."""
-        return x - self.x, y - self.y
+        """Adjusts a world position (x, y) based on the camera's position and offset."""
+        return x - self.x + self.offset_x, y - self.y + self.offset_y
 
     def screen_to_tile(self, screen_x, screen_y):
         """Converts screen coordinates to tile coordinates."""
-        world_x = screen_x + self.x
-        world_y = screen_y + self.y
+        world_x = screen_x - self.offset_x + self.x
+        world_y = screen_y - self.offset_y + self.y
         return world_x // TILE_SIZE, world_y // TILE_SIZE
 
     def tile_to_screen(self, tile_x, tile_y):

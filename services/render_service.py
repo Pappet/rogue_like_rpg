@@ -25,9 +25,9 @@ class RenderService:
                     # Apply camera to get screen position
                     screen_x, screen_y = camera.apply_to_pos(pixel_x, pixel_y)
                     
-                    # Check if tile is on screen
-                    if -TILE_SIZE <= screen_x <= surface.get_width() and \
-                       -TILE_SIZE <= screen_y <= surface.get_height():
+                    # Check if tile is on screen and within viewport
+                    if (camera.offset_x - TILE_SIZE <= screen_x <= camera.offset_x + camera.width and 
+                        camera.offset_y - TILE_SIZE <= screen_y <= camera.offset_y + camera.height):
                         
                         from map.tile import VisibilityState
                         if tile.visibility_state == VisibilityState.UNEXPLORED:
