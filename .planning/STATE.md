@@ -2,29 +2,29 @@
 
 ## Project Reference
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** Implementing advanced gameplay mechanics and UI feedback.
+**Current Focus:** Implementing advanced gameplay mechanics and UI feedback via ECS refactor.
 
 ## Current Position
 **Phase:** 3 - Core Gameplay Mechanics
-**Plan:** 03-01-PLAN.md (Next)
-**Status:** Phase 3 planned. Ready for ECS refactor.
-**Progress Bar:** [----------] 0% (of Phase 3)
+**Plan:** 03-02-PLAN.md (Fog of War & Perception)
+**Status:** In Progress
+**Progress Bar:** [██░░░░░░░░] 20% (of Phase 3)
 
 ## Performance Metrics
 - **Phase 1 (Foundation):** Verified ✓
 - **Phase 2 (Core Loop):** Verified ✓
-- **Turn System:** Logic verified with terminal logging.
-- **Rendering:** Layered sprite rendering verified.
+- **Phase 3 Wave 1 (ECS Refactor):** Completed 03-01 ✓
 
 ## Accumulated Context
 - **Decisions:** 
-    - Verified that `Camera` needs explicit updates to follow the player.
-    - Verified that `TurnService` must explicitly cycle to `ENEMY_TURN` to allow for future AI integration.
-    - **ECS Migration:** Decided to use `esper` for ECS refactoring.
-    - **Visibility:** Using Recursive Shadowcasting for LoS and a 4-state Fog of War.
+    - Using `esper` for ECS (v3.7).
+    - 4-state FoW logic confirmed.
+    - Entities migrated to ECS components.
 - **To Dos:**
-    - Execute Phase 3 plans.
+    - Implement Fog of War and Line of Sight.
+    - Implement UI feedback and Action System.
 - **Blockers:** None.
 
 ## Session Continuity
-- Last action: Completed planning for Phase 3.
+- Last action: Completed Plan 03-01 (ECS Refactor).
+- Stopped at: Ready for Plan 03-02.
