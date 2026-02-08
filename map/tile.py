@@ -18,6 +18,7 @@ class Tile:
         self.dark = dark
         self.sprites = sprites if sprites is not None else {}
         self.visibility_state = VisibilityState.UNEXPLORED
+        self.rounds_since_seen = 0
 
     @property
     def walkable(self) -> bool:

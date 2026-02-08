@@ -4,17 +4,42 @@ from services.visibility_service import VisibilityService
 from map.tile import VisibilityState
 
 class VisibilitySystem(esper.Processor):
-    def __init__(self, map_container):
+    def __init__(self, map_container, turn_system):
         super().__init__()
         self.map_container = map_container
+        self.turn_system = turn_system
+        self.last_round = turn_system.round_counter
 
     def process(self, *args, **kwargs):
-        # 1. Reset currently visible tiles to SHROUDED
+        # 0. Check if a new round has started for aging memory
+        aging_trigger = False
+        if self.turn_system.round_counter > self.last_round:
+            aging_trigger = True
+            self.last_round = self.turn_system.round_counter
+
+        # 0.1 Calculate intelligence-based memory threshold
+        max_intel = 0
+        for ent, stats in esper.get_component(Stats):
+            if stats.intelligence > max_intel:
+                max_intel = stats.intelligence
+        
+        # Memory factor: tiles are remembered for INT * 5 rounds
+        memory_threshold = max_intel * 5
+
+        # 1. Update rounds_since_seen and transition SHROUDED -> FORGOTTEN
         for layer in self.map_container.layers:
             for row in layer.tiles:
                 for tile in row:
                     if tile.visibility_state == VisibilityState.VISIBLE:
                         tile.visibility_state = VisibilityState.SHROUDED
+                        tile.rounds_since_seen = 0
+                    elif aging_trigger:
+                        if tile.visibility_state == VisibilityState.SHROUDED:
+                            tile.rounds_since_seen += 1
+                            if tile.rounds_since_seen > memory_threshold:
+                                tile.visibility_state = VisibilityState.FORGOTTEN
+                        elif tile.visibility_state == VisibilityState.FORGOTTEN:
+                            tile.rounds_since_seen += 1
 
         # 2. Find all entities that provide vision (Position + Stats/LightSource)
         visible_coords = set()

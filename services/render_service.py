@@ -36,6 +36,8 @@ class RenderService:
                         color = (255, 255, 255)
                         if tile.visibility_state == VisibilityState.SHROUDED:
                             color = (80, 80, 100) # Darker/bluer for shrouded
+                        elif tile.visibility_state == VisibilityState.FORGOTTEN:
+                            color = (40, 40, 50) # Even darker for forgotten
                         
                         # Sort sprites by layer order
                         sorted_layers = sorted(tile.sprites.keys(), key=lambda l: l.value)
@@ -43,6 +45,17 @@ class RenderService:
                         for slayer in sorted_layers:
                             sprite_char = tile.sprites[slayer]
                             if sprite_char:
+                                # For forgotten tiles, maybe use a different character?
+                                # For now, let's just use the same character but very dark
+                                # and maybe replace walls with something even vaguer if needed.
+                                char_to_render = sprite_char
+                                if tile.visibility_state == VisibilityState.FORGOTTEN:
+                                    # If it's a floor, maybe use a dot? If it's a wall, maybe leave as is?
+                                    if sprite_char == ".":
+                                        char_to_render = " " # Practically invisible floor
+                                    elif sprite_char == "#":
+                                        char_to_render = "?" # Vague wall memory
+                                
                                 # Render text character for now
-                                text_surface = self.font.render(sprite_char, True, (255, 255, 255))
+                                text_surface = self.font.render(char_to_render, True, color)
                                 surface.blit(text_surface, (screen_x, screen_y))
