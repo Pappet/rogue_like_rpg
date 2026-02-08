@@ -9,7 +9,7 @@ from ecs.systems.movement_system import MovementSystem
 from ecs.systems.turn_system import TurnSystem
 from ecs.systems.visibility_system import VisibilitySystem
 from ecs.systems.ui_system import UISystem
-from ecs.components import Position, MovementRequest, Renderable
+from ecs.components import Position, MovementRequest, Renderable, ActionList
 
 class GameState:
     def __init__(self):
@@ -89,14 +89,6 @@ class Game(GameState):
         self.visibility_system = VisibilitySystem(self.map_container)
         self.movement_system = MovementSystem(self.map_container)
         self.turn_system = TurnSystem()
-        self.ui_system = UISystem(self.turn_system)
-        self.render_system = RenderSystem(self.camera, self.map_container)
-        
-        # Add processors that should run automatically during esper.process()
-        esper.add_processor(self.visibility_system, priority=10) # Run visibility first
-        esper.add_processor(self.movement_system, priority=5)
-        esper.add_processor(self.turn_system, priority=0)
-        # Note: Render systems are usually called manually in draw()
         
         if not self.persist.get("player_entity"):
             party_service = PartyService()
@@ -106,18 +98,25 @@ class Game(GameState):
         else:
             self.player_entity = self.persist.get("player_entity")
 
+        self.ui_system = UISystem(self.turn_system, self.player_entity)
+        self.render_system = RenderSystem(self.camera, self.map_container)
+
     def get_event(self, event):
         if self.turn_system and not self.turn_system.is_player_turn():
             return
 
         if event.type == pygame.KEYDOWN:
             # Action Selection
-            if event.key == pygame.K_w:
-                self.ui_system.prev_action()
-            elif event.key == pygame.K_s:
-                self.ui_system.next_action()
+            try:
+                action_list = esper.component_for_entity(self.player_entity, ActionList)
+                if event.key == pygame.K_w:
+                    action_list.selected_idx = (action_list.selected_idx - 1) % len(action_list.actions)
+                elif event.key == pygame.K_s:
+                    action_list.selected_idx = (action_list.selected_idx + 1) % len(action_list.actions)
+            except KeyError:
+                pass
 
-            # Movement (only if 'Move' action is selected - for future, but let's enable it for now regardless)
+            # Movement (only if 'Move' action is selected)
             dx, dy = 0, 0
             if event.key == pygame.K_UP:
                 dy = -1

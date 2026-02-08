@@ -1,10 +1,12 @@
 import esper
 import pygame
 from config import HEADER_HEIGHT, SIDEBAR_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT, GameStates
+from ecs.components import ActionList
 
 class UISystem(esper.Processor):
-    def __init__(self, turn_system):
+    def __init__(self, turn_system, player_entity):
         self.turn_system = turn_system
+        self.player_entity = player_entity
         pygame.font.init()
         self.font = pygame.font.SysFont('Arial', 24)
         self.small_font = pygame.font.SysFont('Arial', 18)
@@ -12,10 +14,6 @@ class UISystem(esper.Processor):
         # UI Areas
         self.header_rect = pygame.Rect(0, 0, SCREEN_WIDTH, HEADER_HEIGHT)
         self.sidebar_rect = pygame.Rect(SCREEN_WIDTH - SIDEBAR_WIDTH, HEADER_HEIGHT, SIDEBAR_WIDTH, SCREEN_HEIGHT - HEADER_HEIGHT)
-        
-        # Action list for Task 2
-        self.actions = ["Move", "Investigate", "Ranged", "Spells", "Items"]
-        self.selected_action_idx = 0
 
     def process(self, surface):
         self.draw_header(surface)
@@ -46,18 +44,24 @@ class UISystem(esper.Processor):
         title_surf = self.font.render("Actions", True, (200, 200, 200))
         surface.blit(title_surf, (self.sidebar_rect.x + 10, self.sidebar_rect.y + 10))
         
+        # Get ActionList component
+        try:
+            action_list = esper.component_for_entity(self.player_entity, ActionList)
+        except (KeyError, AttributeError):
+            return
+
         # List actions
-        for i, action in enumerate(self.actions):
+        for i, action in enumerate(action_list.actions):
             available = self.is_action_available(action)
             
-            if i == self.selected_action_idx:
+            if i == action_list.selected_idx:
                 # Draw selection highlight
                 bg_rect = pygame.Rect(self.sidebar_rect.x + 5, self.sidebar_rect.y + 45 + i * 30, SIDEBAR_WIDTH - 10, 25)
                 color = (80, 80, 80) if available else (60, 60, 60)
                 pygame.draw.rect(surface, color, bg_rect)
             
             if available:
-                color = (255, 255, 255) if i == self.selected_action_idx else (150, 150, 150)
+                color = (255, 255, 255) if i == action_list.selected_idx else (150, 150, 150)
             else:
                 color = (80, 80, 80)
                 
@@ -68,9 +72,3 @@ class UISystem(esper.Processor):
         if action in ["Ranged", "Spells"]:
             return False # Not implemented yet
         return True
-
-    def next_action(self):
-        self.selected_action_idx = (self.selected_action_idx + 1) % len(self.actions)
-
-    def prev_action(self):
-        self.selected_action_idx = (self.selected_action_idx - 1) % len(self.actions)

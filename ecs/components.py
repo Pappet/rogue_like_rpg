@@ -32,3 +32,13 @@ class TurnOrder:
 @dataclass
 class LightSource:
     radius: int
+
+@dataclass
+class MovementRequest:
+    dx: int
+    dy: int
+
+@dataclass
+class ActionList:
+    actions: List[str]
+    selected_idx: int = 0
