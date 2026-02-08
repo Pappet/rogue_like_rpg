@@ -49,16 +49,16 @@ class VisibilitySystem(esper.Processor):
             return not opaque
 
         # Get entities providing vision
-        for ent, (pos, stats) in self.world.get_components(Position, Stats):
+        for ent, (pos, stats) in esper.get_components(Position, Stats):
             # Player party members or NPCs with stats provide vision based on perception
             radius = stats.perception
-            if self.world.has_component(ent, LightSource):
-                radius = max(radius, self.world.component_for_entity(ent, LightSource).radius)
+            if esper.has_component(ent, LightSource):
+                radius = max(radius, esper.component_for_entity(ent, LightSource).radius)
             
             visible_coords.update(VisibilityService.compute_visibility((pos.x, pos.y), radius, is_transparent))
 
-        for ent, (pos, light) in self.world.get_components(Position, LightSource):
-            if not self.world.has_component(ent, Stats):
+        for ent, (pos, light) in esper.get_components(Position, LightSource):
+            if not esper.has_component(ent, Stats):
                 visible_coords.update(VisibilityService.compute_visibility((pos.x, pos.y), light.radius, is_transparent))
 
         # 3. Mark newly visible tiles
