@@ -25,4 +25,12 @@ class Camera:
         """Converts tile coordinates to screen coordinates."""
         pixel_x = tile_x * TILE_SIZE
         pixel_y = tile_y * TILE_SIZE
-        return self.apply(pixel_x, pixel_y)
+        return self.apply_to_pos(pixel_x, pixel_y)
+
+    def update(self, target_tile_x, target_tile_y):
+        """Centers the camera on a specific tile coordinate."""
+        target_pixel_x = target_tile_x * TILE_SIZE + TILE_SIZE // 2
+        target_pixel_y = target_tile_y * TILE_SIZE + TILE_SIZE // 2
+
+        self.x = target_pixel_x - (self.width // 2)
+        self.y = target_pixel_y - (self.height // 2)

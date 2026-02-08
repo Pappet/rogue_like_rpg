@@ -130,6 +130,10 @@ class Game(GameState):
     def update(self, dt):
         if self.camera and self.player:
             self.camera.update(self.player.x, self.player.y)
+        
+        if self.turn_service and self.turn_service.current_state == GameStates.ENEMY_TURN:
+            # Simple simulation of enemy turn: just flip it back for now
+            self.turn_service.end_enemy_turn()
 
     def draw(self, surface):
         surface.fill((0, 0, 0))

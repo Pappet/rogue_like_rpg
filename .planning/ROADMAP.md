@@ -43,7 +43,7 @@
 - [x] 02-01-PLAN.md — Create the foundational data structures for the tile-based map system. (Revised)
 - [x] 02-02-PLAN.md — Implement the rendering of the tile-based world. (Revised)
 - [x] 02-03-PLAN.md — Introduce the concept of a player-controlled party. (Revised)
-- [ ] 02-04-PLAN.md — Introduce a fundamental turn-based system.
+- [x] 02-04-PLAN.md — Introduce a fundamental turn-based system.
 
 ### Phase 3: Core Gameplay Mechanics
 **Plans:** [To be planned]

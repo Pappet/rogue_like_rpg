@@ -16,6 +16,9 @@ class TurnService:
         return self._current_state == GameStates.PLAYER_TURN
 
     def end_player_turn(self):
-        # In the future, this would set state to ENEMY_TURN
-        # For now, we keep it as PLAYER_TURN as per instructions
+        self._current_state = GameStates.ENEMY_TURN
+        print("End Player Turn -> Enemy Turn")
+
+    def end_enemy_turn(self):
         self._current_state = GameStates.PLAYER_TURN
+        print("End Enemy Turn -> Player Turn")
