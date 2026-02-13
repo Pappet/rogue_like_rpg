@@ -57,6 +57,19 @@ class MapService:
             create_empty_layer(v_width, v_height),      # Layer 1: Empty
             create_empty_layer(v_width, v_height)       # Layer 2: Balconies
         ]
+        # Add walls to Village Map (building footprint)
+        for y in range(8, 13):
+            for x in range(8, 13):
+                if x == 8 or x == 12 or y == 8 or y == 12:
+                    village_layers[0].tiles[y][x].sprites[SpriteLayer.GROUND] = '#'
+                    village_layers[0].tiles[y][x].transparent = False
+        
+        # Ensure gap at (10, 10) for the portal and (10, 12) for the door
+        village_layers[0].tiles[10][10].sprites[SpriteLayer.GROUND] = '.'
+        village_layers[0].tiles[10][10].transparent = True
+        village_layers[0].tiles[12][10].sprites[SpriteLayer.GROUND] = '.'
+        village_layers[0].tiles[12][10].transparent = True
+
         # Add balcony at (10, 11) on Layer 2
         # Accessing tiles[y][x]
         if 11 < len(village_layers[2].tiles) and 10 < len(village_layers[2].tiles[0]):
@@ -71,6 +84,22 @@ class MapService:
             create_empty_layer(h_width, h_height, '.'), # Layer 0: Bottom
             create_empty_layer(h_width, h_height, '.')  # Layer 1: Top
         ]
+        # Add outer walls to House Map
+        for y in range(h_height):
+            for x in range(h_width):
+                if x == 0 or x == 9 or y == 0 or y == 9:
+                    house_layers[0].tiles[y][x].sprites[SpriteLayer.GROUND] = '#'
+                    house_layers[0].tiles[y][x].transparent = False
+                    house_layers[1].tiles[y][x].sprites[SpriteLayer.GROUND] = '#'
+                    house_layers[1].tiles[y][x].transparent = False
+        
+        # Add interior wall at x=5 (y from 1 to 8)
+        for y in range(1, 9):
+            if y == 5: # Gap for door
+                continue
+            house_layers[0].tiles[y][5].sprites[SpriteLayer.GROUND] = '#'
+            house_layers[0].tiles[y][5].transparent = False
+
         house_container = MapContainer(house_layers)
         self.register_map("House", house_container)
 
