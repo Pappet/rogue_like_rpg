@@ -147,9 +147,8 @@ class Game(GameState):
                         self.action_system.start_targeting(self.player_entity, selected_action)
                     else:
                         # Handle non-targeting actions
-                        print(f"Action {selected_action.name} selected")
-                        if selected_action.name == "Move":
-                            pass # Movement is handled by arrows
+                        if selected_action.name != "Move":
+                            self.action_system.perform_action(self.player_entity, selected_action)
             except KeyError:
                 pass
 

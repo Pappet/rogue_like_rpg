@@ -1,7 +1,7 @@
 import esper
 import math
 from config import GameStates, TILE_SIZE
-from ecs.components import Position, Renderable, Stats, Inventory, Targeting, Action, ActionList
+from ecs.components import Position, Renderable, Stats, Inventory, Targeting, Action, ActionList, Portal
 from map.tile import VisibilityState
 
 class ActionSystem(esper.Processor):
@@ -9,9 +9,41 @@ class ActionSystem(esper.Processor):
         self.map_container = map_container
         self.turn_system = turn_system
 
+    def set_map(self, map_container):
+        self.map_container = map_container
+
     def process(self, *args, **kwargs):
         # This could handle animations or time-based action logic
         pass
+
+    def perform_action(self, entity, action):
+        """Executes a non-targeting action."""
+        if action.name == "Enter Portal":
+            pos = esper.component_for_entity(entity, Position)
+            
+            # Find portal at current position
+            portal_found = False
+            for p_ent, (p_pos, portal) in esper.get_components(Position, Portal):
+                if p_pos.x == pos.x and p_pos.y == pos.y and p_pos.layer == pos.layer:
+                    portal_found = True
+                    esper.dispatch_event("log_message", f"You enter the {portal.name}...")
+                    esper.dispatch_event("change_map", {
+                        "target_map_id": portal.target_map_id,
+                        "target_x": portal.target_x,
+                        "target_y": portal.target_y,
+                        "target_layer": portal.target_layer
+                    })
+                    # Note: change_map event will trigger map transition in game_states.py
+                    # We end turn here, but the map transition might reset things.
+                    self.turn_system.end_player_turn()
+                    break
+            
+            if not portal_found:
+                esper.dispatch_event("log_message", "There is no portal here.")
+                return False
+            return True
+        
+        return False
 
     def start_targeting(self, entity, action):
         # 1. Check resources
