@@ -81,3 +81,7 @@ class Targeting:
     action: Action
     potential_targets: List[int] = field(default_factory=list) # Entity IDs
     target_idx: int = 0
+
+@dataclass
+class Corpse:
+    pass

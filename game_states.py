@@ -12,6 +12,7 @@ from ecs.systems.visibility_system import VisibilitySystem
 from ecs.systems.ui_system import UISystem
 from ecs.systems.action_system import ActionSystem
 from ecs.systems.combat_system import CombatSystem
+from ecs.systems.death_system import DeathSystem
 from ecs.components import Position, MovementRequest, Renderable, ActionList, Action
 
 class GameState:
@@ -82,7 +83,7 @@ class Game(GameState):
         self.world = get_world()
         
         # Clear existing processors to avoid duplicates when re-entering state
-        for processor_type in [VisibilitySystem, MovementSystem, CombatSystem, TurnSystem]:
+        for processor_type in [VisibilitySystem, MovementSystem, CombatSystem, TurnSystem, DeathSystem]:
             try:
                 esper.remove_processor(processor_type)
             except KeyError:
@@ -93,6 +94,7 @@ class Game(GameState):
         self.visibility_system = VisibilitySystem(self.map_container, self.turn_system)
         self.movement_system = MovementSystem(self.map_container)
         self.combat_system = CombatSystem()
+        self.death_system = DeathSystem()
         
         if not self.persist.get("player_entity"):
             party_service = PartyService()
@@ -117,6 +119,7 @@ class Game(GameState):
         esper.add_processor(self.visibility_system)
         esper.add_processor(self.movement_system)
         esper.add_processor(self.combat_system)
+        esper.add_processor(self.death_system)
         esper.add_processor(self.turn_system)
         # Note: RenderSystem and UISystem are called manually in draw() because they need the surface
 
