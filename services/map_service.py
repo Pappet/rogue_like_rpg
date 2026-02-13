@@ -5,6 +5,7 @@ from map.map_container import MapContainer
 from config import SpriteLayer
 from entities.monster import create_orc
 from ecs.components import Position, Renderable, Name, Portal
+from map.map_generator_utils import draw_rectangle, place_door
 
 class MapService:
     def __init__(self):
@@ -31,6 +32,67 @@ class MapService:
             self.active_map_id = map_id
         else:
             raise ValueError(f"Map ID '{map_id}' not found in registry.")
+
+    def add_house_to_map(self, world, map_container: MapContainer, start_x: int, start_y: int, w: int, h: int, num_layers: int):
+        """
+        Populates a MapContainer with a house structure.
+        
+        Args:
+            world: The ECS world.
+            map_container: The MapContainer to populate.
+            start_x, start_y: Top-left corner of the house.
+            w, h: Dimensions of the house.
+            num_layers: Number of floors.
+        """
+        # Ensure we have enough layers in the container
+        while len(map_container.layers) < num_layers:
+            # Create a blank layer if needed
+            tiles = []
+            for y in range(map_container.height):
+                row = []
+                for x in range(map_container.width):
+                    tile = Tile(transparent=True, dark=False, sprites={})
+                    row.append(tile)
+                tiles.append(row)
+            map_container.layers.append(MapLayer(tiles))
+
+        map_id = None
+        # Find map_id by value in self.maps
+        for mid, mcon in self.maps.items():
+            if mcon == map_container:
+                map_id = mid
+                break
+
+        for z in range(num_layers):
+            layer = map_container.layers[z]
+            # 1. Draw floor (filled rectangle with '.')
+            draw_rectangle(layer, start_x, start_y, w, h, '.', filled=True)
+            # 2. Draw walls (hollow rectangle with '#')
+            draw_rectangle(layer, start_x, start_y, w, h, '#', filled=False)
+            
+            # 3. Place stairs
+            if z < num_layers - 1:
+                # Stairs Up
+                sx, sy = start_x + w - 2, start_y + h - 2
+                world.create_entity(
+                    Position(sx, sy, z),
+                    Portal(map_id, sx, sy, z + 1, "Stairs Up"),
+                    Renderable("^", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
+                    Name("Stairs Up")
+                )
+            if z > 0:
+                # Stairs Down
+                sx, sy = start_x + w - 2, start_y + h - 2
+                world.create_entity(
+                    Position(sx, sy, z),
+                    Portal(map_id, sx, sy, z - 1, "Stairs Down"),
+                    Renderable("v", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
+                    Name("Stairs Down")
+                )
+        
+        # 4. Place door on layer 0
+        door_x, door_y = start_x + w // 2, start_y + h - 1
+        place_door(map_container.layers[0], door_x, door_y)
 
     def create_village_scenario(self, world):
         """Creates a village scenario with multi-map and portals."""
@@ -67,12 +129,6 @@ class MapService:
                         village_layers[layer_idx].tiles[y][x].sprites[SpriteLayer.GROUND] = '#'
                         village_layers[layer_idx].tiles[y][x].transparent = False
         
-        # Village Layer 0 & 1: Door gap at (10, 12)
-        for layer_idx in [0, 1]:
-            village_layers[layer_idx].tiles[12][10].sprites.pop(SpriteLayer.GROUND, None)
-            village_layers[layer_idx].tiles[12][10].sprites[SpriteLayer.GROUND] = '.'
-            village_layers[layer_idx].tiles[12][10].transparent = True
-
         # Village Layer 2: Roof (8,8) to (12,12)
         for y in range(8, 13):
             for x in range(8, 13):
@@ -103,18 +159,10 @@ class MapService:
                     for layer_idx in [0, 1]:
                         house_layers[layer_idx].tiles[y][x].sprites[SpriteLayer.GROUND] = '#'
                         house_layers[layer_idx].tiles[y][x].transparent = False
-        
-        # Door gap in House Map at (2,0) for exit
-        for layer_idx in [0, 1]:
-            house_layers[layer_idx].tiles[0][2].sprites.pop(SpriteLayer.GROUND, None)
-            house_layers[layer_idx].tiles[0][2].sprites[SpriteLayer.GROUND] = '.'
-            house_layers[layer_idx].tiles[0][2].transparent = True
 
-        # Add interior wall at x=5 (y from 1 to 8) on both floors
+        # Add interior wall at x=5 (y from 1 to 8) on first floor
         for y in range(1, 9):
-            if y == 5: # Gap for door
-                continue
-            for layer_idx in [0, 1]:
+            for layer_idx in [0]:
                 house_layers[layer_idx].tiles[y][5].sprites[SpriteLayer.GROUND] = '#'
                 house_layers[layer_idx].tiles[y][5].transparent = False
 
@@ -126,7 +174,7 @@ class MapService:
         # --- Village Portals ---
         # Enter House: (10, 12, 0) -> House (2, 1, 0)
         world.create_entity(
-            Position(10, 12, 0),
+            Position(10, 13, 0),
             Portal("House", 2, 1, 0, "Enter House"),
             Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Portal to House")
@@ -144,7 +192,7 @@ class MapService:
         # --- House Portals ---
         # Leave House: (2, 0, 0) -> Village (10, 13, 0)
         world.create_entity(
-            Position(2, 0, 0),
+            Position(2, 1, 0),
             Portal("Village", 10, 13, 0, "Leave House"),
             Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Portal to Village")
