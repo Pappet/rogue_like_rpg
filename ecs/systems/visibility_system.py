@@ -2,6 +2,7 @@ import esper
 from ecs.components import Position, Stats, LightSource
 from services.visibility_service import VisibilityService
 from map.tile import VisibilityState
+from config import SpriteLayer
 
 class VisibilitySystem(esper.Processor):
     def __init__(self, map_container, turn_system):
@@ -47,34 +48,22 @@ class VisibilitySystem(esper.Processor):
         # 2. Find all entities that provide vision (Position + Stats/LightSource)
         visible_coords = set()
         
-        def is_transparent(x, y):
-            # Check all layers, if any layer is opaque at this tile
-            opaque = False
-            found_tile = False
-            for layer in self.map_container.layers:
-                if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
-                    found_tile = True
-                    # Check if the tile itself is transparent
-                    # In our sample map, walls have transparent=True but sprites[GROUND]="#"
-                    # Wait, let's check Tile.walkable and Tile.transparent in map_service.py
-                    tile = layer.tiles[y][x]
-                    
-                    # Custom logic for transparency:
-                    # In map_service, walls are created with transparent=True currently?
-                    # Let's check map_service.py again.
-                    if not tile.transparent:
-                        opaque = True
-                        break
-                    
-                    # Also check for '#' in GROUND layer as a fallback/convention
-                    from config import SpriteLayer
-                    if tile.sprites.get(SpriteLayer.GROUND) == "#":
-                        opaque = True
-                        break
-            
-            if not found_tile:
+        def get_is_transparent(layer_index):
+            def is_transparent(x, y):
+                if 0 <= layer_index < len(self.map_container.layers):
+                    layer = self.map_container.layers[layer_index]
+                    if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
+                        tile = layer.tiles[y][x]
+                        # Custom logic for transparency:
+                        if not tile.transparent:
+                            return False
+                        
+                        # Also check for '#' in GROUND layer as a fallback/convention
+                        if tile.sprites.get(SpriteLayer.GROUND) == "#":
+                            return False
+                        return True
                 return False
-            return not opaque
+            return is_transparent
 
         # Get entities providing vision
         for ent, (pos, stats) in esper.get_components(Position, Stats):
@@ -83,11 +72,11 @@ class VisibilitySystem(esper.Processor):
             if esper.has_component(ent, LightSource):
                 radius = max(radius, esper.component_for_entity(ent, LightSource).radius)
             
-            visible_coords.update(VisibilityService.compute_visibility((pos.x, pos.y), radius, is_transparent))
+            visible_coords.update(VisibilityService.compute_visibility((pos.x, pos.y), radius, get_is_transparent(pos.layer)))
 
         for ent, (pos, light) in esper.get_components(Position, LightSource):
             if not esper.has_component(ent, Stats):
-                visible_coords.update(VisibilityService.compute_visibility((pos.x, pos.y), light.radius, is_transparent))
+                visible_coords.update(VisibilityService.compute_visibility((pos.x, pos.y), light.radius, get_is_transparent(pos.layer)))
 
         # 3. Mark newly visible tiles
         for x, y in visible_coords:
