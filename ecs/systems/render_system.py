@@ -35,7 +35,8 @@ class RenderSystem(esper.Processor):
                 renderables.append((rend.layer, pos, rend))
         
         # Sort by layer to ensure correct draw order
-        renderables.sort(key=lambda x: x[0])
+        # Handle both integers and SpriteLayer enum members safely
+        renderables.sort(key=lambda x: int(x[0].value) if hasattr(x[0], 'value') else int(x[0]))
         
         for layer, pos, rend in renderables:
             # Calculate pixel position in the world
