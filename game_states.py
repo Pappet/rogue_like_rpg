@@ -3,6 +3,7 @@ import esper
 from enum import Enum, auto
 from config import SpriteLayer, GameStates
 from services.party_service import PartyService
+from services.map_service import MapService
 from ecs.world import get_world
 from ecs.systems.render_system import RenderSystem
 from ecs.systems.movement_system import MovementSystem
@@ -96,6 +97,10 @@ class Game(GameState):
             # Start at 1,1 to avoid the wall at 0,0
             self.player_entity = party_service.create_initial_party(1, 1)
             self.persist["player_entity"] = self.player_entity
+            
+            # Spawn monsters
+            map_service = MapService()
+            map_service.spawn_monsters(self.world, self.map_container)
         else:
             self.player_entity = self.persist.get("player_entity")
 
