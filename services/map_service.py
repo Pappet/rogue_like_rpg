@@ -33,6 +33,20 @@ class MapService:
         else:
             raise ValueError(f"Map ID '{map_id}' not found in registry.")
 
+    def apply_terrain_variety(self, layer: MapLayer, chance: float, sprite_choices: list):
+        """
+        Adds random terrain variety to a MapLayer ground.
+        """
+        import random
+        for y in range(layer.height):
+            for x in range(layer.width):
+                tile = layer.tiles[y][x]
+                # Only apply to tiles that are currently basic ground ('.')
+                if SpriteLayer.GROUND in tile.sprites and tile.sprites[SpriteLayer.GROUND] == '.':
+                    if random.random() < chance:
+                        sprite = random.choice(sprite_choices)
+                        tile.sprites[SpriteLayer.GROUND] = sprite
+
     def add_house_to_map(self, world, map_container: MapContainer, start_x: int, start_y: int, w: int, h: int, num_layers: int):
         """
         Populates a MapContainer with a house structure.
@@ -95,7 +109,7 @@ class MapService:
         place_door(map_container.layers[0], door_x, door_y)
 
     def create_village_scenario(self, world):
-        """Creates a village scenario with multi-map and portals."""
+        """Creates a village scenario with procedural houses and terrain variety."""
         
         def create_empty_layer(width, height, fill_sprite=None):
             tiles = []
@@ -103,125 +117,77 @@ class MapService:
                 row = []
                 for x in range(width):
                     sprites = {}
-                    transparent = True
                     if fill_sprite:
                         sprites[SpriteLayer.GROUND] = fill_sprite
                     
-                    tile = Tile(transparent=transparent, dark=False, sprites=sprites)
+                    tile = Tile(transparent=True, dark=False, sprites=sprites)
                     row.append(tile)
                 tiles.append(row)
             return MapLayer(tiles)
 
         # Create "Village" MapContainer
-        v_width, v_height = 20, 20
+        v_width, v_height = 40, 40
         village_layers = [
             create_empty_layer(v_width, v_height, '.'), # Layer 0: Ground
-            create_empty_layer(v_width, v_height),      # Layer 1: Walls
-            create_empty_layer(v_width, v_height)       # Layer 2: Roof/Balconies
+            create_empty_layer(v_width, v_height),      # Layer 1
+            create_empty_layer(v_width, v_height)       # Layer 2
         ]
-        
-        # Village Layer 0 & 1: Walls (8,8) to (12,12)
-        for layer_idx in [0, 1]:
-            for y in range(8, 13):
-                for x in range(8, 13):
-                    # Outer walls of the house
-                    if x == 8 or x == 12 or y == 8 or y == 12:
-                        village_layers[layer_idx].tiles[y][x].sprites[SpriteLayer.GROUND] = '#'
-                        village_layers[layer_idx].tiles[y][x].transparent = False
-        
-        # Village Layer 2: Roof (8,8) to (12,12)
-        for y in range(8, 13):
-            for x in range(8, 13):
-                village_layers[2].tiles[y][x].sprites[SpriteLayer.GROUND] = 'X'
-                village_layers[2].tiles[y][x].transparent = False
-
-        # Village Layer 2: Balcony (13,9) to (14,11)
-        # Attached to the right side of the house
-        for y in range(9, 12):
-            for x in range(13, 15):
-                village_layers[2].tiles[y][x].sprites[SpriteLayer.GROUND] = '.'
-                village_layers[2].tiles[y][x].transparent = True # Balcony is open air
-        
         village_container = MapContainer(village_layers)
         self.register_map("Village", village_container)
+        
+        # Apply terrain variety to ground
+        self.apply_terrain_variety(village_layers[0], 0.1, [',', '"', '*'])
 
-        # Create "House" MapContainer
-        h_width, h_height = 10, 10
-        house_layers = [
-            create_empty_layer(h_width, h_height, '.'), # Layer 0: Ground Floor
-            create_empty_layer(h_width, h_height, '.')  # Layer 1: Upper Floor
+        # --- Define House Specs ---
+        houses = [
+            {"id": "Cottage", "v_pos": (5, 5), "v_size": (6, 6), "h_size": (10, 10), "floors": 2},
+            {"id": "Tavern", "v_pos": (20, 5), "v_size": (10, 8), "h_size": (15, 12), "floors": 3},
+            {"id": "Shop", "v_pos": (15, 25), "v_size": (8, 6), "h_size": (12, 10), "floors": 1},
         ]
-        
-        # Add outer walls to House Map
-        for y in range(h_height):
-            for x in range(h_width):
-                if x == 0 or x == 9 or y == 0 or y == 9:
-                    for layer_idx in [0, 1]:
-                        house_layers[layer_idx].tiles[y][x].sprites[SpriteLayer.GROUND] = '#'
-                        house_layers[layer_idx].tiles[y][x].transparent = False
 
-        # Add interior wall at x=5 (y from 1 to 8) on first floor
-        for y in range(1, 9):
-            for layer_idx in [0]:
-                house_layers[layer_idx].tiles[y][5].sprites[SpriteLayer.GROUND] = '#'
-                house_layers[layer_idx].tiles[y][5].transparent = False
-
-        house_container = MapContainer(house_layers)
-        self.register_map("House", house_container)
-
-        # Create Portals
+        # 1. Create Village Portals (while Village is active in terms of entity creation)
+        for h in houses:
+            vx, vy = h["v_pos"]
+            vw, vh = h["v_size"]
+            # Draw shell on village
+            draw_rectangle(village_layers[0], vx, vy, vw, vh, '#', filled=False)
+            
+            # Door position on village
+            door_vx, door_vy = vx + vw // 2, vy + vh - 1
+            village_layers[0].tiles[door_vy][door_vx].sprites[SpriteLayer.GROUND] = '+'
+            
+            # Portal to house
+            world.create_entity(
+                Position(door_vx, door_vy, 0),
+                Portal(h["id"], h["h_size"][0] // 2, h["h_size"][1] - 2, 0, f"Enter {h['id']}"),
+                Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
+                Name(f"Portal to {h['id']}")
+            )
         
-        # --- Village Portals ---
-        # Enter House: (10, 12, 0) -> House (2, 1, 0)
-        world.create_entity(
-            Position(10, 13, 0),
-            Portal("House", 2, 1, 0, "Enter House"),
-            Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
-            Name("Portal to House")
-        )
-        
-        # Enter from Balcony: Village (13, 10, 2) -> House (1, 2, 1)
-        world.create_entity(
-            Position(13, 10, 2),
-            Portal("House", 1, 2, 1, "Enter from Balcony"),
-            Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
-            Name("Portal to House Balcony")
-        )
         village_container.freeze(world)
 
-        # --- House Portals ---
-        # Leave House: (2, 0, 0) -> Village (10, 13, 0)
-        world.create_entity(
-            Position(2, 1, 0),
-            Portal("Village", 10, 13, 0, "Leave House"),
-            Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
-            Name("Portal to Village")
-        )
-        
-        # Stairs Up (4, 4, 0) -> House (4, 4, 1)
-        world.create_entity(
-            Position(4, 4, 0),
-            Portal("House", 4, 4, 1, "Stairs Up"),
-            Renderable("^", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
-            Name("Stairs Up")
-        )
-        
-        # Stairs Down (4, 4, 1) -> House (4, 4, 0)
-        world.create_entity(
-            Position(4, 4, 1),
-            Portal("House", 4, 4, 0, "Stairs Down"),
-            Renderable("v", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
-            Name("Stairs Down")
-        )
-        
-        # Exit to Balcony: House (1, 2, 1) -> Village (13, 10, 2)
-        world.create_entity(
-            Position(1, 2, 1),
-            Portal("Village", 13, 10, 2, "Exit to Balcony"),
-            Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
-            Name("Portal to Balcony")
-        )
-        house_container.freeze(world)
+        # 2. Create House interiors
+        for h in houses:
+            hi, hj = h["h_size"]
+            h_container = MapContainer([create_empty_layer(hi, hj) for _ in range(h["floors"])])
+            self.register_map(h["id"], h_container)
+            
+            # Populate house interior
+            self.add_house_to_map(world, h_container, 0, 0, hi, hj, h["floors"])
+            
+            # Portal back to Village
+            vx, vy = h["v_pos"]
+            vw, vh = h["v_size"]
+            door_vx, door_vy = vx + vw // 2, vy + vh - 1
+            
+            world.create_entity(
+                Position(hi // 2, hj - 1, 0),
+                Portal("Village", door_vx, door_vy, 0, "Leave House"),
+                Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
+                Name(f"Portal to Village")
+            )
+            
+            h_container.freeze(world)
 
         # Set active and thaw
         self.active_map_id = "Village"
