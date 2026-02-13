@@ -5,6 +5,15 @@ from typing import List, Tuple
 class Position:
     x: int
     y: int
+    layer: int = 0
+
+@dataclass
+class Portal:
+    target_map_id: str
+    target_x: int
+    target_y: int
+    target_layer: int = 0
+    name: str = "Portal"
 
 @dataclass
 class Renderable:
