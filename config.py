@@ -10,6 +10,7 @@ TILE_SIZE = 32
 # UI configuration
 HEADER_HEIGHT = 48
 SIDEBAR_WIDTH = 160
+LOG_HEIGHT = 140
 
 
 class SpriteLayer(Enum):
@@ -45,8 +46,26 @@ class SpriteLayer(Enum):
 class GameStates(Enum):
 
 
+
+
+
     PLAYER_TURN = 1
 
 
+
+
+
     ENEMY_TURN = 2
+
+
+
+
+
+    TARGETING = 3
+
+
+
+
+
+
 
