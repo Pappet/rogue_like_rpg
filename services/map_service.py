@@ -45,7 +45,7 @@ class MapService:
         for x, y in spawns:
             # Check if within bounds and walkable
             if 0 <= x < map_container.width and 0 <= y < map_container.height:
-                if map_container.get_tile(x, y).transparent: # Assuming transparent tiles are walkable for now
+                if map_container.get_tile(x, y).walkable: # Use walkable property
                     create_orc(world, x, y)
 
     def change_map(self, current_map: MapContainer, new_map: MapContainer) -> MapContainer:
