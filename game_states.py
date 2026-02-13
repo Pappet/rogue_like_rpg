@@ -313,17 +313,26 @@ class Game(GameState):
     def draw(self, surface):
         surface.fill((0, 0, 0))
 
+        # Get player layer
+        player_layer = 0
+        if self.player_entity:
+            try:
+                pos = esper.component_for_entity(self.player_entity, Position)
+                player_layer = pos.layer
+            except KeyError:
+                pass
+
         # Define viewport
         viewport_rect = pygame.Rect(self.camera.offset_x, self.camera.offset_y, self.camera.width, self.camera.height)
 
         # 1. Render map (clipped to viewport)
         surface.set_clip(viewport_rect)
         if self.render_service and self.map_container and self.camera:
-            self.render_service.render_map(surface, self.map_container, self.camera)
+            self.render_service.render_map(surface, self.map_container, self.camera, player_layer)
 
         # 2. Render entities via ECS (clipped to viewport)
         if self.render_system:
-            self.render_system.process(surface)
+            self.render_system.process(surface, player_layer)
 
         # Reset clip for UI
         surface.set_clip(None)

@@ -15,7 +15,7 @@ class RenderSystem(esper.Processor):
     def set_map(self, map_container):
         self.map_container = map_container
 
-    def process(self, surface):
+    def process(self, surface, player_layer=0):
         # 1. Draw range highlight and targeting cursor
         for ent, targeting in esper.get_component(Targeting):
             self.draw_targeting_ui(surface, targeting)
@@ -23,22 +23,36 @@ class RenderSystem(esper.Processor):
         # 2. Get all entities with Position and Renderable components
         renderables = []
         for ent, (pos, rend) in esper.get_components(Position, Renderable):
+            # Only render if entity is at or below player layer
+            if pos.layer > player_layer:
+                continue
+
             # Check if entity's position is visible
             is_visible = False
-            for layer in self.map_container.layers:
+            # Check the visibility on the entity's own layer
+            if 0 <= pos.layer < len(self.map_container.layers):
+                layer = self.map_container.layers[pos.layer]
                 if 0 <= pos.y < len(layer.tiles) and 0 <= pos.x < len(layer.tiles[pos.y]):
                     if layer.tiles[pos.y][pos.x].visibility_state == VisibilityState.VISIBLE:
                         is_visible = True
-                        break
             
             if is_visible:
-                renderables.append((rend.layer, pos, rend))
+                # Calculate depth darkening factor for entities
+                depth_factor = 1.0 - (player_layer - pos.layer) * 0.3
+                depth_factor = max(0.1, depth_factor)
+                
+                # Apply darkening to entity color
+                color = rend.color
+                if depth_factor < 1.0:
+                    color = tuple(max(0, int(c * depth_factor)) for c in rend.color)
+                
+                renderables.append((rend.layer, pos, rend, color))
         
         # Sort by layer to ensure correct draw order
         # Handle both integers and SpriteLayer enum members safely
         renderables.sort(key=lambda x: int(x[0].value) if hasattr(x[0], 'value') else int(x[0]))
         
-        for layer, pos, rend in renderables:
+        for layer, pos, rend, color in renderables:
             # Calculate pixel position in the world
             pixel_x = pos.x * TILE_SIZE
             pixel_y = pos.y * TILE_SIZE
@@ -51,7 +65,7 @@ class RenderSystem(esper.Processor):
                 self.camera.offset_y - TILE_SIZE <= screen_y <= self.camera.offset_y + self.camera.height):
                 
                 # Render the sprite (character)
-                text_surface = self.font.render(rend.sprite, True, rend.color)
+                text_surface = self.font.render(rend.sprite, True, color)
                 surface.blit(text_surface, (screen_x, screen_y))
 
     def draw_targeting_ui(self, surface, targeting):
