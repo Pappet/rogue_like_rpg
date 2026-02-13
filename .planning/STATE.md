@@ -2,62 +2,31 @@
 
 ## Project Reference
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** Nested Worlds & Navigation (Milestone 2)
+**Current Focus:** Advanced Navigation & UI (Milestone 2)
 
 ## Current Position
-
-**Phase:** 5 - Nested World Architecture
-
-**Plan:** 05-03 complete. Phase 5 complete.
-
-**Status:** Complete. Nested world architecture, transitions, and automated verification implemented.
-
-**Progress Bar:** [██████████] 100%
-
-
+**Phase:** 6 - Advanced Navigation & UI
+**Plan:** 01-01-PLAN.md (Complete)
+**Status:** Map Aging Implemented. Next: World Map UI.
+**Progress Bar:** [█████████░] 90%
 
 ## Performance Metrics
-
 - **Engine:** esper ECS ✓
-
 - **Combat:** Functional (Phase 4 complete) ✓
-
-- **Navigation:** Nested Worlds & Portals ✓ (Persistence & Multi-layer support verified) ✓
-
-
+- **Navigation:** Nested World Architecture (Multi-map, Portals, Layers) ✓
+- **Persistence:** Entity Freeze/Thaw ✓
+- **Map Memory:** Lazy aging and intelligence-based degradation ✓
 
 ## Accumulated Context
-
 - **Decisions:** 
-
-    - Maps will be nested/linked via Portals.
-
-    - Memory of maps will persist and "age" rather than being instantly forgotten.
-
-    - A dedicated MapService will manage the collection of active containers.
-
-    - Entities are persisted by storing their component instances in a list within MapContainer during 'freeze'.
-
-    - MapService now acts as a repository for multiple named MapContainer instances.
-
-    - Position component now includes a 'layer' field to support multi-layered maps.
-
-    - Portal component added to facilitate transitions between maps/layers.
-
-    - Automated verification via headless Game logic mocks.
-
+    - Portals link maps and specify target (x, y, layer).
+    - MapService acts as a repository for all loaded maps.
+    - Entities are persisted within MapContainers when map is inactive.
+    - Map memory ages based on turns passed (Lazy Aging).
+    - Intelligence stat determines how long tiles remain SHROUDED before becoming FORGOTTEN.
 - **To Dos:**
-
-    - Move to Milestone 3 (if applicable) or next Phase.
-
+    - Implement World Map UI (06-02-PLAN.md).
 - **Blockers:** None.
 
-
-
 ## Session Continuity
-
-- Last activity: 2026-02-13 - Completed 05-03-PLAN.md (and acknowledged 05-02)
-
-- Stopped at: Phase 5 Complete.
-
-- Resume file path: .planning/phases/06-next-phase/06-01-PLAN.md (placeholder)
+- Last action: Completed Phase 6 Plan 01 (Lazy Map Aging).
