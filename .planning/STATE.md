@@ -2,13 +2,13 @@
 
 ## Project Reference
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** Milestone 3 Complete.
+**Current Focus:** Procedural Map Features (Milestone 4)
 
 ## Current Position
-**Phase:** 7 - Layered Rendering & Structure (Complete)
-**Plan:** All Plans Executed
-**Status:** Milestone 3 Complete.
-**Progress Bar:** [==========] 100%
+**Phase:** 8 - Procedural Map Features
+**Plan:** 01 (Complete)
+**Status:** In Progress
+**Progress Bar:** [█████░░░░░] 50%
 
 ## Performance Metrics
 - **Engine:** esper ECS ✓
@@ -16,6 +16,7 @@
 - **Navigation:** Nested World Architecture & World Map ✓
 - **Persistence:** Entity Freeze/Thaw & Map Aging ✓
 - **Visuals:** Selective Layer Rendering & Depth Effect ✓
+- **Generation:** Procedural Buildings (Functional) ✓
 
 ## Accumulated Context
 - **Decisions:** 
@@ -23,20 +24,11 @@
     - Darken lower layers by 0.3 per level difference.
     - Structural walls added to Village and House maps.
     - Ground sprites (e.g., '.', '#', 'X') act as occlusion layers, blocking rendering of layers below.
+    - `add_house_to_map` automatically expands MapContainer layers and links them with Portals.
 - **To Dos:**
-    - Define next milestone.
+    - Execute Phase 8 plan 08-02.
 - **Blockers:** None.
 
 ## Session Continuity
-- Last activity: 2026-02-13 - Completed quick fix for visibility architecture and portals.
-- Stopped at: Milestone 3 Complete.
-
-## Quick Tasks Completed
-| Task | Description | Date |
-| :--- | :--- | :--- |
-| quick-fix-01 | Fix AttributeError: 'MapContainer' object has no attribute 'width' | 2026-02-13 |
-| quick-fix-02 | Fix ImportError: cannot import name 'TileState' from 'map.tile' | 2026-02-13 |
-| quick-fix-03 | Fix TypeError in RenderSystem sorting (mixed int/Enum types) | 2026-02-13 |
-| quick-add-village-scenario | Add multi-map village scenario with portals and layers | 2026-02-13 |
-| quick-fix-village-architecture | Refine village architecture and implement ground-occlusion | 2026-02-13 |
-| quick-fix-visibility-and-portals | Fix visibility architecture to be layer-aware and refine portals/occlusion | 2026-02-13 |
+- Last activity: 2026-02-13 - Completed 08-01-PLAN.md
+- Resume file path: .planning/phases/08-procedural-map-features/08-02-PLAN.md
