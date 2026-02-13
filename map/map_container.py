@@ -6,6 +6,7 @@ from map.tile import VisibilityState
 class MapContainer:
     def __init__(self, layers: List[MapLayer]):
         self.layers = layers
+        self.frozen_entities: List[List] = []
 
     @property
     def width(self) -> int:
@@ -36,3 +37,33 @@ class MapContainer:
                     if tile.visibility_state in (VisibilityState.VISIBLE, VisibilityState.SHROUDED):
                         tile.visibility_state = VisibilityState.FORGOTTEN
                         tile.rounds_since_seen = 1000 # Ensure it stays forgotten
+
+    def freeze(self, world, exclude_entities: List[int] = None):
+        """Removes entities from the world and stores them in this container."""
+        if exclude_entities is None:
+            exclude_entities = []
+        
+        self.frozen_entities = []
+        
+        # Accessing private _entities in esper to get all components for an entity
+        actual_world = world._world if hasattr(world, "_world") else world
+        
+        entities_to_freeze = []
+        for ent, components_dict in list(actual_world._entities.items()):
+            if ent not in exclude_entities:
+                self.frozen_entities.append(list(components_dict.values()))
+                entities_to_freeze.append(ent)
+        
+        for ent in entities_to_freeze:
+            world.delete_entity(ent)
+        
+        # In esper, we must clear dead entities to actually remove them from _entities
+        world.clear_dead_entities()
+
+    def thaw(self, world):
+        """Restores frozen entities back into the world."""
+        for components in self.frozen_entities:
+            ent = world.create_entity()
+            for component in components:
+                world.add_component(ent, component)
+        self.frozen_entities = []
