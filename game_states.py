@@ -14,7 +14,7 @@ from ecs.systems.action_system import ActionSystem
 from ecs.systems.combat_system import CombatSystem
 from ecs.systems.death_system import DeathSystem
 from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats
-from map.tile import TileState
+from map.tile import VisibilityState
 
 class GameState:
     def __init__(self):
@@ -160,6 +160,12 @@ class Game(GameState):
 
     def handle_player_input(self, event):
         if event.type == pygame.KEYDOWN:
+            # World Map Toggle
+            if event.key == pygame.K_m:
+                self.next_state = "WORLD_MAP"
+                self.done = True
+                return
+
             # Action Selection
             try:
                 action_list = esper.component_for_entity(self.player_entity, ActionList)
@@ -351,50 +357,49 @@ class WorldMapState(GameState):
         surface.fill((20, 20, 20))
         surface.blit(self.title_text, (20, 20))
         
-        if not self.map_container:
+        if not self.map_container or not self.map_container.layers:
             return
 
-        # Calculate map bounds
-        tiles = self.map_container.tiles
-        if not tiles:
-            return
-            
-        min_x = min(x for x, y in tiles.keys())
-        max_x = max(x for x, y in tiles.keys())
-        min_y = min(y for x, y in tiles.keys())
-        max_y = max(y for x, y in tiles.keys())
-        
-        map_w = (max_x - min_x + 1)
-        map_h = (max_y - min_y + 1)
+        # Use the first layer for dimensions
+        map_w = self.map_container.width
+        map_h = self.map_container.height
         
         # Center the map
         start_x = (800 - map_w * self.tile_size) // 2
         start_y = (600 - map_h * self.tile_size) // 2
         
-        for (x, y), tile in tiles.items():
-            rect = pygame.Rect(
-                start_x + (x - min_x) * self.tile_size,
-                start_y + (y - min_y) * self.tile_size,
-                self.tile_size,
-                self.tile_size
-            )
-            
-            color = (0, 0, 0)
-            if tile.state == TileState.VISIBLE:
-                color = (200, 200, 200) # Light grey
-                if tile.is_wall:
-                    color = (100, 100, 100) # Grey wall
-            elif tile.state == TileState.SHROUDED:
-                color = (60, 60, 60) # Dark grey
-                if tile.is_wall:
-                    color = (40, 40, 40)
-            elif tile.state == TileState.FORGOTTEN:
-                color = (20, 20, 40) # Very dark blue-grey
-                if tile.is_wall:
-                    color = (15, 15, 30)
-            
-            if color != (0, 0, 0):
-                pygame.draw.rect(surface, color, rect)
+        # Draw all layers (simplified: top-most visibility wins)
+        
+        for y in range(map_h):
+            for x in range(map_w):
+                # Check ground layer visibility primarily
+                tile = self.map_container.get_tile(x, y, 0)
+                if not tile:
+                    continue
+                
+                rect = pygame.Rect(
+                    start_x + x * self.tile_size,
+                    start_y + y * self.tile_size,
+                    self.tile_size,
+                    self.tile_size
+                )
+                
+                color = (0, 0, 0)
+                if tile.visibility_state == VisibilityState.VISIBLE:
+                    color = (200, 200, 200) # Light grey
+                    if not tile.walkable:
+                        color = (100, 100, 100) # Grey wall
+                elif tile.visibility_state == VisibilityState.SHROUDED:
+                    color = (60, 60, 60) # Dark grey
+                    if not tile.walkable:
+                        color = (40, 40, 40)
+                elif tile.visibility_state == VisibilityState.FORGOTTEN:
+                    color = (20, 20, 40) # Very dark blue-grey
+                    if not tile.walkable:
+                        color = (15, 15, 30)
+                
+                if color != (0, 0, 0):
+                    pygame.draw.rect(surface, color, rect)
 
         # Highlight player position
         try:
@@ -402,8 +407,8 @@ class WorldMapState(GameState):
             if player_entity is not None:
                 pos = esper.component_for_entity(player_entity, Position)
                 p_rect = pygame.Rect(
-                    start_x + (pos.x - min_x) * self.tile_size,
-                    start_y + (pos.y - min_y) * self.tile_size,
+                    start_x + pos.x * self.tile_size,
+                    start_y + pos.y * self.tile_size,
                     self.tile_size,
                     self.tile_size
                 )
