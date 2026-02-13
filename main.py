@@ -1,10 +1,11 @@
 import pygame
 import sys
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, HEADER_HEIGHT, SIDEBAR_WIDTH, LOG_HEIGHT
-from game_states import TitleScreen, Game
+from game_states import TitleScreen, Game, WorldMapState
 from services.map_service import MapService
 from services.render_service import RenderService
 from components.camera import Camera
+from ecs.world import get_world
 
 class GameController:
     def __init__(self):
@@ -18,8 +19,10 @@ class GameController:
         viewport_width = SCREEN_WIDTH - SIDEBAR_WIDTH
         viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT
         self.camera = Camera(viewport_width, viewport_height, 0, HEADER_HEIGHT)
-        self.map_container = self.map_service.create_sample_map(25, 20, map_id="main")
-        self.map_service.set_active_map("main")
+        
+        world = get_world()
+        self.map_service.create_village_scenario(world)
+        self.map_container = self.map_service.get_active_map()
         
         self.persist = {
             "map_container": self.map_container,
@@ -31,6 +34,7 @@ class GameController:
         self.states = {
             "TITLE": TitleScreen(),
             "GAME": Game(),
+            "WORLD_MAP": WorldMapState(),
         }
         self.state_name = "TITLE"
         self.state = self.states[self.state_name]
