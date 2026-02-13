@@ -31,7 +31,7 @@ class RenderService:
                 base_layer = 0
                 for i in range(player_layer, -1, -1):
                     tile = map_container.get_tile(x, y, i)
-                    if tile and SpriteLayer.GROUND in tile.sprites:
+                    if tile and tile.sprites.get(SpriteLayer.GROUND):
                         base_layer = i
                         break
                 

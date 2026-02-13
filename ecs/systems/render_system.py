@@ -33,7 +33,7 @@ class RenderSystem(esper.Processor):
             if pos.layer < player_layer:
                 for i in range(player_layer, pos.layer, -1):
                     tile = self.map_container.get_tile(pos.x, pos.y, i)
-                    if tile and SpriteLayer.GROUND in tile.sprites:
+                    if tile and tile.sprites.get(SpriteLayer.GROUND):
                         occluded = True
                         break
             
