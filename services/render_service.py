@@ -8,13 +8,20 @@ class RenderService:
         pygame.font.init()
         self.font = pygame.font.SysFont('monospace', TILE_SIZE)
 
-    def render_map(self, surface: pygame.Surface, map_container: MapContainer, camera: Camera):
+    def render_map(self, surface: pygame.Surface, map_container: MapContainer, camera: Camera, player_layer: int = 0):
         """Renders the layered map tiles."""
         if not map_container.layers:
             return
 
-        # Render each layer in the container
-        for layer in map_container.layers:
+        # Render layers from bottom up to player_layer
+        for i, layer in enumerate(map_container.layers):
+            if i > player_layer:
+                continue
+            
+            # Calculate depth darkening factor
+            depth_factor = 1.0 - (player_layer - i) * 0.3
+            depth_factor = max(0.1, depth_factor)
+            
             tiles = layer.tiles
             for y, row in enumerate(tiles):
                 for x, tile in enumerate(row):
@@ -33,11 +40,16 @@ class RenderService:
                         if tile.visibility_state == VisibilityState.UNEXPLORED:
                             continue
                         
-                        color = (255, 255, 255)
+                        base_color = (255, 255, 255)
                         if tile.visibility_state == VisibilityState.SHROUDED:
-                            color = (80, 80, 100) # Darker/bluer for shrouded
+                            base_color = (80, 80, 100) # Darker/bluer for shrouded
                         elif tile.visibility_state == VisibilityState.FORGOTTEN:
-                            color = (40, 40, 50) # Even darker for forgotten
+                            base_color = (40, 40, 50) # Even darker for forgotten
+                        
+                        # Apply depth darkening
+                        color = base_color
+                        if depth_factor < 1.0:
+                            color = tuple(max(0, int(c * depth_factor)) for c in base_color)
                         
                         # Sort sprites by layer order
                         sorted_layers = sorted(tile.sprites.keys(), key=lambda l: l.value)
@@ -46,11 +58,8 @@ class RenderService:
                             sprite_char = tile.sprites[slayer]
                             if sprite_char:
                                 # For forgotten tiles, maybe use a different character?
-                                # For now, let's just use the same character but very dark
-                                # and maybe replace walls with something even vaguer if needed.
                                 char_to_render = sprite_char
                                 if tile.visibility_state == VisibilityState.FORGOTTEN:
-                                    # If it's a floor, maybe use a dot? If it's a wall, maybe leave as is?
                                     if sprite_char == ".":
                                         char_to_render = " " # Practically invisible floor
                                     elif sprite_char == "#":
