@@ -36,10 +36,10 @@ This document outlines the requirements for version 1 of the Rogue Like RPG.
 | FEAT-005 | Phase 2 | Completed |
 | FEAT-006 | Phase 2 | Completed |
 | FEAT-007 | Phase 2 | Completed |
-| UI-001 | Phase 4 | Pending |
-| UI-002 | Phase 4 | Pending |
-| ARCH-001 | Phase 4 | Pending |
-| ENT-001 | Phase 4 | Pending |
-| MECH-001 | Phase 4 | Pending |
-| MECH-002 | Phase 4 | Pending |
-| MECH-003 | Phase 4 | Pending |
+| UI-001 | Phase 4 | Completed |
+| UI-002 | Phase 4 | Completed |
+| ARCH-001 | Phase 4 | Completed |
+| ENT-001 | Phase 4 | Completed |
+| MECH-001 | Phase 4 | Completed |
+| MECH-002 | Phase 4 | Completed |
+| MECH-003 | Phase 4 | Completed |
