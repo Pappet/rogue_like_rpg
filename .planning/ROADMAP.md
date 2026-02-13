@@ -2,9 +2,9 @@
 
 ## Summary
 
-**Phases:** 6
+**Phases:** 7
 **Depth:** Standard
-**Coverage:** 19/19 requirements mapped
+**Coverage:** 22/22 requirements mapped
 
 | Phase | Goal | Requirements |
 |-------|------|--------------|
@@ -14,19 +14,15 @@
 | 4 - Combat & Feedback | Players can fight monsters and receive textual feedback on actions. | UI-001, UI-002, ARCH-001, ENT-001, MECH-001, MECH-002, MECH-003 |
 | 5 - Nested World Architecture | Enable navigation between different map containers (World/House) using Portals. | ARCH-002, ARCH-003, MECH-004 |
 | 6 - Advanced Navigation & UI | Implement realistic map memory aging and a world map overview. | MECH-005, UI-003 |
+| 7 - Layered Rendering & Structure | Enhance visuals with depth-based rendering and structured map layouts. | VIS-001, VIS-002, MAP-001 |
 
 ## Success Criteria
 
-### Phase 5: Nested World Architecture
-1.  Entities can move between different `MapContainer` instances via Portals.
-2.  Transitions support specific target layers and coordinates (e.g., balcony access).
-3.  The previous map state is preserved in memory when switching.
-4.  `MapService` can manage a hierarchy or list of active/inactive containers.
-
-### Phase 6: Advanced Navigation & UI
-1.  Inactive maps do not immediately become "Forgotten"; they age over time.
-2.  A new UI window displays a "World Map" or "Area Map" overview.
-3.  The overview shows discovered areas of the current and parent maps.
+### Phase 7: Layered Rendering & Structure
+1.  Layers above the player's current layer are not rendered (e.g., no "floating" balconies).
+2.  Layers below the player are rendered with a progressive darkening effect.
+3.  The "Village" map features a visible house structure with walls.
+4.  The "House" map features interior walls and rooms.
 
 ## Plans
 
@@ -61,8 +57,11 @@
 - [x] 06-01-PLAN.md — Implement Time-based Map Memory (Aging).
 - [x] 06-02-PLAN.md — Implement World Map UI Module.
 
+### Phase 7: Layered Rendering & Structure
+- [ ] 07-01-PLAN.md — Implement Selective Layer Rendering & Map Structures.
+
 ## Quick Tasks
 - [x] fix-map-container-attribute-error.md — Fix missing 'width' attribute.
 - [x] fix-tile-state-import-error.md — Fix TileState import error.
 - [x] add-village-scenario.md — Add multi-map village scenario.
-- [ ] fix-render-layer-type-error.md — Fix TypeError in RenderSystem sorting.
+- [x] fix-render-layer-type-error.md — Fix TypeError in RenderSystem sorting.
