@@ -11,7 +11,7 @@
 | 1 - Game Foundation | Users can launch the game and begin a new play session. | GAME-001, GAME-002 |
 | 2 - Core Gameplay Loop | Extend the basic framework with tile-based, turn-based mechanics and player party movement. | FEAT-003, FEAT-004, FEAT-005, FEAT-006, FEAT-007 |
 | 3 - Core Gameplay Mechanics | Implement key interactive gameplay systems like Fog of War and expanded player actions. | (Implicit in Phase 3 plans) |
-| 4 - Combat & Feedback | Players can fight monsters and receive textual feedback on actions. | UI-001, UI-002, ARCH-001, ENT-001, MECH-001, MECH-002, MECH-003 |
+| 4 - Combat & Feedback | Players can fight monsters and receive textual feedback on actions. | UI-001, UI-002, ARCH-001, ENT-001, MECH-001, MECH-001, MECH-002, MECH-003 |
 | 5 - Nested World Architecture | Enable navigation between different map containers (World/House) using Portals. | ARCH-002, ARCH-003, MECH-004 |
 | 6 - Advanced Navigation & UI | Implement realistic map memory aging and a world map overview. | MECH-005, UI-003 |
 | 7 - Layered Rendering & Structure | Enhance visuals with depth-based rendering and structured map layouts. | VIS-001, VIS-002, MAP-001 |
@@ -58,10 +58,11 @@
 - [x] 06-02-PLAN.md — Implement World Map UI Module.
 
 ### Phase 7: Layered Rendering & Structure
-- [ ] 07-01-PLAN.md — Implement Selective Layer Rendering & Map Structures.
+- [x] 07-01-PLAN.md — Implement Selective Layer Rendering & Map Structures.
 
 ## Quick Tasks
 - [x] fix-map-container-attribute-error.md — Fix missing 'width' attribute.
 - [x] fix-tile-state-import-error.md — Fix TileState import error.
 - [x] add-village-scenario.md — Add multi-map village scenario.
 - [x] fix-render-layer-type-error.md — Fix TypeError in RenderSystem sorting.
+- [ ] fix-visibility-architecture-and-portals.md — Fix visibility system, update village architecture, and refine occlusion logic.
