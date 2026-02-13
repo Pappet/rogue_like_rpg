@@ -81,14 +81,14 @@ class MapService:
         world.create_entity(
             Position(10, 10, 0),
             Portal("House", 2, 2, 0, "Enter House"),
-            Renderable(">", SpriteLayer.DECOR_BOTTOM, (255, 255, 0)),
+            Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Portal to House")
         )
         # Enter House from Balcony (10, 11, 2) -> House (1, 2, 1)
         world.create_entity(
             Position(10, 11, 2),
             Portal("House", 1, 2, 1, "Enter from Balcony"),
-            Renderable(">", SpriteLayer.DECOR_BOTTOM, (255, 255, 0)),
+            Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Portal to House Balcony")
         )
         village_container.freeze(world)
@@ -98,28 +98,28 @@ class MapService:
         world.create_entity(
             Position(2, 2, 0),
             Portal("Village", 10, 10, 0, "Leave House"),
-            Renderable("<", SpriteLayer.DECOR_BOTTOM, (255, 255, 0)),
+            Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Portal to Village")
         )
         # Stairs Up (4, 4, 0) -> House (4, 4, 1)
         world.create_entity(
             Position(4, 4, 0),
             Portal("House", 4, 4, 1, "Stairs Up"),
-            Renderable("^", SpriteLayer.DECOR_BOTTOM, (255, 255, 0)),
+            Renderable("^", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Stairs Up")
         )
         # Stairs Down (4, 4, 1) -> House (4, 4, 0)
         world.create_entity(
             Position(4, 4, 1),
             Portal("House", 4, 4, 0, "Stairs Down"),
-            Renderable("v", SpriteLayer.DECOR_BOTTOM, (255, 255, 0)),
+            Renderable("v", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Stairs Down")
         )
         # Exit to Balcony (1, 2, 1) -> Village (10, 11, 2)
         world.create_entity(
             Position(1, 2, 1),
             Portal("Village", 10, 11, 2, "Exit to Balcony"),
-            Renderable("<", SpriteLayer.DECOR_BOTTOM, (255, 255, 0)),
+            Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Portal to Balcony")
         )
         house_container.freeze(world)
