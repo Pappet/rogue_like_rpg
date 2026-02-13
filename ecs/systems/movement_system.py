@@ -1,5 +1,5 @@
 import esper
-from ecs.components import Position, MovementRequest, Blocker
+from ecs.components import Position, MovementRequest, Blocker, Stats, AttackIntent
 from map.map_container import MapContainer
 
 class MovementSystem(esper.Processor):
@@ -12,7 +12,17 @@ class MovementSystem(esper.Processor):
             new_x = pos.x + req.dx
             new_y = pos.y + req.dy
             
-            if self._is_walkable(new_x, new_y) and not self._is_blocked(new_x, new_y):
+            blocker_ent = self._get_blocker_at(new_x, new_y)
+            
+            if blocker_ent:
+                # If blocked by entity with Stats, it's an attack
+                if esper.has_component(blocker_ent, Stats):
+                    esper.add_component(ent, AttackIntent(target_entity=blocker_ent))
+                    # Consume the movement request without moving
+                    esper.remove_component(ent, MovementRequest)
+                    continue
+
+            if self._is_walkable(new_x, new_y) and not blocker_ent:
                 pos.x = new_x
                 pos.y = new_y
             
@@ -26,8 +36,8 @@ class MovementSystem(esper.Processor):
                 return layer.tiles[y][x].walkable
         return False
 
-    def _is_blocked(self, x, y):
+    def _get_blocker_at(self, x, y):
         for ent, (pos, blocker) in esper.get_components(Position, Blocker):
             if pos.x == x and pos.y == y:
-                return True
-        return False
+                return ent
+        return None

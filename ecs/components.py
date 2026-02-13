@@ -53,6 +53,10 @@ class MovementRequest:
     dy: int
 
 @dataclass
+class AttackIntent:
+    target_entity: int
+
+@dataclass
 class Action:
     name: str
     cost_mana: int = 0
