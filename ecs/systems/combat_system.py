@@ -1,0 +1,44 @@
+import esper
+from ecs.components import Stats, AttackIntent, Name
+
+class CombatSystem(esper.Processor):
+    def process(self):
+        for attacker, intent in list(esper.get_component(AttackIntent)):
+            target = intent.target_entity
+            
+            try:
+                attacker_stats = esper.component_for_entity(attacker, Stats)
+                target_stats = esper.component_for_entity(target, Stats)
+                
+                # Calculate damage
+                damage = max(0, attacker_stats.power - target_stats.defense)
+                
+                # Subtract HP
+                target_stats.hp -= damage
+                
+                # Get names for logging
+                attacker_name = self._get_name(attacker)
+                target_name = self._get_name(target)
+                
+                # Dispatch log message
+                if damage > 0:
+                    esper.dispatch_event("log_message", f"{attacker_name} hits {target_name} for {damage} damage.")
+                else:
+                    esper.dispatch_event("log_message", f"{attacker_name} attacks {target_name} but deals no damage.")
+                
+                # Death Check
+                if target_stats.hp <= 0:
+                    esper.dispatch_event("entity_died", target)
+                
+            except KeyError:
+                # One of the entities might not have stats
+                pass
+            
+            # Remove AttackIntent
+            esper.remove_component(attacker, AttackIntent)
+
+    def _get_name(self, entity):
+        try:
+            return esper.component_for_entity(entity, Name).name
+        except KeyError:
+            return f"Entity {entity}"
