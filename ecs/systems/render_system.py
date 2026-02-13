@@ -22,9 +22,22 @@ class RenderSystem(esper.Processor):
 
         # 2. Get all entities with Position and Renderable components
         renderables = []
+        from config import SpriteLayer
         for ent, (pos, rend) in esper.get_components(Position, Renderable):
             # Only render if entity is at or below player layer
             if pos.layer > player_layer:
+                continue
+
+            # Ground Occlusion Check for entities below player layer
+            occluded = False
+            if pos.layer < player_layer:
+                for i in range(player_layer, pos.layer, -1):
+                    tile = self.map_container.get_tile(pos.x, pos.y, i)
+                    if tile and SpriteLayer.GROUND in tile.sprites:
+                        occluded = True
+                        break
+            
+            if occluded:
                 continue
 
             # Check if entity's position is visible

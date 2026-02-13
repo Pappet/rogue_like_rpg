@@ -54,36 +54,55 @@ class MapService:
         v_width, v_height = 20, 20
         village_layers = [
             create_empty_layer(v_width, v_height, '.'), # Layer 0: Ground
-            create_empty_layer(v_width, v_height),      # Layer 1: Empty
-            create_empty_layer(v_width, v_height)       # Layer 2: Balconies
+            create_empty_layer(v_width, v_height),      # Layer 1: Walls
+            create_empty_layer(v_width, v_height)       # Layer 2: Roof/Balconies
         ]
-        # Add walls to Village Map (building footprint)
+        
+        # Village Layer 1: Walls (8,8) to (12,12)
         for y in range(8, 13):
             for x in range(8, 13):
+                # Outer walls of the house
                 if x == 8 or x == 12 or y == 8 or y == 12:
-                    village_layers[0].tiles[y][x].sprites[SpriteLayer.GROUND] = '#'
-                    village_layers[0].tiles[y][x].transparent = False
+                    village_layers[1].tiles[y][x].sprites[SpriteLayer.GROUND] = '#'
+                    village_layers[1].tiles[y][x].transparent = False
         
-        # Ensure gap at (10, 10) for the portal and (10, 12) for the door
-        village_layers[0].tiles[10][10].sprites[SpriteLayer.GROUND] = '.'
-        village_layers[0].tiles[10][10].transparent = True
-        village_layers[0].tiles[12][10].sprites[SpriteLayer.GROUND] = '.'
-        village_layers[0].tiles[12][10].transparent = True
+        # Village Layer 1: Door gap at (10, 12)
+        # Actually, for a portal to be visible/walkable, we might want a gap in the wall
+        # But if the portal is on Layer 0 (ground level), and wall is Layer 1...
+        # If we are on Layer 0, we see Layer 0. Wall on Layer 1 is above us.
+        # But for 'entering', we usually walk into the door.
+        # Let's keep the door gap in the wall on Layer 1 so it looks like an entrance if we were on Layer 1
+        # But critically, the portal is at (10, 12, 0).
+        village_layers[1].tiles[12][10].sprites.pop(SpriteLayer.GROUND, None) # Remove wall at door
+        village_layers[1].tiles[12][10].transparent = True
 
-        # Add balcony at (10, 11) on Layer 2
-        # Accessing tiles[y][x]
-        if 11 < len(village_layers[2].tiles) and 10 < len(village_layers[2].tiles[0]):
-            village_layers[2].tiles[11][10].sprites[SpriteLayer.GROUND] = '.'
-            
+        # Village Layer 2: Roof (8,8) to (12,12)
+        for y in range(8, 13):
+            for x in range(8, 13):
+                village_layers[2].tiles[y][x].sprites[SpriteLayer.GROUND] = 'X'
+                village_layers[2].tiles[y][x].transparent = False
+
+        # Village Layer 2: Balcony (13,9) to (14,11)
+        # Attached to the right side of the house
+        for y in range(9, 12):
+            for x in range(13, 15):
+                village_layers[2].tiles[y][x].sprites[SpriteLayer.GROUND] = '.'
+                village_layers[2].tiles[y][x].transparent = True # Balcony is open air
+        
+        # Connect Balcony to House Roof? 
+        # The house is at x=12. Balcony starts at x=13.
+        # So (12, 10) is a wall/roof. (13, 10) is balcony.
+
         village_container = MapContainer(village_layers)
         self.register_map("Village", village_container)
 
         # Create "House" MapContainer
         h_width, h_height = 10, 10
         house_layers = [
-            create_empty_layer(h_width, h_height, '.'), # Layer 0: Bottom
-            create_empty_layer(h_width, h_height, '.')  # Layer 1: Top
+            create_empty_layer(h_width, h_height, '.'), # Layer 0: Ground Floor
+            create_empty_layer(h_width, h_height, '.')  # Layer 1: Upper Floor
         ]
+        
         # Add outer walls to House Map
         for y in range(h_height):
             for x in range(h_width):
@@ -93,7 +112,7 @@ class MapService:
                     house_layers[1].tiles[y][x].sprites[SpriteLayer.GROUND] = '#'
                     house_layers[1].tiles[y][x].transparent = False
         
-        # Add interior wall at x=5 (y from 1 to 8)
+        # Add interior wall at x=5 (y from 1 to 8) on Ground Floor
         for y in range(1, 9):
             if y == 5: # Gap for door
                 continue
@@ -106,16 +125,19 @@ class MapService:
         # Create Portals
         
         # --- Village Portals ---
-        # Enter House from Village (10, 10, 0) -> House (2, 2, 0)
+        # Enter House: (10, 12, 0) -> House (2, 2, 0)
+        # Note: (10, 12) is where the door is on the south wall.
         world.create_entity(
-            Position(10, 10, 0),
+            Position(10, 12, 0),
             Portal("House", 2, 2, 0, "Enter House"),
             Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Portal to House")
         )
-        # Enter House from Balcony (10, 11, 2) -> House (1, 2, 1)
+        
+        # Enter from Balcony: Village (13, 10, 2) -> House (1, 2, 1)
+        # Balcony is at (13, 10, 2). 
         world.create_entity(
-            Position(10, 11, 2),
+            Position(13, 10, 2),
             Portal("House", 1, 2, 1, "Enter from Balcony"),
             Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Portal to House Balcony")
@@ -123,13 +145,14 @@ class MapService:
         village_container.freeze(world)
 
         # --- House Portals ---
-        # Leave House (2, 2, 0) -> Village (10, 10, 0)
+        # Leave House: (2, 2, 0) -> Village (10, 12, 0)
         world.create_entity(
             Position(2, 2, 0),
-            Portal("Village", 10, 10, 0, "Leave House"),
+            Portal("Village", 10, 12, 0, "Leave House"),
             Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Portal to Village")
         )
+        
         # Stairs Up (4, 4, 0) -> House (4, 4, 1)
         world.create_entity(
             Position(4, 4, 0),
@@ -137,6 +160,7 @@ class MapService:
             Renderable("^", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Stairs Up")
         )
+        
         # Stairs Down (4, 4, 1) -> House (4, 4, 0)
         world.create_entity(
             Position(4, 4, 1),
@@ -144,10 +168,11 @@ class MapService:
             Renderable("v", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Stairs Down")
         )
-        # Exit to Balcony (1, 2, 1) -> Village (10, 11, 2)
+        
+        # Exit to Balcony: House (1, 2, 1) -> Village (13, 10, 2)
         world.create_entity(
             Position(1, 2, 1),
-            Portal("Village", 10, 11, 2, "Exit to Balcony"),
+            Portal("Village", 13, 10, 2, "Exit to Balcony"),
             Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
             Name("Portal to Balcony")
         )
