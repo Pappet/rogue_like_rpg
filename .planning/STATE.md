@@ -28,7 +28,7 @@
 - **Blockers:** None.
 
 ## Session Continuity
-- Last activity: 2026-02-13 - Completed Phase 07 (Layered Rendering & Structure).
+- Last activity: 2026-02-13 - Completed quick fix for visibility architecture and portals.
 - Stopped at: Milestone 3 Complete.
 
 ## Quick Tasks Completed
@@ -39,3 +39,4 @@
 | quick-fix-03 | Fix TypeError in RenderSystem sorting (mixed int/Enum types) | 2026-02-13 |
 | quick-add-village-scenario | Add multi-map village scenario with portals and layers | 2026-02-13 |
 | quick-fix-village-architecture | Refine village architecture and implement ground-occlusion | 2026-02-13 |
+| quick-fix-visibility-and-portals | Fix visibility architecture to be layer-aware and refine portals/occlusion | 2026-02-13 |
