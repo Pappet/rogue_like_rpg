@@ -78,6 +78,7 @@ class Game(GameState):
         self.map_container = self.persist.get("map_container")
         self.render_service = self.persist.get("render_service")
         self.camera = self.persist.get("camera")
+        self.map_service = self.persist.get("map_service")
         
         # Initialize ECS
         self.world = get_world()
@@ -103,8 +104,7 @@ class Game(GameState):
             self.persist["player_entity"] = self.player_entity
             
             # Spawn monsters
-            map_service = MapService()
-            map_service.spawn_monsters(self.world, self.map_container)
+            self.map_service.spawn_monsters(self.world, self.map_container)
         else:
             self.player_entity = self.persist.get("player_entity")
 
@@ -114,6 +114,9 @@ class Game(GameState):
 
         # Welcome message
         esper.dispatch_event("log_message", "Welcome [color=green]Traveler[/color] to the dungeon!")
+
+        # Register event handlers
+        esper.set_handler("change_map", self.transition_map)
 
         # Add processors that should run during esper.process()
         esper.add_processor(self.visibility_system)
@@ -203,6 +206,51 @@ class Game(GameState):
         # In the future, we might wait for movement to complete
         if self.turn_system:
             self.turn_system.end_player_turn()
+
+    def transition_map(self, event_data):
+        target_map_id = event_data["target_map_id"]
+        target_x = event_data["target_x"]
+        target_y = event_data["target_y"]
+        target_layer = event_data["target_layer"]
+        
+        # 1. Freeze current map
+        self.map_container.freeze(self.world, exclude_entities=[self.player_entity])
+        
+        # 2. Get new map
+        new_map = self.map_service.get_map(target_map_id)
+        if not new_map:
+            # Fallback: create a new map if it doesn't exist? 
+            # Or just fail. For now, let's create a sample map for robustness if it's "level_2"
+            if target_map_id == "level_2":
+                new_map = self.map_service.create_sample_map(30, 25, map_id="level_2")
+            else:
+                print(f"Error: Map {target_map_id} not found!")
+                return
+            
+        # 3. Switch active map
+        self.map_service.set_active_map(target_map_id)
+        self.map_container = new_map
+        self.persist["map_container"] = self.map_container
+        
+        # 4. Thaw new map
+        new_map.thaw(self.world)
+        
+        # 5. Update Player Position
+        player_pos = esper.component_for_entity(self.player_entity, Position)
+        player_pos.x = target_x
+        player_pos.y = target_y
+        player_pos.layer = target_layer
+        
+        # 6. Update Systems
+        self.movement_system.set_map(new_map)
+        self.visibility_system.set_map(new_map)
+        self.action_system.set_map(new_map)
+        self.render_system.set_map(new_map)
+        
+        # 7. Update Camera
+        self.camera.update(target_x, target_y)
+        
+        esper.dispatch_event("log_message", f"Transitioned to {target_map_id}.")
 
     def update(self, dt):
         # Run ECS processing

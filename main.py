@@ -18,12 +18,14 @@ class GameController:
         viewport_width = SCREEN_WIDTH - SIDEBAR_WIDTH
         viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT
         self.camera = Camera(viewport_width, viewport_height, 0, HEADER_HEIGHT)
-        self.map_container = self.map_service.create_sample_map(25, 20)
+        self.map_container = self.map_service.create_sample_map(25, 20, map_id="main")
+        self.map_service.set_active_map("main")
         
         self.persist = {
             "map_container": self.map_container,
             "render_service": self.render_service,
-            "camera": self.camera
+            "camera": self.camera,
+            "map_service": self.map_service
         }
         
         self.states = {
