@@ -20,6 +20,7 @@ class MapContainer:
         return len(self.layers[0].tiles)
 
     def get_tile(self, x: int, y: int, layer_idx: int = 0):
+        """Returns the tile at (x, y) for the specified layer."""
         if layer_idx < 0 or layer_idx >= len(self.layers):
             return None
         layer = self.layers[layer_idx]
