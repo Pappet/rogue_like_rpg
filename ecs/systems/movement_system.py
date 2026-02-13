@@ -1,5 +1,5 @@
 import esper
-from ecs.components import Position, MovementRequest
+from ecs.components import Position, MovementRequest, Blocker
 from map.map_container import MapContainer
 
 class MovementSystem(esper.Processor):
@@ -12,7 +12,7 @@ class MovementSystem(esper.Processor):
             new_x = pos.x + req.dx
             new_y = pos.y + req.dy
             
-            if self._is_walkable(new_x, new_y):
+            if self._is_walkable(new_x, new_y) and not self._is_blocked(new_x, new_y):
                 pos.x = new_x
                 pos.y = new_y
             
@@ -24,4 +24,10 @@ class MovementSystem(esper.Processor):
             layer = self.map_container.layers[0] # Assume first layer for collision
             if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[0]):
                 return layer.tiles[y][x].walkable
+        return False
+
+    def _is_blocked(self, x, y):
+        for ent, (pos, blocker) in esper.get_components(Position, Blocker):
+            if pos.x == x and pos.y == y:
+                return True
         return False
