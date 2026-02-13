@@ -2,9 +2,9 @@
 
 ## Summary
 
-**Phases:** 7
+**Phases:** 8
 **Depth:** Standard
-**Coverage:** 22/22 requirements mapped
+**Coverage:** 25/25 requirements mapped
 
 | Phase | Goal | Requirements |
 |-------|------|--------------|
@@ -15,14 +15,15 @@
 | 5 - Nested World Architecture | Enable navigation between different map containers (World/House) using Portals. | ARCH-002, ARCH-003, MECH-004 |
 | 6 - Advanced Navigation & UI | Implement realistic map memory aging and a world map overview. | MECH-005, UI-003 |
 | 7 - Layered Rendering & Structure | Enhance visuals with depth-based rendering and structured map layouts. | VIS-001, VIS-002, MAP-001 |
+| 8 - Procedural Map Features | Transition to modular map generation for buildings and environment details. | GEN-001, GEN-002, GEN-003 |
 
 ## Success Criteria
 
-### Phase 7: Layered Rendering & Structure
-1.  Layers above the player's current layer are not rendered (e.g., no "floating" balconies).
-2.  Layers below the player are rendered with a progressive darkening effect.
-3.  The "Village" map features a visible house structure with walls.
-4.  The "House" map features interior walls and rooms.
+### Phase 8: Procedural Map Features
+1.  Map structures (walls, floors) are generated using reusable utility functions (`draw_rectangle`, etc.).
+2.  A `BuildingGenerator` can create a house with walls, a door, and stairs, placing it on the map.
+3.  The Village map is populated with 2-3 procedurally generated houses.
+4.  The map ground layer features random decorative sprites (grass/flowers).
 
 ## Plans
 
@@ -60,9 +61,15 @@
 ### Phase 7: Layered Rendering & Structure
 - [x] 07-01-PLAN.md — Implement Selective Layer Rendering & Map Structures.
 
+### Phase 8: Procedural Map Features
+**Plans:** 2 plans
+- [ ] 08-01-PLAN.md — Implement Map Generator Utilities & Building Generator Logic.
+- [ ] 08-02-PLAN.md — Refactor Village Scenario & Apply Terrain Variety.
+
 ## Quick Tasks
 - [x] fix-map-container-attribute-error.md — Fix missing 'width' attribute.
 - [x] fix-tile-state-import-error.md — Fix TileState import error.
 - [x] add-village-scenario.md — Add multi-map village scenario.
 - [x] fix-render-layer-type-error.md — Fix TypeError in RenderSystem sorting.
-- [ ] fix-visibility-architecture-and-portals.md — Fix visibility system, update village architecture, and refine occlusion logic.
+- [x] fix-visibility-architecture-and-portals.md — Fix visibility system, update village architecture, and refine occlusion logic.
+- [x] fix-village-architecture-and-occlusion-v2.md — Refine Village architecture and implement ground-occlusion logic.
