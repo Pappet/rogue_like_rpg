@@ -69,6 +69,8 @@ class TestNestedWorlds(unittest.TestCase):
         self.game.movement_system = MagicMock()
         self.game.visibility_system = MagicMock()
         self.game.action_system = MagicMock()
+        self.game.turn_system = MagicMock()
+        self.game.turn_system.round_counter = 0
         
         # Register handlers
         try:
