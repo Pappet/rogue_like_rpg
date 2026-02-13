@@ -83,6 +83,36 @@ class Game(GameState):
         # Initialize ECS
         self.world = get_world()
         
+        # Retrieve or initialize Systems
+        self.turn_system = self.persist.get("turn_system")
+        if not self.turn_system:
+            self.turn_system = TurnSystem()
+            self.persist["turn_system"] = self.turn_system
+
+        self.visibility_system = self.persist.get("visibility_system")
+        if not self.visibility_system:
+            self.visibility_system = VisibilitySystem(self.map_container, self.turn_system)
+            self.persist["visibility_system"] = self.visibility_system
+        else:
+            self.visibility_system.set_map(self.map_container)
+
+        self.movement_system = self.persist.get("movement_system")
+        if not self.movement_system:
+            self.movement_system = MovementSystem(self.map_container)
+            self.persist["movement_system"] = self.movement_system
+        else:
+            self.movement_system.set_map(self.map_container)
+
+        self.combat_system = self.persist.get("combat_system")
+        if not self.combat_system:
+            self.combat_system = CombatSystem()
+            self.persist["combat_system"] = self.combat_system
+
+        self.death_system = self.persist.get("death_system")
+        if not self.death_system:
+            self.death_system = DeathSystem()
+            self.persist["death_system"] = self.death_system
+        
         # Clear existing processors to avoid duplicates when re-entering state
         for processor_type in [VisibilitySystem, MovementSystem, CombatSystem, TurnSystem, DeathSystem]:
             try:
@@ -90,12 +120,12 @@ class Game(GameState):
             except KeyError:
                 pass
         
-        # Initialize Systems
-        self.turn_system = TurnSystem()
-        self.visibility_system = VisibilitySystem(self.map_container, self.turn_system)
-        self.movement_system = MovementSystem(self.map_container)
-        self.combat_system = CombatSystem()
-        self.death_system = DeathSystem()
+        # Re-add processors to esper
+        esper.add_processor(self.visibility_system)
+        esper.add_processor(self.movement_system)
+        esper.add_processor(self.combat_system)
+        esper.add_processor(self.death_system)
+        esper.add_processor(self.turn_system)
         
         if not self.persist.get("player_entity"):
             party_service = PartyService()
@@ -105,6 +135,9 @@ class Game(GameState):
             
             # Spawn monsters
             self.map_service.spawn_monsters(self.world, self.map_container)
+            
+            # Welcome message
+            esper.dispatch_event("log_message", "Welcome [color=green]Traveler[/color] to the dungeon!")
         else:
             self.player_entity = self.persist.get("player_entity")
 
@@ -112,19 +145,8 @@ class Game(GameState):
         self.action_system = ActionSystem(self.map_container, self.turn_system)
         self.render_system = RenderSystem(self.camera, self.map_container)
 
-        # Welcome message
-        esper.dispatch_event("log_message", "Welcome [color=green]Traveler[/color] to the dungeon!")
-
         # Register event handlers
         esper.set_handler("change_map", self.transition_map)
-
-        # Add processors that should run during esper.process()
-        esper.add_processor(self.visibility_system)
-        esper.add_processor(self.movement_system)
-        esper.add_processor(self.combat_system)
-        esper.add_processor(self.death_system)
-        esper.add_processor(self.turn_system)
-        # Note: RenderSystem and UISystem are called manually in draw() because they need the surface
 
     def get_event(self, event):
         if not self.turn_system:
