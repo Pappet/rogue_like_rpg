@@ -39,4 +39,5 @@
 | quick-fix-02 | Fix ImportError: cannot import name 'TileState' from 'map.tile' | 2026-02-13 |
 | quick-fix-03 | Fix TypeError in RenderSystem sorting (int vs Enum) | 2026-02-13 |
 | quick-add-village-scenario | Add multi-map village scenario with portals and layers | 2026-02-13 |
+| quick-fix-03 | Fix TypeError in RenderSystem sorting (mixed int/Enum types) | 2026-02-13 |
 

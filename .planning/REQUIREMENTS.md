@@ -7,8 +7,7 @@ This document outlines the requirements for version 1 of the Rogue Like RPG.
 - `GAME-001`: The game must launch successfully and display a title screen.
 - `GAME-002`: The player must be able to start a new game from the title screen.
 
-## Placeholder for Additional Requirements
-[Add requirements here with unique IDs, e.g., `FEAT-001: Description of feature.`]
+## Additional Requirements
 - `FEAT-002`: The game will be using PyGame.
 - `FEAT-003`: The game will be tile-based.
 - `FEAT-004`: The game will be turn-based.
@@ -16,7 +15,7 @@ This document outlines the requirements for version 1 of the Rogue Like RPG.
 - `FEAT-006`: The graphics will be sprite-based with different layers.
 - `FEAT-007`: The tile size will be configurable.
 
-## Combat & Feedback Requirements
+## Combat & Feedback Requirements (Phase 4)
 - `UI-001`: The game must display a message log in the bottom screen area.
 - `UI-002`: The message log must support colored text parsing.
 - `ARCH-001`: An event system must broadcast game events to subscribers (like the log).
@@ -24,6 +23,13 @@ This document outlines the requirements for version 1 of the Rogue Like RPG.
 - `MECH-001`: The player must be able to attack monsters by moving into them (Bump Combat).
 - `MECH-002`: Combat must calculate damage and apply it to the target's HP.
 - `MECH-003`: Entities must die when HP reaches 0, changing visual to a corpse and becoming non-blocking.
+
+## Nested Worlds & Navigation Requirements (Phase 5-6)
+- `ARCH-002`: **Portal ECS Component**: Create a component storing target container, layer, and coordinates.
+- `ARCH-003`: **Multi-Container MapService**: Manage multiple loaded containers and allow switching without immediate data loss.
+- `MECH-004`: **Advanced Transition Logic**: Implement entry/exit points returning to specific layers (e.g., exiting a house to a balcony).
+- `MECH-005`: **Active Map Memory**: "Pause" background maps and transition to FORGOTTEN state only after a time/turn delay.
+- `UI-003`: **World Map UI**: Display an overview map of discovered areas within the current and parent containers.
 
 ## Traceability
 
@@ -43,3 +49,8 @@ This document outlines the requirements for version 1 of the Rogue Like RPG.
 | MECH-001 | Phase 4 | Completed |
 | MECH-002 | Phase 4 | Completed |
 | MECH-003 | Phase 4 | Completed |
+| ARCH-002 | Phase 5 | Completed |
+| ARCH-003 | Phase 5 | Completed |
+| MECH-004 | Phase 5 | Completed |
+| MECH-005 | Phase 6 | Completed |
+| UI-003 | Phase 6 | Completed |
