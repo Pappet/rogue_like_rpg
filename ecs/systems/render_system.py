@@ -12,6 +12,9 @@ class RenderSystem(esper.Processor):
         pygame.font.init()
         self.font = pygame.font.SysFont('monospace', TILE_SIZE)
 
+    def set_map(self, map_container):
+        self.map_container = map_container
+
     def process(self, surface):
         # 1. Draw range highlight and targeting cursor
         for ent, targeting in esper.get_component(Targeting):

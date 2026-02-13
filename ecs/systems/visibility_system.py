@@ -10,6 +10,9 @@ class VisibilitySystem(esper.Processor):
         self.turn_system = turn_system
         self.last_round = turn_system.round_counter
 
+    def set_map(self, map_container):
+        self.map_container = map_container
+
     def process(self, *args, **kwargs):
         # 0. Check if a new round has started for aging memory
         aging_trigger = False
