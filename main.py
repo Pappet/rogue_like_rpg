@@ -1,6 +1,6 @@
 import pygame
 import sys
-from config import SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, HEADER_HEIGHT, SIDEBAR_WIDTH
+from config import SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, HEADER_HEIGHT, SIDEBAR_WIDTH, LOG_HEIGHT
 from game_states import TitleScreen, Game
 from services.map_service import MapService
 from services.render_service import RenderService
@@ -14,9 +14,9 @@ class GameController:
         
         self.map_service = MapService()
         self.render_service = RenderService()
-        # Viewport is the area not covered by UI Header and Sidebar
+        # Viewport is the area not covered by UI Header, Sidebar and Log
         viewport_width = SCREEN_WIDTH - SIDEBAR_WIDTH
-        viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT
+        viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT
         self.camera = Camera(viewport_width, viewport_height, 0, HEADER_HEIGHT)
         self.map_container = self.map_service.create_sample_map(25, 20)
         

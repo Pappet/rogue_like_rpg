@@ -103,6 +103,9 @@ class Game(GameState):
         self.action_system = ActionSystem(self.map_container, self.turn_system)
         self.render_system = RenderSystem(self.camera, self.map_container)
 
+        # Welcome message
+        esper.dispatch_event("log_message", "Welcome [color=green]Traveler[/color] to the dungeon!")
+
         # Add processors that should run during esper.process()
         esper.add_processor(self.visibility_system)
         esper.add_processor(self.movement_system)
