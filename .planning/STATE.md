@@ -28,6 +28,15 @@
 - **Blockers:** None.
 
 ## Session Continuity
-- Last activity: 2026-02-13 - Completed quick-fix plan 02: fix-tile-state-import-error.
+- Last activity: 2026-02-13 - Completed quick-fix plan 03: fix-render-layer-type-error.
 - Stopped at: Milestone 2 Complete.
 - Resume file path: .planning/ROADMAP.md (for next milestones)
+
+## Quick Tasks Completed
+| Task | Description | Date |
+| :--- | :--- | :--- |
+| quick-fix-01 | Fix AttributeError: 'MapContainer' object has no attribute 'width' | 2026-02-13 |
+| quick-fix-02 | Fix ImportError: cannot import name 'TileState' from 'map.tile' | 2026-02-13 |
+| quick-fix-03 | Fix TypeError in RenderSystem sorting (int vs Enum) | 2026-02-13 |
+| quick-add-village-scenario | Add multi-map village scenario with portals and layers | 2026-02-13 |
+
