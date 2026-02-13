@@ -67,5 +67,11 @@ class GameStates(Enum):
 
 
 
+    WORLD_MAP = 4
+
+
+
+
+
 
 

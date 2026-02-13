@@ -14,6 +14,7 @@ from ecs.systems.action_system import ActionSystem
 from ecs.systems.combat_system import CombatSystem
 from ecs.systems.death_system import DeathSystem
 from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats
+from map.tile import TileState
 
 class GameState:
     def __init__(self):
@@ -324,3 +325,88 @@ class Game(GameState):
         # 3. Render UI
         if self.ui_system:
             self.ui_system.process(surface)
+
+class WorldMapState(GameState):
+    def __init__(self):
+        super().__init__()
+        self.map_container = None
+        self.tile_size = 8
+        self.font = pygame.font.Font(None, 36)
+        self.title_text = self.font.render("World Map (M/ESC to return)", True, (255, 255, 255))
+
+    def startup(self, persistent):
+        self.persist = persistent
+        self.map_container = self.persist.get("map_container")
+
+    def get_event(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_m or event.key == pygame.K_ESCAPE:
+                self.done = True
+                self.next_state = "GAME"
+
+    def update(self, dt):
+        pass
+
+    def draw(self, surface):
+        surface.fill((20, 20, 20))
+        surface.blit(self.title_text, (20, 20))
+        
+        if not self.map_container:
+            return
+
+        # Calculate map bounds
+        tiles = self.map_container.tiles
+        if not tiles:
+            return
+            
+        min_x = min(x for x, y in tiles.keys())
+        max_x = max(x for x, y in tiles.keys())
+        min_y = min(y for x, y in tiles.keys())
+        max_y = max(y for x, y in tiles.keys())
+        
+        map_w = (max_x - min_x + 1)
+        map_h = (max_y - min_y + 1)
+        
+        # Center the map
+        start_x = (800 - map_w * self.tile_size) // 2
+        start_y = (600 - map_h * self.tile_size) // 2
+        
+        for (x, y), tile in tiles.items():
+            rect = pygame.Rect(
+                start_x + (x - min_x) * self.tile_size,
+                start_y + (y - min_y) * self.tile_size,
+                self.tile_size,
+                self.tile_size
+            )
+            
+            color = (0, 0, 0)
+            if tile.state == TileState.VISIBLE:
+                color = (200, 200, 200) # Light grey
+                if tile.is_wall:
+                    color = (100, 100, 100) # Grey wall
+            elif tile.state == TileState.SHROUDED:
+                color = (60, 60, 60) # Dark grey
+                if tile.is_wall:
+                    color = (40, 40, 40)
+            elif tile.state == TileState.FORGOTTEN:
+                color = (20, 20, 40) # Very dark blue-grey
+                if tile.is_wall:
+                    color = (15, 15, 30)
+            
+            if color != (0, 0, 0):
+                pygame.draw.rect(surface, color, rect)
+
+        # Highlight player position
+        try:
+            player_entity = self.persist.get("player_entity")
+            if player_entity is not None:
+                pos = esper.component_for_entity(player_entity, Position)
+                p_rect = pygame.Rect(
+                    start_x + (pos.x - min_x) * self.tile_size,
+                    start_y + (pos.y - min_y) * self.tile_size,
+                    self.tile_size,
+                    self.tile_size
+                )
+                pygame.draw.rect(surface, (255, 255, 0), p_rect) # Yellow player
+        except Exception:
+            pass
