@@ -63,8 +63,8 @@
 
 ### Phase 8: Procedural Map Features
 **Plans:** 2 plans
-- [ ] 08-01-PLAN.md — Implement Map Generator Utilities & Building Generator Logic.
-- [ ] 08-02-PLAN.md — Refactor Village Scenario & Apply Terrain Variety.
+- [x] 08-01-PLAN.md — Implement Map Generator Utilities & Building Generator Logic.
+- [x] 08-02-PLAN.md — Refactor Village Scenario & Apply Terrain Variety.
 
 ## Quick Tasks
 - [x] fix-map-container-attribute-error.md — Fix missing 'width' attribute.
@@ -73,3 +73,5 @@
 - [x] fix-render-layer-type-error.md — Fix TypeError in RenderSystem sorting.
 - [x] fix-visibility-architecture-and-portals.md — Fix visibility system, update village architecture, and refine occlusion logic.
 - [x] fix-village-architecture-and-occlusion-v2.md — Refine Village architecture and implement ground-occlusion logic.
+- [x] fix-north-wall-rendering.md — Fix missing north wall (y=0) rendering in houses.
+- [x] fix-portal-overlap-and-wall-integrity.md — Fix portal overlap and preserve wall integrity.

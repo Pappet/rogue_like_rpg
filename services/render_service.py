@@ -18,10 +18,10 @@ class RenderService:
         height = map_container.height
         
         # Calculate viewport in tile coordinates
-        start_x = max(0, camera.offset_x // TILE_SIZE)
-        end_x = min(width, (camera.offset_x + camera.width) // TILE_SIZE + 1)
-        start_y = max(0, camera.offset_y // TILE_SIZE)
-        end_y = min(height, (camera.offset_y + camera.height) // TILE_SIZE + 1)
+        start_x = max(0, camera.x // TILE_SIZE)
+        end_x = min(width, (camera.x + camera.width) // TILE_SIZE + 1)
+        start_y = max(0, camera.y // TILE_SIZE)
+        end_y = min(height, (camera.y + camera.height) // TILE_SIZE + 1)
 
         from map.tile import VisibilityState
 

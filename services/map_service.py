@@ -85,28 +85,30 @@ class MapService:
             draw_rectangle(layer, start_x, start_y, w, h, '#', filled=False)
             
             # 3. Place stairs
+            # Alternate positions to ensure they never overlap on the same layer
+            sx_up, sy_up = start_x + w - 2, start_y + 2
+            sx_down, sy_down = start_x + 2, start_y + 2
+            
+            pos_up = (sx_up, sy_up) if z % 2 == 0 else (sx_down, sy_down)
+            pos_down = (sx_down, sy_down) if z % 2 == 0 else (sx_up, sy_up)
+
             if z < num_layers - 1:
                 # Stairs Up
-                sx, sy = start_x + w - 2, start_y + h - 2
                 world.create_entity(
-                    Position(sx, sy, z),
-                    Portal(map_id, sx, sy, z + 1, "Stairs Up"),
+                    Position(pos_up[0], pos_up[1], z),
+                    Portal(map_id, pos_up[0], pos_up[1], z + 1, "Stairs Up"),
                     Renderable("^", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                     Name("Stairs Up")
                 )
             if z > 0:
                 # Stairs Down
-                sx, sy = start_x + w - 2, start_y + h - 2
                 world.create_entity(
-                    Position(sx, sy, z),
-                    Portal(map_id, sx, sy, z - 1, "Stairs Down"),
+                    Position(pos_down[0], pos_down[1], z),
+                    Portal(map_id, pos_down[0], pos_down[1], z - 1, "Stairs Down"),
                     Renderable("v", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                     Name("Stairs Down")
                 )
-        
-        # 4. Place door on layer 0
-        door_x, door_y = start_x + w // 2, start_y + h - 1
-        place_door(map_container.layers[0], door_x, door_y)
+
 
     def create_village_scenario(self, world):
         """Creates a village scenario with procedural houses and terrain variety."""
@@ -152,13 +154,12 @@ class MapService:
             # Draw shell on village
             draw_rectangle(village_layers[0], vx, vy, vw, vh, '#', filled=False)
             
-            # Door position on village
+            # Door position on village (reference for portal, but wall stays intact)
             door_vx, door_vy = vx + vw // 2, vy + vh - 1
-            village_layers[0].tiles[door_vy][door_vx].sprites[SpriteLayer.GROUND] = '+'
             
-            # Portal to house
+            # Portal to house (placed one tile south of the wall)
             world.create_entity(
-                Position(door_vx, door_vy, 0),
+                Position(door_vx, door_vy + 1, 0),
                 Portal(h["id"], h["h_size"][0] // 2, h["h_size"][1] - 2, 0, f"Enter {h['id']}"),
                 Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                 Name(f"Portal to {h['id']}")
@@ -181,8 +182,8 @@ class MapService:
             door_vx, door_vy = vx + vw // 2, vy + vh - 1
             
             world.create_entity(
-                Position(hi // 2, hj - 1, 0),
-                Portal("Village", door_vx, door_vy, 0, "Leave House"),
+                Position(hi // 2, hj - 2, 0), # Placed one tile north of the south wall
+                Portal("Village", door_vx, door_vy + 1, 0, "Leave House"),
                 Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                 Name(f"Portal to Village")
             )

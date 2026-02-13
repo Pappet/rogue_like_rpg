@@ -31,6 +31,16 @@ This document outlines the requirements for version 1 of the Rogue Like RPG.
 - `MECH-005`: **Active Map Memory**: "Pause" background maps and transition to FORGOTTEN state only after a time/turn delay.
 - `UI-003`: **World Map UI**: Display an overview map of discovered areas within the current and parent containers.
 
+## Layered Rendering & Structure Requirements (Phase 7)
+- `VIS-001`: **Selective Layer Rendering**: Render only map layers at or below the player's current layer to simulate depth.
+- `VIS-002`: **Depth Darkening**: Apply a darkening effect to layers rendered below the player's current layer.
+- `MAP-001`: **Structural Elements**: Implement distinct walls and rooms in the Village and House maps to improve layout logic.
+
+## Procedural Map Features Requirements (Phase 8)
+- `GEN-001`: **Geometric Utils**: Implement utility functions for drawing basic shapes (rectangles, lines) on map layers.
+- `GEN-002`: **Building Generator**: Create a generator that automatically constructs multi-story buildings with walls, doors, and stairs.
+- `GEN-003`: **Environment Detail**: Implement a system to apply random terrain variety (decor sprites) to map layers.
+
 ## Traceability
 
 | Requirement | Phase | Status |
@@ -54,3 +64,9 @@ This document outlines the requirements for version 1 of the Rogue Like RPG.
 | MECH-004 | Phase 5 | Completed |
 | MECH-005 | Phase 6 | Completed |
 | UI-003 | Phase 6 | Completed |
+| VIS-001 | Phase 7 | Completed |
+| VIS-002 | Phase 7 | Completed |
+| MAP-001 | Phase 7 | Completed |
+| GEN-001 | Phase 8 | Completed |
+| GEN-002 | Phase 8 | Completed |
+| GEN-003 | Phase 8 | Completed |
