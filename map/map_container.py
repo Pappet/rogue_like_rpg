@@ -7,6 +7,7 @@ class MapContainer:
     def __init__(self, layers: List[MapLayer]):
         self.layers = layers
         self.frozen_entities: List[List] = []
+        self.last_visited_turn: int = 0
 
     @property
     def width(self) -> int:
@@ -28,6 +29,28 @@ class MapContainer:
         if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[0]):
             return layer.tiles[y][x]
         return None
+
+    def on_exit(self, current_turn: int):
+        """Updates the last visited turn and transitions VISIBLE tiles to SHROUDED."""
+        self.last_visited_turn = current_turn
+        for layer in self.layers:
+            for row in layer.tiles:
+                for tile in row:
+                    if tile.visibility_state == VisibilityState.VISIBLE:
+                        tile.visibility_state = VisibilityState.SHROUDED
+                        tile.rounds_since_seen = 0
+
+    def on_enter(self, current_turn: int, memory_threshold: int):
+        """Calculates decay based on time passed since last visit."""
+        turns_passed = current_turn - self.last_visited_turn
+        if turns_passed > 0:
+            for layer in self.layers:
+                for row in layer.tiles:
+                    for tile in row:
+                        if tile.visibility_state == VisibilityState.SHROUDED:
+                            tile.rounds_since_seen += turns_passed
+                            if tile.rounds_since_seen > memory_threshold:
+                                tile.visibility_state = VisibilityState.FORGOTTEN
 
     def forget_all(self):
         """Transitions all VISIBLE and SHROUDED tiles to FORGOTTEN state."""
