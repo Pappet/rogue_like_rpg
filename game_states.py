@@ -13,7 +13,7 @@ from ecs.systems.ui_system import UISystem
 from ecs.systems.action_system import ActionSystem
 from ecs.systems.combat_system import CombatSystem
 from ecs.systems.death_system import DeathSystem
-from ecs.components import Position, MovementRequest, Renderable, ActionList, Action
+from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats
 
 class GameState:
     def __init__(self):
@@ -213,10 +213,19 @@ class Game(GameState):
         target_y = event_data["target_y"]
         target_layer = event_data["target_layer"]
         
-        # 1. Freeze current map
+        # 1. Calculate memory threshold from player stats
+        memory_threshold = 10
+        try:
+            stats = esper.component_for_entity(self.player_entity, Stats)
+            memory_threshold = stats.intelligence * 5
+        except KeyError:
+            pass
+
+        # 2. Freeze current map
+        self.map_container.on_exit(self.turn_system.round_counter)
         self.map_container.freeze(self.world, exclude_entities=[self.player_entity])
         
-        # 2. Get new map
+        # 3. Get new map
         new_map = self.map_service.get_map(target_map_id)
         if not new_map:
             # Fallback: create a new map if it doesn't exist? 
@@ -226,28 +235,31 @@ class Game(GameState):
             else:
                 print(f"Error: Map {target_map_id} not found!")
                 return
+        
+        # 4. Map Aging on Enter
+        new_map.on_enter(self.turn_system.round_counter, memory_threshold)
             
-        # 3. Switch active map
+        # 5. Switch active map
         self.map_service.set_active_map(target_map_id)
         self.map_container = new_map
         self.persist["map_container"] = self.map_container
         
-        # 4. Thaw new map
+        # 6. Thaw new map
         new_map.thaw(self.world)
         
-        # 5. Update Player Position
+        # 7. Update Player Position
         player_pos = esper.component_for_entity(self.player_entity, Position)
         player_pos.x = target_x
         player_pos.y = target_y
         player_pos.layer = target_layer
         
-        # 6. Update Systems
+        # 8. Update Systems
         self.movement_system.set_map(new_map)
         self.visibility_system.set_map(new_map)
         self.action_system.set_map(new_map)
         self.render_system.set_map(new_map)
         
-        # 7. Update Camera
+        # 9. Update Camera
         self.camera.update(target_x, target_y)
         
         esper.dispatch_event("log_message", f"Transitioned to {target_map_id}.")
