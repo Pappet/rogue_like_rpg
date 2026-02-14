@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A rogue-like RPG built with PyGame and an ECS architecture (esper). Features tile-based maps with layered rendering, turn-based movement and combat, nested world navigation with portals, procedural building generation, and a fully data-driven entity/tile system backed by JSON registries.
+A rogue-like RPG built with PyGame and an ECS architecture (esper). Features tile-based maps with layered rendering, turn-based movement and combat, nested world navigation with portals, procedural building generation, a fully data-driven entity/tile system backed by JSON registries, and a tile/entity investigation system with perception-based targeting and dynamic descriptions.
 
 ## Core Value
 
@@ -43,33 +43,41 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 - ✓ DATA-001: Tile registry from JSON — v1.0
 - ✓ DATA-002: Map prefab loading from JSON — v1.0
 - ✓ DATA-003: Entity templates from JSON — v1.0
+- ✓ INV-01: Investigate action enters targeting mode — v1.1
+- ✓ INV-02: Investigation range from perception stat — v1.1
+- ✓ INV-03: Investigation is a free action — v1.1
+- ✓ INV-04: Cancel investigation with Escape — v1.1
+- ✓ TILE-01: Tile name and description on confirm — v1.1
+- ✓ TILE-02: SHROUDED tiles show name only — v1.1
+- ✓ TILE-03: UNEXPLORED tiles blocked — v1.1
+- ✓ ENT-01: Entity names and descriptions at position — v1.1
+- ✓ ENT-02: HP-aware dynamic descriptions — v1.1
+- ✓ ENT-03: Multiple entities all listed — v1.1
+- ✓ ENT-04: Stats-less entities handled safely — v1.1
+- ✓ UI-01: Formatted colored investigation output — v1.1
+- ✓ UI-02: "Investigating..." header text — v1.1
+- ✓ UI-03: Cyan cursor distinct from combat — v1.1
 
 ### Active
 
-## Current Milestone: v1.1 Investigation System
-
-**Goal:** Introduce an "Investigate" action that lets the player inspect tiles in their FOV to get detailed information about terrain and entities, with dynamic status text based on entity state.
-
-**Target features:**
-- Description component for entities and tiles (data fields in JSON registries)
-- Investigate action with manual targeting (range = perception stat)
-- Visibility check enforcement (only VISIBLE tiles can be investigated)
-- Data aggregation: tile info + all entities at target position
-- Dynamic status text based on entity state (e.g., HP-based descriptions)
-- Formatted investigation results in the message log
-- UI cursor/highlight for manual tile targeting
+(None — next milestone not yet defined)
 
 ### Out of Scope
 
 - Multiplayer — single-player focus
 - 3D graphics — sprite-based 2D
+- Dedicated description sidebar panel — message log output sufficient
+- Showing exact stat numbers — Description threshold system preferred
+- Cursor snap to nearest entity — deferred to v2
+- Mouse click investigation — requires mouse input system (v2)
 
 ## Context
 
-**Shipped:** v1.0 MVP (2026-02-14)
-**Codebase:** 3,892 lines Python, 3 JSON data files
+**Shipped:** v1.0 MVP (2026-02-14), v1.1 Investigation System (2026-02-14)
+**Codebase:** 5,009 lines Python, 3 JSON data files
 **Tech stack:** Python 3.13, PyGame, esper ECS
 **Architecture:** ECS with data-driven JSON pipelines (tiles, entities, map prefabs)
+**Tests:** 28 investigation tests + prior verification tests
 
 ## Key Decisions
 
@@ -83,6 +91,12 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 | At-or-below threshold for wounded | Inclusive boundary (<=) for Description.get() | ✓ Good |
 | Nested world with freeze/thaw | Preserves entity state across container transitions | ✓ Good |
 | Modular building generation | MapGeneratorUtils replaces hardcoded coordinates | ✓ Good |
+| Reuse TARGETING state with targeting_mode | No new game state for investigation; "inspect" mode flag differentiates | ✓ Good |
+| Free action for investigation | Does not call end_player_turn(); investigate is information-only | ✓ Good |
+| Cyan cursor for investigation | Distinct from yellow combat cursor; clear visual mode signal | ✓ Good |
+| Perception stat as investigation range | Natural RPG mapping; stat already exists on entities | ✓ Good |
+| != UNEXPLORED for tile access | Any tile ever seen is reachable; robust to new visibility states | ✓ Good |
+| Entity loop via esper.get_components | Filtered by position match; no spatial index needed at this scale | ✓ Good |
 
 ## Constraints
 
@@ -91,4 +105,4 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 - Sprite-based 2D rendering
 
 ---
-*Last updated: 2026-02-14 after v1.1 milestone start*
+*Last updated: 2026-02-14 after v1.1 milestone completion*

@@ -28,57 +28,16 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 
 </details>
 
----
+<details>
+<summary>✅ v1.1 Investigation System (Phases 12-14) — SHIPPED 2026-02-14</summary>
 
-### ✅ v1.1 Investigation System (Complete — 2026-02-14)
+- [x] Phase 12: Action Wiring (1/1 plans) — completed 2026-02-14
+- [x] Phase 13: Range and Movement Rules (1/1 plans) — completed 2026-02-14
+- [x] Phase 14: Inspection Output (1/1 plans) — completed 2026-02-14
 
-**Milestone Goal:** Player can inspect tiles and entities in their field of view using a free targeting cursor, with dynamic descriptions based on entity state, formatted output in the message log, and distinct visual feedback for investigation mode.
+Full details: `.planning/milestones/v1.1-ROADMAP.md`
 
-#### Phase 12: Action Wiring
-
-**Goal**: The Investigate action routes through the targeting system so the player can activate, navigate, and cancel a look-mode cursor.
-**Depends on**: Phase 11 (Description component exists; TARGETING state and draw_targeting_ui() already in place)
-**Requirements**: INV-01, INV-03, INV-04, UI-02, UI-03
-**Success Criteria** (what must be TRUE):
-  1. Player selects "Investigate" from the action list and a cyan cursor appears on the map at the player position.
-  2. Arrow keys move the cursor while the game remains in targeting mode (enemy turns do not fire).
-  3. Pressing Escape cancels investigation and returns to normal play with no turn consumed.
-  4. The header text reads "Investigating..." when investigation targeting is active (distinct from "Targeting..." for combat).
-  5. The investigation cursor is cyan; the combat targeting cursor remains yellow.
-**Plans**: 1 plan
-
-Plans:
-- [x] 12-01-PLAN.md — Wire Investigate action through targeting system with cyan cursor, mode-aware header, and free-action confirm ✓ (2026-02-14)
-
-#### Phase 13: Range and Movement Rules
-
-**Goal**: The investigation cursor respects perception-derived range and movement is allowed over explored (shrouded/forgotten) tiles but blocked on unexplored tiles.
-**Depends on**: Phase 12
-**Requirements**: INV-02, TILE-03
-**Success Criteria** (what must be TRUE):
-  1. Investigation cursor cannot move beyond a range equal to the player's perception stat.
-  2. The cursor can move to SHROUDED (previously seen) tiles as well as VISIBLE tiles.
-  3. The cursor cannot move onto UNEXPLORED tiles.
-**Plans**: 1 plan
-
-Plans:
-- [x] 13-01-PLAN.md — Override targeting range with perception stat and expand tile access to explored tiles ✓ (2026-02-14)
-
-#### Phase 14: Inspection Output
-
-**Goal**: Confirming investigation on a tile produces formatted, colored results in the message log covering the tile, all entities at that position, and HP-aware dynamic descriptions.
-**Depends on**: Phase 13
-**Requirements**: TILE-01, TILE-02, ENT-01, ENT-02, ENT-03, ENT-04, UI-01
-**Success Criteria** (what must be TRUE):
-  1. Confirming investigation on a VISIBLE tile prints the tile name and base description in the message log with colored formatting.
-  2. Confirming investigation on a SHROUDED tile prints only the tile name (no entity information shown).
-  3. All entities at the investigated position are listed in the message log (multiple entities are all reported).
-  4. An entity below its HP wound threshold shows wounded flavor text (e.g., "looks wounded") rather than the healthy description.
-  5. Entities without a Stats component (portals, corpses) produce a description without crashing.
-**Plans**: 1 plan
-
-Plans:
-- [x] 14-01-PLAN.md — Implement inspection output dispatch and verification tests ✓ (2026-02-14)
+</details>
 
 ---
 
