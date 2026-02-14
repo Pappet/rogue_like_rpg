@@ -28,6 +28,8 @@ class EntityTemplate:
     intelligence: int
     ai: bool = True
     blocker: bool = True
+    default_state: str = "wander"
+    alignment: str = "hostile"
     description: str = ""
     wounded_text: str = ""
     wounded_threshold: float = 0.5

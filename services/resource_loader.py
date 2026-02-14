@@ -9,6 +9,7 @@ import json
 import os
 
 from config import SpriteLayer
+from ecs.components import AIState, Alignment
 from map.tile_registry import TileRegistry, TileType
 from entities.entity_registry import EntityRegistry, EntityTemplate
 
@@ -137,6 +138,25 @@ class ResourceLoader:
             ai = bool(item.get("ai", True))
             blocker = bool(item.get("blocker", True))
 
+            # --- parse and validate AI state fields ---
+            raw_state = item.get("default_state", "wander")
+            try:
+                AIState(raw_state)
+            except ValueError:
+                raise ValueError(
+                    f"Entity '{item['id']}' has invalid default_state '{raw_state}'. "
+                    f"Valid values: {[s.value for s in AIState]}"
+                )
+
+            raw_alignment = item.get("alignment", "hostile")
+            try:
+                Alignment(raw_alignment)
+            except ValueError:
+                raise ValueError(
+                    f"Entity '{item['id']}' has invalid alignment '{raw_alignment}'. "
+                    f"Valid values: {[a.value for a in Alignment]}"
+                )
+
             # --- parse optional description fields ---
             description = item.get("description", "")
             wounded_text = item.get("wounded_text", "")
@@ -158,6 +178,8 @@ class ResourceLoader:
                 intelligence=int(item["intelligence"]),
                 ai=ai,
                 blocker=blocker,
+                default_state=raw_state,
+                alignment=raw_alignment,
                 description=description,
                 wounded_text=wounded_text,
                 wounded_threshold=wounded_threshold,

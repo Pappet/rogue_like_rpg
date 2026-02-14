@@ -1,5 +1,20 @@
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import List, Tuple
+
+
+class AIState(str, Enum):
+    IDLE = "idle"
+    WANDER = "wander"
+    CHASE = "chase"
+    TALK = "talk"
+
+
+class Alignment(str, Enum):
+    HOSTILE = "hostile"
+    NEUTRAL = "neutral"
+    FRIENDLY = "friendly"
+
 
 @dataclass
 class Position:
@@ -106,3 +121,22 @@ class Description:
             if stats.hp / stats.max_hp <= self.wounded_threshold:
                 return self.wounded_text
         return self.base
+
+
+@dataclass
+class AIBehaviorState:
+    state: AIState
+    alignment: Alignment
+
+
+@dataclass
+class ChaseData:
+    last_known_x: int
+    last_known_y: int
+    turns_without_sight: int = 0
+
+
+@dataclass
+class WanderData:
+    """Stub component for wander state. Fields added when wander behavior is implemented."""
+    pass
