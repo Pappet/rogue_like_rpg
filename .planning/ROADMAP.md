@@ -45,10 +45,10 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
   3. Pressing Escape cancels investigation and returns to normal play with no turn consumed.
   4. The header text reads "Investigating..." when investigation targeting is active (distinct from "Targeting..." for combat).
   5. The investigation cursor is cyan; the combat targeting cursor remains yellow.
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 12-01: TBD
+- [ ] 12-01-PLAN.md — Wire Investigate action through targeting system with cyan cursor, mode-aware header, and free-action confirm
 
 #### Phase 13: Range and Movement Rules
 
@@ -87,6 +87,6 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-11 | v1.0 | 27/27 | Complete | 2026-02-14 |
-| 12. Action Wiring | v1.1 | 0/TBD | Not started | - |
+| 12. Action Wiring | v1.1 | 0/1 | Planned | - |
 | 13. Range and Movement Rules | v1.1 | 0/TBD | Not started | - |
 | 14. Inspection Output | v1.1 | 0/TBD | Not started | - |
