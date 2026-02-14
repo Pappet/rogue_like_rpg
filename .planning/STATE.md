@@ -2,13 +2,13 @@
 
 ## Project Reference
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** Phase 9 - Data-Driven Core.
+**Current Focus:** Phase 10 - Entity & Map Templates.
 
 ## Current Position
-**Phase:** 9 - Data-Driven Core (In Progress)
-**Plan:** 03 (next)
-**Status:** Milestone 5 In Progress - Plans 01 and 02 complete.
-**Progress Bar:** [####......] 40%
+**Phase:** 10 - Entity & Map Templates (In Progress)
+**Plan:** 02 (next)
+**Status:** Milestone 6 In Progress - Plan 01 complete.
+**Progress Bar:** [#####.....] 50%
 
 ## Performance Metrics
 - **Engine:** esper ECS ✓
@@ -19,6 +19,7 @@
 - **Generation:** Procedural Buildings & Terrain Details ✓
 - **Data:** JSON Registry Loading ✓ (Plan 09-01 complete)
 - **Data:** Tile Class & Map Generation use Registry IDs ✓ (Plan 09-02 complete)
+- **Data:** Entity Template System (EntityRegistry + EntityFactory + entities.json) ✓ (Plan 10-01 complete)
 
 ## Accumulated Context
 - **Decisions:**
@@ -38,17 +39,24 @@
     - draw_rectangle/place_door take type_id str; delegation to TileType handles transparency/walkable.
     - apply_terrain_variety switched to type_id_choices list; tile.walkable used to identify floor tiles.
     - TileRegistry.clear() + ResourceLoader.load_tiles() must appear at the top of every test that creates tiles.
+    - EntityFactory defers SpriteLayer enum conversion to create() time; ResourceLoader stores sprite_layer as raw string.
+    - EntityFactory.create() raises ValueError with helpful message including available IDs if template not found.
+    - main.py calls load_tiles() and load_entities() before get_world() and create_village_scenario().
+    - entities/monster.py (create_orc) preserved for backward compat — not deleted, just no longer imported by map_service.
+    - JSON pipeline pattern established: data file -> ResourceLoader.load_X() -> XRegistry.register() -> XFactory.create().
+    - Every test that uses EntityRegistry must call EntityRegistry.clear() + ResourceLoader.load_entities() at top.
 - **To Dos:**
-    - Execute Phase 9 Plan 03: Additional tile types and map scenario enhancements.
+    - Execute Phase 10 Plan 02: Map template system (next).
 - **Blockers:** None.
 
 ## Session Continuity
-- Last activity: 2026-02-14 - Completed Phase 9 Plan 02 (Tile Class + Map Generator Refactor).
-- Stopped at: Phase 9, Plan 03 ready to execute.
+- Last activity: 2026-02-14 - Completed Phase 10 Plan 01 (Entity Template System).
+- Stopped at: Phase 10, Plan 02 ready to execute.
 
 ## Quick Tasks Completed
 | Task | Description | Date |
 | :--- | :--- | :--- |
 | 09-01 | Tile Registry + Resource Loader pipeline | 2026-02-14 |
 | 09-02 | Tile class + map generation pipeline ported to registry type_ids | 2026-02-14 |
+| 10-01 | Entity Template System: EntityRegistry + EntityFactory + entities.json | 2026-02-14 |
 | (Previous milestone tasks archived) | | |
