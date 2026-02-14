@@ -28,6 +28,9 @@ class EntityTemplate:
     intelligence: int
     ai: bool = True
     blocker: bool = True
+    description: str = ""
+    wounded_text: str = ""
+    wounded_threshold: float = 0.5
 
 
 class EntityRegistry:

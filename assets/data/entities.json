@@ -14,6 +14,9 @@
     "perception": 5,
     "intelligence": 5,
     "ai": true,
-    "blocker": true
+    "blocker": true,
+    "description": "A generic orc",
+    "wounded_text": "A wounded orc",
+    "wounded_threshold": 0.5
   }
 ]

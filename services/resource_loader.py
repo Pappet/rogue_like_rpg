@@ -137,6 +137,11 @@ class ResourceLoader:
             ai = bool(item.get("ai", True))
             blocker = bool(item.get("blocker", True))
 
+            # --- parse optional description fields ---
+            description = item.get("description", "")
+            wounded_text = item.get("wounded_text", "")
+            wounded_threshold = float(item.get("wounded_threshold", 0.5))
+
             template = EntityTemplate(
                 id=item["id"],
                 name=item["name"],
@@ -153,6 +158,9 @@ class ResourceLoader:
                 intelligence=int(item["intelligence"]),
                 ai=ai,
                 blocker=blocker,
+                description=description,
+                wounded_text=wounded_text,
+                wounded_threshold=wounded_threshold,
             )
 
             EntityRegistry.register(template)

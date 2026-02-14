@@ -5,7 +5,7 @@ This mirrors the data-driven approach used for tiles in Phase 9.
 """
 
 from config import SpriteLayer
-from ecs.components import Position, Renderable, Stats, Name, Blocker, AI
+from ecs.components import Position, Renderable, Stats, Name, Blocker, AI, Description
 from entities.entity_registry import EntityRegistry
 
 
@@ -60,5 +60,14 @@ class EntityFactory:
 
         if template.ai:
             components.append(AI())
+
+        if template.description:
+            components.append(
+                Description(
+                    base=template.description,
+                    wounded_text=template.wounded_text,
+                    wounded_threshold=template.wounded_threshold,
+                )
+            )
 
         return world.create_entity(*components)

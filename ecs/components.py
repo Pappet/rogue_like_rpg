@@ -102,4 +102,7 @@ class Description:
     wounded_threshold: float = 0.5
 
     def get(self, stats) -> str:
-        raise NotImplementedError("RED phase stub")
+        if self.wounded_text and stats.max_hp > 0:
+            if stats.hp / stats.max_hp <= self.wounded_threshold:
+                return self.wounded_text
+        return self.base
