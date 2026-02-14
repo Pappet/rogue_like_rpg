@@ -59,7 +59,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 **Plans:** 1 plan
 
 Plans:
-- [ ] 15-01-PLAN.md — Define AI enums/components, wire JSON-to-ECS pipeline, update DeathSystem cleanup
+- [x] 15-01-PLAN.md — Define AI enums/components, wire JSON-to-ECS pipeline, update DeathSystem cleanup — completed 2026-02-14
 
 #### Phase 16: AISystem Skeleton and Turn Wiring
 
@@ -118,7 +118,7 @@ Plans:
 | 12. Action Wiring | v1.1 | 1/1 | Complete | 2026-02-14 |
 | 13. Range and Movement Rules | v1.1 | 1/1 | Complete | 2026-02-14 |
 | 14. Inspection Output | v1.1 | 1/1 | Complete | 2026-02-14 |
-| 15. AI Component Foundation | v1.2 | 0/1 | Not started | - |
+| 15. AI Component Foundation | v1.2 | 1/1 | Complete | 2026-02-14 |
 | 16. AISystem Skeleton and Turn Wiring | v1.2 | 0/TBD | Not started | - |
 | 17. Wander Behavior | v1.2 | 0/TBD | Not started | - |
 | 18. Chase Behavior and State Transitions | v1.2 | 0/TBD | Not started | - |

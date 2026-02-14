@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-14)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.2 AI Infrastructure — Phase 15: AI Component Foundation
+**Current Focus:** v1.2 AI Infrastructure — Phase 16: AISystem Skeleton and Turn Wiring
 
 ## Current Position
 
-Phase: 15 of 18 (AI Component Foundation)
-Plan: 1 of 1 in current phase
-Status: Plan 1 complete
-Last activity: 2026-02-14 — Executed 15-01: AI Component Foundation data pipeline
+Phase: 16 of 18 (AISystem Skeleton and Turn Wiring)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-02-14 — Phase 15 complete, verified 6/6 must-haves
 
 Progress: [███░░░░░░░] 15 of 18+ phases complete (v1.0 + v1.1 shipped)
 
@@ -58,5 +58,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Completed 15-01-PLAN.md — AI enums, components, and full data pipeline wired
+Stopped at: Phase 15 complete. Next: `/gsd:plan-phase 16`
 Resume file: None
