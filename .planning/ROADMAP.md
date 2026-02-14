@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** — Phases 1-11 (shipped 2026-02-14)
-- 🚧 **v1.1 Investigation System** — Phases 12-14 (in progress)
+- ✅ **v1.1 Investigation System** — Phases 12-14 (shipped 2026-02-14)
 
 ## Phases
 
@@ -30,7 +30,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 
 ---
 
-### 🚧 v1.1 Investigation System (In Progress)
+### ✅ v1.1 Investigation System (Complete — 2026-02-14)
 
 **Milestone Goal:** Player can inspect tiles and entities in their field of view using a free targeting cursor, with dynamic descriptions based on entity state, formatted output in the message log, and distinct visual feedback for investigation mode.
 
@@ -78,7 +78,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 14-01-PLAN.md — Implement inspection output dispatch and verification tests
+- [x] 14-01-PLAN.md — Implement inspection output dispatch and verification tests ✓ (2026-02-14)
 
 ---
 
@@ -89,4 +89,4 @@ Plans:
 | 1-11 | v1.0 | 27/27 | Complete | 2026-02-14 |
 | 12. Action Wiring | v1.1 | 1/1 | Complete | 2026-02-14 |
 | 13. Range and Movement Rules | v1.1 | 1/1 | Complete | 2026-02-14 |
-| 14. Inspection Output | v1.1 | 0/1 | Not started | - |
+| 14. Inspection Output | v1.1 | 1/1 | Complete | 2026-02-14 |
