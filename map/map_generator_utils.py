@@ -1,16 +1,23 @@
-from config import SpriteLayer
 from map.map_layer import MapLayer
 
-def draw_rectangle(layer: MapLayer, x: int, y: int, w: int, h: int, tile_type: str, filled: bool = False):
-    """
-    Draws a rectangle on the given MapLayer.
-    
+
+def draw_rectangle(
+    layer: MapLayer,
+    x: int,
+    y: int,
+    w: int,
+    h: int,
+    type_id: str,
+    filled: bool = False,
+):
+    """Draw a rectangle on the given MapLayer using a registry tile type_id.
+
     Args:
-        layer: The MapLayer to draw on.
-        x, y: Top-left corner.
-        w, h: Width and height.
-        tile_type: The sprite character to use (e.g., '#' for walls, '.' for floor).
-        filled: If True, fills the interior of the rectangle.
+        layer:   The MapLayer to draw on.
+        x, y:    Top-left corner.
+        w, h:    Width and height.
+        type_id: Registry ID of the tile type to use (e.g. 'wall_stone', 'floor_stone').
+        filled:  If True, fills the interior of the rectangle as well as the border.
     """
     rows = len(layer.tiles)
     if rows == 0:
@@ -22,19 +29,16 @@ def draw_rectangle(layer: MapLayer, x: int, y: int, w: int, h: int, tile_type: s
             if 0 <= i < rows and 0 <= j < cols:
                 is_border = (i == y or i == y + h - 1 or j == x or j == x + w - 1)
                 if filled or is_border:
-                    tile = layer.tiles[i][j]
-                    tile.sprites[SpriteLayer.GROUND] = tile_type
-                    # If it's a wall '#', it's not transparent.
-                    tile.transparent = (tile_type != '#')
+                    layer.tiles[i][j].set_type(type_id)
 
-def place_door(layer: MapLayer, x: int, y: int, sprite: str = '.'):
-    """
-    Places a door (visual opening) on the given MapLayer.
-    
+
+def place_door(layer: MapLayer, x: int, y: int, type_id: str = "door_stone"):
+    """Place a door tile on the given MapLayer.
+
     Args:
-        layer: The MapLayer to draw on.
-        x, y: Coordinates.
-        sprite: The sprite character to use (default '.').
+        layer:   The MapLayer to draw on.
+        x, y:    Coordinates.
+        type_id: Registry ID of the door tile type (default 'door_stone').
     """
     rows = len(layer.tiles)
     if rows == 0:
@@ -42,6 +46,4 @@ def place_door(layer: MapLayer, x: int, y: int, sprite: str = '.'):
     cols = len(layer.tiles[0])
 
     if 0 <= y < rows and 0 <= x < cols:
-        tile = layer.tiles[y][x]
-        tile.sprites[SpriteLayer.GROUND] = sprite
-        tile.transparent = True
+        layer.tiles[y][x].set_type(type_id)
