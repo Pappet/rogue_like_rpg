@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 ## Current Position
 
 Phase: 15 of 18 (AI Component Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-14 — Roadmap created for v1.2 AI Infrastructure
+Plan: 1 of 1 in current phase
+Status: Plan 1 complete
+Last activity: 2026-02-14 — Executed 15-01: AI Component Foundation data pipeline
 
-Progress: [██░░░░░░░░] 14 of 18+ phases complete (v1.0 + v1.1 shipped)
+Progress: [███░░░░░░░] 15 of 18+ phases complete (v1.0 + v1.1 shipped)
 
 ## Performance Metrics
 
@@ -30,6 +30,7 @@ Progress: [██░░░░░░░░] 14 of 18+ phases complete (v1.0 + v1.
 | Phase 12 | 1 | ~15min | ~15min |
 | Phase 13 | 1 | ~15min | ~15min |
 | Phase 14 | 1 | ~2min | ~2min |
+| Phase 15 | 1 | ~8min | ~8min |
 
 *v1.2 metrics will be recorded as phases complete.*
 
@@ -42,6 +43,8 @@ Relevant for v1.2:
 - AISystem uses explicit-call pattern (not esper.add_processor) — matches UISystem/RenderSystem convention; prevents AI firing every frame
 - AIBehaviorState is a separate component from AI marker — AI is a pure tag; state data lives in AIBehaviorState
 - AI state stores coordinates only — never entity IDs; freeze/thaw assigns new IDs breaking ID-based references
+- Raw strings in EntityTemplate converted to enums in EntityFactory (same pattern as sprite_layer -> SpriteLayer)
+- ResourceLoader validates AIState/Alignment enum values at load time for early failure with clear errors
 
 ### Pending Todos
 
@@ -55,5 +58,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: v1.2 roadmap created. Next: `/gsd:plan-phase 15`
+Stopped at: Completed 15-01-PLAN.md — AI enums, components, and full data pipeline wired
 Resume file: None
