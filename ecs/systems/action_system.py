@@ -1,8 +1,9 @@
 import esper
 import math
 from config import GameStates, TILE_SIZE
-from ecs.components import Position, Renderable, Stats, Inventory, Targeting, Action, ActionList, Portal
+from ecs.components import Position, Renderable, Stats, Inventory, Targeting, Action, ActionList, Portal, Name, Description
 from map.tile import VisibilityState
+from map.tile_registry import TileRegistry
 
 class ActionSystem(esper.Processor):
     def __init__(self, map_container, turn_system):
@@ -151,20 +152,27 @@ class ActionSystem(esper.Processor):
     def confirm_action(self, entity):
         try:
             targeting = esper.component_for_entity(entity, Targeting)
-            
-            # Check visibility of target tile one last time
-            is_visible = False
+
+            # Check visibility of target tile — mode-aware gate
+            tile_visibility = VisibilityState.UNEXPLORED
+            target_tile = None
             for layer in self.map_container.layers:
                 if 0 <= targeting.target_y < len(layer.tiles) and 0 <= targeting.target_x < len(layer.tiles[targeting.target_y]):
-                    if layer.tiles[targeting.target_y][targeting.target_x].visibility_state == VisibilityState.VISIBLE:
-                        is_visible = True
+                    t = layer.tiles[targeting.target_y][targeting.target_x]
+                    if t.visibility_state != VisibilityState.UNEXPLORED:
+                        target_tile = t
+                        tile_visibility = t.visibility_state
                         break
-            
-            if not is_visible:
-                return False
+
+            if targeting.action.targeting_mode == "inspect":
+                if tile_visibility == VisibilityState.UNEXPLORED:
+                    return False
+            else:
+                if tile_visibility != VisibilityState.VISIBLE:
+                    return False
 
             stats = esper.component_for_entity(entity, Stats)
-            
+
             # Final resource check
             if targeting.action.cost_mana > stats.mana:
                 self.cancel_targeting(entity)
@@ -172,9 +180,57 @@ class ActionSystem(esper.Processor):
 
             # Consume resources
             stats.mana -= targeting.action.cost_mana
-            
-            # Execute action logic (for now just print and end turn)
-            print(f"Executed {targeting.action.name} at ({targeting.target_x}, {targeting.target_y})")
+
+            # Dispatch inspection output for inspect mode
+            if targeting.action.targeting_mode == "inspect":
+                # Look up tile type from registry
+                if target_tile is not None and target_tile._type_id is not None:
+                    tile_type = TileRegistry.get(target_tile._type_id)
+                    if tile_type is not None:
+                        tile_name = tile_type.name
+                        tile_desc = tile_type.base_description
+                    else:
+                        tile_name = "Unknown tile"
+                        tile_desc = ""
+                else:
+                    tile_name = "Unknown tile"
+                    tile_desc = ""
+
+                # Always dispatch tile name in yellow
+                esper.dispatch_event("log_message", f"[color=yellow]{tile_name}[/color]")
+
+                # For VISIBLE tiles: dispatch description and entity info
+                if tile_visibility == VisibilityState.VISIBLE:
+                    if tile_desc:
+                        esper.dispatch_event("log_message", tile_desc)
+
+                    # List all entities at the target position
+                    for ent, (pos,) in esper.get_components(Position):
+                        if ent == entity:
+                            continue
+                        if pos.x != targeting.target_x or pos.y != targeting.target_y:
+                            continue
+
+                        name_comp = esper.try_component(ent, Name)
+                        if name_comp is None:
+                            continue
+
+                        desc_comp = esper.try_component(ent, Description)
+                        ent_stats = esper.try_component(ent, Stats)
+
+                        if desc_comp is not None:
+                            esper.dispatch_event(
+                                "log_message",
+                                f"[color=white]{name_comp.name}[/color]: {desc_comp.get(ent_stats)}"
+                            )
+                        else:
+                            esper.dispatch_event(
+                                "log_message",
+                                f"[color=white]{name_comp.name}[/color]"
+                            )
+            else:
+                # Execute action logic (for now just print and end turn)
+                print(f"Executed {targeting.action.name} at ({targeting.target_x}, {targeting.target_y})")
 
             mode = targeting.action.targeting_mode
             self.cancel_targeting(entity)
