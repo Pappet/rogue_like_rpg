@@ -2,9 +2,9 @@
 
 ## Summary
 
-**Phases:** 8
+**Phases:** 11
 **Depth:** Standard
-**Coverage:** 25/25 requirements mapped
+**Coverage:** 31/31 requirements mapped
 
 | Phase | Goal | Requirements |
 |-------|------|--------------|
@@ -16,14 +16,17 @@
 | 6 - Advanced Navigation & UI | Implement realistic map memory aging and a world map overview. | MECH-005, UI-003 |
 | 7 - Layered Rendering & Structure | Enhance visuals with depth-based rendering and structured map layouts. | VIS-001, VIS-002, MAP-001 |
 | 8 - Procedural Map Features | Transition to modular map generation for buildings and environment details. | GEN-001, GEN-002, GEN-003 |
+| 9 - Data-Driven Core | Implement JSON-based tile registry and resource loading system. | DATA-001, MECH-007 |
+| 10 - Entity & Map Templates | Migrate entities and map structures to external template files. | DATA-002, DATA-003, ARCH-004 |
+| 11 - Investigation Preparation | Implement description components and dynamic text logic. | MECH-006 |
 
 ## Success Criteria
 
-### Phase 8: Procedural Map Features
-1.  Map structures (walls, floors) are generated using reusable utility functions (`draw_rectangle`, etc.).
-2.  A `BuildingGenerator` can create a house with walls, a door, and stairs, placing it on the map.
-3.  The Village map is populated with 2-3 procedurally generated houses.
-4.  The map ground layer features random decorative sprites (grass/flowers).
+### Phase 11: Investigation Preparation (Milestone Completion)
+1.  **Registry Loaded:** `tile_types.json` and `entities.json` are successfully loaded at game start.
+2.  **Prefab Map:** The game can generate a map that includes a structure (e.g., house) defined in an external JSON file.
+3.  **Template Entity:** An entity (e.g., Orc) is spawned using stats and renderable data from `entities.json`.
+4.  **Dynamic Description:** Entities possess a `Description` component that returns context-aware text (e.g., "A generic orc" vs "A wounded orc") when queried.
 
 ## Plans
 
@@ -65,6 +68,17 @@
 **Plans:** 2 plans
 - [x] 08-01-PLAN.md — Implement Map Generator Utilities & Building Generator Logic.
 - [x] 08-02-PLAN.md — Refactor Village Scenario & Apply Terrain Variety.
+
+### Phase 9: Data-Driven Core
+**Plans:** 2 plans
+- [ ] 09-01-PLAN.md — Create Resource Loader & Tile Registry.
+- [ ] 09-02-PLAN.md — Refactor Tile class & Map Generator.
+
+### Phase 10: Entity & Map Templates
+- [ ] Implement Map Prefab Loading & Entity Factory.
+
+### Phase 11: Investigation Preparation
+- [ ] Implement Description Component & Dynamic Text.
 
 ## Quick Tasks
 - [x] fix-map-container-attribute-error.md — Fix missing 'width' attribute.
