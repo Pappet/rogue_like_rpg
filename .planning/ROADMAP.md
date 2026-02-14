@@ -80,7 +80,8 @@
 - [x] 10-02-PLAN.md — Map Prefab Loading system
 
 ### Phase 11: Investigation Preparation
-- [ ] Implement Description Component & Dynamic Text.
+**Plans:** 1 plan
+- [ ] 11-01-PLAN.md — Description component with dynamic context-aware text (TDD)
 
 ## Quick Tasks
 - [x] fix-map-container-attribute-error.md — Fix missing 'width' attribute.
