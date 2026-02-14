@@ -101,8 +101,8 @@ class Description:
     wounded_text: str = ""
     wounded_threshold: float = 0.5
 
-    def get(self, stats) -> str:
-        if self.wounded_text and stats.max_hp > 0:
+    def get(self, stats=None) -> str:
+        if stats is not None and self.wounded_text and stats.max_hp > 0:
             if stats.hp / stats.max_hp <= self.wounded_threshold:
                 return self.wounded_text
         return self.base

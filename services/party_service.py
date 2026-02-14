@@ -18,7 +18,7 @@ class PartyService:
             ActionList(actions=[
                 Action(name="Move"),
                 Action(name="Enter Portal"),
-                Action(name="Investigate"),
+                Action(name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"),
                 Action(name="Ranged", range=5, requires_targeting=True, targeting_mode="auto"),
                 Action(name="Spells", cost_mana=10, range=7, requires_targeting=True, targeting_mode="manual"),
                 Action(name="Items")

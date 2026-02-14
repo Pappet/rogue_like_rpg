@@ -172,9 +172,11 @@ class ActionSystem(esper.Processor):
             
             # Execute action logic (for now just print and end turn)
             print(f"Executed {targeting.action.name} at ({targeting.target_x}, {targeting.target_y})")
-            
+
+            mode = targeting.action.targeting_mode
             self.cancel_targeting(entity)
-            self.turn_system.end_player_turn()
+            if mode != "inspect":
+                self.turn_system.end_player_turn()
             return True
         except KeyError:
             return False

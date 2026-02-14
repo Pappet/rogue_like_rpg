@@ -42,7 +42,14 @@ class UISystem(esper.Processor):
             turn_str = "Player Turn"
             turn_color = (100, 255, 100)
         elif self.turn_system.current_state == GameStates.TARGETING:
-            turn_str = "Targeting..."
+            try:
+                targeting = esper.component_for_entity(self.player_entity, Targeting)
+                if targeting.mode == "inspect":
+                    turn_str = "Investigating..."
+                else:
+                    turn_str = "Targeting..."
+            except KeyError:
+                turn_str = "Targeting..."
             turn_color = (100, 255, 255)
         else:
             turn_str = "Environment Turn"

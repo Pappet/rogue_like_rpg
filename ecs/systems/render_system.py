@@ -82,6 +82,14 @@ class RenderSystem(esper.Processor):
                 surface.blit(text_surface, (screen_x, screen_y))
 
     def draw_targeting_ui(self, surface, targeting):
+        # Select colors based on targeting mode
+        if targeting.mode == "inspect":
+            range_color = (0, 255, 255, 50)
+            cursor_color = (0, 255, 255)
+        else:
+            range_color = (255, 255, 0, 50)
+            cursor_color = (255, 255, 0)
+
         # Draw range highlight
         for y in range(targeting.origin_y - int(targeting.range), targeting.origin_y + int(targeting.range) + 1):
             for x in range(targeting.origin_x - int(targeting.range), targeting.origin_x + int(targeting.range) + 1):
@@ -106,7 +114,7 @@ class RenderSystem(esper.Processor):
                         self.camera.offset_y <= screen_y < self.camera.offset_y + self.camera.height):
                         
                         s = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
-                        s.fill((255, 255, 0, 50)) # Transparent yellow
+                        s.fill(range_color)
                         surface.blit(s, (screen_x, screen_y))
 
         # Draw cursor
@@ -118,4 +126,4 @@ class RenderSystem(esper.Processor):
             self.camera.offset_y <= screen_y < self.camera.offset_y + self.camera.height):
             
             # Draw a thick box for the cursor
-            pygame.draw.rect(surface, (255, 255, 0), (screen_x, screen_y, TILE_SIZE, TILE_SIZE), 2)
+            pygame.draw.rect(surface, cursor_color, (screen_x, screen_y, TILE_SIZE, TILE_SIZE), 2)
