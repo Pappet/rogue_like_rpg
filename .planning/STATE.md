@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-14)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.2 AI Infrastructure — Phase 16: AISystem Skeleton and Turn Wiring
+**Current Focus:** v1.2 AI Infrastructure — Phase 17: Wander Behavior
 
 ## Current Position
 
-Phase: 16 of 18 (AISystem Skeleton and Turn Wiring)
-Plan: 1 of 1 complete in current phase
-Status: Phase 16 complete
-Last activity: 2026-02-14 — Phase 16 Plan 01 complete, 7/7 tests passing
+Phase: 17 of 18 (Wander Behavior)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-02-14 — Phase 16 complete, verified 5/5 must-haves
 
 Progress: [████░░░░░░] 16 of 18+ phases complete (v1.0 + v1.1 shipped, v1.2 in progress)
 
@@ -59,5 +59,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Completed 16-01-PLAN.md (AISystem skeleton + turn wiring)
+Stopped at: Phase 16 complete. Next: `/gsd:plan-phase 17`
 Resume file: None
