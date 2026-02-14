@@ -74,10 +74,10 @@
 - [x] 09-01-PLAN.md — Create Resource Loader & Tile Registry.
 - [x] 09-02-PLAN.md — Refactor Tile class & Map Generator.
 
-### Phase 10: Entity & Map Templates
+### Phase 10: Entity & Map Templates ✓
 **Plans:** 2 plans
-- [ ] 10-01-PLAN.md — Entity Templates, Factory, and ResourceLoader extension
-- [ ] 10-02-PLAN.md — Map Prefab Loading system
+- [x] 10-01-PLAN.md — Entity Templates, Factory, and ResourceLoader extension
+- [x] 10-02-PLAN.md — Map Prefab Loading system
 
 ### Phase 11: Investigation Preparation
 - [ ] Implement Description Component & Dynamic Text.

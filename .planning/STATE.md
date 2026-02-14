@@ -2,13 +2,13 @@
 
 ## Project Reference
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** Phase 10 - Entity & Map Templates.
+**Current Focus:** Phase 11 - Investigation Preparation.
 
 ## Current Position
-**Phase:** 10 - Entity & Map Templates (In Progress)
-**Plan:** 03 (next)
-**Status:** Milestone 6 In Progress - Plans 01 and 02 complete.
-**Progress Bar:** [######....] 60%
+**Phase:** 11 - Investigation Preparation (Next)
+**Plan:** Not yet planned
+**Status:** Phase 10 complete. Phase 11 needs planning.
+**Progress Bar:** [#########.] 90%
 
 ## Performance Metrics
 - **Engine:** esper ECS ✓
@@ -19,8 +19,8 @@
 - **Generation:** Procedural Buildings & Terrain Details ✓
 - **Data:** JSON Registry Loading ✓ (Plan 09-01 complete)
 - **Data:** Tile Class & Map Generation use Registry IDs ✓ (Plan 09-02 complete)
-- **Data:** Entity Template System (EntityRegistry + EntityFactory + entities.json) ✓ (Plan 10-01 complete)
-- **Data:** Map Prefab Loading System (cottage_interior.json + MapService.load_prefab()) ✓ (Plan 10-02 complete)
+- **Data:** Entity Template System ✓ (Plan 10-01 complete)
+- **Data:** Map Prefab Loading System ✓ (Plan 10-02 complete)
 
 ## Accumulated Context
 - **Decisions:**
@@ -49,12 +49,12 @@
     - load_prefab() uses set_type() to mutate existing tiles, preserving per-instance visibility_state.
     - Prefab out-of-bounds tiles are silently skipped; enables partial stamps at layer edges.
 - **To Dos:**
-    - Execute Phase 10 Plan 03 (next).
+    - Plan and execute Phase 11: Investigation Preparation (Description Component & Dynamic Text).
 - **Blockers:** None.
 
 ## Session Continuity
-- Last activity: 2026-02-14 - Completed Phase 10 Plan 02 (Map Prefab Loading System).
-- Stopped at: Phase 10, Plan 03 ready to execute.
+- Last activity: 2026-02-14 - Completed Phase 10 execution and verification.
+- Stopped at: Phase 11 needs planning.
 
 ## Quick Tasks Completed
 | Task | Description | Date |
