@@ -71,8 +71,8 @@
 
 ### Phase 9: Data-Driven Core
 **Plans:** 2 plans
-- [ ] 09-01-PLAN.md — Create Resource Loader & Tile Registry.
-- [ ] 09-02-PLAN.md — Refactor Tile class & Map Generator.
+- [x] 09-01-PLAN.md — Create Resource Loader & Tile Registry.
+- [x] 09-02-PLAN.md — Refactor Tile class & Map Generator.
 
 ### Phase 10: Entity & Map Templates
 - [ ] Implement Map Prefab Loading & Entity Factory.
