@@ -72,10 +72,10 @@ Plans:
   3. Entities with a Corpse component are never processed by AISystem (dead enemies do not move or act).
   4. AISystem does not run during PLAYER_TURN, TARGETING, or WORLD_MAP states.
   5. end_enemy_turn() is called exactly once per enemy turn, after all entity decisions have been processed.
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 16-01: Create ecs/systems/ai_system.py with AISystem(esper.Processor), remove ENEMY_TURN stub from game_states.py, wire explicit call in ENEMY_TURN branch with double esper.process()
+- [ ] 16-01-PLAN.md — Create AISystem processor, wire into game loop replacing ENEMY_TURN stub, verify all requirements
 
 #### Phase 17: Wander Behavior
 
@@ -119,6 +119,6 @@ Plans:
 | 13. Range and Movement Rules | v1.1 | 1/1 | Complete | 2026-02-14 |
 | 14. Inspection Output | v1.1 | 1/1 | Complete | 2026-02-14 |
 | 15. AI Component Foundation | v1.2 | 1/1 | Complete | 2026-02-14 |
-| 16. AISystem Skeleton and Turn Wiring | v1.2 | 0/TBD | Not started | - |
+| 16. AISystem Skeleton and Turn Wiring | v1.2 | 0/1 | Planning complete | - |
 | 17. Wander Behavior | v1.2 | 0/TBD | Not started | - |
 | 18. Chase Behavior and State Transitions | v1.2 | 0/TBD | Not started | - |
