@@ -58,26 +58,26 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INV-01 | — | Pending |
-| INV-02 | — | Pending |
-| INV-03 | — | Pending |
-| INV-04 | — | Pending |
-| TILE-01 | — | Pending |
-| TILE-02 | — | Pending |
-| TILE-03 | — | Pending |
-| ENT-01 | — | Pending |
-| ENT-02 | — | Pending |
-| ENT-03 | — | Pending |
-| ENT-04 | — | Pending |
-| UI-01 | — | Pending |
-| UI-02 | — | Pending |
-| UI-03 | — | Pending |
+| INV-01 | Phase 12 | Pending |
+| INV-02 | Phase 13 | Pending |
+| INV-03 | Phase 12 | Pending |
+| INV-04 | Phase 12 | Pending |
+| TILE-01 | Phase 14 | Pending |
+| TILE-02 | Phase 14 | Pending |
+| TILE-03 | Phase 13 | Pending |
+| ENT-01 | Phase 14 | Pending |
+| ENT-02 | Phase 14 | Pending |
+| ENT-03 | Phase 14 | Pending |
+| ENT-04 | Phase 14 | Pending |
+| UI-01 | Phase 14 | Pending |
+| UI-02 | Phase 12 | Pending |
+| UI-03 | Phase 12 | Pending |
 
 **Coverage:**
-- v1.1 requirements: 13 total
-- Mapped to phases: 0
-- Unmapped: 13
+- v1.1 requirements: 14 total
+- Mapped to phases: 14
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-14*
-*Last updated: 2026-02-14 after initial definition*
+*Last updated: 2026-02-14 after roadmap creation*
