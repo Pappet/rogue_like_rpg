@@ -1,0 +1,50 @@
+[
+  {
+    "id": "floor_stone",
+    "name": "Stone Floor",
+    "base_description": "A cold, uneven stone floor.",
+    "walkable": true,
+    "transparent": true,
+    "sprites": {
+      "GROUND": "."
+    },
+    "color": [200, 200, 200],
+    "occludes_below": false
+  },
+  {
+    "id": "wall_stone",
+    "name": "Stone Wall",
+    "base_description": "A solid wall of rough-hewn stone.",
+    "walkable": false,
+    "transparent": false,
+    "sprites": {
+      "GROUND": "#"
+    },
+    "color": [100, 100, 100],
+    "occludes_below": false
+  },
+  {
+    "id": "door_stone",
+    "name": "Stone Door",
+    "base_description": "A heavy stone door, slightly ajar.",
+    "walkable": true,
+    "transparent": true,
+    "sprites": {
+      "GROUND": "."
+    },
+    "color": [140, 120, 80],
+    "occludes_below": false
+  },
+  {
+    "id": "roof_thatch",
+    "name": "Thatched Roof",
+    "base_description": "A dried straw roof that keeps out the rain.",
+    "walkable": true,
+    "transparent": false,
+    "sprites": {
+      "GROUND": "#"
+    },
+    "color": [150, 110, 50],
+    "occludes_below": true
+  }
+]
