@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 ## Current Position
 
 Phase: 13 of 14 (Range and Movement Rules)
-Plan: — of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-14 — Phase 12 complete: Investigate action wired through targeting system
+Plan: 1 of 1 in current phase (complete)
+Status: Phase 13 complete
+Last activity: 2026-02-14 — Phase 13 Plan 01 complete: Range and movement rules implemented
 
-Progress: [███░░░░░░░] 33% (v1.1)
+Progress: [█████░░░░░] 50% (v1.1)
 
 ## Performance Metrics
 
@@ -28,6 +28,7 @@ Progress: [███░░░░░░░] 33% (v1.1)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | Phase 12 | 1 | ~15min | ~15min |
+| Phase 13 | 1 | ~15min | ~15min |
 
 *Updated after each plan completion*
 
@@ -45,6 +46,9 @@ Recent decisions affecting current work:
 - [v1.1 research]: Description.get() must accept stats=None to handle portals/corpses without crash.
 - [12-01]: targeting_mode must be captured BEFORE cancel_targeting() — component is removed by that call.
 - [12-01]: Description.get(stats=None) guard placed in Phase 12 proactively for Phase 14 readiness.
+- [13-01]: Perception range override applied post-constructor in start_targeting(), not inside Targeting() — keeps component generic.
+- [13-01]: != UNEXPLORED formulation for tile access — any tile ever seen is reachable, robust to new visibility states.
+- [13-01]: confirm_action() gate remains == VISIBLE intentionally — Phase 14 will update for SHROUDED inspection output.
 
 ### Pending Todos
 
@@ -57,5 +61,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 12 complete. Ready to plan Phase 13.
+Stopped at: Completed 13-01-PLAN.md — Phase 13 complete. Ready for Phase 14.
 Resume file: None
