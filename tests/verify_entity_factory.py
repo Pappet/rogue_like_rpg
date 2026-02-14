@@ -23,7 +23,7 @@ from entities.entity_registry import EntityRegistry
 from entities.entity_factory import EntityFactory
 from services.resource_loader import ResourceLoader
 from ecs.world import get_world, reset_world
-from ecs.components import Position, Renderable, Stats, Name, Blocker, AI
+from ecs.components import Position, Renderable, Stats, Name, Blocker, AI, AIBehaviorState, AIState, Alignment
 
 TILE_FILE = "assets/data/tile_types.json"
 ENTITY_FILE = "assets/data/entities.json"
@@ -86,6 +86,48 @@ def test_entity_factory_create():
     # Verify Blocker and AI components are present
     assert world.has_component(entity_id, Blocker), "Orc entity should have Blocker component"
     assert world.has_component(entity_id, AI), "Orc entity should have AI component"
+
+    # Verify AIBehaviorState is attached with correct values
+    assert world.has_component(entity_id, AIBehaviorState), "Orc entity should have AIBehaviorState component"
+    behavior = world.component_for_entity(entity_id, AIBehaviorState)
+    assert behavior.state == AIState.WANDER
+    assert behavior.alignment == Alignment.HOSTILE
+
+
+def test_ai_state_talk_assignable():
+    """AIState.TALK is a valid, assignable state for AIBehaviorState."""
+    setup_registries()
+    reset_world()
+    world = get_world()
+
+    entity_id = EntityFactory.create(world, "orc", 0, 0)
+    behavior = world.component_for_entity(entity_id, AIBehaviorState)
+    behavior.state = AIState.TALK
+    assert behavior.state == AIState.TALK
+
+
+def test_invalid_state_raises():
+    """EntityFactory.create() raises ValueError for invalid default_state in template."""
+    setup_registries()
+    reset_world()
+    world = get_world()
+
+    from entities.entity_registry import EntityTemplate
+    bad_template = EntityTemplate(
+        id="bad_entity",
+        name="Bad",
+        sprite="X",
+        color=(255, 0, 0),
+        sprite_layer="ENTITIES",
+        hp=1, max_hp=1, power=1, defense=0,
+        mana=0, max_mana=0, perception=1, intelligence=1,
+        default_state="invalid_state",
+        alignment="hostile",
+    )
+    EntityRegistry.register(bad_template)
+
+    with pytest.raises(ValueError):
+        EntityFactory.create(world, "bad_entity", 0, 0)
 
 
 def test_entity_factory_unknown_template():

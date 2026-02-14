@@ -1,5 +1,5 @@
 import esper
-from ecs.components import Name, Renderable, Blocker, AI, Corpse, Stats
+from ecs.components import Name, Renderable, Blocker, AI, Corpse, Stats, AIBehaviorState, ChaseData, WanderData
 from config import SpriteLayer
 
 class DeathSystem(esper.Processor):
@@ -26,7 +26,7 @@ class DeathSystem(esper.Processor):
         # Blocker: Corpses don't block movement
         # AI: Corpses don't take turns
         # Stats: Corpses don't have health/combat stats (optional, but requested in plan context)
-        for component_type in [Blocker, AI, Stats]:
+        for component_type in [Blocker, AI, Stats, AIBehaviorState, ChaseData, WanderData]:
             if esper.has_component(entity, component_type):
                 esper.remove_component(entity, component_type)
 

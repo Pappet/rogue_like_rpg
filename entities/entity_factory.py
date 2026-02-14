@@ -5,7 +5,7 @@ This mirrors the data-driven approach used for tiles in Phase 9.
 """
 
 from config import SpriteLayer
-from ecs.components import Position, Renderable, Stats, Name, Blocker, AI, Description
+from ecs.components import Position, Renderable, Stats, Name, Blocker, AI, Description, AIBehaviorState, AIState, Alignment
 from entities.entity_registry import EntityRegistry
 
 
@@ -60,6 +60,10 @@ class EntityFactory:
 
         if template.ai:
             components.append(AI())
+            components.append(AIBehaviorState(
+                state=AIState(template.default_state),
+                alignment=Alignment(template.alignment),
+            ))
 
         if template.description:
             components.append(
