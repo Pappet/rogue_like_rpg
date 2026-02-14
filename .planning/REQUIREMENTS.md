@@ -41,6 +41,14 @@ This document outlines the requirements for version 1 of the Rogue Like RPG.
 - `GEN-002`: **Building Generator**: Create a generator that automatically constructs multi-story buildings with walls, doors, and stairs.
 - `GEN-003`: **Environment Detail**: Implement a system to apply random terrain variety (decor sprites) to map layers.
 
+## Data-Driven Architecture & Investigation Requirements (Phase 9-11)
+- `DATA-001`: **Tile Registry**: Load tile properties (walkable, transparent, sprite, description) from an external configuration file (`tile_types.json`).
+- `DATA-002`: **Map Prefab System**: Load map structures (houses, rooms) from external files (JSON/TXT) and place them on map layers using coordinates.
+- `DATA-003`: **Entity Templates**: Define entity stats (HP, Power, Defense) and renderables in an external configuration file (`entities.json`).
+- `ARCH-004`: **Generic Entity Factory**: Refactor entity creation to use a factory pattern that initializes entities based on templates from `entities.json`.
+- `MECH-006`: **Description Component**: Implement an ECS component that supports static text and dynamic placeholders for entity/object descriptions.
+- `MECH-007`: **Configurable Tile Logic**: Ensure special tile behaviors (e.g., roof transparency, walkability) can be configured via the data files.
+
 ## Traceability
 
 | Requirement | Phase | Status |
@@ -70,3 +78,9 @@ This document outlines the requirements for version 1 of the Rogue Like RPG.
 | GEN-001 | Phase 8 | Completed |
 | GEN-002 | Phase 8 | Completed |
 | GEN-003 | Phase 8 | Completed |
+| DATA-001 | Phase 9 | Planned |
+| DATA-002 | Phase 10 | Planned |
+| DATA-003 | Phase 10 | Planned |
+| ARCH-004 | Phase 10 | Planned |
+| MECH-006 | Phase 11 | Planned |
+| MECH-007 | Phase 9 | Planned |
