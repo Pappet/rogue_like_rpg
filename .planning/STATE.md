@@ -2,13 +2,13 @@
 
 ## Project Reference
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** Phase 11 - Investigation Preparation.
+**Current Focus:** Phase 11 - Investigation Preparation (complete).
 
 ## Current Position
-**Phase:** 11 - Investigation Preparation (Next)
-**Plan:** Not yet planned
-**Status:** Phase 10 complete. Phase 11 needs planning.
-**Progress Bar:** [#########.] 90%
+**Phase:** 11 - Investigation Preparation
+**Plan:** 01 complete (1/1 plans done)
+**Status:** Phase 11 complete. All plans executed.
+**Progress Bar:** [##########] 100%
 
 ## Performance Metrics
 - **Engine:** esper ECS ✓
@@ -21,6 +21,7 @@
 - **Data:** Tile Class & Map Generation use Registry IDs ✓ (Plan 09-02 complete)
 - **Data:** Entity Template System ✓ (Plan 10-01 complete)
 - **Data:** Map Prefab Loading System ✓ (Plan 10-02 complete)
+- **Data:** Description Component & Dynamic Text ✓ (Plan 11-01 complete)
 
 ## Accumulated Context
 - **Decisions:**
@@ -48,13 +49,14 @@
     - Every test that uses EntityRegistry must call EntityRegistry.clear() + ResourceLoader.load_entities() at top.
     - load_prefab() uses set_type() to mutate existing tiles, preserving per-instance visibility_state.
     - Prefab out-of-bounds tiles are silently skipped; enables partial stamps at layer edges.
-- **To Dos:**
-    - Plan and execute Phase 11: Investigation Preparation (Description Component & Dynamic Text).
+    - Description.get(stats): at-or-below threshold (<=) triggers wounded text; max_hp == 0 falls through to base (division-by-zero guard); empty wounded_text always returns base.
+    - Description component attached only when template.description is non-empty (truthy check in EntityFactory).
+- **To Dos:** None.
 - **Blockers:** None.
 
 ## Session Continuity
-- Last activity: 2026-02-14 - Completed Phase 10 execution and verification.
-- Stopped at: Phase 11 needs planning.
+- Last activity: 2026-02-14 - Completed Phase 11 Plan 01 (Description Component MECH-006).
+- Stopped at: Completed 11-01-PLAN.md (Description Component MECH-006)
 
 ## Quick Tasks Completed
 | Task | Description | Date |
@@ -63,4 +65,5 @@
 | 09-02 | Tile class + map generation pipeline ported to registry type_ids | 2026-02-14 |
 | 10-01 | Entity Template System: EntityRegistry + EntityFactory + entities.json | 2026-02-14 |
 | 10-02 | Map Prefab Loading System: cottage_interior.json + MapService.load_prefab() | 2026-02-14 |
+| 11-01 | Description Component (MECH-006): dynamic wounded/healthy text via JSON pipeline | 2026-02-14 |
 | (Previous milestone tasks archived) | | |
