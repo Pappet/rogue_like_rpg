@@ -1,0 +1,19 @@
+[
+  {
+    "id": "orc",
+    "name": "Orc",
+    "sprite": "O",
+    "color": [0, 255, 0],
+    "sprite_layer": "ENTITIES",
+    "hp": 10,
+    "max_hp": 10,
+    "power": 3,
+    "defense": 0,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 5,
+    "intelligence": 5,
+    "ai": true,
+    "blocker": true
+  }
+]

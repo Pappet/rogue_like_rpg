@@ -1,8 +1,8 @@
 """Resource loader service.
 
 Responsible for loading game data from disk into in-memory registries.
-Call ResourceLoader.load_tiles() during game startup before any map
-generation to ensure all tile definitions are available.
+Call ResourceLoader.load_tiles() and ResourceLoader.load_entities() during
+game startup before any map or entity creation.
 """
 
 import json
@@ -10,6 +10,7 @@ import os
 
 from config import SpriteLayer
 from map.tile_registry import TileRegistry, TileType
+from entities.entity_registry import EntityRegistry, EntityTemplate
 
 
 class ResourceLoader:
@@ -82,3 +83,76 @@ class ResourceLoader:
             )
 
             TileRegistry.register(tile_type)
+
+    @staticmethod
+    def load_entities(filepath: str) -> None:
+        """Load entity definitions from a JSON file into EntityRegistry.
+
+        Args:
+            filepath: Path to the entities.json file.
+
+        Raises:
+            FileNotFoundError: If the JSON file does not exist at filepath.
+            ValueError: If the JSON is malformed or missing required fields.
+        """
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(
+                f"Entity resource file not found: '{filepath}'. "
+                f"Expected a JSON file with entity definitions."
+            )
+
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"Malformed JSON in entity resource file '{filepath}': {exc}"
+            ) from exc
+
+        if not isinstance(data, list):
+            raise ValueError(
+                f"Entity resource file '{filepath}' must contain a JSON array, "
+                f"got {type(data).__name__}."
+            )
+
+        required_fields = (
+            "id", "name", "sprite", "sprite_layer",
+            "hp", "max_hp", "power", "defense",
+            "mana", "max_mana", "perception", "intelligence",
+        )
+
+        for item in data:
+            # --- validate required fields ---
+            for required_field in required_fields:
+                if required_field not in item:
+                    raise ValueError(
+                        f"Entity entry missing required field '{required_field}': {item}"
+                    )
+
+            # --- build color tuple (default white if missing) ---
+            raw_color = item.get("color", [255, 255, 255])
+            color = tuple(raw_color)
+
+            # --- parse optional bool fields with defaults ---
+            ai = bool(item.get("ai", True))
+            blocker = bool(item.get("blocker", True))
+
+            template = EntityTemplate(
+                id=item["id"],
+                name=item["name"],
+                sprite=item["sprite"],
+                color=color,
+                sprite_layer=item["sprite_layer"],  # Raw string, NOT converted to enum here
+                hp=int(item["hp"]),
+                max_hp=int(item["max_hp"]),
+                power=int(item["power"]),
+                defense=int(item["defense"]),
+                mana=int(item["mana"]),
+                max_mana=int(item["max_mana"]),
+                perception=int(item["perception"]),
+                intelligence=int(item["intelligence"]),
+                ai=ai,
+                blocker=blocker,
+            )
+
+            EntityRegistry.register(template)
