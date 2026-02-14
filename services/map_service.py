@@ -242,6 +242,43 @@ class MapService:
                 if map_container.get_tile(x, y).walkable:  # Use walkable property
                     EntityFactory.create(world, "orc", x, y)
 
+    def load_prefab(self, world, layer: MapLayer, filepath: str, ox: int = 0, oy: int = 0) -> None:
+        """Stamp a prefab JSON file onto an existing MapLayer at an offset.
+
+        The prefab defines a 2D tile grid plus optional entity spawn points.
+        Tiles are mutated in-place via set_type(), preserving per-instance
+        state such as visibility_state.
+
+        Args:
+            world:    The ECS world (used to spawn entities).
+            layer:    The MapLayer to stamp tiles onto.
+            filepath: Path to the prefab JSON file.
+            ox:       X offset for placement on the layer.
+            oy:       Y offset for placement on the layer.
+
+        Raises:
+            FileNotFoundError: If filepath does not exist.
+        """
+        import json
+        import os
+
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Prefab file not found: '{filepath}'")
+
+        with open(filepath, "r") as f:
+            data = json.load(f)
+
+        tiles_grid = data["tiles"]
+        for row_idx, row in enumerate(tiles_grid):
+            for col_idx, type_id in enumerate(row):
+                tx = ox + col_idx
+                ty = oy + row_idx
+                if 0 <= ty < layer.height and 0 <= tx < layer.width:
+                    layer.tiles[ty][tx].set_type(type_id)
+
+        for spawn in data.get("entities", []):
+            EntityFactory.create(world, spawn["template_id"], ox + spawn["x"], oy + spawn["y"])
+
     def change_map(self, current_map: MapContainer, new_map: MapContainer) -> MapContainer:
         """Handles transition between maps, forgetting details of the current map."""
         if current_map:
