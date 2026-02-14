@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-14)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.1 — Phase 12: Action Wiring
+**Current Focus:** v1.1 — Phase 13: Range and Movement Rules
 
 ## Current Position
 
-Phase: 12 of 14 (Action Wiring)
-Plan: 1 of 1 in current phase
-Status: Plan 01 complete
-Last activity: 2026-02-14 — Phase 12 Plan 01 complete: Investigate action wired through targeting system
+Phase: 13 of 14 (Range and Movement Rules)
+Plan: — of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-02-14 — Phase 12 complete: Investigate action wired through targeting system
 
-Progress: [█░░░░░░░░░] 10% (v1.1)
+Progress: [███░░░░░░░] 33% (v1.1)
 
 ## Performance Metrics
 
 **Velocity (v1.1):**
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: —
+- Total plans completed: 1
+- Average duration: ~15min
+- Total execution time: ~15min
 
 **By Phase:**
 
@@ -57,5 +57,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Completed 12-action-wiring 12-01-PLAN.md
+Stopped at: Phase 12 complete. Ready to plan Phase 13.
 Resume file: None

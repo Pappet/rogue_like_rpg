@@ -48,7 +48,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 **Plans**: 1 plan
 
 Plans:
-- [ ] 12-01-PLAN.md — Wire Investigate action through targeting system with cyan cursor, mode-aware header, and free-action confirm
+- [x] 12-01-PLAN.md — Wire Investigate action through targeting system with cyan cursor, mode-aware header, and free-action confirm ✓ (2026-02-14)
 
 #### Phase 13: Range and Movement Rules
 
@@ -87,6 +87,6 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-11 | v1.0 | 27/27 | Complete | 2026-02-14 |
-| 12. Action Wiring | v1.1 | 0/1 | Planned | - |
+| 12. Action Wiring | v1.1 | 1/1 | Complete | 2026-02-14 |
 | 13. Range and Movement Rules | v1.1 | 0/TBD | Not started | - |
 | 14. Inspection Output | v1.1 | 0/TBD | Not started | - |
