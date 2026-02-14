@@ -1,181 +1,177 @@
 # Project Research Summary
 
-**Project:** Roguelike RPG — Investigation / Look / Examine System
-**Domain:** Roguelike RPG tile inspection and entity examination feature
+**Project:** Roguelike RPG — AI Behavior State System
+**Domain:** Turn-based ECS game AI — wander, chase, and state transitions for NPC entities
 **Researched:** 2026-02-14
 **Confidence:** HIGH
 
 ## Executive Summary
 
-This milestone adds a classic roguelike "look" command — a free-move cursor that lets the player inspect tiles and entities without consuming a turn. Research across all four areas converges on the same conclusion: the codebase already contains nearly all required infrastructure. The `Targeting` component, `GameStates.TARGETING`, `draw_targeting_ui()`, `Description.get(stats)`, `TileRegistry.base_description`, and the message log's rich-text pipeline are all in place. The investigation feature is best implemented as a thin extension of the existing targeting system: a new `"Investigate"` branch in `confirm_action()`, a stat-derived range override in `start_targeting()`, and a `_gather_investigation_data()` method on `ActionSystem`. No new external dependencies, no new ECS processors, and no new game state enum value are needed.
+This milestone adds functional AI to an existing roguelike RPG built on Python 3.13 / PyGame 2.6.1 / esper 3.7. The codebase already has every primitive needed: an empty `AI` marker component, `MovementRequest` consumed by `MovementSystem`, a stub `ENEMY_TURN` game state that immediately flips back without running any AI, `VisibilityService` shadowcasting for line-of-sight, and `Stats.perception` on every entity. The recommended approach is purely additive: expand the `AI` dataclass with behavior state fields, add a separate `AIBehaviorState` component for per-entity runtime data, build a new `AISystem(esper.Processor)` in `ecs/systems/ai_system.py`, and wire it into the ENEMY_TURN branch of `Game.update()`. No new external dependencies are required.
 
-The recommended approach reuses `GameStates.TARGETING` with a `targeting_mode="inspect"` to differentiate investigation cursor behavior from combat targeting, rather than introducing a parallel `INVESTIGATING` or `LOOKING` state. This avoids duplicating the complete cursor/input/render/cancel infrastructure that already works. The output of the investigation action flows through the existing `esper.dispatch_event("log_message", ...)` → `MessageLog` pipeline with color-tagged rich text. The description panel itself must be rendered in `UISystem` (not `RenderSystem`) to avoid viewport clipping — this is the single most critical architectural constraint identified in research.
+The canonical implementation pattern for this project is "AISystem as a pure emitter": the AI processor decides what to do and issues `MovementRequest` or `AttackIntent` components exactly as the player input path does. `MovementSystem` and `CombatSystem` handle the rest — keeping all collision detection, walkability enforcement, and bump-combat in one place regardless of actor. Chase behavior uses the existing `VisibilityService.compute_visibility()` with `Stats.perception` as the radius — no new LOS code needed. Wander uses `random.shuffle` over four directions and issues `MovementRequest`. The state machine is a simple string enum (`"wander"` / `"chase"` / `"idle"`) on the component — no state machine library. AISystem must be called explicitly from the ENEMY_TURN branch, NOT registered with `esper.add_processor()`, following the same pattern as UISystem and RenderSystem.
 
-The main risks are all pre-identified and preventable: the viewport clip boundary between render and UI layers, the `Description.get()` crash when called without a `Stats` component, stale cross-map entities in spatial queries, and cursor movement being incorrectly blocked on non-VISIBLE tiles during inspection. Each has a low-cost prevention strategy documented in PITFALLS.md. Overall implementation risk is LOW given how much existing infrastructure applies directly.
+The top risks are structural and all preventable: (1) if AISystem runs without a turn guard it fires on every frame including the player's turn; (2) if `end_enemy_turn()` is called inside the AI entity loop only the first enemy acts before the turn ends; (3) if wander destinations are not tracked with a claimed-tiles set two enemies can silently stack on the same tile corrupting the blocker system; (4) AI state that stores entity IDs rather than coordinates will break on map transition because esper reassigns entity IDs during `create_entity()` in `thaw()`. The existing stub at `game_states.py` lines 309-311 that immediately ends the enemy turn must be deleted when AISystem takes over — leaving both active is a common integration mistake.
 
 ## Key Findings
 
 ### Recommended Stack
 
-No new packages or dependencies are required. The full stack — Python 3.13.11, PyGame 2.6.1, esper 3.7 — is already installed and in active use. All rendering primitives (`pygame.Surface` with `SRCALPHA`, `pygame.draw.rect`, `pygame.font.SysFont`), ECS query APIs (`esper.get_components()`, `esper.has_component()`, `esper.component_for_entity()`), and map access (`MapContainer.get_tile()`, `TileRegistry.get()`) needed for the investigation system are already exercised in the codebase. The one structural addition is a new `"Investigate"` entry in the `Action` definition in `party_service.py` with `requires_targeting=True` and `targeting_mode="manual"` — no new component dataclass required.
+No new packages are required. All AI behavior capabilities exist in Python stdlib `random` and the installed esper 3.7 ECS. The existing `VisibilityService`, `MovementRequest`, `esper.Processor` base class, and `map_container.get_tile()` provide every primitive needed. Pathfinding libraries (A* via `pathfinding` PyPI package) are explicitly deferred — greedy Manhattan step is sufficient for v1 chase in dungeon room geometry. State machine libraries (`transitions`, `statemachine`) are overkill for a two-to-four state machine and must not be added.
 
 **Core technologies:**
-- `pygame 2.6.1`: Cursor rendering via `draw.rect`, text via `font.SysFont`, overlay surfaces via `SRCALPHA` — all patterns already in use in `render_system.py` and `ui_system.py`
-- `esper 3.7`: Multi-component spatial queries via `get_components(Position, Name)` and `get_components(Position, Description)` — same pattern as `find_potential_targets()` in `action_system.py`
-- `TileRegistry` + `tile_types.json`: `base_description` field already populated on all tile types — zero data work required for tile name display
+- `random` (stdlib 3.13.11): wander direction selection — `random.shuffle(directions)` is the canonical pattern; zero overhead, already imported in `map_service.py`
+- `esper.Processor` (3.7 existing): AISystem base class — all game systems follow this pattern; AISystem is one more processor in the same family as MovementSystem and CombatSystem
+- `VisibilityService.compute_visibility()` (existing): NPC line-of-sight — returns a `set` of (x,y) tuples; checking player position is O(1); no new LOS code needed
+- `esper.add_component(ent, MovementRequest)` (existing): AI output mechanism — identical to the player input path; all collision and combat resolution reused for free
 
 ### Expected Features
 
 **Must have (table stakes):**
-- Activate look mode with `x` or `l` key — does not end player turn
-- Arrow-key cursor movement across the full visible area (no range restriction for inspect)
-- Escape cancels look mode and returns to `PLAYER_TURN`
-- Distinct cursor color (cyan) vs. combat cursor (yellow)
-- Header text updates to "Look Mode" or "Investigating..." when active
-- Status line (not message log) shows tile name at cursor position
-- Entity name and HP-aware description at cursor position (VISIBLE entities only)
-- `Description.get(stats)` called for entities that have both `Description` and `Stats` components
+- `AIState` enum on `AI` component — without an explicit state field, behavior is ad-hoc and unextendable; every roguelike AI starts here
+- `AISystem(esper.Processor)` new file in `ecs/systems/ai_system.py` — currently ENEMY_TURN is a no-op; this is the core deliverable of the milestone
+- IDLE state (no-op branch) — valid explicit behavior; standing still must be intentional, not accidental
+- WANDER state with bounded random walk — a goblin that never moves feels unfinished; the minimum "alive" signal
+- CHASE state with FOV detection — core combat AI; without it combat is the player walking into static objects
+- State transitions WANDER/IDLE → CHASE on player detection — required to ever enter CHASE
+- State transition CHASE → WANDER after losing sight (`turns_chasing` cooldown) — omniscient chase is a known anti-pattern that makes the game feel unfair
+- Dead entity guard (`Corpse` component check in AISystem loop) — AI must not act after death
+- Layer guard — NPCs must stay on their own `Position.layer`; multi-layer maps already exist
+- "The [name] notices you!" log message on first CHASE transition — one-shot; player feedback and world responsiveness
+- `is_hostile: bool` flag on `AI` — required to distinguish hostile enemies from future friendly NPCs
 
-**Should have (competitive/differentiator):**
-- Dynamic status line updates in-place as cursor moves — avoids message log spam (the most common beginner mistake in roguelike look implementations)
-- HP-aware flavor text via existing `Description` component thresholds — already built, just needs wiring
-- Tile description from `TileRegistry` — already has `base_description`, data change is zero or minimal
-- Cursor snap to nearest visible entity on activation — reuses `find_potential_targets()` sort
+**Should have (competitive):**
+- Last-known-player-position pursuit — `last_known_player_x/y` on `AI` component; monster investigates last seen position before reverting to wander; this is the "investigate" pattern from DCSS and Angband; makes stealth interesting
+- Bounded wander walk (direction + steps counter) — pure random produces jitter oscillation on two tiles; direction persistence produces more natural patrol-like movement
+- `TALK` state as a non-operational enum value — future NPC schedule milestone needs this slot; adding it later would require migrating serialized state; cost is one enum value now
 
 **Defer (v2+):**
-- Multiple entities at same tile listed in full
-- Mouse click to examine — only if mouse input is added broadly
-- Look at shrouded tile for entity info (tile name is acceptable; entity info violates FOV contract)
-- Examine items on the floor once an inventory/item system exists
+- A* pathfinding — only if greedy step produces visible navigation failures in playtesting; do not add preemptively
+- Group aggro via optional `GroupAI` component — changes game balance significantly; requires inter-entity ECS communication with no clean home
+- NPC portal transit / cross-layer chase — already planned as a separate future milestone; requires architectural separation of "entity transit" from "player-visible map transition" in the portal system
+- Ranged attack AI — requires `ActionList` integration; separate milestone
 
 ### Architecture Approach
 
-The investigation system slots into the existing action dispatch pipeline with minimal changes. The `Targeting` component already carries all cursor state. `confirm_action()` already branches on `action.name` for different action types — adding an `"Investigate"` branch is consistent with the existing portal, ranged, and spell branches. The spatial query uses `esper.get_components(Position, Name)` filtered by `pos.x == tx and pos.y == ty and pos.layer == player_layer`, matching the established O(n) pattern throughout the codebase. Output goes through `esper.dispatch_event("log_message", ...)` to `MessageLog` with `[color=X]...[/color]` rich-text tags — no new UI wiring.
+The architecture is strictly additive to the existing ECS. A new `AIBehaviorState` dataclass component holds all per-entity AI state — state string, wander direction, wander steps, last-known-player coordinates, alert rounds. A new `AISystem(esper.Processor)` iterates entities with `(AI, AIBehaviorState, Position)`, evaluates state transitions, and emits `MovementRequest` or `AttackIntent`. The system is called explicitly from the ENEMY_TURN branch in `game_states.update()` — NOT registered with `esper.add_processor()` — following the same explicit-call pattern as UISystem and RenderSystem. The stub that immediately calls `end_enemy_turn()` in `Game.update()` lines 309-311 is removed and replaced by: `ai_system.process()` + second `esper.process()` + `end_enemy_turn()`.
 
 **Major components:**
-1. `ActionSystem` — extended with `_gather_investigation_data(tx, ty, layer)` method and `"Investigate"` branch in `confirm_action()`; `start_targeting()` overrides range from `stats.perception` when action name is "Investigate"
-2. `services/party_service.py` — "Investigate" `Action` updated with `range`, `requires_targeting=True`, `targeting_mode="manual"` to route through the targeting flow instead of the null `perform_action()` path
-3. `UISystem` — description panel rendered here (not in `RenderSystem`) to avoid viewport clip; reads cursor state from `Targeting` component on player entity
-4. `TileRegistry` / `tile_types.json` — `base_description` already present; optionally add `inspect_text` field with default `""` for longer flavor text
+1. `AIBehaviorState` (new dataclass, `ecs/components.py`) — per-entity behavior state: `state: str`, `wander_dir: Tuple`, `wander_steps: int`, `target_x: int`, `target_y: int`, `alert_rounds: int`; all coordinate-based (no entity ID references that break on freeze/thaw)
+2. `AISystem` (new file, `ecs/systems/ai_system.py`) — pure emitter processor; reads `AIBehaviorState`, evaluates transitions, emits `MovementRequest`/`AttackIntent`; stateless itself; needs `map_container` reference and `set_map()` method
+3. `Game.update()` ENEMY_TURN branch (modified, `game_states.py`) — explicit orchestration: run `ai_system.process()`, run `esper.process()` to consume AI requests, call `end_enemy_turn()`; stub at lines 309-311 deleted
+4. `EntityFactory` (modified, `entities/entity_factory.py`) — attach `AIBehaviorState()` when `template.ai == True`; default state `"wander"`
 
 ### Critical Pitfalls
 
-1. **Description text drawn inside RenderSystem gets clipped by viewport** — Draw the inspection description panel exclusively in `UISystem.process()`, never inside `draw_targeting_ui()`. The `Game.draw()` method sets a viewport clip before `RenderSystem` runs and clears it before `UISystem` runs. Any text rendered inside `RenderSystem` is clipped to the map viewport.
+1. **AI acts on player's turn** — if AISystem is registered with `esper.add_processor()` without a turn guard, it fires 60 times per second. Prevention: call `ai_system.process()` explicitly from the ENEMY_TURN branch only, matching the UISystem/RenderSystem explicit-call pattern.
 
-2. **`Description.get()` raises AttributeError when called without a Stats component** — Change the method signature to `get(self, stats=None)` and guard: `if self.wounded_text and stats is not None and stats.max_hp > 0`. Fix the API before wiring any callers. Portals, corpses, and other non-living entities will all be inspected via this path.
+2. **`end_enemy_turn()` called inside AI entity loop** — only the first enemy acts before turn ends; subsequent enemies' requests are processed on PLAYER_TURN. Prevention: collect all AI decisions, apply them, then call `end_enemy_turn()` once outside the loop.
 
-3. **Spatial query returns stale entities from previously-frozen maps** — Always filter `esper.get_components(Position, ...)` results by `pos.layer == player_layer` AND verify coordinates are within the active map bounds. The `ActionSystem.map_container` reference is already available. Add this filter in the initial implementation, not as a later fix.
+3. **Two enemies stack on same tile** — naive wander picks destinations independently; both pass the blocker check because neither has moved yet when the check runs. Prevention: maintain a `claimed_tiles: set` within the AI processing pass; skip destination if already claimed.
 
-4. **Cursor blocked on VISIBLE-only check makes inspect useless for explored areas** — Add a `mode` check in `move_cursor()`: if `targeting.mode == "inspect"`, allow movement to `VISIBLE`, `SHROUDED`, or `FORGOTTEN` tiles but block `UNEXPLORED`. The `VisibilityState` enum has all four states.
+4. **Entity ID in AI state breaks on map transition** — esper reassigns integer entity IDs after `create_entity()` in `thaw()`; an AI mid-chase with `target_entity=42` points at a wrong or nonexistent entity after freeze/thaw. Prevention: store only coordinates (`target_x`, `target_y`), never entity IDs, in persistent AI state.
 
-5. **Adding `inspect_text` field to `TileType` dataclass without a default breaks all construction sites** — Always add new dataclass fields with a default value (`inspect_text: str = ""`). The Python dataclass field-ordering rule (non-default cannot follow default) will cause a `TypeError` on startup otherwise.
+5. **Existing ENEMY_TURN stub not removed** — lines 309-311 in `game_states.py` immediately call `end_enemy_turn()` before AISystem runs. This stub must be deleted when AISystem takes responsibility; leaving both active causes the turn to end before AI processes.
 
 ## Implications for Roadmap
 
-Based on combined research, the build has a clear linear dependency chain of 4-5 steps. These map naturally to phases:
+The build has a strict linear dependency chain identified in ARCHITECTURE.md. Each phase is independently testable and delivers a named, verifiable outcome.
 
-### Phase 1: Wire the Investigate Action into the Targeting Flow
+### Phase 1: AI Component Foundation
 
-**Rationale:** This is the root dependency. Until the `Action(name="Investigate")` in `party_service.py` has `requires_targeting=True` and `targeting_mode="manual"`, calling it falls into the `perform_action()` null-return path and nothing works. Fixing this makes the cursor appear immediately, providing a working baseline to build on.
+**Rationale:** All downstream code depends on `AIBehaviorState` and the expanded `AI` component existing. These have zero dependencies of their own. Must come first because AISystem cannot even be imported without them. Establishing the "separate marker from state" component pattern here prevents the most expensive architectural pitfall (Pitfall 6: AI marker overloaded with state data).
+**Delivers:** `AIBehaviorState` dataclass in `ecs/components.py`; `AI` component expanded with `is_hostile: bool` flag and state enum values; `AIState` enum with `IDLE`, `WANDER`, `CHASE`, `TALK`; `EntityFactory` updated to attach `AIBehaviorState()` for all AI entities with default state `"wander"`
+**Addresses:** AIState enum (P1), AI component fields (P1), TALK enum slot (P1), is_hostile flag (P1)
+**Avoids:** Pitfall 6 (AI marker overloaded with state data — must be a pure tag); Pitfall 5 (entity ID in AI state — all fields are coordinates from the start)
 
-**Delivers:** A working investigate cursor that activates, moves with arrow keys, and cancels with Escape — using 100% existing infrastructure. No new code beyond updating one `Action` definition.
+### Phase 2: AISystem Skeleton and Turn Wiring
 
-**Addresses:** Table-stakes features: activate look mode, cursor movement, cancel, mode indicator.
+**Rationale:** The turn wiring — removing the stub, calling AISystem explicitly, double `esper.process()` — must be established before any AI behavior can be tested in-game. With the skeleton and an IDLE no-op branch in place, ENEMY_TURN no longer immediately flips but the game stays stable because all entities idle. This phase proves the scaffolding works before adding behavioral complexity.
+**Delivers:** `ecs/systems/ai_system.py` with `AISystem(esper.Processor)`, explicit ENEMY_TURN branch call in `game_states.update()`, stub at lines 309-311 removed, IDLE no-op branch, dead entity guard (`Corpse` check), `set_map()` method, `end_enemy_turn()` called once outside AI loop
+**Addresses:** AISystem processor (P1), turn gate (P1), dead entity guard (P1), stub removal
+**Avoids:** Pitfall 1 (AI acts on player turn), Pitfall 2 (`end_enemy_turn()` inside loop), anti-pattern (esper.add_processor unconditional registration)
 
-**Avoids:** Pitfall 2 (enemy turns firing) — the `TARGETING` state already blocks enemy turns in `Game.update()`.
+### Phase 3: Wander Behavior
 
-### Phase 2: Stat-Derived Range and Cursor Movement Mode
+**Rationale:** Wander is the simplest active behavior and makes the game feel immediately alive. All wander logic is self-contained and does not require player detection or LOS. Can be verified by watching enemies move randomly on each player action.
+**Delivers:** WANDER branch in AISystem with bounded direction persistence (`wander_dir`, `wander_steps`); claimed-tile reservation set; `_is_walkable()` check via `map_container.get_tile()`; monsters move every enemy turn; layer guard enforced in movement decisions
+**Addresses:** WANDER state (P1), bounded wander walk (P2), layer guard (P1)
+**Avoids:** Pitfall 3 (MovementRequest cross-turn collision), Pitfall 4 (enemies stack on same tile)
 
-**Rationale:** Before implementing the description gather (Phase 3), the cursor must move correctly for inspection. Combat targeting blocks non-VISIBLE tiles; investigation should allow SHROUDED/FORGOTTEN tiles. This phase also sets investigation range from `stats.perception` rather than a hardcoded value.
+### Phase 4: Chase Behavior and State Transitions
 
-**Delivers:** Inspection cursor that roams the full explored area. Range scales with the perception stat. The `move_cursor()` mode check prevents the cursor from reaching UNEXPLORED tiles while allowing previously-seen tiles.
+**Rationale:** Chase requires a working wander system to transition from (Phase 3 dependency). FOV computation via `VisibilityService` and the WANDER→CHASE transition are the core combat AI deliverable. The "notices you" log message and last-known-position pursuit complete the player-facing experience.
+**Delivers:** CHASE branch with `VisibilityService.compute_visibility()` NPC FOV; greedy Manhattan step toward player; WANDER/IDLE→CHASE transition on player detection with `is_hostile` guard; CHASE→WANDER transition after `turns_chasing` cooldown; "The [name] notices you!" log message (one-shot on state change); `last_known_player_x/y` tracking for post-sight investigation
+**Addresses:** CHASE state (P1), all state transitions (P1), "notices you" message (P1), last-known-position (P2)
+**Avoids:** Pitfall 5 (entity ID in AI state — use coordinates not entity IDs for last-known-position)
 
-**Addresses:** Table-stakes feature: free cursor movement over visible and explored tiles.
+### Phase 5: Safety and Edge Cases
 
-**Avoids:** Pitfall 5 (cursor blocked on non-VISIBLE tiles for inspect).
-
-**Implements:** `start_targeting()` range override + `move_cursor()` mode check in `action_system.py`.
-
-### Phase 3: Description Gather and Message Log Output
-
-**Rationale:** With a working cursor (Phases 1-2), the gather logic can be written and tested in isolation. This is the core value-add of the feature.
-
-**Delivers:** `_gather_investigation_data(tx, ty, layer)` method returning formatted strings for tile name, entity name, and HP-aware entity description. Output dispatched via `esper.dispatch_event("log_message", ...)` with rich-text color tags.
-
-**Addresses:** Must-have features: tile name display, entity name + description display, HP-aware description via `Description.get(stats)`.
-
-**Avoids:** Pitfall 3 (stale cross-map entities) via `pos.layer == player_layer` filter; Pitfall 4 (`Description.get()` crash) via `stats=None` default.
-
-**Uses:** `TileRegistry.get(tile._type_id).base_description` for tiles; `Description.get(stats)` for entities; `esper.get_components(Position, Name)` spatial query.
-
-### Phase 4: Description Panel in UISystem
-
-**Rationale:** The message log approach (Phases 1-3) works but spams combat history. A dedicated in-place status display is the correct pattern per genre conventions and research. This phase replaces or supplements log output with a sidebar panel.
-
-**Delivers:** A sidebar description panel in `UISystem` that updates in-place as cursor moves. Shows tile and entity info without polluting the message log. Word-wrap for long descriptions using a greedy split over sidebar width.
-
-**Addresses:** Differentiator feature: dynamic status line that updates in-place; avoids log spam.
-
-**Avoids:** Pitfall 1 (description drawn in RenderSystem gets clipped) — panel lives exclusively in `UISystem.process()`.
-
-**Implements:** Mode branch in `UISystem.draw_sidebar()` or `UISystem.process()` reading `Targeting` component from player entity.
-
-### Phase 5: Polish and UX Refinements (Optional)
-
-**Rationale:** Quality-of-life improvements that do not block core functionality. Can be deferred or collapsed into Phase 4.
-
-**Delivers:** Header text shows "Investigating..." when look mode is active. Cursor color changes when an entity is found at cursor position (visual feedback). Cursor snaps to nearest visible entity on activation. Investigate action grouped separately from combat actions in the action list.
-
-**Addresses:** Differentiator features: cursor snap, visual mode distinction.
-
-**Avoids:** UX pitfalls: no visual distinction between entity and empty tile; inspect action listed between combat actions.
+**Rationale:** The "looks done but isn't" behaviors — portal safety, freeze/thaw correctness, multi-enemy turn verification, stub removal confirmation — are invisible until edge cases are hit. Addressing them as a dedicated phase before calling the milestone done prevents runtime surprises. The full checklist from PITFALLS.md is the acceptance criterion.
+**Delivers:** Portal tile exclusion from wander destinations; freeze/thaw AI state validation on map transition; claimed-tiles stress test with multiple adjacent enemies; `TurnOrder` documented as unused stub with comment; full PITFALLS.md "looks done but isn't" checklist green
+**Addresses:** Portal safety, freeze/thaw correctness, `TurnOrder` stub documentation
+**Avoids:** Pitfall 7 (enemies walk into portals), Pitfall 5 (freeze/thaw corruption), Pitfall 8 (TurnOrder misuse)
 
 ### Phase Ordering Rationale
 
-- Phases 1-4 are a strict linear dependency chain: the action must be wired before cursor movement, cursor movement must be correct before the gather is meaningful, and the gather must produce output before the panel has content to show.
-- Phase 5 is independent and can be interleaved with Phase 4 or deferred.
-- The architecture research explicitly recommends this build order and it is validated against the existing code structure.
+- Phases 1→2→3→4 form a strict linear dependency: the component must exist before the system, the skeleton must be wired before behavior can be tested, wander must work before chase can transition from it
+- Phase 5 is a safety pass after functional behavior is working; edge cases require working features to test against
+- `AIBehaviorState` as a separate component (not fields on `AI`) is a hard architectural decision in Phase 1; changing it later requires updating all call sites — must be right from the start
+- The explicit-call approach for AISystem (not esper.add_processor) is a foundational decision in Phase 2 that prevents the most subtle runtime bug (AI firing on every frame)
+- The double `esper.process()` approach is deliberately simple; architecture notes it as acceptable at current scale with a clear refactor path if VisibilitySystem cost grows
 
 ### Research Flags
 
-Phases with standard patterns (skip deeper research — implementation details are fully documented):
-- **Phase 1:** Single `Action` definition change in `party_service.py` — trivial, pattern is identical to existing Spells action wiring
-- **Phase 2:** Two-method extension of `action_system.py` — pattern documented in ARCHITECTURE.md with code examples
-- **Phase 3:** Spatial gather implementation — fully worked example in ARCHITECTURE.md Pattern 2
-- **Phase 4:** UISystem panel — standard sidebar mode branch; word-wrap pattern documented in STACK.md
+Phases with standard patterns (skip deeper research — implementation details fully documented in research files):
+- **Phase 1:** Pure dataclass additions following established project convention; zero ambiguity; all patterns in `ecs/components.py` already
+- **Phase 2:** Follows the exact same explicit-call pattern as UISystem and RenderSystem; `set_map()` contract documented in ARCHITECTURE.md; turn guard pattern provided with code examples
+- **Phase 3:** `random.shuffle` + walkability check + claimed-tile set is trivially well-understood; code examples in both STACK.md and ARCHITECTURE.md
 
-No phases require additional `/gsd:research-phase` deeper research. All implementation details are resolved to the level of specific method signatures, line references, and code examples in the research files.
+Phases that benefit from one targeted source check during planning:
+- **Phase 4:** Verify the `VisibilityService.compute_visibility()` function signature and `is_transparent` callback shape against live source in `services/visibility_service.py` before writing chase LOS code; one read is sufficient
+- **Phase 5:** Verify `map_container.freeze()` / `thaw()` component handling in `map/map_container.py` lines 64-92 to confirm coordinate-based AI state survives correctly; confirm `DeathSystem` still removes `AI` component on death (death_system.py line 29)
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All package versions verified against live runtime; no new dependencies needed; all API patterns confirmed against working code |
-| Features | HIGH | Based on 30+ year roguelike genre conventions (NetHack, DCSS, Brogue) plus direct codebase analysis of existing `Description`, `Name`, `Targeting` components |
-| Architecture | HIGH | Based on direct codebase inspection of all relevant files; build order and code examples verified against live source; integration points confirmed |
-| Pitfalls | HIGH | Based on direct codebase inspection of `Game.draw()` clip order, `Description.get()` implementation, `esper` singleton behavior, and `VisibilityState` enum |
+| Stack | HIGH | All technologies verified against installed packages and live codebase; no new deps needed; alternatives explicitly evaluated and dismissed with specific rationale |
+| Features | HIGH | Based on direct codebase analysis + 30-year roguelike genre consensus across NetHack, DCSS, Angband, Brogue; all dependencies mapped against actual component and system files |
+| Architecture | HIGH | Derived from direct inspection of `game_states.py`, `movement_system.py`, `death_system.py`, and existing processor registration patterns; explicit-call pattern verified against UISystem/RenderSystem usage |
+| Pitfalls | HIGH | All pitfalls grounded in specific line references in the live codebase; the stub at lines 309-311 and entity ID reassignment in `thaw()` are confirmed present and verified |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Turn consumption decision:** Research identifies this as a design choice, not a technical constraint. Investigation as a free action (does not call `end_player_turn()`) is the genre standard and the recommended approach. Confirm this is the intended design before implementing Phase 3's `confirm_action()` branch.
-- **Header text change:** Whether to change "Targeting..." to "Investigating..." when the active action is Investigate is cosmetic and left as optional in all research files. Decide before Phase 4 to avoid a separate polish pass.
-- **Cursor color for investigate mode:** Research recommends cyan to distinguish from the yellow combat cursor. The existing targeting cursor is yellow. Confirm the color constant before Phase 1 to avoid a visual regression fix later.
+- **Greedy chase in complex map geometry:** Manhattan step is sufficient for open dungeon rooms but may produce visibly stuck behavior in narrow L-shaped corridors or dead ends. Monitor during playtesting. A* (pathfinding PyPI package) is the deferred addition if greedy step fails — do not add preemptively.
+- **Double `esper.process()` VisibilitySystem overhead:** Running `esper.process()` twice per ENEMY_TURN also runs VisibilitySystem twice. At current entity counts this is negligible. Establish a performance baseline during Phase 2 wiring so any future regression is detectable.
+- **`is_transparent` callback shape for AISystem LOS:** The exact signature of the transparency function passed to `VisibilityService.compute_visibility()` should be confirmed against `services/visibility_service.py` before Phase 4. The pattern is established in `visibility_system.py` but AISystem will be a new caller.
+- **Wander behavior feel:** Whether `wander_steps = 3` produces natural-looking movement or jitter/drift is only verifiable by running the game. This is a playtest calibration gap, not a technical one. Start with 3 steps and adjust.
 
 ## Sources
 
-### Primary (HIGH confidence)
-- Live codebase: `ecs/systems/action_system.py`, `ecs/systems/render_system.py`, `ecs/systems/ui_system.py`, `ecs/components.py`, `game_states.py`, `config.py`, `services/party_service.py`, `map/tile_registry.py`, `assets/data/tile_types.json`, `assets/data/entities.json` — read directly during research
-- Installed package verification: `python3 -c "import pygame; print(pygame.__version__)"` → `2.6.1`; `esper.__version__` → `3.7`
-- Roguelike convention: NetHack `:` look command, DCSS `x` examine cursor, Brogue examine overlay — 30+ year established conventions, HIGH confidence
+### Primary (HIGH confidence — direct codebase inspection)
+- `ecs/components.py` — AI marker, MovementRequest, AttackIntent, Stats.perception, Position.layer, TurnOrder stub
+- `ecs/systems/turn_system.py` — TurnSystem state machine, end_player_turn/end_enemy_turn API
+- `game_states.py` lines 309-311 — confirmed enemy turn stub; lines 118-129 — processor registration pattern
+- `ecs/systems/movement_system.py` — MovementRequest consumer, walkability checks, blocker detection
+- `ecs/systems/combat_system.py` — AttackIntent consumer pattern
+- `ecs/systems/death_system.py` line 29 — AI component removal on death
+- `ecs/systems/visibility_system.py` — VisibilityService integration and constructor injection pattern
+- `services/visibility_service.py` — `compute_visibility(origin, radius, transparency_fn)` API; returns set of (x,y)
+- `entities/entity_factory.py` — AI component attachment pattern
+- `entities/entity_registry.py` — EntityTemplate.ai bool field
+- `entities/monster.py` — `create_orc` using empty `AI()` constructor; must be updated
+- `map/map_container.py` lines 64-92 — freeze/thaw entity ID reassignment behavior confirmed
+- `.planning/codebase/ARCHITECTURE.md` — system registration pattern, set_map() contract
+- `.planning/codebase/CONCERNS.md` — fragile areas, known tech debt
 
-### Secondary (MEDIUM confidence)
-- PyGame 2.x word-wrap limitation (no built-in wrap in `font.render`) — confirmed from existing sidebar rendering code patterns
-- esper module-global singleton freeze/thaw behavior — inferred from `transition_map()` implementation in `game_states.py`
-
-### Tertiary (LOW confidence)
-- Performance threshold estimates (>200 entities for spatial query to become noticeable, >60x60 tiles for range highlight to slow) — estimates based on domain knowledge, not profiled against this codebase
+### Secondary (HIGH confidence — domain consensus)
+- Roguelike AI convention: IDLE/WANDER/CHASE state machine — 30-year consensus across NetHack, DCSS, Angband, Brogue; virtually all ASCII roguelike AI tutorials
+- Greedy Manhattan step sufficient for v1 tile-based dungeon — established by NetHack's success and DCSS's documented incremental AI improvement history
+- Roguelike AI pitfall: using player tile visibility_state for NPC sight — documented failure mode in RogueBasin wiki AI articles; HIGH confidence
+- ECS turn-based AI ordering patterns (group-act, simultaneous movement tile reservation) — well-established ECS/roguelike pattern
 
 ---
 *Research completed: 2026-02-14*

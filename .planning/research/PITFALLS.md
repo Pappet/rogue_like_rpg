@@ -1,135 +1,204 @@
 # Pitfalls Research
 
-**Domain:** Roguelike RPG — Adding investigation/targeting features to existing ECS system
+**Domain:** Roguelike RPG — Adding AI behavior states and NPC wander logic to existing ECS turn-based system
 **Researched:** 2026-02-14
-**Confidence:** HIGH (based on direct codebase inspection + domain knowledge)
+**Confidence:** HIGH (based on direct codebase inspection + domain knowledge of ECS AI patterns)
 
 ---
 
 ## Critical Pitfalls
 
-### Pitfall 1: Cursor Rendered Inside the Viewport Clip, Description Rendered Outside It
+### Pitfall 1: AI System Runs During Player Turn Because `esper.process()` Has No Turn Guard
 
 **What goes wrong:**
-The `Game.draw()` method in `game_states.py` (lines 329–338) sets a viewport clip before rendering entities via `RenderSystem.process()`, then calls `surface.set_clip(None)` before rendering UI via `UISystem.process()`. If the targeting cursor is drawn inside `RenderSystem` (which already happens) it is correctly clipped. But the description panel — showing what the cursor is pointing at — belongs in the UI layer. If a developer accidentally draws the description box inside `RenderSystem` (to keep cursor and text together), it will be clipped to the viewport and may be partially or fully invisible.
+`Game.update()` calls `esper.process()` every frame unconditionally (line 298 in `game_states.py`). All registered processors — including the new `AISystem` — run every frame. If `AISystem.process()` does not internally check `turn_system.current_state == GameStates.ENEMY_TURN`, it will add `MovementRequest` components to enemies during `PLAYER_TURN`. The `MovementSystem` processes `MovementRequest` in the same `esper.process()` call, so enemies move on the player's turn. The game appears to work but enemies move twice per round (once on player's turn, once on enemy's turn).
 
 **Why it happens:**
-It feels natural to put "what is at cursor position" text next to the cursor draw code, which lives in `RenderSystem.draw_targeting_ui()`. The rendering of the cursor highlight already sits inside that method. The draw order in `Game.draw()` is non-obvious: map clip → entity render → clip off → UI render.
+The existing processors (`MovementSystem`, `CombatSystem`, `VisibilitySystem`) are not turn-gated — they process any pending components regardless of whose turn it is. This works now because only the player input path adds `MovementRequest`. Adding an AI that emits `MovementRequest` without a guard breaks the implicit assumption.
 
 **How to avoid:**
-Draw the investigation description panel exclusively inside `UISystem.process()`, not inside `RenderSystem`. Pass cursor state to UISystem via the `Targeting` component (already on the ECS entity), not via a direct method call or shared variable.
-
-**Warning signs:**
-Description text appears clipped at the right or bottom edge of the viewport. Text is visible in some camera positions but not others.
-
-**Phase to address:**
-The phase that introduces the description panel UI widget. Define the rendering contract upfront: "description panel = UI layer = UISystem only."
-
----
-
-### Pitfall 2: Game State Check in `update()` Allows Enemy Turn to Fire During Targeting
-
-**What goes wrong:**
-In `game_states.py` `Game.update()` (lines 308–311), enemy turns are advanced with:
-
+Inside `AISystem.process()`, add an explicit guard as the first line:
 ```python
-if self.turn_system and not (self.turn_system.is_player_turn() or self.turn_system.current_state == GameStates.TARGETING):
-    self.turn_system.end_enemy_turn()
+def process(self):
+    if not self.turn_system.current_state == GameStates.ENEMY_TURN:
+        return
 ```
-
-This correctly blocks enemy turns during targeting. However, if the investigation "Inspect" action is added as a non-targeting action (i.e., `requires_targeting=False`, handled in `perform_action`), the `GameStates.TARGETING` check never fires. The state machine stays in `PLAYER_TURN`, `perform_action` returns, and `move_player()` is never called, so `end_player_turn()` is never called — but the `update()` loop does not advance the enemy turn either, because `is_player_turn()` returns True. The game appears frozen: player can keep pressing keys but nothing visible happens.
-
-**Why it happens:**
-Inspect is a free action ("look, don't touch") — it should not end the player's turn. But the current code has no concept of a zero-cost action. Every non-Move non-targeting action path in `handle_player_input()` calls `perform_action()`, which currently only handles "Enter Portal" and returns False for everything else. There is no turn-end call after `perform_action` returns False.
-
-**How to avoid:**
-Add a dedicated `GameStates.INSPECTING` state (or model inspect as a special `targeting_mode="inspect"` within the existing TARGETING flow). Using the existing `TARGETING` state is safer: it already blocks enemy turns and provides the cursor movement loop. Add `"inspect"` as a new targeting mode value to `Action.targeting_mode`.
+Do not rely on the caller to gate the AI. The system must be self-governing because `esper.process()` calls all processors without discrimination.
 
 **Warning signs:**
-After pressing Enter on Inspect, arrow keys move the cursor but pressing Escape returns to an unresponsive state. Round counter does not increment. Header still shows "Player Turn".
+Enemies move before the player does on round 1. Round counter increments twice per perceived "enemy action". Player inputs feel sluggish because enemies are consuming turn state mid-player-turn.
 
 **Phase to address:**
-The phase that introduces the Inspect action. Decision to reuse TARGETING vs. add a new state must be made before implementing input handling.
+The phase that registers `AISystem` with esper — add the turn guard on the same commit as the `esper.add_processor(ai_system)` call. Never merge an AI processor without this guard.
 
 ---
 
-### Pitfall 3: ECS Spatial Query Returns Stale Entities From Frozen Maps
+### Pitfall 2: `AISystem.process()` Calls `turn_system.end_enemy_turn()` Before All Enemies Have Acted
 
 **What goes wrong:**
-`esper.get_components(Position, Renderable)` (used in `action_system.py` `find_potential_targets()` and throughout the codebase) iterates all entities currently registered in the global esper world. When a player leaves a map, `map_container.freeze()` is called, which removes entities from the world to disk. But if `freeze()` is called after `get_components()` returns a list that the caller holds — or if `freeze()` logic has a bug — dead-map entities remain queryable. An Inspect at position (5, 3) may return an entity from the previous map that happens to share those coordinates.
+The current `Game.update()` stub (lines 309–311) advances the enemy turn immediately by calling `turn_system.end_enemy_turn()` whenever the state is `ENEMY_TURN`. When real AI is added, `AISystem.process()` must decide when ALL enemies have finished acting — not just the first one. If `end_enemy_turn()` is called inside the AI processing loop after the first enemy acts, subsequent enemies in the same `esper.process()` call have their `MovementRequest` accepted but the turn has already flipped back to `PLAYER_TURN`. The `MovementSystem` runs after `AISystem` in the same frame and processes those requests — but it does so during `PLAYER_TURN`, effectively giving the second enemy a "free" move.
 
 **Why it happens:**
-`esper` is a module-level singleton. There is no per-map entity scope. The freeze/thaw cycle in `game_states.py` `transition_map()` (lines 253–277) correctly removes entities, but between maps there is a window where both maps' entities coexist. Any spatial query during this window returns cross-map results.
+The simplest AI implementation adds a `MovementRequest` and calls `end_enemy_turn()` inside the `get_components(AI)` loop. This works with one enemy but fails with multiple because the method mutates shared `TurnSystem` state mid-iteration.
 
 **How to avoid:**
-Scope the spatial query for Inspect to the current map's layer. After collecting entities from `esper.get_components(Position, ...)`, filter by `pos.layer == player_layer` AND verify the tile at `(pos.x, pos.y, pos.layer)` is on the active `map_container`. The active map reference is already available in `ActionSystem.map_container`.
+Collect all AI decisions into a list first, apply them in a second pass, then call `end_enemy_turn()` once at the end of `AISystem.process()`:
+```python
+def process(self):
+    if not self.turn_system.current_state == GameStates.ENEMY_TURN:
+        return
+    for ent, (pos, ai) in list(esper.get_components(Position, AI)):
+        self._decide(ent, pos, ai)  # adds MovementRequest, does NOT end turn
+    self.turn_system.end_enemy_turn()  # called ONCE, outside loop
+```
+Also remove the stub in `Game.update()` that currently flips the turn back (lines 309–311) before the AI system is integrated — that stub must be deleted when `AISystem` takes responsibility for ending enemy turns.
 
 **Warning signs:**
-Inspecting a tile shows information about an entity that is not visually present. Entity names appear in inspection text that do not match what is rendered on screen.
+With two or more enemies, only the first enemy's action is visible before the player regains control. Second and third enemy positions change between frames without a corresponding player action. Round counter increments before all enemies have visibly moved.
 
 **Phase to address:**
-The phase implementing the ECS spatial query for Inspect. Add layer and map-bounds filtering as part of the initial query implementation, not as a later fix.
+The phase implementing multi-entity AI processing. The stub removal and the `end_enemy_turn()` placement must be coordinated in the same phase.
 
 ---
 
-### Pitfall 4: Description Component's `get()` Method Called Without a Stats Component
+### Pitfall 3: `MovementRequest` Collision Between Player and AI on the Same Frame
 
 **What goes wrong:**
-`Description.get(stats)` in `components.py` (line 104) accepts a `Stats` object and checks `stats.max_hp`. For the investigation feature, the description of a tile is needed (not an entity). Tiles do not have a `Stats` component. If the aggregation logic calls `description.get(stats)` and `stats` is `None` (or if an entity lacks a Stats component), the method raises `AttributeError: 'NoneType' object has no attribute 'max_hp'`.
+`MovementSystem.process()` iterates all entities with `(Position, MovementRequest)`. If both the player and an enemy have a `MovementRequest` in the same `esper.process()` call, `MovementSystem` processes both. The player should never have an active `MovementRequest` during `ENEMY_TURN` (the player's request is added in `move_player()` during `PLAYER_TURN` and removed by `MovementSystem` in the same frame). However, if the player's `MovementRequest` is not consumed before the enemy turn starts, a race condition exists: both move simultaneously, and the bump-combat detection in `MovementSystem._get_blocker_at()` may trigger for the wrong entity.
 
-This also occurs for entities like Portals or Corpses that have a `Description` component but lack `Stats` (the `Corpse` component has no HP).
+A more likely version: an AI entity targets the player's current tile, and the player also has a pending request targeting the enemy's current tile. `_get_blocker_at()` is called for each — both see each other as blockers — and both add `AttackIntent` targeting each other. `CombatSystem` processes both intents: the player attacks the enemy AND the enemy attacks the player in the same frame without the player having initiated anything.
 
 **Why it happens:**
-`Description.get()` was designed for the specific case of living monsters. The investigation feature needs to call it on any entity — including those without HP. Developers naturally reach for `description_component.get(stats)` because that is the existing API.
+`MovementRequest` is a component used by both the player and all AI entities. The system is data-driven and cannot distinguish between player-generated and AI-generated requests. `esper.process()` runs all processors sequentially, so `MovementSystem` sees all pending `MovementRequest` components regardless of their origin.
 
 **How to avoid:**
-Make `Stats` optional in `Description.get()`. Change the signature to `get(self, stats=None) -> str` and guard: `if self.wounded_text and stats is not None and stats.max_hp > 0`. For tile descriptions, call `tile_type.base_description` directly from `TileRegistry` — tiles already have this field (`resource_loader.py` line 81).
+Use strict turn ordering: player's `MovementRequest` is guaranteed consumed within `PLAYER_TURN` (verified: `move_player()` ends the turn immediately). AI only adds `MovementRequest` during `ENEMY_TURN`. Never allow cross-turn `MovementRequest` leakage. Add an assertion in `AISystem.process()`: verify no `MovementRequest` exists on any entity before adding new ones. If one is found on an entity, log a warning and skip.
 
 **Warning signs:**
-`AttributeError` traceback in the console when moving the cursor over a tile. Investigation works for monsters but crashes on portals, corpses, or floor tiles.
+Player takes damage on a turn where only movement was pressed, with no adjacent enemy. Two combat log entries appear for one player action. Entity position after movement is wrong — entity ended up in a different location than expected.
 
 **Phase to address:**
-The phase that aggregates descriptions from multiple sources. Fix the API before wiring up any callers.
+The phase introducing `AISystem`. The turn separation guarantee must be documented and verified in tests — write a test that confirms no `MovementRequest` remains on the player entity after `MovementSystem.process()` runs.
 
 ---
 
-### Pitfall 5: Cursor Moves Off Visible Area Into SHROUDED Tiles, Breaking Inspect Logic
+### Pitfall 4: Wander Logic Causes Enemies to Stack on the Same Tile
 
 **What goes wrong:**
-`ActionSystem.move_cursor()` (lines 123–146) already checks `VisibilityState.VISIBLE` before allowing cursor movement. But the investigation feature adds a new requirement: the cursor must be able to move freely over explored tiles (SHROUDED/FORGOTTEN) so the player can read their remembered descriptions. If `move_cursor()` blocks movement to non-VISIBLE tiles, Inspect becomes useless for exploring remembered areas.
-
-Conversely, if the check is removed entirely, the cursor can reach UNEXPLORED tiles and the description query returns empty or crashes.
+A naive wander implementation picks a random adjacent walkable tile for each AI entity independently. If two entities are adjacent and both decide to move into the same empty tile in the same frame, both `MovementRequest` components target the same destination. `MovementSystem._get_blocker_at()` checks for `Blocker` components at the destination — but the `Blocker` component is at the entity's *current* position when the check runs. Neither entity has moved yet. Both pass the blocker check and both move to the same tile. Two entities now occupy (x, y) simultaneously. This corrupts movement collision for both entities thereafter: they become invisible to each other's blocker checks.
 
 **Why it happens:**
-The existing `move_cursor()` was written for combat targeting where LoS is required. Reusing it unchanged for investigation silently makes Inspect combat-only. Removing the check silently allows probing unexplored areas.
+`_get_blocker_at()` reads current `Position` components, not pending positions. When two AI entities both decide to move into (5, 10) in the same frame, the pre-movement state has neither entity at (5, 10), so both get clearance. This is a classic "reservation" problem in simultaneous-movement systems.
 
 **How to avoid:**
-Add a `mode` check in `move_cursor()`: if `targeting.mode == "inspect"`, allow movement to `VISIBLE`, `SHROUDED`, or `FORGOTTEN` tiles but block `UNEXPLORED`. The `VisibilityState` enum already has all four states.
+Before applying an AI movement decision, track "claimed tiles" within the same AI processing pass:
+```python
+claimed_tiles = set()
+for ent, (pos, ai) in list(esper.get_components(Position, AI)):
+    dest = self._pick_wander_dest(ent, pos)
+    if dest and dest not in claimed_tiles:
+        claimed_tiles.add(dest)
+        esper.add_component(ent, MovementRequest(dest[0]-pos.x, dest[1]-pos.y))
+    # else: skip this entity's move this turn
+```
+The set is local to the AI processing frame and costs O(n) for n AI entities.
 
 **Warning signs:**
-During investigation, the cursor refuses to move to any tile the player walked past previously. Or the cursor moves to black unexplored tiles with no description.
+Two orcs visually overlap on the same tile. Bump combat stops working for one of the stacked entities. After stacking, one entity becomes "unkillable" because attacks target the wrong entity via `_get_blocker_at()`.
 
 **Phase to address:**
-The phase implementing cursor movement for the Inspect action. The mode check must be in place before any playtesting.
+The phase implementing wander movement. Claimed-tile tracking must be in the initial implementation, not added later after the bug is discovered in playtesting.
 
 ---
 
-### Pitfall 6: Adding `description` Field to JSON Breaks Existing Entities Without It
+### Pitfall 5: AI Entities Freeze/Thaw Into a Dead or Invalid State
 
 **What goes wrong:**
-`resource_loader.py` `load_entities()` already handles `description` as an optional field (`item.get("description", "")`, line 141). Adding new optional JSON fields for investigation (e.g., `tile_description`, `inspect_note`) is safe in `entities.json`. However, `tile_types.json` uses `TileType` from `tile_registry.py`. If a new field is added to `TileType` as a required positional argument (not keyword with a default), every call site that constructs a `TileType` directly in tests or map generators will raise `TypeError`.
+`MapContainer.freeze()` serializes all component instances to `frozen_entities`. `thaw()` recreates entities by calling `world.create_entity()` and adding the same component objects back. The AI component is currently a bare marker (`class AI: pass`). If AI state is added — such as `AIState` enum (WANDERING, HOSTILE, IDLE) or a target entity ID — and an AI entity is frozen mid-chase with `target_entity=42`, that entity ID is meaningless after thaw because entity IDs are reassigned by `world.create_entity()`. The enemy resurfaces on the new map still "chasing" entity 42, which is now a different entity or does not exist at all.
 
 **Why it happens:**
-`TileType` is a dataclass. Adding a field without a default at the end of a dataclass with fields-that-have-defaults causes Python to raise `TypeError: non-default argument follows default argument`. Developers sometimes add the new field at the end, forgetting this rule.
+`freeze()` does a shallow copy of component objects. Entity ID references embedded inside components become dangling references after thaw because esper assigns new integer IDs during `create_entity()`. This is documented as a fragile area in `.planning/codebase/CONCERNS.md` (lines 65–68) but only for the esper `_entities` internal access — the ID invalidation problem is a separate concern.
 
 **How to avoid:**
-Always add new optional fields to dataclasses with a default value. For `TileType`, add after existing fields: `inspect_text: str = ""`. For `EntityTemplate`, do the same. The JSON loaders already use `item.get("field", default)` patterns so they are safe.
+AI state that references entity IDs (target, last_seen_entity) must be cleared or reset on freeze, not carried across. Add a `reset_transient_state()` method to the AI component, or ensure that on thaw, any entity-ID references are set to `None` and the AI re-evaluates from its current position. The safest approach: AI state should only reference data that is stable across freeze/thaw cycles — positions (x, y coordinates) are stable; entity IDs are not.
 
 **Warning signs:**
-`TypeError` on startup when loading tiles. All entities fail to load even though only one new field was added. Tests that directly construct `TileType(...)` with positional arguments break.
+After a map transition, enemies immediately attack without the player being nearby. `AttackIntent` added to entities with no valid target. `KeyError` in `CombatSystem` when trying to resolve an `AttackIntent` pointing to a non-existent entity.
 
 **Phase to address:**
-The phase that modifies JSON data files and their dataclass definitions.
+The phase that introduces AI state beyond the bare marker. Establish the rule "no entity IDs in persistent AI state" before any stateful fields are added to the AI component.
+
+---
+
+### Pitfall 6: AI Behavior State Added to the Empty `AI` Marker Instead of a Separate `AIState` Component
+
+**What goes wrong:**
+The current `AI` component is an empty dataclass (`class AI: pass`). The natural reflex is to add state directly to it: `class AI: state = AIState.WANDERING; target = None`. This works initially but creates problems as complexity grows. Systems that only need to know "is this an AI entity?" must import and understand the full AI data structure. When multiple AI behavior types are needed (passive NPC, hostile enemy, fleeing animal), the single component becomes a union of all possible fields. Adding a field for one type (e.g., `patrol_waypoints` for a guard) pollutes all AI entities.
+
+**Why it happens:**
+The empty marker is right there and adding a field to an existing dataclass feels simpler than creating a new component. ECS best practice (separation of data concerns) is not obvious from the empty-class starting point.
+
+**How to avoid:**
+Keep `AI` as a pure marker tag component — its presence on an entity means "this entity is AI-controlled." Create a separate `AIState` component for behavior data:
+```python
+@dataclass
+class AIState:
+    state: str = "wander"   # "wander", "hostile", "idle"
+    target_x: int = -1      # last known player position (coordinate, not entity ID)
+    target_y: int = -1
+    wander_cooldown: int = 0
+```
+Query `esper.get_components(Position, AI)` to find all AI entities. Query `esper.get_components(Position, AI, AIState)` for entities with active behavior state. This allows NPCs that have `AI` but no `AIState` (passive, no behavior), and enemies that have both.
+
+**Warning signs:**
+The `AI` dataclass has more than 3 fields. Different monster types check `if ai.type == "guard"` inside `AISystem`. Passive NPCs that should have no behavior are being iterated by hostile AI logic because they also have the `AI` marker.
+
+**Phase to address:**
+The phase that introduces the first AI state field — before writing any state-checking logic in AISystem.
+
+---
+
+### Pitfall 7: AI Movement Triggers Map Transitions Through Portals
+
+**What goes wrong:**
+`MovementSystem._get_blocker_at()` checks for `Blocker` components. If an AI entity steps onto a Portal entity's tile, nothing in `MovementSystem` fires the portal logic — portals don't have `Blocker`, they have `Portal`. The AI entity moves onto the portal tile without event. However, in future milestones when NPC portal use is planned, naive portal activation logic in `AISystem` that checks "is there a Portal at my position?" may call `esper.dispatch_event("change_map", ...)`. This would trigger `Game.transition_map()`, which calls `map_container.freeze()` — freezing all non-player entities including the AI entity that just arrived on the destination map, and immediately sending it back. The entity ends up frozen on the source map with corrupted position state.
+
+**Why it happens:**
+The portal transition system in `Game.transition_map()` was designed for the player only. It calls `map_container.freeze()` which excludes only `[self.player_entity]`. An NPC triggering a portal is not excluded and gets frozen on the wrong map.
+
+**How to avoid:**
+For this milestone, AI entities must explicitly NOT use portals. Add a check in any "entity-at-portal" logic: skip portal activation for entities that are not the player. For the future NPC portal milestone, `transition_map()` will need refactoring to support moving a non-player entity across maps — that is a significant architectural change, not an incremental add.
+
+**Warning signs:**
+Enemies disappear when they walk onto portal tiles. After a portal-triggered map change, the previously-adjacent enemy appears at the player's starting position on the new map. `freeze()` is called with an entity count mismatch.
+
+**Phase to address:**
+This milestone's wander phase — add an explicit check in the wander destination picker that excludes portal tiles as valid wander destinations. This is the minimal prevention. Full NPC portal support is a separate milestone.
+
+---
+
+### Pitfall 8: `TurnOrder` Component Exists But Is Unused, Leading to Incorrect Ordering Assumptions
+
+**What goes wrong:**
+The `TurnOrder` component exists in `ecs/components.py` with a `priority` field, but no system reads or uses it. The binary `PLAYER_TURN` / `ENEMY_TURN` model in `TurnSystem` means all enemies act as a group, not in priority order. When `AISystem` is added, developers may assume `TurnOrder` will be used to sequence individual AI actions (e.g., "faster enemies act first"). If code is written that depends on `TurnOrder` priority without implementing the mechanism to enforce it, enemies with higher priority appear no different from low-priority enemies. Worse: if another developer later implements `TurnOrder`-based sequencing, it changes the order enemies act in combat, potentially breaking existing test expectations.
+
+**Why it happens:**
+`TurnOrder` was added speculatively. Its presence implies a richer turn system than what exists. Developers new to the codebase naturally assume a component with a `priority` field is being used somewhere.
+
+**How to avoid:**
+For this milestone: explicitly document that `TurnOrder` is a stub for future use and `AISystem` does NOT use it. All enemies act in esper's entity iteration order (deterministic but not priority-based). Add a comment to `TurnOrder`:
+```python
+@dataclass
+class TurnOrder:
+    priority: int  # STUB: not yet consumed by any system; reserved for future scheduling
+```
+For this milestone, do not add `TurnOrder` to any entity or query it. Implement priority-based turn ordering only when schedules milestone is planned.
+
+**Warning signs:**
+`AISystem` code that calls `esper.get_components(TurnOrder)` and sorts results — if `TurnOrder` is not on most entities, this silently excludes them from acting. Tests that verify "fast enemies move first" pass because they happen to be created in the right order, not because priority is enforced.
+
+**Phase to address:**
+The phase that first uses `AISystem`. Document the stub and defer priority ordering to the schedules milestone.
 
 ---
 
@@ -137,11 +206,12 @@ The phase that modifies JSON data files and their dataclass definitions.
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Putting description lookup logic directly in `RenderSystem.draw_targeting_ui()` | Keeps cursor and label co-located | Description is clipped by viewport; duplicates entity-query logic | Never — keep in UISystem |
-| Hardcoding "Inspect" as a special case in `handle_player_input()` rather than using `Action` dataclass | Faster to write | Bypasses the action system; Inspect cannot gain targeting mode, range, or cost constraints | Never for this codebase — use the Action/ActionList pattern |
-| Using `esper.get_components(Position, Renderable)` without layer filtering for spatial queries | Simple one-liner | Returns cross-map entities during map transitions | Acceptable only in single-map contexts; always filter by layer for multi-map |
-| Calling `Description.get(stats)` everywhere without None guard | Works for monsters | Crashes on portals, tiles, corpses | Never — fix the API |
-| Adding an `INSPECTING` state to `GameStates` enum | Clean state separation | If not added, reusing TARGETING leaks combat-targeting assumptions into inspect | Reuse TARGETING with mode="inspect" is acceptable if mode is consistently checked |
+| Adding behavior state directly to the `AI` dataclass | Faster than creating a second component | Pollutes all AI entities with fields they don't use; prevents specialized NPC types | Never for this codebase — use a separate `AIState` component |
+| Calling `turn_system.end_enemy_turn()` inside the AI entity loop | Simple, linear code | Second and subsequent enemies act after turn has ended; movement requests processed on wrong turn | Never — call once, outside loop |
+| Using `esper.get_components(Position, AI)` without the `AISystem` turn guard | One less branch | AI acts on player's turn when other systems trigger reprocessing | Never — guard is mandatory |
+| Storing target entity ID (integer) in AI state | Enables direct entity lookup | Entity IDs are invalid after freeze/thaw cycle; causes `KeyError` in combat | Never for persistent AI state — use coordinates instead |
+| Skipping "claimed tiles" reservation in wander | ~5 lines less code | Two entities move to same tile; blocker system corrupted silently | Never — the bug is not visible until multiple enemies exist in proximity |
+| Not removing the `Game.update()` enemy-turn stub when `AISystem` takes over | Gradual rollout feels safer | Stub fires first, ends enemy turn before AI processes; AI actions occur on wrong turn | Acceptable during development only if both stub and AISystem are protected by the same guard |
 
 ---
 
@@ -149,11 +219,13 @@ The phase that modifies JSON data files and their dataclass definitions.
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| `UISystem` + `Targeting` component | Query `esper.get_component(Targeting)` and iterate in UISystem to find cursor position for description display | Correct — `Targeting` is already on the player entity; UISystem has `self.player_entity` to look it up directly with `esper.component_for_entity` |
-| `RenderSystem` viewport clip + UI overlay | Drawing description text inside `draw_targeting_ui()` | Draw description in `UISystem.process()` after `surface.set_clip(None)` has been called |
-| `ActionSystem.set_map()` + `transition_map()` | Forgetting that `action_system` reference is local to `Game` class and not in `persist` dict | `action_system` is recreated on each `startup()` call (line 146); it does not survive map transitions unless `set_map()` is called — already handled in `transition_map()` line 288 |
-| `esper` global world + `freeze()`/`thaw()` cycle | Running spatial queries between `freeze()` and `thaw()` calls | Never run spatial queries during map transitions; inspection is only valid during `PLAYER_TURN` or `TARGETING` states |
-| `Description.get()` + tile inspection | Calling `description.get(None)` for tiles | Tiles use `TileType.base_description` directly, not `Description.get()`; keep the two paths separate |
+| `AISystem` + `TurnSystem` | Checking `turn_system.is_player_turn()` (negated) instead of `== GameStates.ENEMY_TURN` | Use `== GameStates.ENEMY_TURN` explicitly; other states (TARGETING, WORLD_MAP) would incorrectly enable AI if the negation form is used |
+| `AISystem` + `MovementRequest` | Adding `MovementRequest` without checking if one already exists on the entity | Use `esper.has_component(ent, MovementRequest)` before adding; duplicate requests cause two moves |
+| `AISystem` + `MapContainer.freeze()` | AI state component with entity ID reference frozen mid-chase | Store last-seen player coordinates (x, y) not player entity ID; coordinates survive freeze/thaw |
+| `AISystem` + `Game.update()` stub | Stub `end_enemy_turn()` (lines 309-311) still active alongside real `AISystem` | Remove the stub when `AISystem` takes over turn-ending responsibility; it is a placeholder only |
+| `AISystem` + `DeathSystem` | Iterating AI entities that were just killed in the same frame via `entity_died` event | `DeathSystem.on_entity_died()` removes the `AI` component synchronously; wrap AI iteration in `list()` to snapshot before component removal |
+| `AISystem` + `VisibilitySystem` | Querying tile visibility from inside `AISystem` using the same pattern as `ActionSystem` (iterating all layers) | Extract a shared `is_visible(map_container, x, y)` helper; do not duplicate the layer-iteration pattern already flagged as tech debt in `CONCERNS.md` |
+| `AISystem` + `Blocker` | Wander destination picker calls `_get_blocker_at()` — but this is private to `MovementSystem` | Duplicate the blocker check in `AISystem` is wrong; extract it to a shared utility function or call it via a public `MovementSystem.is_blocked(x, y, layer)` method |
 
 ---
 
@@ -161,33 +233,23 @@ The phase that modifies JSON data files and their dataclass definitions.
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Full `esper.get_components()` scan every frame for cursor description lookup | FPS drop when many entities exist; noticeable when inspecting during large maps | Cache the description result when cursor position changes; only re-query on cursor move, not every render frame | At ~200+ entities on screen |
-| Iterating all map layers to check visibility in `draw_targeting_ui()` (already done in existing code, lines 92–96) | Slow targeting overlay on large maps | This is already O(range^2 * layers); for Inspect with unlimited range, this becomes O(map_area * layers) — profile before shipping large maps | Maps larger than 60x60 with 3+ layers |
-| `pygame.Surface` with `SRCALPHA` allocated per tile per frame in range highlight | GC pressure, frame stuttering | Create one reusable surface at `__init__` time; blit it to each tile position | Any map size if the surface is large |
-
----
-
-## UX Pitfalls
-
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| Description text updates only on cursor move, not on entity state change | A monster that just got wounded still shows "healthy" description until the player wiggles the cursor | Re-evaluate description on every render of the description panel, not only when cursor moves |
-| No visual distinction between cursor-over-entity vs. cursor-over-empty-tile | Player cannot tell if they are inspecting something or nothing | Change cursor color or border style based on whether an entity exists at the cursor tile |
-| Inspect action added to ActionList but listed between combat actions | Players skip past it accidentally when cycling with W/S | Group "utility" actions (Inspect, Enter Portal) separately from "combat" actions in the ActionList order |
-| Description panel appears over the message log area | Overlapping text becomes unreadable | Reserve a fixed region for the description panel — the existing sidebar (`self.sidebar_rect` in UISystem) is the natural place |
-| Long descriptions wrap unpredictably in fixed-width sidebar | Text overflow into combat action list | Implement word-wrap with a fixed line width; truncate with "..." if description exceeds sidebar height |
+| AI calls full `esper.get_components(Position, Blocker)` to find all blockers for every entity, every enemy turn | Frame stutter on enemy turns with 10+ enemies | Cache blocker positions as a `set` once per enemy turn pass, share across all AI decisions | 10+ AI entities on a 40x40 map |
+| Wander logic uses random.randint for all 4 directions every entity every turn | Barely noticeable at low entity counts | Not a real bottleneck; profile before optimizing | Never in practice at roguelike scale |
+| AI visibility check (does AI see player?) iterates all map layers per entity | Slow enemy turn with 3+ layers and 10+ enemies | Share a single "player is visible" precompute per turn; AI reads result, doesn't recompute | 5+ enemies with 3-layer maps |
+| AI entities added but never removed from `esper.get_components(AI)` on death | Dead enemies still "act" (no-op since `AI` component removed by `DeathSystem`) | Confirm `DeathSystem` removes `AI` component on death — already present (line 29 of `death_system.py`) | Already handled; verify it stays that way |
 
 ---
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **Cursor rendering:** Cursor is visible during Inspect mode — verify it also disappears when Inspect is cancelled via Escape and the game returns to PLAYER_TURN state
-- [ ] **Description panel:** Panel displays entity name and description — verify it also clears correctly when cursor moves to an empty tile (no stale text from previous position)
-- [ ] **FOV integration:** Inspect shows descriptions for VISIBLE entities — verify it also shows remembered descriptions for SHROUDED tiles without revealing hidden entity positions
-- [ ] **Input mode switch:** Pressing Escape cancels Inspect and returns to PLAYER_TURN — verify round counter did not increment (Inspect is a free action)
-- [ ] **Multi-entity tiles:** Inspect query returns an entity — verify behavior when multiple entities occupy the same tile (e.g., player standing on a portal): should show a list or priority ordering, not silently pick one
-- [ ] **JSON data:** `description` fields added to `entities.json` — verify `ResourceLoader.load_entities()` does not crash on entities that lack the new field (use `.get()` with default)
-- [ ] **Targeting mode reuse:** Existing combat targeting (spells) still works after Inspect mode changes — verify `move_cursor()` visibility check still blocks UNEXPLORED tiles for combat targeting modes
+- [ ] **Turn guard:** AI appears to only act on enemy turns in normal play — verify that AI does NOT act when game state is `TARGETING` or `WORLD_MAP` (not just `PLAYER_TURN`)
+- [ ] **Multi-enemy turns:** One enemy moves correctly — verify ALL enemies on the map act before the player regains control (not just the first one)
+- [ ] **Tile collision:** Enemies move to open tiles — verify two enemies cannot occupy the same tile simultaneously
+- [ ] **Stub removal:** `Game.update()` enemy-turn stub removed — verify round counter still increments correctly after AISystem takes over `end_enemy_turn()`
+- [ ] **Freeze/thaw:** AI works before map transition — verify AI still works correctly after returning from a child map (thaw restores state, entity IDs are not carried over)
+- [ ] **Death interaction:** AI acts after being wounded — verify a dead entity (with `Corpse` component, no `AI` component) does NOT appear in `AISystem`'s component query
+- [ ] **Portal safety:** Wander AI is implemented — verify enemies never disappear into portals (wander destination excludes portal tiles)
+- [ ] **Player bump:** Player can still bump-attack an adjacent enemy — verify `MovementSystem` bump-to-attack still fires when the player moves into an enemy tile during `PLAYER_TURN`
 
 ---
 
@@ -195,12 +257,14 @@ The phase that modifies JSON data files and their dataclass definitions.
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Description drawn in RenderSystem, clipped by viewport | LOW | Move draw call to UISystem.process(); search for `font.render` calls inside RenderSystem |
-| Enemy turns fire during inspect | MEDIUM | Add `GameStates.INSPECTING` to enum and update the three guard locations: `get_event()`, `update()`, `draw_header()` |
-| Stale cross-map entity in spatial query | LOW | Add `pos.layer == player_layer` filter to `find_entities_at()` helper |
-| `Description.get()` crashes on None stats | LOW | Add `stats=None` default and guard; single-file change in `components.py` |
-| Cursor stuck on VISIBLE-only check for inspect | LOW | Add mode check in `move_cursor()`; two-line change in `action_system.py` |
-| Dataclass field order breaks `TileType` construction | MEDIUM | Add `inspect_text: str = ""` with default; fix any test files constructing `TileType` positionally |
+| AI acts on player turn | LOW | Add `if not ENEMY_TURN: return` at top of `AISystem.process()`; test immediately |
+| `end_enemy_turn()` called inside loop | LOW | Move call to after loop; one-line relocation |
+| Player and AI MovementRequest collision | LOW | Verify turn ordering is strict; add assertion in AISystem that no requests exist before adding |
+| Two enemies on same tile | MEDIUM | Add claimed-tile set to AI processing pass; requires re-testing all movement scenarios |
+| AI state with entity ID reference broken after thaw | MEDIUM | Replace entity ID fields with coordinate fields; audit all AI state component fields |
+| `AI` marker overloaded with state | HIGH if many fields already exist | Extract state to `AIState` component; update all call sites |
+| Enemies walk into portals | LOW | Exclude portal tiles from wander destinations; one check in destination picker |
+| `TurnOrder` incorrectly assumed to be active | LOW | Add doc comment to `TurnOrder`; remove any erroneous `get_components(TurnOrder)` calls |
 
 ---
 
@@ -208,23 +272,25 @@ The phase that modifies JSON data files and their dataclass definitions.
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| Description in wrong render layer | Phase adding description panel UI | Verify description text visible at all camera positions |
-| Enemy turn fires during inspect | Phase defining Inspect action + state | Verify round counter unchanged after Inspect; verify Escape returns to PLAYER_TURN |
-| Stale cross-map entities in spatial query | Phase implementing spatial entity query | Verify no entities from previous map appear in results after map transition |
-| `Description.get()` crashes without Stats | Phase implementing description aggregation | Verify inspect on portal, corpse, and empty floor tile does not raise |
-| Cursor blocked on non-VISIBLE tiles for inspect | Phase implementing cursor movement for Inspect | Verify cursor can reach previously-visited SHROUDED tiles |
-| JSON field addition breaks dataclass | Phase modifying JSON data + dataclass definitions | Verify all existing tests pass after new fields added; verify new entities load correctly |
-| Long description text overflow | Phase implementing description panel widget | Verify descriptions of 200+ characters display without overflow in sidebar |
+| AI acts on player turn | Phase: AI processor registration | Test: verify player actions and enemy actions never happen in same frame; check round counter increments once per full cycle |
+| `end_enemy_turn()` called too early | Phase: multi-entity AI processing | Test: place 3 enemies; verify all 3 act before player regains control |
+| MovementRequest cross-turn collision | Phase: AI movement implementation | Test: verify no MovementRequest remains on any entity after MovementSystem.process() |
+| Two enemies stack on same tile | Phase: wander logic | Test: spawn 2 adjacent enemies targeting same empty tile; verify they end up on different tiles |
+| Freeze/thaw AI state corruption | Phase: any AI state beyond empty marker | Test: transition map with AI entity mid-wander; verify AI behavior is valid on return |
+| `AI` marker overloaded | Phase: first AI state field added | Code review gate: `AI` dataclass must remain a marker; state goes in `AIState` |
+| Enemies walk into portals | Phase: wander destination picker | Test: place enemy adjacent to portal; verify enemy never enters portal tile |
+| `TurnOrder` stub misused | Phase: AI system integration | Code review gate: no `get_components(TurnOrder)` call in AISystem |
 
 ---
 
 ## Sources
 
-- Direct codebase inspection: `game_states.py`, `ecs/components.py`, `ecs/systems/action_system.py`, `ecs/systems/render_system.py`, `ecs/systems/ui_system.py`, `ecs/systems/turn_system.py`, `services/resource_loader.py`, `entities/entity_registry.py`, `map/tile.py`, `assets/data/entities.json` — HIGH confidence
-- Esper ECS module-global singleton behavior — HIGH confidence (verified from existing code patterns using `esper.get_components()` globally)
-- PyGame `set_clip()` + `blit()` interaction — HIGH confidence (verified from `game_states.py` draw order)
-- Python dataclass field ordering rules — HIGH confidence (language specification)
+- Direct codebase inspection: `game_states.py` (turn stub lines 309–311, transition_map lines 239–294), `ecs/systems/turn_system.py`, `ecs/systems/movement_system.py`, `ecs/systems/combat_system.py`, `ecs/systems/death_system.py`, `ecs/components.py` (AI marker, TurnOrder, MovementRequest), `map/map_container.py` (freeze/thaw lines 64–92) — HIGH confidence
+- `.planning/codebase/CONCERNS.md` — existing analysis of fragile areas, performance bottlenecks, known bugs — HIGH confidence
+- `.planning/codebase/ARCHITECTURE.md` — data flow documentation confirming frame update loop and processor execution order — HIGH confidence
+- ECS turn-based AI ordering patterns (group-act vs. individual-act, simultaneous movement reservation) — HIGH confidence (well-established roguelike/ECS pattern)
+- Esper module-global singleton: entity ID reassignment on `create_entity()` after `delete_entity()` — HIGH confidence (verified from `thaw()` implementation in `map_container.py`)
 
 ---
-*Pitfalls research for: Roguelike RPG — investigation/targeting milestone*
+*Pitfalls research for: Roguelike RPG — AI behavior states and NPC wander logic milestone*
 *Researched: 2026-02-14*
