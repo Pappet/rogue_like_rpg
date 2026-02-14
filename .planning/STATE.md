@@ -6,9 +6,9 @@
 
 ## Current Position
 **Phase:** 10 - Entity & Map Templates (In Progress)
-**Plan:** 02 (next)
-**Status:** Milestone 6 In Progress - Plan 01 complete.
-**Progress Bar:** [#####.....] 50%
+**Plan:** 03 (next)
+**Status:** Milestone 6 In Progress - Plans 01 and 02 complete.
+**Progress Bar:** [######....] 60%
 
 ## Performance Metrics
 - **Engine:** esper ECS ✓
@@ -20,6 +20,7 @@
 - **Data:** JSON Registry Loading ✓ (Plan 09-01 complete)
 - **Data:** Tile Class & Map Generation use Registry IDs ✓ (Plan 09-02 complete)
 - **Data:** Entity Template System (EntityRegistry + EntityFactory + entities.json) ✓ (Plan 10-01 complete)
+- **Data:** Map Prefab Loading System (cottage_interior.json + MapService.load_prefab()) ✓ (Plan 10-02 complete)
 
 ## Accumulated Context
 - **Decisions:**
@@ -45,13 +46,15 @@
     - entities/monster.py (create_orc) preserved for backward compat — not deleted, just no longer imported by map_service.
     - JSON pipeline pattern established: data file -> ResourceLoader.load_X() -> XRegistry.register() -> XFactory.create().
     - Every test that uses EntityRegistry must call EntityRegistry.clear() + ResourceLoader.load_entities() at top.
+    - load_prefab() uses set_type() to mutate existing tiles, preserving per-instance visibility_state.
+    - Prefab out-of-bounds tiles are silently skipped; enables partial stamps at layer edges.
 - **To Dos:**
-    - Execute Phase 10 Plan 02: Map template system (next).
+    - Execute Phase 10 Plan 03 (next).
 - **Blockers:** None.
 
 ## Session Continuity
-- Last activity: 2026-02-14 - Completed Phase 10 Plan 01 (Entity Template System).
-- Stopped at: Phase 10, Plan 02 ready to execute.
+- Last activity: 2026-02-14 - Completed Phase 10 Plan 02 (Map Prefab Loading System).
+- Stopped at: Phase 10, Plan 03 ready to execute.
 
 ## Quick Tasks Completed
 | Task | Description | Date |
@@ -59,4 +62,5 @@
 | 09-01 | Tile Registry + Resource Loader pipeline | 2026-02-14 |
 | 09-02 | Tile class + map generation pipeline ported to registry type_ids | 2026-02-14 |
 | 10-01 | Entity Template System: EntityRegistry + EntityFactory + entities.json | 2026-02-14 |
+| 10-02 | Map Prefab Loading System: cottage_interior.json + MapService.load_prefab() | 2026-02-14 |
 | (Previous milestone tasks archived) | | |
