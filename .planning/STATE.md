@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-14)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.1 — Phase 14: Inspection Output
+**Current Focus:** v1.1 — Phase 14 complete. v1.1 Investigation System done.
 
 ## Current Position
 
 Phase: 14 of 14 (Inspection Output)
-Plan: — of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-14 — Phase 13 complete: Range and movement rules implemented
+Plan: 1 of 1 complete
+Status: Phase 14 complete
+Last activity: 2026-02-14 — Phase 14 complete: Inspection output implemented
 
-Progress: [██████░░░░] 66% (v1.1)
+Progress: [████████░░] 80% (v1.1)
 
 ## Performance Metrics
 
 **Velocity (v1.1):**
-- Total plans completed: 1
-- Average duration: ~15min
-- Total execution time: ~15min
+- Total plans completed: 3
+- Average duration: ~10min
+- Total execution time: ~32min
 
 **By Phase:**
 
@@ -29,6 +29,7 @@ Progress: [██████░░░░] 66% (v1.1)
 |-------|-------|-------|----------|
 | Phase 12 | 1 | ~15min | ~15min |
 | Phase 13 | 1 | ~15min | ~15min |
+| Phase 14 | 1 | ~2min | ~2min |
 
 *Updated after each plan completion*
 
@@ -49,10 +50,14 @@ Recent decisions affecting current work:
 - [13-01]: Perception range override applied post-constructor in start_targeting(), not inside Targeting() — keeps component generic.
 - [13-01]: != UNEXPLORED formulation for tile access — any tile ever seen is reachable, robust to new visibility states.
 - [13-01]: confirm_action() gate remains == VISIBLE intentionally — Phase 14 will update for SHROUDED inspection output.
+- [14-01]: inspect mode gate accepts VISIBLE and SHROUDED (rejects UNEXPLORED only) — consistent with Phase 13 cursor movement rules.
+- [14-01]: Tile name dispatched for VISIBLE and SHROUDED; description and entities only for VISIBLE.
+- [14-01]: Entity loop uses esper.get_components(Position) filtered by position match — no spatial index needed at this scale.
+- [14-01]: TileRegistry.get() None guard: falls back to "Unknown tile" and empty description for unregistered tiles.
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
@@ -61,5 +66,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 13 complete. Ready to plan Phase 14.
+Stopped at: Phase 14 complete. v1.1 Investigation System fully implemented.
 Resume file: None
