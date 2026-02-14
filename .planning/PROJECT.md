@@ -46,7 +46,18 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 
 ### Active
 
-(None — next milestone not yet planned)
+## Current Milestone: v1.1 Investigation System
+
+**Goal:** Introduce an "Investigate" action that lets the player inspect tiles in their FOV to get detailed information about terrain and entities, with dynamic status text based on entity state.
+
+**Target features:**
+- Description component for entities and tiles (data fields in JSON registries)
+- Investigate action with manual targeting (range = perception stat)
+- Visibility check enforcement (only VISIBLE tiles can be investigated)
+- Data aggregation: tile info + all entities at target position
+- Dynamic status text based on entity state (e.g., HP-based descriptions)
+- Formatted investigation results in the message log
+- UI cursor/highlight for manual tile targeting
 
 ### Out of Scope
 
@@ -80,4 +91,4 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 - Sprite-based 2D rendering
 
 ---
-*Last updated: 2026-02-14 after v1.0 milestone*
+*Last updated: 2026-02-14 after v1.1 milestone start*
