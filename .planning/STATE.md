@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-14)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.1 — Phase 13: Range and Movement Rules
+**Current Focus:** v1.1 — Phase 14: Inspection Output
 
 ## Current Position
 
-Phase: 13 of 14 (Range and Movement Rules)
-Plan: 1 of 1 in current phase (complete)
-Status: Phase 13 complete
-Last activity: 2026-02-14 — Phase 13 Plan 01 complete: Range and movement rules implemented
+Phase: 14 of 14 (Inspection Output)
+Plan: — of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-02-14 — Phase 13 complete: Range and movement rules implemented
 
-Progress: [█████░░░░░] 50% (v1.1)
+Progress: [██████░░░░] 66% (v1.1)
 
 ## Performance Metrics
 
@@ -61,5 +61,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Completed 13-01-PLAN.md — Phase 13 complete. Ready for Phase 14.
+Stopped at: Phase 13 complete. Ready to plan Phase 14.
 Resume file: None
