@@ -13,6 +13,7 @@ from ecs.systems.ui_system import UISystem
 from ecs.systems.action_system import ActionSystem
 from ecs.systems.combat_system import CombatSystem
 from ecs.systems.death_system import DeathSystem
+from ecs.systems.ai_system import AISystem
 from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats
 from map.tile import VisibilityState
 
@@ -113,7 +114,12 @@ class Game(GameState):
         if not self.death_system:
             self.death_system = DeathSystem()
             self.persist["death_system"] = self.death_system
-        
+
+        self.ai_system = self.persist.get("ai_system")
+        if not self.ai_system:
+            self.ai_system = AISystem()
+            self.persist["ai_system"] = self.ai_system
+
         # Clear existing processors to avoid duplicates when re-entering state
         for processor_type in [VisibilitySystem, MovementSystem, CombatSystem, TurnSystem, DeathSystem]:
             try:
@@ -305,10 +311,14 @@ class Game(GameState):
             except KeyError:
                 pass
         
-        # Handle turns
-        if self.turn_system and not (self.turn_system.is_player_turn() or self.turn_system.current_state == GameStates.TARGETING):
-            # Simple simulation of enemy turn: just flip it back for now
-            self.turn_system.end_enemy_turn()
+        # Handle enemy turn via AISystem
+        if self.turn_system and self.turn_system.current_state == GameStates.ENEMY_TURN:
+            try:
+                pos = esper.component_for_entity(self.player_entity, Position)
+                player_layer = pos.layer
+            except KeyError:
+                player_layer = 0
+            self.ai_system.process(self.turn_system, self.map_container, player_layer)
 
     def draw(self, surface):
         surface.fill((0, 0, 0))
