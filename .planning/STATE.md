@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 ## Current Position
 
 Phase: 16 of 18 (AISystem Skeleton and Turn Wiring)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-14 — Phase 15 complete, verified 6/6 must-haves
+Plan: 1 of 1 complete in current phase
+Status: Phase 16 complete
+Last activity: 2026-02-14 — Phase 16 Plan 01 complete, 7/7 tests passing
 
-Progress: [███░░░░░░░] 15 of 18+ phases complete (v1.0 + v1.1 shipped)
+Progress: [████░░░░░░] 16 of 18+ phases complete (v1.0 + v1.1 shipped, v1.2 in progress)
 
 ## Performance Metrics
 
@@ -31,8 +31,7 @@ Progress: [███░░░░░░░] 15 of 18+ phases complete (v1.0 + v1.
 | Phase 13 | 1 | ~15min | ~15min |
 | Phase 14 | 1 | ~2min | ~2min |
 | Phase 15 | 1 | ~8min | ~8min |
-
-*v1.2 metrics will be recorded as phases complete.*
+| Phase 16 | 1 | ~2min | ~2min |
 
 ## Accumulated Context
 
@@ -45,6 +44,8 @@ Relevant for v1.2:
 - AI state stores coordinates only — never entity IDs; freeze/thaw assigns new IDs breaking ID-based references
 - Raw strings in EntityTemplate converted to enums in EntityFactory (same pattern as sprite_layer -> SpriteLayer)
 - ResourceLoader validates AIState/Alignment enum values at load time for early failure with clear errors
+- AISystem uses explicit `== GameStates.ENEMY_TURN` check (not negation) — prevents WORLD_MAP state from triggering AI (Phase 16)
+- end_enemy_turn() is unconditional after entity loop — turn always closes even with zero eligible AI entities (Phase 16)
 
 ### Pending Todos
 
@@ -58,5 +59,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 15 complete. Next: `/gsd:plan-phase 16`
+Stopped at: Completed 16-01-PLAN.md (AISystem skeleton + turn wiring)
 Resume file: None
