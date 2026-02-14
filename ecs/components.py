@@ -94,3 +94,12 @@ class Targeting:
 @dataclass
 class Corpse:
     pass
+
+@dataclass
+class Description:
+    base: str
+    wounded_text: str = ""
+    wounded_threshold: float = 0.5
+
+    def get(self, stats) -> str:
+        raise NotImplementedError("RED phase stub")
