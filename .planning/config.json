@@ -1,3 +1,6 @@
 {
-  "depth": "Standard"
+  "depth": "Standard",
+  "workflow": {
+    "research": true
+  }
 }
