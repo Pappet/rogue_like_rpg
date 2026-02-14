@@ -79,9 +79,9 @@
 - [x] 10-01-PLAN.md — Entity Templates, Factory, and ResourceLoader extension
 - [x] 10-02-PLAN.md — Map Prefab Loading system
 
-### Phase 11: Investigation Preparation
+### Phase 11: Investigation Preparation ✓
 **Plans:** 1 plan
-- [ ] 11-01-PLAN.md — Description component with dynamic context-aware text (TDD)
+- [x] 11-01-PLAN.md — Description component with dynamic context-aware text (TDD)
 
 ## Quick Tasks
 - [x] fix-map-container-attribute-error.md — Fix missing 'width' attribute.
