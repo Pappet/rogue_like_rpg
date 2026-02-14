@@ -60,7 +60,18 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 
 ### Active
 
-(None — next milestone not yet defined)
+## Current Milestone: v1.2 AI Infrastructure
+
+**Goal:** Lay the foundation for extensible NPC behavior with state-driven AI, wander logic, and an AI system processor that runs during enemy turns.
+
+**Target features:**
+- Behavior states on AI component (IDLE, WANDER, CHASE, TALK)
+- AISystem processor active during ENEMY_TURN
+- Wander logic for NPCs using existing MovementRequest
+
+**Architectural constraints (for future milestones):**
+- Design must support future NPC schedules (time-of-day driven behavior)
+- NPCs must produce the same action components as the player (portal use, etc.)
 
 ### Out of Scope
 
@@ -73,7 +84,7 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 
 ## Context
 
-**Shipped:** v1.0 MVP (2026-02-14), v1.1 Investigation System (2026-02-14)
+**Shipped:** v1.0 MVP (2026-02-14), v1.1 Investigation System (2026-02-14), v1.2 AI Infrastructure (in progress)
 **Codebase:** 5,009 lines Python, 3 JSON data files
 **Tech stack:** Python 3.13, PyGame, esper ECS
 **Architecture:** ECS with data-driven JSON pipelines (tiles, entities, map prefabs)
@@ -105,4 +116,4 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 - Sprite-based 2D rendering
 
 ---
-*Last updated: 2026-02-14 after v1.1 milestone completion*
+*Last updated: 2026-02-14 after v1.2 milestone start*

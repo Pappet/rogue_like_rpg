@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-14)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** Planning next milestone
+**Current Focus:** v1.2 AI Infrastructure
 
 ## Current Position
 
-Phase: —
+Phase: Not started (defining requirements)
 Plan: —
-Status: v1.1 milestone shipped, awaiting next milestone definition
-Last activity: 2026-02-14 — v1.1 Investigation System milestone completed and archived
+Status: Defining requirements
+Last activity: 2026-02-14 — Milestone v1.2 started
 
-Progress: Between milestones
+Progress: Milestone setup
 
 ## Performance Metrics
 
