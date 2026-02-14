@@ -72,32 +72,32 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BHVR-01 | — | Pending |
-| BHVR-02 | — | Pending |
-| BHVR-03 | — | Pending |
-| BHVR-04 | — | Pending |
-| AISYS-01 | — | Pending |
-| AISYS-02 | — | Pending |
-| AISYS-03 | — | Pending |
-| AISYS-04 | — | Pending |
-| AISYS-05 | — | Pending |
-| WNDR-01 | — | Pending |
-| WNDR-02 | — | Pending |
-| WNDR-03 | — | Pending |
-| WNDR-04 | — | Pending |
-| CHAS-01 | — | Pending |
-| CHAS-02 | — | Pending |
-| CHAS-03 | — | Pending |
-| CHAS-04 | — | Pending |
-| CHAS-05 | — | Pending |
-| SAFE-01 | — | Pending |
-| SAFE-02 | — | Pending |
+| BHVR-01 | Phase 15 | Pending |
+| BHVR-02 | Phase 15 | Pending |
+| BHVR-03 | Phase 15 | Pending |
+| BHVR-04 | Phase 15 | Pending |
+| AISYS-01 | Phase 16 | Pending |
+| AISYS-02 | Phase 16 | Pending |
+| AISYS-03 | Phase 16 | Pending |
+| AISYS-04 | Phase 16 | Pending |
+| AISYS-05 | Phase 16 | Pending |
+| WNDR-01 | Phase 17 | Pending |
+| WNDR-02 | Phase 17 | Pending |
+| WNDR-03 | Phase 17 | Pending |
+| WNDR-04 | Phase 17 | Pending |
+| CHAS-01 | Phase 18 | Pending |
+| CHAS-02 | Phase 18 | Pending |
+| CHAS-03 | Phase 18 | Pending |
+| CHAS-04 | Phase 18 | Pending |
+| CHAS-05 | Phase 18 | Pending |
+| SAFE-01 | Phase 18 | Pending |
+| SAFE-02 | Phase 16 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 20 total
-- Mapped to phases: 0
-- Unmapped: 20 ⚠️
+- Mapped to phases: 20
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-14*
-*Last updated: 2026-02-14 after initial definition*
+*Last updated: 2026-02-14 after roadmap creation*
