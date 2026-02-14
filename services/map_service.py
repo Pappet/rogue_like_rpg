@@ -3,7 +3,7 @@ from map.tile import Tile, VisibilityState
 from map.map_layer import MapLayer
 from map.map_container import MapContainer
 from config import SpriteLayer
-from entities.monster import create_orc
+from entities.entity_factory import EntityFactory
 from ecs.components import Position, Renderable, Name, Portal
 from map.map_generator_utils import draw_rectangle, place_door
 
@@ -240,7 +240,7 @@ class MapService:
             # Check if within bounds and walkable
             if 0 <= x < map_container.width and 0 <= y < map_container.height:
                 if map_container.get_tile(x, y).walkable:  # Use walkable property
-                    create_orc(world, x, y)
+                    EntityFactory.create(world, "orc", x, y)
 
     def change_map(self, current_map: MapContainer, new_map: MapContainer) -> MapContainer:
         """Handles transition between maps, forgetting details of the current map."""

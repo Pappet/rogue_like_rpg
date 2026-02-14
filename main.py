@@ -4,6 +4,7 @@ from config import SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, HEADER_HEIGHT, SID
 from game_states import TitleScreen, Game, WorldMapState
 from services.map_service import MapService
 from services.render_service import RenderService
+from services.resource_loader import ResourceLoader
 from components.camera import Camera
 from ecs.world import get_world
 
@@ -12,14 +13,16 @@ class GameController:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(SCREEN_TITLE)
         self.clock = pygame.time.Clock()
-        
+
         self.map_service = MapService()
         self.render_service = RenderService()
         # Viewport is the area not covered by UI Header, Sidebar and Log
         viewport_width = SCREEN_WIDTH - SIDEBAR_WIDTH
         viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT
         self.camera = Camera(viewport_width, viewport_height, 0, HEADER_HEIGHT)
-        
+
+        ResourceLoader.load_tiles("assets/data/tile_types.json")
+        ResourceLoader.load_entities("assets/data/entities.json")
         world = get_world()
         self.map_service.create_village_scenario(world)
         self.map_container = self.map_service.get_active_map()
