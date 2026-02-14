@@ -75,10 +75,10 @@ Plans:
   3. All entities at the investigated position are listed in the message log (multiple entities are all reported).
   4. An entity below its HP wound threshold shows wounded flavor text (e.g., "looks wounded") rather than the healthy description.
   5. Entities without a Stats component (portals, corpses) produce a description without crashing.
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 14-01: TBD
+- [ ] 14-01-PLAN.md — Implement inspection output dispatch and verification tests
 
 ---
 
@@ -89,4 +89,4 @@ Plans:
 | 1-11 | v1.0 | 27/27 | Complete | 2026-02-14 |
 | 12. Action Wiring | v1.1 | 1/1 | Complete | 2026-02-14 |
 | 13. Range and Movement Rules | v1.1 | 1/1 | Complete | 2026-02-14 |
-| 14. Inspection Output | v1.1 | 0/TBD | Not started | - |
+| 14. Inspection Output | v1.1 | 0/1 | Not started | - |
