@@ -56,10 +56,10 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
   2. The AIState enum exposes IDLE, WANDER, CHASE, and TALK as named values importable from ecs/components.py.
   3. An AI entity has an is_hostile flag that is True for enemies and False for friendly NPCs.
   4. TALK is a valid AIState value that can be assigned without error (non-operational placeholder for future schedules).
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 15-01: Add AIState enum and AIBehaviorState dataclass to ecs/components.py; update EntityFactory to attach AIBehaviorState for AI entities
+- [ ] 15-01-PLAN.md — Define AI enums/components, wire JSON-to-ECS pipeline, update DeathSystem cleanup
 
 #### Phase 16: AISystem Skeleton and Turn Wiring
 
@@ -118,7 +118,7 @@ Plans:
 | 12. Action Wiring | v1.1 | 1/1 | Complete | 2026-02-14 |
 | 13. Range and Movement Rules | v1.1 | 1/1 | Complete | 2026-02-14 |
 | 14. Inspection Output | v1.1 | 1/1 | Complete | 2026-02-14 |
-| 15. AI Component Foundation | v1.2 | 0/TBD | Not started | - |
+| 15. AI Component Foundation | v1.2 | 0/1 | Not started | - |
 | 16. AISystem Skeleton and Turn Wiring | v1.2 | 0/TBD | Not started | - |
 | 17. Wander Behavior | v1.2 | 0/TBD | Not started | - |
 | 18. Chase Behavior and State Transitions | v1.2 | 0/TBD | Not started | - |
