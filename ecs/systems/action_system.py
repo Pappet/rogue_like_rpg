@@ -64,6 +64,9 @@ class ActionSystem(esper.Processor):
             action=action
         )
         
+        if action.targeting_mode == "inspect":
+            targeting.range = stats.perception
+
         if action.targeting_mode == "auto":
             # Find potential targets in LoS and range
             targets = self.find_potential_targets(entity, pos.x, pos.y, action.range)
@@ -74,10 +77,10 @@ class ActionSystem(esper.Processor):
                 targeting.target_y = target_pos.y
             else:
                 # No targets found, maybe still allow manual targeting or just fail?
-                # If auto-targeting finds nothing, we might want to still enter targeting 
+                # If auto-targeting finds nothing, we might want to still enter targeting
                 # but with the player's position as initial target.
                 pass
-        
+
         esper.add_component(entity, targeting)
         self.turn_system.current_state = GameStates.TARGETING
         return True
@@ -131,15 +134,15 @@ class ActionSystem(esper.Processor):
             if dist > targeting.range:
                 return
 
-            # 2. Check visibility (LoS)
-            is_visible = False
+            # 2. Check tile accessibility (any previously-seen tile is reachable)
+            is_accessible = False
             for layer in self.map_container.layers:
                 if 0 <= new_y < len(layer.tiles) and 0 <= new_x < len(layer.tiles[new_y]):
-                    if layer.tiles[new_y][new_x].visibility_state == VisibilityState.VISIBLE:
-                        is_visible = True
+                    if layer.tiles[new_y][new_x].visibility_state != VisibilityState.UNEXPLORED:
+                        is_accessible = True
                         break
-            
-            if is_visible:
+
+            if is_accessible:
                 targeting.target_x = new_x
                 targeting.target_y = new_y
         except KeyError:
