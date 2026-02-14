@@ -7,6 +7,7 @@ from entities.monster import create_orc
 from ecs.components import Position, Renderable, Name, Portal
 from map.map_generator_utils import draw_rectangle, place_door
 
+
 class MapService:
     def __init__(self):
         self.maps: Dict[str, MapContainer] = {}
@@ -33,24 +34,29 @@ class MapService:
         else:
             raise ValueError(f"Map ID '{map_id}' not found in registry.")
 
-    def apply_terrain_variety(self, layer: MapLayer, chance: float, sprite_choices: list):
+    def apply_terrain_variety(self, layer: MapLayer, chance: float, type_id_choices: list):
         """
-        Adds random terrain variety to a MapLayer ground.
+        Adds random terrain variety to a MapLayer by randomly reassigning tile types.
+
+        Args:
+            layer:            The MapLayer to vary.
+            chance:           Probability (0–1) of replacing each floor tile.
+            type_id_choices:  List of registry type_ids to randomly choose from.
         """
         import random
         for y in range(layer.height):
             for x in range(layer.width):
                 tile = layer.tiles[y][x]
-                # Only apply to tiles that are currently basic ground ('.')
-                if SpriteLayer.GROUND in tile.sprites and tile.sprites[SpriteLayer.GROUND] == '.':
+                # Only apply to walkable ground tiles (floor_stone equivalent).
+                if tile.walkable:
                     if random.random() < chance:
-                        sprite = random.choice(sprite_choices)
-                        tile.sprites[SpriteLayer.GROUND] = sprite
+                        type_id = random.choice(type_id_choices)
+                        tile.set_type(type_id)
 
     def add_house_to_map(self, world, map_container: MapContainer, start_x: int, start_y: int, w: int, h: int, num_layers: int):
         """
         Populates a MapContainer with a house structure.
-        
+
         Args:
             world: The ECS world.
             map_container: The MapContainer to populate.
@@ -65,7 +71,7 @@ class MapService:
             for y in range(map_container.height):
                 row = []
                 for x in range(map_container.width):
-                    tile = Tile(transparent=True, dark=False, sprites={})
+                    tile = Tile(type_id="floor_stone")
                     row.append(tile)
                 tiles.append(row)
             map_container.layers.append(MapLayer(tiles))
@@ -79,16 +85,16 @@ class MapService:
 
         for z in range(num_layers):
             layer = map_container.layers[z]
-            # 1. Draw floor (filled rectangle with '.')
-            draw_rectangle(layer, start_x, start_y, w, h, '.', filled=True)
-            # 2. Draw walls (hollow rectangle with '#')
-            draw_rectangle(layer, start_x, start_y, w, h, '#', filled=False)
-            
+            # 1. Draw floor (filled rectangle with floor_stone)
+            draw_rectangle(layer, start_x, start_y, w, h, "floor_stone", filled=True)
+            # 2. Draw walls (hollow rectangle with wall_stone)
+            draw_rectangle(layer, start_x, start_y, w, h, "wall_stone", filled=False)
+
             # 3. Place stairs
             # Alternate positions to ensure they never overlap on the same layer
             sx_up, sy_up = start_x + w - 2, start_y + 2
             sx_down, sy_down = start_x + 2, start_y + 2
-            
+
             pos_up = (sx_up, sy_up) if z % 2 == 0 else (sx_down, sy_down)
             pos_down = (sx_down, sy_down) if z % 2 == 0 else (sx_up, sy_up)
 
@@ -109,20 +115,18 @@ class MapService:
                     Name("Stairs Down")
                 )
 
-
     def create_village_scenario(self, world):
         """Creates a village scenario with procedural houses and terrain variety."""
-        
-        def create_empty_layer(width, height, fill_sprite=None):
+
+        def create_empty_layer(width, height, fill_type_id: Optional[str] = None):
             tiles = []
             for y in range(height):
                 row = []
                 for x in range(width):
-                    sprites = {}
-                    if fill_sprite:
-                        sprites[SpriteLayer.GROUND] = fill_sprite
-                    
-                    tile = Tile(transparent=True, dark=False, sprites=sprites)
+                    if fill_type_id:
+                        tile = Tile(type_id=fill_type_id)
+                    else:
+                        tile = Tile(type_id="floor_stone")
                     row.append(tile)
                 tiles.append(row)
             return MapLayer(tiles)
@@ -130,15 +134,15 @@ class MapService:
         # Create "Village" MapContainer
         v_width, v_height = 40, 40
         village_layers = [
-            create_empty_layer(v_width, v_height, '.'), # Layer 0: Ground
-            create_empty_layer(v_width, v_height),      # Layer 1
-            create_empty_layer(v_width, v_height)       # Layer 2
+            create_empty_layer(v_width, v_height, "floor_stone"),  # Layer 0: Ground
+            create_empty_layer(v_width, v_height),                 # Layer 1
+            create_empty_layer(v_width, v_height)                  # Layer 2
         ]
         village_container = MapContainer(village_layers)
         self.register_map("Village", village_container)
-        
-        # Apply terrain variety to ground
-        self.apply_terrain_variety(village_layers[0], 0.1, [',', '"', '*'])
+
+        # Apply terrain variety to ground (floor_stone variants can be added to registry later)
+        self.apply_terrain_variety(village_layers[0], 0.1, ["floor_stone"])
 
         # --- Define House Specs ---
         houses = [
@@ -152,11 +156,11 @@ class MapService:
             vx, vy = h["v_pos"]
             vw, vh = h["v_size"]
             # Draw shell on village
-            draw_rectangle(village_layers[0], vx, vy, vw, vh, '#', filled=False)
-            
+            draw_rectangle(village_layers[0], vx, vy, vw, vh, "wall_stone", filled=False)
+
             # Door position on village (reference for portal, but wall stays intact)
             door_vx, door_vy = vx + vw // 2, vy + vh - 1
-            
+
             # Portal to house (placed one tile south of the wall)
             world.create_entity(
                 Position(door_vx, door_vy + 1, 0),
@@ -164,7 +168,7 @@ class MapService:
                 Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                 Name(f"Portal to {h['id']}")
             )
-        
+
         village_container.freeze(world)
 
         # 2. Create House interiors
@@ -172,22 +176,22 @@ class MapService:
             hi, hj = h["h_size"]
             h_container = MapContainer([create_empty_layer(hi, hj) for _ in range(h["floors"])])
             self.register_map(h["id"], h_container)
-            
+
             # Populate house interior
             self.add_house_to_map(world, h_container, 0, 0, hi, hj, h["floors"])
-            
+
             # Portal back to Village
             vx, vy = h["v_pos"]
             vw, vh = h["v_size"]
             door_vx, door_vy = vx + vw // 2, vy + vh - 1
-            
+
             world.create_entity(
-                Position(hi // 2, hj - 2, 0), # Placed one tile north of the south wall
+                Position(hi // 2, hj - 2, 0),  # Placed one tile north of the south wall
                 Portal("Village", door_vx, door_vy + 1, 0, "Leave House"),
                 Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                 Name(f"Portal to Village")
             )
-            
+
             h_container.freeze(world)
 
         # Set active and thaw
@@ -200,34 +204,30 @@ class MapService:
         for y in range(height):
             row = []
             for x in range(width):
-                # Basic ground sprite
-                sprites = {SpriteLayer.GROUND: "."}
-                transparent = True
-                
-                # Add some walls
-                if x == 0 or x == width - 1 or y == 0 or y == height - 1:
-                    sprites[SpriteLayer.GROUND] = "#"
-                    transparent = False
-                
-                # Add some internal walls for LoS testing
-                if (x == 10 and 5 < y < 15) or (y == 10 and 5 < x < 15):
-                    sprites[SpriteLayer.GROUND] = "#"
-                    transparent = False
-                
-                # Add some random decor
+                # Determine tile type based on position
+                is_border = (x == 0 or x == width - 1 or y == 0 or y == height - 1)
+                is_internal_wall = (
+                    (x == 10 and 5 < y < 15) or (y == 10 and 5 < x < 15)
+                )
+
+                if is_border or is_internal_wall:
+                    tile = Tile(type_id="wall_stone")
+                else:
+                    tile = Tile(type_id="floor_stone")
+
+                # Add some random decor (preserved as sprite override)
                 if x == 5 and y == 5:
-                    sprites[SpriteLayer.DECOR_BOTTOM] = "T"
-                
-                tile = Tile(transparent=transparent, dark=False, sprites=sprites)
+                    tile.sprites[SpriteLayer.DECOR_BOTTOM] = "T"
+
                 row.append(tile)
             tiles.append(row)
-        
+
         layer = MapLayer(tiles)
         container = MapContainer([layer])
-        
+
         if map_id:
             self.register_map(map_id, container)
-            
+
         return container
 
     def spawn_monsters(self, world, map_container: MapContainer):
@@ -235,11 +235,11 @@ class MapService:
         # Simple spawning logic for testing: 2 orcs at fixed locations
         # that are walkable and not where the player starts (1,1)
         spawns = [(5, 10), (15, 5), (20, 15)]
-        
+
         for x, y in spawns:
             # Check if within bounds and walkable
             if 0 <= x < map_container.width and 0 <= y < map_container.height:
-                if map_container.get_tile(x, y).walkable: # Use walkable property
+                if map_container.get_tile(x, y).walkable:  # Use walkable property
                     create_orc(world, x, y)
 
     def change_map(self, current_map: MapContainer, new_map: MapContainer) -> MapContainer:
