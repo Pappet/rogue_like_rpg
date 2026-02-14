@@ -59,10 +59,10 @@ Plans:
   1. Investigation cursor cannot move beyond a range equal to the player's perception stat.
   2. The cursor can move to SHROUDED (previously seen) tiles as well as VISIBLE tiles.
   3. The cursor cannot move onto UNEXPLORED tiles.
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 13-01: TBD
+- [ ] 13-01-PLAN.md — Override targeting range with perception stat and expand tile access to explored tiles
 
 #### Phase 14: Inspection Output
 
@@ -88,5 +88,5 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1-11 | v1.0 | 27/27 | Complete | 2026-02-14 |
 | 12. Action Wiring | v1.1 | 1/1 | Complete | 2026-02-14 |
-| 13. Range and Movement Rules | v1.1 | 0/TBD | Not started | - |
+| 13. Range and Movement Rules | v1.1 | 0/1 | Not started | - |
 | 14. Inspection Output | v1.1 | 0/TBD | Not started | - |
