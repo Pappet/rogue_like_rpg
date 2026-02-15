@@ -46,6 +46,32 @@ class Stats:
     max_mana: int
     perception: int
     intelligence: int
+    # Base fields for Effective Stats pattern
+    base_hp: int = 0
+    base_max_hp: int = 0
+    base_power: int = 0
+    base_defense: int = 0
+    base_mana: int = 0
+    base_max_mana: int = 0
+    base_perception: int = 0
+    base_intelligence: int = 0
+
+@dataclass
+class StatModifiers:
+    hp: int = 0
+    power: int = 0
+    defense: int = 0
+    mana: int = 0
+    perception: int = 0
+    intelligence: int = 0
+
+@dataclass
+class Portable:
+    weight: float # kg
+
+@dataclass
+class ItemMaterial:
+    material: str # e.g., 'iron', 'wood', 'glass'
 
 @dataclass
 class Inventory:

@@ -11,7 +11,10 @@ class PartyService:
         player_entity = esper.create_entity(
             Position(x, y),
             Renderable("@", SpriteLayer.ENTITIES.value, (255, 255, 255)),
-            Stats(hp=100, max_hp=100, power=5, defense=2, mana=50, max_mana=50, perception=10, intelligence=10),
+            Stats(
+                hp=100, max_hp=100, power=5, defense=2, mana=50, max_mana=50, perception=10, intelligence=10,
+                base_hp=100, base_max_hp=100, base_power=5, base_defense=2, base_mana=50, base_max_mana=50, base_perception=10, base_intelligence=10
+            ),
             Name("Player"),
             Blocker(),
             Inventory(),
