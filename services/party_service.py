@@ -1,5 +1,5 @@
 import esper
-from ecs.components import Position, Renderable, Stats, Name, Inventory, TurnOrder, ActionList, Action
+from ecs.components import Position, Renderable, Stats, Name, Inventory, TurnOrder, ActionList, Action, Blocker
 from config import SpriteLayer
 
 class PartyService:
@@ -13,6 +13,7 @@ class PartyService:
             Renderable("@", SpriteLayer.ENTITIES.value, (255, 255, 255)),
             Stats(hp=100, max_hp=100, power=5, defense=2, mana=50, max_mana=50, perception=10, intelligence=10),
             Name("Player"),
+            Blocker(),
             Inventory(),
             TurnOrder(priority=0), # Player usually has high priority
             ActionList(actions=[
