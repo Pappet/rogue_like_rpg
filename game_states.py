@@ -318,7 +318,7 @@ class Game(GameState):
                 player_layer = pos.layer
             except KeyError:
                 player_layer = 0
-            self.ai_system.process(self.turn_system, self.map_container, player_layer)
+            self.ai_system.process(self.turn_system, self.map_container, player_layer, self.player_entity)
 
     def draw(self, surface):
         surface.fill((0, 0, 0))
