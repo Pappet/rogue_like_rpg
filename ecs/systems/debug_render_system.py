@@ -1,8 +1,8 @@
 import pygame
 import esper
-from config import TILE_SIZE, DEBUG_FOV_COLOR, DEBUG_CHASE_COLOR, DEBUG_LABEL_COLOR, DEBUG_FONT_SIZE, DEBUG_NPC_FOV_COLOR
+from config import TILE_SIZE, DEBUG_FOV_COLOR, DEBUG_CHASE_COLOR, DEBUG_LABEL_COLOR, DEBUG_FONT_SIZE, DEBUG_NPC_FOV_COLOR, SpriteLayer
 from ecs.components import Position, AIBehaviorState, ChaseData, AIState, Stats
-from map.tile import VisibilityState, SpriteLayer
+from map.tile import VisibilityState
 from services.visibility_service import VisibilityService
 
 class DebugRenderSystem:
