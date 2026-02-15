@@ -32,3 +32,22 @@ class PartyService:
         # We could create more heroes as separate entities or keep them in player's party
         # For now, let's just return the player entity
         return player_entity
+
+def get_entity_closure(world, root_entity):
+    """Find all entities that should travel with the root_entity (e.g., inventory items)."""
+    closure = {root_entity}
+    stack = [root_entity]
+    
+    while stack:
+        current = stack.pop()
+        try:
+            inventory = world.component_for_entity(current, Inventory)
+            for item_id in inventory.items:
+                if item_id not in closure:
+                    closure.add(item_id)
+                    stack.append(item_id)
+        except KeyError:
+            # Entity doesn't have an inventory
+            pass
+    
+    return list(closure)

@@ -2,7 +2,7 @@ import pygame
 import esper
 from enum import Enum, auto
 from config import SpriteLayer, GameStates
-from services.party_service import PartyService
+from services.party_service import PartyService, get_entity_closure
 from services.map_service import MapService
 from ecs.world import get_world
 from ecs.systems.render_system import RenderSystem
@@ -297,7 +297,7 @@ class Game(GameState):
 
         # 2. Freeze current map
         self.map_container.on_exit(self.turn_system.round_counter)
-        self.map_container.freeze(self.world, exclude_entities=[self.player_entity])
+        self.map_container.freeze(self.world, exclude_entities=get_entity_closure(self.world, self.player_entity))
         
         # 3. Get new map
         new_map = self.map_service.get_map(target_map_id)
