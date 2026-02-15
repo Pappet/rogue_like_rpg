@@ -5,7 +5,7 @@
 - ✅ **v1.0 MVP** — Phases 1-11 (shipped 2026-02-14)
 - ✅ **v1.1 Investigation System** — Phases 12-14 (shipped 2026-02-14)
 - ✅ **v1.2 AI Infrastructure** — Phases 15-18 (shipped 2026-02-15)
-- 🔄 **v1.3 Debug Overlay System** — Phases 19-21 (in progress)
+- ✅ **v1.3 Debug Overlay System** — Phases 19-21 (shipped 2026-02-15)
 
 ## Phases
 
@@ -120,9 +120,9 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 **Plans:** 3
 
 **Plans:**
-- [ ] 21-01-PLAN.md — Implement granular debug flags and input handling
-- [ ] 21-02-PLAN.md — Implement chase vectors and sight-loss counters
-- [ ] 21-03-PLAN.md — Implement NPC field-of-view visualization
+- [x] 21-01-PLAN.md — Implement granular debug flags and input handling
+- [x] 21-02-PLAN.md — Implement chase vectors and sight-loss counters
+- [x] 21-03-PLAN.md — Implement NPC field-of-view visualization
 
 **Success Criteria:**
 
@@ -148,4 +148,4 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 18. Chase Behavior and State Transitions | v1.2 | 1/1 | Complete | 2026-02-15 |
 | 19. Debug Infrastructure | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 20. Core Overlays | v1.3 | 1/1 | Complete | 2026-02-15 |
-| 21. Extended Overlays | v1.3 | 0/3 | Pending | — |
+| 21. Extended Overlays | v1.3 | 3/3 | Complete | 2026-02-15 |

@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.3 Debug Overlay System
+**Current Focus:** v1.3 Debug Overlay System (Complete)
 
 ## Current Position
 
-Phase: 21 — Extended Overlays
-Plan: 21-03-PLAN.md (Completed)
-Status: In Progress
-Last activity: 2026-02-15 — Completed Phase 21 Plan 03
+Phase: 21 — Extended Overlays (Complete)
+Milestone: v1.3 Debug Overlay System (Complete)
+Status: Ready for v1.4 Planning
+Last activity: 2026-02-15 — Milestone v1.3 Complete
 
-Progress: [██████████] 3.0 of 3 phases (v1.3 Debug Overlay System)
+Progress: [██████████] 3 of 3 phases (v1.3 Debug Overlay System)
 
 ## Performance Metrics
 
@@ -24,7 +24,7 @@ Progress: [██████████] 3.0 of 3 phases (v1.3 Debug Overlay S
 |-------|-------|-------|----------|
 | Phase 19 | 1 | ~15min | ~15min |
 | Phase 20 | 1 | ~15min | ~15min |
-| Phase 21 | 1 | ~15min | ~15min |
+| Phase 21 | 3 | ~45min | ~15min |
 
 ## Accumulated Context
 
@@ -46,5 +46,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed Phase 20 Plan 01.
-Resume file: .planning/phases/21-extended-overlays/21-RESEARCH.md (Next phase)
+Stopped at: Completed Milestone v1.3.
+Resume file: .planning/MILESTONES.md (Check next milestone)
