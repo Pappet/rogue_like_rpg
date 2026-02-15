@@ -80,20 +80,26 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 
 ### Active
 
-## Current Milestone: v1.3 Debug Overlay System
+## Current Milestone: v1.4 Item & Inventory System
 
-**Goal:** Extensible debug overlay for visualizing internal game state — visibility FOV, direction vectors, and future AI state — as a dedicated DebugRenderSystem after the main render pass.
+**Goal:** Simulation-first item system where items are full ECS entities with physical properties, a weight-based inventory, equipment slots with dynamic stat modification, consumable items, contextual loot drops, and a full inventory management UI.
 
 **Target features:**
-- DebugRenderSystem as separate ECS system at end of render pipeline
-- FOV/LOS tile highlighting via VisibilityService integration
-- Direction vector drawing on tiles (A* pathfinding prep)
-- Extensible data structure for future text labels, hitboxes, AI schedules
-- Global toggle (hotkey + config) for all debug overlays
+- Items as full ECS entities with identity continuity (same entity on ground, in inventory, equipped)
+- Physical properties: weight (kg), material (wood, metal, glass, etc.) with interaction rules
+- Component-based item behavior: Portable, Equippable, Consumable, ItemPhysics
+- Flat inventory system with weight-based capacity limits
+- Equipment slots (head, body, hands, etc.) with dynamic stat modification (base + bonus)
+- Consumable items with use-effects (healing, buffs) and destruction on use
+- Contextual loot tables — monsters drop thematic items, death transforms entity or drops inventory
+- Full inventory management UI: pick up, equip/unequip, use, drop
+- JSON-driven item templates extending existing entity registry pipeline
 
 **Architectural constraints:**
-- Dedicated DebugRenderSystem, NOT embedded in RenderSystem — isolation and zero perf impact when off
-- Must support entity-specific debug components AND global state visualization
+- Items are entities, not abstract data — position OR parent reference, never both
+- Stat calculation: base stats + sum of equipped item bonuses, recalculated on equip/unequip
+- Material interactions: wood burns, metal conducts, glass shatters (event-driven hooks)
+- Flat inventory only (no nested containers this milestone)
 
 ### Out of Scope
 
@@ -107,11 +113,15 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 - Group aggro — individual AI decisions sufficient for foundation
 - NPC portal transit — transition_map() is player-coupled; requires refactor
 - Bounded wander (direction persistence) — low complexity, not needed for foundation
+- Nested containers (bag-in-bag) — flat inventory sufficient for v1.4 foundation
+- Durability/wear system — future hook, not this milestone
+- Crafting system — future hook, not this milestone
+- NPC economy/trading — future hook, not this milestone
 
 ## Context
 
-**Shipped:** v1.0 MVP (2026-02-14), v1.1 Investigation System (2026-02-14), v1.2 AI Infrastructure (2026-02-15)
-**In progress:** v1.3 Debug Overlay System
+**Shipped:** v1.0 MVP (2026-02-14), v1.1 Investigation System (2026-02-14), v1.2 AI Infrastructure (2026-02-15), v1.3 Debug Overlay System (2026-02-15)
+**In progress:** v1.4 Item & Inventory System
 **Codebase:** 5,959 lines Python, 3 JSON data files
 **Tech stack:** Python 3.13, PyGame, esper ECS
 **Architecture:** ECS with data-driven JSON pipelines (tiles, entities, map prefabs); AISystem with state-driven behavior dispatch
@@ -150,4 +160,4 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 - Sprite-based 2D rendering
 
 ---
-*Last updated: 2026-02-15 after v1.3 milestone start*
+*Last updated: 2026-02-15 after v1.4 milestone start*

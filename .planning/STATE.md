@@ -5,27 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.3 Debug Overlay System (Complete)
+**Current Focus:** v1.4 Item & Inventory System
 
 ## Current Position
 
-Phase: 22 — Debug System Refinement (Complete)
-Milestone: v1.3 Debug Overlay System (Complete)
-Status: Ready for v1.4 Planning
-Last activity: 2026-02-15 — Milestone v1.3 Complete
-
-Progress: [██████████] 4 of 4 phases (v1.3 Debug Overlay System)
-
-## Performance Metrics
-
-**By Phase (v1.3):**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| Phase 19 | 1 | ~15min | ~15min |
-| Phase 20 | 1 | ~15min | ~15min |
-| Phase 21 | 3 | ~45min | ~15min |
-| Phase 22 | 1 | ~15min | ~15min |
+Phase: Not started (defining requirements)
+Milestone: v1.4 Item & Inventory System
+Status: Defining requirements
+Last activity: 2026-02-15 — Milestone v1.4 started
 
 ## Accumulated Context
 
@@ -47,5 +34,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed Milestone v1.3.
-Resume file: .planning/MILESTONES.md (Check next milestone)
+Stopped at: Starting milestone v1.4 — defining requirements.
+Resume file: .planning/REQUIREMENTS.md
