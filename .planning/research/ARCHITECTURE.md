@@ -1,7 +1,7 @@
 # Architecture Research
 
-**Domain:** Roguelike RPG — AI Behavior States, AISystem Processor, Wander Logic
-**Researched:** 2026-02-14
+**Domain:** Roguelike RPG — Debug Overlay System Integration with ECS
+**Researched:** 2026-02-15
 **Confidence:** HIGH (based on direct codebase analysis)
 
 ## Standard Architecture
@@ -9,503 +9,427 @@
 ### System Overview
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                      PLAYER_TURN (game_states.py)                 │
-│                                                                    │
-│  Player input → MovementRequest / AttackIntent                    │
-│  esper.process() runs all processors                              │
-│  move_player() → turn_system.end_player_turn()                   │
-│               → GameStates.ENEMY_TURN                             │
-└───────────────────────────────┬──────────────────────────────────┘
-                                │
-                         state change
-                                │
-┌───────────────────────────────▼──────────────────────────────────┐
-│                      ENEMY_TURN dispatcher                         │
-│                      (game_states.py Game.update())               │
-│                                                                    │
-│  Current (stub): turn_system.end_enemy_turn() immediately        │
-│                                                                    │
-│  Target: call ai_system.run_all_ai()                              │
-│          ai_system runs AISystem.process() loop                   │
-│          each AI entity emits MovementRequest or AttackIntent     │
-│          then turn_system.end_enemy_turn()                        │
-└──────────┬────────────────────────────────────────┬──────────────┘
-           │                                        │
-┌──────────▼──────────┐                  ┌──────────▼──────────────┐
-│   AISystem          │                  │  AIBehaviorState (new)  │
-│   (new processor)   │                  │  component on AI entity │
-│                     │                  │                          │
-│  process():         │                  │  state: str             │
-│    query AI+Pos     │                  │   "wander"              │
-│    per entity:      │                  │   "chase"               │
-│      evaluate state │                  │   "flee"                │
-│      → transition?  │◄─────────────────│   "idle"               │
-│      execute state  │                  │                          │
-│      → emit request │                  │  wander_dir: (dx,dy)    │
-└──────────┬──────────┘                  │   current direction     │
-           │                             │                          │
-           │ emits                       │  target_entity: int|None│
-           ▼                             │   who to chase/flee     │
-┌──────────────────────────────┐         └─────────────────────────┘
-│  MovementRequest / AttackIntent        │
-│  (existing components)                 │
-│                                        │
-│  Consumed by MovementSystem and        │
-│  CombatSystem in the same              │
-│  esper.process() call                  │
-└──────────────────────────────┘
+game_states.py Game.draw()
+┌─────────────────────────────────────────────────────────────────────┐
+│  surface.fill((0,0,0))                                               │
+│                                                                      │
+│  1. render_service.render_map()        ← map tiles                   │
+│       [viewport clip active]                                         │
+│                                                                      │
+│  2. render_system.process()            ← entities (sprite chars)     │
+│       [viewport clip active]                                         │
+│                                                                      │
+│  surface.set_clip(None)                ← clip reset before UI        │
+│                                                                      │
+│  3. ui_system.process()                ← header / sidebar / log      │
+│                                                                      │
+│  4. [INSERT] debug_render_system.process()   ← debug overlays        │
+│       [no clip — can draw anywhere]                                  │
+└─────────────────────────────────────────────────────────────────────┘
 ```
+
+The debug system slots into position 4: after all game rendering and UI, before
+`pygame.display.flip()`. This ordering means debug visuals appear on top of everything
+without affecting the game rendering path.
 
 ### Component Responsibilities
 
 | Component | Responsibility | Status |
 |-----------|----------------|--------|
-| `AI` | Marker tag: entity is AI-controlled | Existing — no changes needed |
-| `AIBehaviorState` | Current behavior state + state-local data (wander dir, chase target) | **NEW** — add to `ecs/components.py` |
-| `Position` | Entity coordinates — read by AISystem for perception range checks | Existing |
-| `Stats` | Perception stat drives detection range in AISystem | Existing |
-| `MovementRequest` | Output from AISystem for movement actions | Existing — consumed by MovementSystem |
-| `AttackIntent` | Output from AISystem for melee attacks | Existing — consumed by CombatSystem |
-| `TurnOrder` | Priority integer — determines processor execution order relative to other systems | Existing |
-| `AISystem` | Processor that iterates AI entities, evaluates/transitions state, emits requests | **NEW** — `ecs/systems/ai_system.py` |
-
-**No changes to MovementSystem or CombatSystem are required.** AISystem emits the same request
-components already processed by those systems. The pipeline from "decision" to "effect" is:
-
-```
-AISystem.process() → add MovementRequest / AttackIntent → MovementSystem / CombatSystem consume
-```
+| `DebugRenderSystem` | Reads global debug flags, queries ECS components, draws overlays | **NEW** `ecs/systems/debug_render_system.py` |
+| `DebugConfig` | Runtime toggle state (which overlays are active) | **NEW** module-level singleton or dataclass in `debug_config.py` |
+| `DebugTag` (optional) | Per-entity component to suppress debug drawing for specific entities | Only if selective suppression is needed |
+| `RenderSystem` | Unchanged — draws entity sprites. No debug logic enters it | Existing — no changes |
+| `Game.draw()` | Calls `debug_render_system.process()` after `ui_system.process()` | **MODIFY** — add 3 lines |
+| `Game.get_event()` | Handles F3 (or chosen key) to toggle debug mode | **MODIFY** — add key handler |
+| `config.py` | Add `DEBUG_MODE = False` as the startup default | **MODIFY** — add constant |
 
 ## Recommended Project Structure
 
 ```
 ecs/
-├── components.py          # Add AIBehaviorState dataclass [MODIFY]
 └── systems/
-    ├── ai_system.py        # New AISystem(esper.Processor) [NEW]
-    ├── turn_system.py      # No changes needed
-    ├── movement_system.py  # No changes needed
-    └── combat_system.py    # No changes needed
+    ├── render_system.py       # Unchanged
+    ├── debug_render_system.py # NEW — DebugRenderSystem class
 
-game_states.py              # Register AISystem; replace stub enemy turn [MODIFY]
+config.py                      # MODIFY — add DEBUG_MODE = False
+
+game_states.py                 # MODIFY — toggle handler + draw call
 ```
 
-No new directories. No new service layer.
+No new directories. No new service layer. No new components required for the base overlay.
 
 ### Structure Rationale
 
-- **`ecs/systems/ai_system.py`:** All other game behaviors live in `ecs/systems/`. AISystem
-  follows the same pattern as MovementSystem and CombatSystem — a single `esper.Processor`
-  subclass with a `process()` method, registered via `esper.add_processor()`.
-- **`AIBehaviorState` in `ecs/components.py`:** All components live in one file by project
-  convention. This is the correct location to match existing patterns (AI, Position, Stats, etc.).
-- **No `AIService`:** The AI logic is simple enough to live entirely in `AISystem.process()`.
-  Extracting to a service adds indirection with no benefit at this scale.
+- **`ecs/systems/debug_render_system.py`:** All draw-loop participants live in
+  `ecs/systems/`. Placing it here is consistent with `render_system.py` and
+  `ui_system.py`. It is an `esper.Processor` subclass matching the project pattern,
+  though it is called explicitly (not via `esper.process()`).
+
+- **`config.py` for `DEBUG_MODE`:** All game constants live here. `DEBUG_MODE = False`
+  is the compile-time default. The runtime toggle flips a module-level variable. This
+  matches how `TILE_SIZE`, `SpriteLayer`, and `GameStates` are accessed across all
+  systems via `from config import ...`.
+
+- **No `DebugTag` component initially:** Making debug drawing component-driven is
+  premature. The debug system queries existing components (`AIBehaviorState`, `Position`,
+  `Stats`, `Name`) that are already on entities. A `DebugTag` component is only needed
+  if you need to suppress or customise debug output per entity — defer until needed.
 
 ## Architectural Patterns
 
-### Pattern 1: State-as-Component (Not State Machine Object)
+### Pattern 1: Global Debug State as a Mutable Module Variable
 
-**What:** `AIBehaviorState` is a plain dataclass component attached to each AI entity. The
-current state is a string field (`state: str`). State-local data (wander direction, chase
-target) lives as additional fields on the same component. `AISystem.process()` reads the
-component, evaluates transition conditions, mutates the state string, and executes the
-current state's action.
+**What:** A single boolean `DEBUG_MODE` in `config.py` controls whether the debug system
+draws anything. The runtime toggle inverts it. All debug rendering is gated on this flag.
 
-**When to use:** Always for this project. This is the canonical ECS approach to per-entity
-behavioral state. It avoids creating stateful Python objects per entity.
+**When to use:** Always for this project. Module-level state in `config.py` is the
+established project pattern — every system already imports from `config`. Introducing a
+singleton class or a component adds indirection with no benefit.
 
-**Trade-offs:** String state is readable and serializable. The risk is state explosion if
-behaviors grow to 10+ states — at that point, consider an enum. For wander/chase/flee/idle
-(4 states), a string is sufficient and clear.
-
-**Example:**
-```python
-# ecs/components.py
-from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Optional, Tuple
-
-@dataclass
-class AIBehaviorState:
-    state: str = "wander"          # "wander" | "chase" | "flee" | "idle"
-    wander_dir: Tuple[int, int] = (1, 0)   # current wander direction
-    wander_steps: int = 0          # steps taken in current direction
-    target_entity: Optional[int] = None    # entity ID to chase or flee from
-    alert_rounds: int = 0          # rounds remaining in chase mode
-```
-
-### Pattern 2: AISystem as a Pure Emitter, Not Executor
-
-**What:** `AISystem.process()` does not move entities directly. It adds `MovementRequest`
-and `AttackIntent` components to AI entities, exactly as the player input code does. The
-existing `MovementSystem` and `CombatSystem` then process those requests. This means all
-collision detection, blocker logic, and combat calculation happens in one place regardless
-of whether the actor is the player or an enemy.
-
-**When to use:** Always. This is a strict requirement for correctness. If AISystem called
-`pos.x += dx` directly it would bypass walkability checks, portal detection, and attack
-resolution.
-
-**Trade-offs:** AISystem outputs are consumed in the same `esper.process()` call as long as
-processor registration order is `AISystem` → `MovementSystem` → `CombatSystem`. This order
-must be explicitly enforced in `game_states.py`.
+**Trade-offs:** Module state is global and mutable, which is fine for a single-player
+game with no concurrency. If testing requires isolated debug state, use a fixture to
+reset the value. The alternative — a `DebugConfig` dataclass passed through constructors
+— is cleaner architecturally but requires threading it through `Game.startup()` and every
+system constructor.
 
 **Example:**
 ```python
-# ecs/systems/ai_system.py
-import esper
-import random
-from ecs.components import AI, AIBehaviorState, Position, Stats, MovementRequest, AttackIntent
+# config.py — add at end of file
+DEBUG_MODE = False  # Runtime toggle; F3 inverts this
 
-class AISystem(esper.Processor):
-    def __init__(self, map_container):
-        self.map_container = map_container
-
-    def set_map(self, map_container):
-        self.map_container = map_container
-
-    def process(self):
-        for ent, (ai, behavior, pos) in esper.get_components(AI, AIBehaviorState, Position):
-            self._run_entity(ent, behavior, pos)
-
-    def _run_entity(self, ent, behavior, pos):
-        if behavior.state == "wander":
-            self._do_wander(ent, behavior, pos)
-        elif behavior.state == "chase":
-            self._do_chase(ent, behavior, pos)
-        # ... etc.
-
-    def _do_wander(self, ent, behavior, pos):
-        # Change direction every N steps or if blocked
-        dx, dy = behavior.wander_dir
-        esper.add_component(ent, MovementRequest(dx, dy))
-        behavior.wander_steps += 1
-        if behavior.wander_steps >= 3:
-            behavior.wander_dir = random.choice([(1,0),(-1,0),(0,1),(0,-1)])
-            behavior.wander_steps = 0
+# To toggle from game_states.py:
+import config
+config.DEBUG_MODE = not config.DEBUG_MODE
 ```
-
-### Pattern 3: TurnSystem Coordination — ENEMY_TURN Is a Phase, Not an Event
-
-**What:** The current `game_states.py` `update()` method detects `not is_player_turn()` and
-immediately calls `end_enemy_turn()`. The correct integration replaces this stub with a
-call that: (1) runs `AISystem` logic (via `esper.process()` which already includes
-AISystem as a registered processor), then (2) calls `end_enemy_turn()`.
-
-**The key insight:** `esper.process()` is already called every frame unconditionally in
-`update()`. If AISystem is registered as a processor, it will run every frame. This is
-wrong — AISystem should only run once per ENEMY_TURN. The solution is to gate AISystem
-execution on the current state inside its `process()` method:
 
 ```python
-# In AISystem.process():
-from config import GameStates
-# AISystem needs a reference to TurnSystem to check current state.
-# Inject via constructor, same as VisibilitySystem does.
+# ecs/systems/debug_render_system.py
+import config
 
-def process(self):
-    if not self.turn_system.current_state == GameStates.ENEMY_TURN:
-        return
-    for ent, (ai, behavior, pos) in esper.get_components(AI, AIBehaviorState, Position):
-        self._run_entity(ent, behavior, pos)
+class DebugRenderSystem(esper.Processor):
+    def process(self, surface, camera, map_container, player_layer):
+        if not config.DEBUG_MODE:
+            return
+        self._draw_ai_state_labels(surface, camera, player_layer)
+        # Future overlays added as additional _draw_X() calls here
 ```
 
-**Alternative approach:** Remove AISystem from `esper.add_processor()` and call
-`ai_system.process()` explicitly from the ENEMY_TURN branch in `game_states.update()`.
-This is simpler and avoids the state check inside AISystem. It also matches how
-`ui_system.process()` and `render_system.process()` are called explicitly rather than
-registered with esper.
+### Pattern 2: DebugRenderSystem Reads Existing Components — No Debug-Specific Components
 
-**Recommendation:** Use the explicit-call approach (alternative). It matches the pattern
-already used for UISystem and RenderSystem in `game_states.py`. It avoids the TurnSystem
-reference dependency inside AISystem. It is clearer about when AI runs.
+**What:** The debug system queries the ECS for components that already exist
+(`AIBehaviorState`, `Position`, `Name`, `Stats`, `ChaseData`) and renders overlays
+based on their current values. No new components are added to entities for debug
+purposes.
 
-**Implementation:**
+**When to use:** Always, unless you need per-entity debug suppression (rare). Adding a
+`DebugTag` component to every entity to enable debug drawing is unnecessary coupling —
+the debug system should be a read-only observer, not a participant in entity structure.
+
+**Trade-offs:** The debug system is tightly coupled to the shape of existing components.
+If `AIBehaviorState` fields change, `DebugRenderSystem` must be updated. This is
+acceptable — debug rendering is explicitly not production code and breakage is visible
+immediately.
+
+**Example — AI state labels:**
 ```python
-# game_states.py Game.update()
-def update(self, dt):
-    esper.process()  # runs VisibilitySystem, MovementSystem, CombatSystem, DeathSystem, TurnSystem
-
-    # Camera update (unchanged)
-    ...
-
-    # Handle enemy turn
-    if self.turn_system and not self.turn_system.is_player_turn():
-        if self.turn_system.current_state == GameStates.ENEMY_TURN:
-            self.ai_system.process()        # AISystem emits MovementRequest/AttackIntent
-            esper.process()                 # MovementSystem + CombatSystem consume them
-            self.turn_system.end_enemy_turn()
+def _draw_ai_state_labels(self, surface, camera, player_layer):
+    font = pygame.font.SysFont('monospace', 10)
+    for ent, (behavior, pos) in esper.get_components(AIBehaviorState, Position):
+        if pos.layer != player_layer:
+            continue
+        screen_x, screen_y = camera.apply_to_pos(pos.x * TILE_SIZE, pos.y * TILE_SIZE)
+        label = behavior.state.value  # AIState enum → string
+        surf = font.render(label, True, (255, 255, 0))
+        surface.blit(surf, (screen_x, screen_y - 12))
 ```
 
-**Trade-offs of double esper.process():** Running `esper.process()` twice per frame on
-ENEMY_TURN means VisibilitySystem and DeathSystem also run twice. This is acceptable at
-this scale. The alternative is to register MovementSystem and CombatSystem only and call
-them directly — but that requires more wiring. Start simple (double process call), refactor
-if visibility performance becomes a concern.
+**Example — perception radius circles:**
+```python
+def _draw_perception_radii(self, surface, camera, player_layer):
+    for ent, (behavior, pos, stats) in esper.get_components(AIBehaviorState, Position, Stats):
+        if pos.layer != player_layer:
+            continue
+        cx, cy = camera.apply_to_pos(
+            pos.x * TILE_SIZE + TILE_SIZE // 2,
+            pos.y * TILE_SIZE + TILE_SIZE // 2
+        )
+        radius_px = stats.perception * TILE_SIZE
+        pygame.draw.circle(surface, (255, 100, 100), (cx, cy), radius_px, 1)
+```
 
-### Pattern 4: Extensibility for Schedules and NPC Actions
+### Pattern 3: Explicit Call After UI, Before Display Flip — No esper.process() Registration
 
-**What:** The `AIBehaviorState.state` string and the `_run_entity()` dispatch in AISystem
-form an open extension point. Adding a new behavior (schedule-driven "go_to_work",
-"sleep", etc.) requires:
-1. Adding a new state string constant.
-2. Adding a new `_do_X()` method in AISystem.
-3. Adding transition conditions in `_evaluate_transitions()`.
-4. Optionally adding new fields to `AIBehaviorState` (e.g., `schedule_target: Tuple[int, int]`).
+**What:** `Game.draw()` calls `debug_render_system.process(surface, ...)` after
+`ui_system.process(surface)` and before the function returns. `DebugRenderSystem` is
+NOT registered with `esper.add_processor()`.
 
-No changes to components.py, MovementSystem, CombatSystem, or TurnSystem are needed for
-new behaviors, because all behaviors output the same `MovementRequest` / `AttackIntent`
-interface.
+**When to use:** Always. This matches the existing explicit-call pattern for
+`render_system.process()` and `ui_system.process()` in `game_states.py`. Registering
+with `esper.add_processor()` would cause `debug_render_system.process()` to be called
+during `esper.process()` in `update()` (logic phase), not in `draw()` (render phase).
+The debug overlay must run in the render phase — it needs `surface` and `camera`.
 
-**For NPC portal use:** NPCs using portals requires emitting a signal that triggers the
-map transition system. The current portal system is tightly coupled to the player entity
-via `game_states.transition_map()`. For NPCs to use portals:
-- Option A: Dispatch `"change_map"` event from AISystem when NPC steps on a portal —
-  but this currently triggers a full map transition including camera and player position
-  changes. This needs decoupling first.
-- Option B: When NPC reaches a portal tile, freeze/thaw without moving the player. This
-  requires a separate event handler or a `Portal` component check in AISystem.
-- **Recommendation:** Do not implement NPC portal use in this milestone. Flag it in
-  PITFALLS.md. The portal system needs architectural separation of "NPC transit" from
-  "player transition" before it can support both.
+**Trade-offs:** Explicit call means manually threading `camera` and `map_container` into
+the constructor or `process()` signature. `RenderSystem` already does this — pass them
+the same way.
+
+**Implementation in `game_states.py`:**
+```python
+# Game.__init__()
+self.debug_render_system = None
+
+# Game.startup()
+self.debug_render_system = DebugRenderSystem(self.camera, self.map_container)
+
+# Game.draw() — after ui_system.process()
+if self.debug_render_system:
+    self.debug_render_system.process(surface, player_layer)
+
+# Game.get_event() — in handle_player_input()
+if event.key == pygame.K_F3:
+    import config
+    config.DEBUG_MODE = not config.DEBUG_MODE
+```
+
+### Pattern 4: Extensibility via Private Draw Methods
+
+**What:** `DebugRenderSystem.process()` calls a series of private `_draw_X()` methods.
+Each overlay type is one method. Enabling or disabling a specific overlay type is a
+one-line change in `process()`. Future overlay types (hitboxes, AI schedules, pathfinding
+waypoints) are added as new `_draw_X()` methods without touching existing ones.
+
+**When to use:** Always. This is the simplest extensibility mechanism that fits the
+codebase size. It avoids an overlay registry, strategy pattern, or plugin system —
+all of which are overkill for 3-5 overlay types.
+
+**Trade-offs:** All overlay types are always available (just toggled off). Per-overlay
+toggles require adding boolean flags to `DebugConfig`. For the first milestone, a single
+`DEBUG_MODE` bool is sufficient. Per-overlay toggles can be added later if needed.
+
+**Extensibility example:**
+```python
+class DebugRenderSystem(esper.Processor):
+    def process(self, surface, player_layer):
+        if not config.DEBUG_MODE:
+            return
+        # Phase 1 overlays
+        self._draw_ai_state_labels(surface, player_layer)
+        self._draw_perception_radii(surface, player_layer)
+        # Phase 2 overlays (add here when implementing)
+        # self._draw_tile_hitboxes(surface, player_layer)
+        # self._draw_ai_schedule(surface, player_layer)
+        # self._draw_pathfinding_waypoints(surface, player_layer)
+
+    def _draw_ai_state_labels(self, surface, player_layer):
+        ...
+
+    def _draw_perception_radii(self, surface, player_layer):
+        ...
+```
 
 ## Data Flow
 
-### Enemy Turn Data Flow
+### Debug Toggle Flow
 
 ```
-PLAYER_TURN ends
-    │ move_player() → turn_system.end_player_turn()
+Player presses F3
+    │
     ▼
-GameStates.ENEMY_TURN
-
-game_states.update() detects ENEMY_TURN
+Game.get_event() → handle_player_input()
     │
-    ├─► esper.process() [already running]
-    │     → VisibilitySystem: tiles update visibility from all Stats entities
-    │     → MovementSystem: processes any pending MovementRequests (none yet)
-    │     → CombatSystem: processes any pending AttackIntents (none yet)
-    │     → DeathSystem: handles entity_died events (none)
-    │     → TurnSystem: no-op (process() is empty)
+    ├─► config.DEBUG_MODE = not config.DEBUG_MODE
     │
-    ├─► ai_system.process()
-    │     → for each (AI, AIBehaviorState, Position) entity:
-    │         _evaluate_transitions(ent, behavior, pos)
-    │           → scan for player in perception range
-    │           → if player visible: state = "chase", target = player_ent
-    │           → if low HP: state = "flee"
-    │           → else: state = "wander"
-    │         _execute_state(ent, behavior, pos)
-    │           → wander: esper.add_component(ent, MovementRequest(dx, dy))
-    │           → chase:  check adjacent to player? add AttackIntent
-    │                     else: add MovementRequest toward player
-    │           → flee:   add MovementRequest away from player
+    ▼
+Next Game.draw() call
     │
-    ├─► esper.process() [second call]
-    │     → MovementSystem: resolves each MovementRequest
-    │         → collision check → move pos OR convert to AttackIntent
-    │     → CombatSystem: resolves each AttackIntent
-    │         → damage calc → dispatch entity_died if hp <= 0
-    │     → DeathSystem: on_entity_died → removes AI, Blocker, Stats from corpse
-    │     → VisibilitySystem: re-runs (minor cost)
+    ├─► render_service.render_map()         [always runs]
+    ├─► render_system.process()             [always runs]
+    ├─► ui_system.process()                 [always runs]
     │
-    └─► turn_system.end_enemy_turn()
-          → state = PLAYER_TURN
-          → round_counter += 1
+    └─► debug_render_system.process()
+            │
+            ├─ config.DEBUG_MODE == False → return immediately (no cost)
+            │
+            └─ config.DEBUG_MODE == True
+                ├─► _draw_ai_state_labels()
+                │     esper.get_components(AIBehaviorState, Position)
+                │     → screen coords via camera.apply_to_pos()
+                │     → pygame.font.render() + surface.blit()
+                │
+                └─► _draw_perception_radii()
+                      esper.get_components(AIBehaviorState, Position, Stats)
+                      → pygame.draw.circle()
 ```
 
 ### Key Data Flows
 
-1. **AI perception (detect player):** AISystem queries `esper.get_components(Position, Stats)`
-   to find the player entity, then calculates Euclidean distance against `ai_stats.perception`.
-   Same pattern used by VisibilitySystem. No new infrastructure required.
+1. **World-to-screen coordinate conversion:** `DebugRenderSystem` uses the same
+   `camera.apply_to_pos(pixel_x, pixel_y)` call as `RenderSystem`. No new coordinate
+   system. The camera is injected via the constructor (same pattern as `RenderSystem`).
 
-2. **Wander state persistence:** `AIBehaviorState.wander_dir` and `wander_steps` persist
-   between turns on the component. The entity keeps its current direction until it decides
-   to change. This is correct ECS pattern — state lives on the component, not in the system.
+2. **Layer filtering:** All debug draw methods must filter by `pos.layer != player_layer`
+   to avoid drawing overlays for entities on other map layers. This mirrors the check in
+   `RenderSystem.process()` (line 28-29 of render_system.py).
 
-3. **State transitions:** All transition logic lives in AISystem._evaluate_transitions().
-   This is called at the start of each AI entity's turn, before the action. Transitions
-   happen before the action so the entity acts in its new state immediately.
-
-4. **Dead entity safety:** DeathSystem removes the `AI` component when an entity dies.
-   Therefore `esper.get_components(AI, AIBehaviorState, Position)` in AISystem will
-   never iterate dead entities. No explicit "is alive" check needed.
+3. **No-clip rendering:** `Game.draw()` calls `surface.set_clip(None)` before
+   `ui_system.process()`. The debug system runs after this reset, so it can draw
+   anywhere on the screen including UI areas — useful for text labels near screen edges.
+   Debug draws within the viewport are naturally positioned correctly via camera
+   coordinates.
 
 ## Scaling Considerations
 
-This is a single-player, single-threaded roguelike. Scaling is not a concern.
+This is a debug system for a single-player roguelike. Scaling is not a concern.
 
-| Concern | At current scale | Threshold to care |
-|---------|------------------|--------------------|
-| AI entity count | 3-10 per map | Linear scan fine up to ~1000 |
-| Double esper.process() per enemy turn | ~1ms overhead | Acceptable indefinitely |
-| State transitions per entity | O(n) entity scan for perception | Fine up to ~500 entities |
-| Wander pathfinding | Single-step random — no pathfinding | Fine for wander. Chase requires direction-finding |
+| Concern | Notes |
+|---------|-------|
+| Performance when DEBUG_MODE=False | Single bool check in `process()`, immediate return. Zero ECS queries. Negligible cost. |
+| Performance when DEBUG_MODE=True | One `esper.get_components()` call per overlay type per frame. At 3-10 AI entities per map, this is negligible. |
+| Font rendering cost | `pygame.font.SysFont().render()` is called per entity per frame when debug is on. Cache font objects in `__init__` — do not create them in draw methods. |
+| Screen-space clutter | At >20 AI entities on screen, text labels overlap. This is a debug tool, not production UI — it is acceptable. |
 
 ## Anti-Patterns
 
-### Anti-Pattern 1: AISystem Moves Entities Directly
+### Anti-Pattern 1: Putting Debug Logic Inside RenderSystem
 
-**What people do:** In `ai_system.process()`, set `pos.x += dx` or `pos.y += dy` directly.
+**What people do:** Add `if config.DEBUG_MODE:` branches inside `RenderSystem.process()`
+to draw debug overlays alongside entity sprites.
 
-**Why it's wrong:** Bypasses MovementSystem's walkability checks, blocker detection, and
-automatic AttackIntent generation on collision. Enemy AI would walk through walls and fail
-to attack the player correctly.
+**Why it's wrong:** Pollutes the production rendering code with debug concerns. Makes
+`RenderSystem` harder to read, test, and reason about. When debug code is removed or
+changed, the risk of accidentally affecting production rendering is high. The explicit
+call pattern used in this codebase exists precisely to keep systems single-purpose.
 
-**Do this instead:** Emit `MovementRequest(dx, dy)` and let MovementSystem handle it. Same
-as the player input pathway. All entities share one movement resolution code path.
+**Do this instead:** Create a separate `DebugRenderSystem` that runs after
+`RenderSystem`. The production render path remains untouched.
 
-### Anti-Pattern 2: Storing Behavior State Inside AISystem (Not on Component)
+### Anti-Pattern 2: Registering DebugRenderSystem with esper.add_processor()
 
-**What people do:** Keep a dict `{entity_id: state_string}` inside the AISystem instance.
+**What people do:** Call `esper.add_processor(self.debug_render_system)` in `startup()`
+alongside the other systems.
 
-**Why it's wrong:** Breaks the esper ECS model. State on the system is invisible to other
-systems, serialization, freeze/thaw, and debug tooling. When the map freezes
-(`map_container.freeze(world)`) and entities are serialized, the behavior state would be
-lost. Keeping state on the component means it travels with the entity.
+**Why it's wrong:** `esper.process()` is called in `Game.update()` (the logic phase),
+not in `Game.draw()` (the render phase). Debug rendering requires the `surface` and
+`camera` objects that are only available in the draw phase. Registered processors receive
+no arguments — the `process()` signature would have to change, requiring a stored
+`surface` reference that becomes stale between frames.
 
-**Do this instead:** Put all per-entity state in `AIBehaviorState` dataclass component.
-AISystem is stateless — it only reads and writes to components.
+**Do this instead:** Call `debug_render_system.process(surface, player_layer)` explicitly
+in `Game.draw()`, matching the pattern used for `render_system` and `ui_system`.
 
-### Anti-Pattern 3: Registering AISystem with esper.add_processor() Unconditionally
+### Anti-Pattern 3: Adding DebugComponent to Every Entity
 
-**What people do:** Add AISystem to `esper.add_processor()` alongside MovementSystem and
-CombatSystem, then rely on the game loop to call `esper.process()` once.
+**What people do:** Create a `DebugInfo` component attached to each entity, storing
+debug-displayable strings. The debug system then queries for `DebugInfo`.
 
-**Why it's wrong:** `esper.process()` is called every frame (60 FPS). AISystem would run
-60 times per second, not once per enemy turn. All AI entities would move on every frame,
-not on every turn.
+**Why it's wrong:** This spreads debug state into the ECS entity graph. Every entity
+gets a component it only uses in debug mode. It also requires updating `DebugInfo`
+contents in every system that changes the state being debugged (AISystem updates the AI
+state string, CombatSystem updates HP info, etc.) — duplicating data that already exists
+in `AIBehaviorState`, `Stats`, and `ChaseData`.
 
-**Do this instead:** Call `ai_system.process()` explicitly from the ENEMY_TURN branch in
-`game_states.update()`, exactly as UISystem and RenderSystem are called. This gives
-precise control over when AI runs.
+**Do this instead:** Query the existing components directly from `DebugRenderSystem`.
+The debug system is a read-only observer. The data already exists; just read it.
 
-### Anti-Pattern 4: Implementing NPC Portal Transit in the First AI Milestone
+### Anti-Pattern 4: Storing Font Objects as Method-Local Variables
 
-**What people do:** Add AI behavior that checks for portal tiles and dispatches
-`"change_map"` events, mirroring the player portal system.
+**What people do:** In `_draw_ai_state_labels()`, call
+`pygame.font.SysFont('monospace', 10)` at the top of the method.
 
-**Why it's wrong:** The current `transition_map()` handler in `game_states.py` is tightly
-coupled to the player entity — it moves the player, updates the camera, and sets the active
-map for human navigation. NPC transit would trigger all of this incorrectly.
+**Why it's wrong:** `pygame.font.SysFont()` loads a font from disk on every call. At
+60 FPS with debug mode enabled, this is 60 disk/cache operations per frame per method.
+It causes visible frame drops when debug mode is on.
 
-**Do this instead:** Scope the first AI milestone to movement and combat only. NPC portal
-transit requires separating "entity transit" from "player-visible map transition" in the
-portal system. Flag as future work.
-
-### Anti-Pattern 5: Using GameStates.ENEMY_TURN as a Long-Running Blocking State
-
-**What people do:** Enter ENEMY_TURN, run a multi-frame animation loop per enemy, then
-exit to PLAYER_TURN.
-
-**Why it's wrong:** The current architecture has no animation system. All systems run
-synchronously within `update()`. Trying to hold ENEMY_TURN across multiple frames without
-a completed-signal mechanism creates state management complexity.
-
-**Do this instead:** Run all AI logic synchronously in a single `update()` call: compute
-all AI moves, resolve movement and combat, then call `end_enemy_turn()`. Animation can be
-added later as a non-blocking overlay system.
+**Do this instead:** Create font objects once in `DebugRenderSystem.__init__()` and
+store them as instance attributes. `RenderSystem` already demonstrates this pattern
+(`self.font = pygame.font.SysFont('monospace', TILE_SIZE)` in `__init__`).
 
 ## Integration Points
 
-### New Components
+### New Files
 
-| Component | File | Fields | Notes |
-|-----------|------|--------|-------|
-| `AIBehaviorState` | `ecs/components.py` | `state: str`, `wander_dir: Tuple[int,int]`, `wander_steps: int`, `target_entity: Optional[int]`, `alert_rounds: int` | Add after existing `AI` class |
-
-### New Systems
-
-| System | File | Constructor Args | Notes |
-|--------|------|-----------------|-------|
-| `AISystem` | `ecs/systems/ai_system.py` | `map_container: MapContainer` | Needs `set_map()` method like MovementSystem |
+| File | Purpose | Notes |
+|------|---------|-------|
+| `ecs/systems/debug_render_system.py` | `DebugRenderSystem(esper.Processor)` class | Mirrors `render_system.py` structure |
 
 ### Modified Files
 
-| File | Change | Why |
-|------|--------|-----|
-| `ecs/components.py` | Add `AIBehaviorState` dataclass | Per-entity AI state |
-| `ecs/systems/ai_system.py` | New file | AI logic processor |
-| `game_states.py` (Game.startup) | Instantiate AISystem, add to persist dict, call `set_map()` on map transition | Lifecycle management |
-| `game_states.py` (Game.update) | Replace stub `end_enemy_turn()` with `ai_system.process()` + second `esper.process()` + `end_enemy_turn()` | Wire enemy turn |
-| `game_states.py` (Game.transition_map) | Call `ai_system.set_map(new_map)` in step 8 alongside other system updates | Map change support |
-| `entities/entity_factory.py` | Attach `AIBehaviorState()` when `template.ai == True` | All AI entities get behavior state |
+| File | Change | Lines Affected |
+|------|--------|----------------|
+| `config.py` | Add `DEBUG_MODE = False` | After existing constants |
+| `game_states.py` (imports) | `from ecs.systems.debug_render_system import DebugRenderSystem` | Top of file |
+| `game_states.py` `Game.__init__()` | Add `self.debug_render_system = None` | After `self.render_system = None` |
+| `game_states.py` `Game.startup()` | Instantiate: `self.debug_render_system = DebugRenderSystem(self.camera, self.map_container)` | After `self.render_system = RenderSystem(...)` |
+| `game_states.py` `Game.draw()` | Add call after `ui_system.process()` | 2 lines: null-guard + `.process()` call |
+| `game_states.py` `handle_player_input()` | Add `K_F3` toggle handler | In the `KEYDOWN` block |
+| `game_states.py` `transition_map()` | Call `self.debug_render_system.set_map(new_map)` | Step 8, alongside other `set_map()` calls |
 
 ### Unchanged Files
 
 | File | Reason |
 |------|--------|
-| `ecs/components.py` (AI marker) | Preserved as-is; AIBehaviorState is additive |
-| `ecs/systems/movement_system.py` | AI uses MovementRequest — no changes needed |
-| `ecs/systems/combat_system.py` | AI uses AttackIntent — no changes needed |
-| `ecs/systems/turn_system.py` | TurnSystem API unchanged; AISystem calls same methods |
-| `ecs/systems/death_system.py` | Already removes AI component on death — correctly gates AISystem queries |
-| `config.py` (GameStates.ENEMY_TURN) | State value unchanged |
-| `entities/entity_registry.py` | EntityTemplate.ai bool field already exists |
-| `assets/data/entities.json` | `"ai": true` field already used for orcs — no data changes |
+| `ecs/systems/render_system.py` | Zero changes. Debug is fully separate. |
+| `ecs/systems/ui_system.py` | Zero changes. |
+| `ecs/systems/ai_system.py` | Zero changes. Debug reads AI state, does not affect it. |
+| `ecs/components.py` | No new components required for the base overlay. |
+| `services/visibility_service.py` | Not relevant to debug rendering. |
+| All other systems | Not affected. |
 
 ### Internal Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| `AISystem` → `MovementSystem` | `esper.add_component(ent, MovementRequest)` | Indirect via ECS component — no import needed |
-| `AISystem` → `CombatSystem` | `esper.add_component(ent, AttackIntent)` | Indirect via ECS component — no import needed |
-| `game_states.py` → `AISystem` | Direct method call `ai_system.process()` | Explicit call in ENEMY_TURN branch |
-| `AISystem` → `MapContainer` | `self.map_container.get_tile(x, y, layer)` for walkability hints | Optional: AISystem can skip walkability and let MovementSystem handle blocking |
-| `EntityFactory` → `AIBehaviorState` | `esper.add_component(ent, AIBehaviorState())` when `template.ai` | Default state = "wander" |
+| `Game.draw()` → `DebugRenderSystem` | Direct method call with `surface`, `player_layer` | Matches `RenderSystem` call pattern exactly |
+| `DebugRenderSystem` → ECS | `esper.get_components(...)` read-only queries | No component mutation from debug system |
+| `DebugRenderSystem` → Camera | `self.camera.apply_to_pos(pixel_x, pixel_y)` | Injected in constructor; add `set_camera()` if needed |
+| `DebugRenderSystem` → MapContainer | `self.map_container` for tile queries (hitbox overlays) | Add `set_map()` method; called in `transition_map()` |
+| `Game.get_event()` → `config.DEBUG_MODE` | `import config; config.DEBUG_MODE = not config.DEBUG_MODE` | Direct module attribute mutation |
 
 ## Suggested Build Order
 
-Build order is driven by data dependencies:
+Dependencies drive this order:
 
-1. **Add `AIBehaviorState` to `ecs/components.py`** — zero dependencies. The component
-   definition must exist before EntityFactory or AISystem can reference it. Verifiable
-   with an import test immediately.
+1. **Add `DEBUG_MODE = False` to `config.py`** — zero dependencies. All subsequent
+   work imports this flag. Test: `from config import DEBUG_MODE` works.
 
-2. **Update `EntityFactory.create()` to attach `AIBehaviorState()`** — depends on step 1.
-   When `template.ai == True`, add `AIBehaviorState()` alongside `AI()`. All existing AI
-   entities now carry behavior state with default `state="wander"`. Verifiable by
-   inspecting components on a spawned orc.
+2. **Create `DebugRenderSystem` skeleton** — depends on step 1. Implement
+   `__init__(self, camera, map_container)`, `set_map()`, and a `process()` that returns
+   immediately when `config.DEBUG_MODE` is False. No overlay drawing yet.
+   Test: instantiate the class without errors.
 
-3. **Implement `AISystem` with wander logic** — depends on steps 1-2. Implement
-   `ecs/systems/ai_system.py` with `process()`, `_do_wander()`, and basic random direction
-   changing. No chase or flee yet. Verifiable in isolation by calling `ai_system.process()`
-   in a test and checking that MovementRequests are added.
+3. **Wire `DebugRenderSystem` into `game_states.py`** — depends on step 2. Add import,
+   instantiate in `startup()`, add explicit call in `draw()`, add F3 key handler in
+   `get_event()`. Add `set_map()` call in `transition_map()`.
+   Test: game runs normally; F3 key does not crash; debug mode boolean flips.
 
-4. **Wire AISystem into `game_states.py`** — depends on step 3. Instantiate in `startup()`,
-   store in `persist`, call `set_map()` on transitions, and replace the stub in `update()`
-   with the explicit `ai_system.process()` + second `esper.process()` + `end_enemy_turn()`
-   sequence. Verifiable by running the game and watching AI entities move on each player
-   action.
+4. **Implement AI state label overlay** — depends on step 3. Implement
+   `_draw_ai_state_labels()`: query `(AIBehaviorState, Position)`, filter by
+   `player_layer`, convert to screen coordinates, render text.
+   Test: enable debug mode, confirm AI state text appears above each NPC.
 
-5. **Add chase behavior to AISystem** — depends on step 4 (need running system to test).
-   Implement `_evaluate_transitions()` with perception-range player detection, state change
-   to "chase", and `_do_chase()` with direction-toward-player movement + adjacent attack
-   check. Verifiable by walking the player near an orc and watching it pursue.
+5. **Implement perception radius overlay** — depends on step 4. Implement
+   `_draw_perception_radii()`: query `(AIBehaviorState, Position, Stats)`, draw circle
+   with radius `stats.perception * TILE_SIZE`.
+   Test: enable debug mode, confirm circles appear centered on NPCs at correct scale.
 
-6. **(Optional) Add flee behavior** — depends on step 5. Add "flee" state transition on
-   low HP threshold (e.g., `stats.hp < stats.max_hp * 0.25`), implement `_do_flee()` as
-   movement in the opposite direction from the threat.
+6. **Future overlays** — each is a new `_draw_X()` method added to step 4's framework.
+   Chase target arrows, last-known-position markers, tile hitboxes: each is independent
+   and adds one method plus one call in `process()`.
 
-Steps 1-4 form a strict linear dependency chain. Steps 5-6 extend the chain but each is
-independently testable.
+Steps 1-3 form the infrastructure; they can be done in one commit. Steps 4-5 are each
+independently releasable overlays.
 
 ## Sources
 
-- Direct codebase analysis: `ecs/components.py` — AI marker component (line 48-49)
-- Direct codebase analysis: `ecs/systems/turn_system.py` — TurnSystem state machine, stub ENEMY_TURN
-- Direct codebase analysis: `game_states.py` — ENEMY_TURN stub (line 309-311), processor registration (lines 118-129)
-- Direct codebase analysis: `ecs/systems/movement_system.py` — MovementRequest consumer pattern
-- Direct codebase analysis: `ecs/systems/combat_system.py` — AttackIntent consumer pattern
-- Direct codebase analysis: `ecs/systems/death_system.py` — removes AI component on death (line 29)
-- Direct codebase analysis: `entities/entity_factory.py` — AI component attachment pattern (lines 61-63)
-- Direct codebase analysis: `entities/entity_registry.py` — EntityTemplate.ai bool (line 29)
-- Direct codebase analysis: `ecs/systems/visibility_system.py` — constructor injection of turn_system reference
-- Direct codebase analysis: `services/map_service.py` — spawn_monsters() and EntityFactory usage
+- Direct codebase analysis: `game_states.py` — `Game.draw()` render pipeline (lines 323-352)
+- Direct codebase analysis: `game_states.py` — explicit-call pattern for `render_system` and `ui_system`
+- Direct codebase analysis: `ecs/systems/render_system.py` — `camera.apply_to_pos()` usage, font init in `__init__`
+- Direct codebase analysis: `ecs/systems/ui_system.py` — constructor injection pattern, explicit call in `draw()`
+- Direct codebase analysis: `ecs/systems/ai_system.py` — explicit-call pattern (not registered with `esper.add_processor()`)
+- Direct codebase analysis: `ecs/components.py` — `AIBehaviorState`, `Position`, `Stats`, `ChaseData`, `Name` fields
+- Direct codebase analysis: `config.py` — `DEBUG_MODE` placement conventions, `SpriteLayer` enum pattern
 
 ---
-*Architecture research for: Roguelike RPG — AI Behavior States and AISystem Processor*
-*Researched: 2026-02-14*
+*Architecture research for: Roguelike RPG — Debug Overlay System Integration*
+*Researched: 2026-02-15*

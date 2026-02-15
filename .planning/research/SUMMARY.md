@@ -1,178 +1,169 @@
 # Project Research Summary
 
-**Project:** Roguelike RPG — AI Behavior State System
-**Domain:** Turn-based ECS game AI — wander, chase, and state transitions for NPC entities
-**Researched:** 2026-02-14
+**Project:** Rogue-like RPG — v1.3 Debug Overlay System
+**Domain:** PyGame/ECS debug visualization layer for tile-based roguelike
+**Researched:** 2026-02-15
 **Confidence:** HIGH
 
 ## Executive Summary
 
-This milestone adds functional AI to an existing roguelike RPG built on Python 3.13 / PyGame 2.6.1 / esper 3.7. The codebase already has every primitive needed: an empty `AI` marker component, `MovementRequest` consumed by `MovementSystem`, a stub `ENEMY_TURN` game state that immediately flips back without running any AI, `VisibilityService` shadowcasting for line-of-sight, and `Stats.perception` on every entity. The recommended approach is purely additive: expand the `AI` dataclass with behavior state fields, add a separate `AIBehaviorState` component for per-entity runtime data, build a new `AISystem(esper.Processor)` in `ecs/systems/ai_system.py`, and wire it into the ENEMY_TURN branch of `Game.update()`. No new external dependencies are required.
+The v1.3 debug overlay is a pure read-only visualization layer that sits after the main render pass and requires zero new external dependencies. Every rendering primitive needed — alpha-blended surfaces, font rendering, vector lines, arrowheads, FOV circles — is already available in pygame 2.6.1. All data to be visualized (AI state, chase targets, perception radius, entity position) already exists in the ECS component graph via `AIBehaviorState`, `ChaseData`, `Stats.perception`, and `Position`. This milestone is fundamentally a composition and integration task, not a feature-invention task.
 
-The canonical implementation pattern for this project is "AISystem as a pure emitter": the AI processor decides what to do and issues `MovementRequest` or `AttackIntent` components exactly as the player input path does. `MovementSystem` and `CombatSystem` handle the rest — keeping all collision detection, walkability enforcement, and bump-combat in one place regardless of actor. Chase behavior uses the existing `VisibilityService.compute_visibility()` with `Stats.perception` as the radius — no new LOS code needed. Wander uses `random.shuffle` over four directions and issues `MovementRequest`. The state machine is a simple string enum (`"wander"` / `"chase"` / `"idle"`) on the component — no state machine library. AISystem must be called explicitly from the ENEMY_TURN branch, NOT registered with `esper.add_processor()`, following the same pattern as UISystem and RenderSystem.
+The single most important architectural decision is surface composition: a pre-allocated `pygame.SRCALPHA` overlay surface, created once in `__init__` and cleared with `fill((0,0,0,0))` each frame, must be used for all debug drawing. Drawing pygame primitives with RGBA color tuples directly onto the screen surface silently discards alpha, producing solid opaque rectangles instead of transparent tints. This is the canonical PyGame alpha pitfall and the source of most debug-overlay bugs. Every other design decision flows from keeping this surface strategy consistent — specifically, the single pre-allocated overlay eliminates both the alpha-discard problem and the 96,000+ per-tile surface allocation problem simultaneously.
 
-The top risks are structural and all preventable: (1) if AISystem runs without a turn guard it fires on every frame including the player's turn; (2) if `end_enemy_turn()` is called inside the AI entity loop only the first enemy acts before the turn ends; (3) if wander destinations are not tracked with a claimed-tiles set two enemies can silently stack on the same tile corrupting the blocker system; (4) AI state that stores entity IDs rather than coordinates will break on map transition because esper reassigns entity IDs during `create_entity()` in `thaw()`. The existing stub at `game_states.py` lines 309-311 that immediately ends the enemy turn must be deleted when AISystem takes over — leaving both active is a common integration mistake.
+The recommended implementation is a single `DebugRenderSystem` class in `ecs/systems/debug_render_system.py`, called explicitly from `Game.draw()` inside the active viewport clip block (after `render_system.process()`, before `surface.set_clip(None)`). It must NOT be registered with `esper.add_processor()`, because it needs `surface` and `camera` at draw time — the same reason `RenderSystem` and `UISystem` are called explicitly. The debug toggle flag lives in `self.persist["debug_enabled"]` to survive state transitions between `Game` and `WorldMapState`. Build order is strict: infrastructure (flag + skeleton + wiring) first, then individual overlay methods one at a time.
 
 ## Key Findings
 
 ### Recommended Stack
 
-No new packages are required. All AI behavior capabilities exist in Python stdlib `random` and the installed esper 3.7 ECS. The existing `VisibilityService`, `MovementRequest`, `esper.Processor` base class, and `map_container.get_tile()` provide every primitive needed. Pathfinding libraries (A* via `pathfinding` PyPI package) are explicitly deferred — greedy Manhattan step is sufficient for v1 chase in dungeon room geometry. State machine libraries (`transitions`, `statemachine`) are overkill for a two-to-four state machine and must not be added.
+No new packages. The full feature set is achievable with pygame 2.6.1 stdlib modules already installed and confirmed working. The only conditional addition is `pygame.gfxdraw` for anti-aliased FOV circles at large radii (>3 tiles), which is already present in pygame 2.6.1 and verified.
 
 **Core technologies:**
-- `random` (stdlib 3.13.11): wander direction selection — `random.shuffle(directions)` is the canonical pattern; zero overhead, already imported in `map_service.py`
-- `esper.Processor` (3.7 existing): AISystem base class — all game systems follow this pattern; AISystem is one more processor in the same family as MovementSystem and CombatSystem
-- `VisibilityService.compute_visibility()` (existing): NPC line-of-sight — returns a `set` of (x,y) tuples; checking player position is O(1); no new LOS code needed
-- `esper.add_component(ent, MovementRequest)` (existing): AI output mechanism — identical to the player input path; all collision and combat resolution reused for free
+- `pygame.Surface(size, pygame.SRCALPHA)`: Pre-allocated overlay surface — mandatory for alpha compositing; create once in `__init__`, reuse with `fill((0,0,0,0))` each frame; benchmarked at 1.03ms/frame vs 1.16ms/frame for per-tile allocation at 240 tiles
+- `pygame.draw` (line, polygon, rect, circle): All debug primitives — verified working on SRCALPHA surfaces with RGBA 4-tuples; alpha is correctly composited when drawing onto SRCALPHA
+- `pygame.gfxdraw.aacircle` + `filled_circle`: Anti-aliased FOV circles — use only for FOV rings where jagged edges at large radii (>3 tiles) are distracting; `pygame.draw.circle` is sufficient otherwise
+- `pygame.font.SysFont('monospace', 12)`: Debug text labels — monospace matches project convention (`render_service.py`, `render_system.py`); must be created in `__init__` only, never in the draw path
+- `math.atan2`, `math.cos`, `math.sin`: Arrow vector angle computation — Python stdlib, zero overhead, matches existing `render_system.py` import pattern
+
+**Critical finding confirmed live:** `pygame.draw` functions accept RGBA tuples but the alpha channel is silently discarded when drawing onto a non-SRCALPHA surface. The main `screen` surface is not SRCALPHA. This affects every debug draw call and is non-negotiable to get right.
 
 ### Expected Features
 
-**Must have (table stakes):**
-- `AIState` enum on `AI` component — without an explicit state field, behavior is ad-hoc and unextendable; every roguelike AI starts here
-- `AISystem(esper.Processor)` new file in `ecs/systems/ai_system.py` — currently ENEMY_TURN is a no-op; this is the core deliverable of the milestone
-- IDLE state (no-op branch) — valid explicit behavior; standing still must be intentional, not accidental
-- WANDER state with bounded random walk — a goblin that never moves feels unfinished; the minimum "alive" signal
-- CHASE state with FOV detection — core combat AI; without it combat is the player walking into static objects
-- State transitions WANDER/IDLE → CHASE on player detection — required to ever enter CHASE
-- State transition CHASE → WANDER after losing sight (`turns_chasing` cooldown) — omniscient chase is a known anti-pattern that makes the game feel unfair
-- Dead entity guard (`Corpse` component check in AISystem loop) — AI must not act after death
-- Layer guard — NPCs must stay on their own `Position.layer`; multi-layer maps already exist
-- "The [name] notices you!" log message on first CHASE transition — one-shot; player feedback and world responsiveness
-- `is_hostile: bool` flag on `AI` — required to distinguish hostile enemies from future friendly NPCs
+The feature set divides into a v1 MVP (4 features, all LOW complexity, all reading existing component data) and a v1.x follow-on tier (4 features to add once the MVP is validated).
 
-**Should have (competitive):**
-- Last-known-player-position pursuit — `last_known_player_x/y` on `AI` component; monster investigates last seen position before reverting to wander; this is the "investigate" pattern from DCSS and Angband; makes stealth interesting
-- Bounded wander walk (direction + steps counter) — pure random produces jitter oscillation on two tiles; direction persistence produces more natural patrol-like movement
-- `TALK` state as a non-operational enum value — future NPC schedule milestone needs this slot; adding it later would require migrating serialized state; cost is one enum value now
+**Must have (table stakes) — v1 MVP:**
+- **Toggle on/off (F1 or F3)** — prerequisite for every other feature; toggle state stored in `persist` dict, not on `self`, to survive state transitions
+- **Player FOV tile highlight** — green semi-transparent tint on tiles where `visibility_state == VisibilityState.VISIBLE`; establishes the tile iteration and SRCALPHA draw pattern
+- **NPC AI state label** — abbreviated text (W/C/I/T) rendered above each entity with `AIBehaviorState`; zero new data access; establishes the entity iteration pattern
+- **Last-known position marker** — orange rect at `ChaseData.last_known_x/y`; present only on CHASE-state entities; the chase system's primary debug signal
 
-**Defer (v2+):**
-- A* pathfinding — only if greedy step produces visible navigation failures in playtesting; do not add preemptively
-- Group aggro via optional `GroupAI` component — changes game balance significantly; requires inter-entity ECS communication with no clean home
-- NPC portal transit / cross-layer chase — already planned as a separate future milestone; requires architectural separation of "entity transit" from "player-visible map transition" in the portal system
-- Ranged attack AI — requires `ActionList` integration; separate milestone
+**Should have (differentiators) — v1.x after validation:**
+- **Chase vector** — `pygame.draw.line` + polygon arrowhead from NPC to last-known position; extends the marker with direction signal; trivial once marker is working
+- **Turns-without-sight counter** — appended to AI state label as `C(2)`; zero overhead; exposes CHASE→WANDER transition timing
+- **NPC FOV cone** — per-NPC `VisibilityService.compute_visibility()` call, red/blue tint by alignment; most computationally non-trivial feature (20 shadowcast passes per frame when active)
+- **Per-layer toggle** — extend single bool to `dict[str, bool]`; add only when visual noise from simultaneous overlays is actually observed
+
+**Defer (v2+) — only if specific bugs surface:**
+- **Claimed-tiles highlight** — requires lifting `claimed_tiles` local var to `AISystem` instance state; structural change to an existing system
+- **Pathfinding intent marker** — requires AISystem coupling to expose intended move before execution; adds complexity for a greedy single-step algorithm
 
 ### Architecture Approach
 
-The architecture is strictly additive to the existing ECS. A new `AIBehaviorState` dataclass component holds all per-entity AI state — state string, wander direction, wander steps, last-known-player coordinates, alert rounds. A new `AISystem(esper.Processor)` iterates entities with `(AI, AIBehaviorState, Position)`, evaluates state transitions, and emits `MovementRequest` or `AttackIntent`. The system is called explicitly from the ENEMY_TURN branch in `game_states.update()` — NOT registered with `esper.add_processor()` — following the same explicit-call pattern as UISystem and RenderSystem. The stub that immediately calls `end_enemy_turn()` in `Game.update()` lines 309-311 is removed and replaced by: `ai_system.process()` + second `esper.process()` + `end_enemy_turn()`.
+`DebugRenderSystem` is a standalone class in `ecs/systems/debug_render_system.py` that follows the explicit-call pattern already used by `RenderSystem`, `UISystem`, and `AISystem`. It is NOT registered with `esper.add_processor()`. It reads existing ECS components as a pure observer; no new components are added to entities. A single `config.DEBUG_MODE = False` constant is toggled from `game_states.py` on keypress. The overlay surface is pre-allocated in `__init__` to camera viewport dimensions.
+
+The render pipeline after this milestone:
+
+```
+Game.draw()
+  surface.set_clip(viewport_rect)       ← clip active
+  1. render_service.render_map()        ← map tiles
+  2. render_system.process()            ← entity sprites
+  3. debug_render_system.process()      ← overlays [NEW — clip still active]
+     └─ if not config.DEBUG_MODE: return immediately (zero cost)
+  surface.set_clip(None)                ← clip reset
+  4. ui_system.process()               ← UI chrome, no debug elements here
+```
 
 **Major components:**
-1. `AIBehaviorState` (new dataclass, `ecs/components.py`) — per-entity behavior state: `state: str`, `wander_dir: Tuple`, `wander_steps: int`, `target_x: int`, `target_y: int`, `alert_rounds: int`; all coordinate-based (no entity ID references that break on freeze/thaw)
-2. `AISystem` (new file, `ecs/systems/ai_system.py`) — pure emitter processor; reads `AIBehaviorState`, evaluates transitions, emits `MovementRequest`/`AttackIntent`; stateless itself; needs `map_container` reference and `set_map()` method
-3. `Game.update()` ENEMY_TURN branch (modified, `game_states.py`) — explicit orchestration: run `ai_system.process()`, run `esper.process()` to consume AI requests, call `end_enemy_turn()`; stub at lines 309-311 deleted
-4. `EntityFactory` (modified, `entities/entity_factory.py`) — attach `AIBehaviorState()` when `template.ai == True`; default state `"wander"`
+1. `DebugRenderSystem` (`ecs/systems/debug_render_system.py`, NEW) — pre-allocated SRCALPHA overlay, private `_draw_X()` methods per overlay type, explicit call from `Game.draw()`, read-only ECS observer; font objects initialized in `__init__`
+2. `config.DEBUG_MODE = False` (`config.py`, MODIFIED) — module-level toggle, inverted by keypress in `game_states.py`; existing module-level constants pattern
+3. `game_states.py` (MODIFIED) — import, instantiation in `startup()`, explicit draw call inside clip block, F-key toggle handler, `set_map()` call in `transition_map()`
+
+**Coordinate system:** The overlay surface origin `(0,0)` equals `(camera.offset_x, camera.offset_y)` in screen space. All world-to-overlay conversions call `camera.apply_to_pos()` then subtract the viewport offset. This is mandatory for cross-tile elements (chase vectors, FOV circles) that cannot be drawn per-tile.
+
+**Extensibility:** Each new overlay type is one `_draw_X()` private method plus one call line in `process()`. No registry, no strategy pattern, no plugin system — those are overkill for 3-5 overlay types at this project scale.
 
 ### Critical Pitfalls
 
-1. **AI acts on player's turn** — if AISystem is registered with `esper.add_processor()` without a turn guard, it fires 60 times per second. Prevention: call `ai_system.process()` explicitly from the ENEMY_TURN branch only, matching the UISystem/RenderSystem explicit-call pattern.
+1. **Alpha silently discarded on screen surface** — `pygame.draw` accepts RGBA tuples but discards alpha when drawing onto a non-SRCALPHA surface (confirmed live). Prevention: draw all debug primitives onto the pre-allocated `self._overlay` (SRCALPHA), then blit once to screen. Non-negotiable.
 
-2. **`end_enemy_turn()` called inside AI entity loop** — only the first enemy acts before turn ends; subsequent enemies' requests are processed on PLAYER_TURN. Prevention: collect all AI decisions, apply them, then call `end_enemy_turn()` once outside the loop.
+2. **Per-tile SRCALPHA surface allocation** — copying the existing `draw_targeting_ui()` per-tile pattern causes 96,000+ `Surface.__init__` calls per second at 240 tiles at 60fps. Prevention: pre-allocate one `(camera.width, camera.height)` SRCALPHA surface at init; reuse with `fill((0,0,0,0))` each frame.
 
-3. **Two enemies stack on same tile** — naive wander picks destinations independently; both pass the blocker check because neither has moved yet when the check runs. Prevention: maintain a `claimed_tiles: set` within the AI processing pass; skip destination if already claimed.
+3. **Debug toggle lost on state transition** — `Game.startup()` is called on every state re-entry, resetting any instance-level flag. Prevention: store toggle in `self.persist["debug_enabled"]`, not on `self`. The `persist` dict is the established cross-state communication channel.
 
-4. **Entity ID in AI state breaks on map transition** — esper reassigns integer entity IDs after `create_entity()` in `thaw()`; an AI mid-chase with `target_entity=42` points at a wrong or nonexistent entity after freeze/thaw. Prevention: store only coordinates (`target_x`, `target_y`), never entity IDs, in persistent AI state.
+4. **Overlay bleeding into UI chrome** — inserting the debug draw call after `surface.set_clip(None)` causes debug elements to appear over the header (top 48px), sidebar (right 160px), and message log (bottom 140px). Prevention: insert `debug_render_system.process()` inside the viewport clip block, after `render_system.process()`, before `surface.set_clip(None)`.
 
-5. **Existing ENEMY_TURN stub not removed** — lines 309-311 in `game_states.py` immediately call `end_enemy_turn()` before AISystem runs. This stub must be deleted when AISystem takes responsibility; leaving both active causes the turn to end before AI processes.
+5. **Font objects created in the draw path** — `pygame.font.SysFont()` takes 5-30ms per call (disk access). At 60fps with debug on, this causes visible per-frame stutter. Prevention: create all font objects once in `DebugRenderSystem.__init__()`. Already the pattern in `RenderSystem.__init__()`.
+
+6. **Wrong z-order from a single insertion point** — tile-level overlays (FOV tint) must draw after map tiles but before entity sprites; entity-level overlays (AI labels, markers) must draw after entity sprites. Prevention: design two draw sub-passes — tile layer called before `render_system.process()`, entity layer called after.
+
+7. **DebugRenderSystem registered with esper** — `esper.process()` runs in the logic phase (`update()`), which has no `surface` or `camera`. Registered processors cannot receive these arguments without stale references. Prevention: explicit call from `Game.draw()` only, matching the established pattern.
 
 ## Implications for Roadmap
 
-The build has a strict linear dependency chain identified in ARCHITECTURE.md. Each phase is independently testable and delivers a named, verifiable outcome.
+Three phases are appropriate. The infrastructure phase is non-negotiable as a prerequisite. The core overlays phase delivers a complete MVP. The extended overlays phase is conditional on actual debugging needs surfacing during use.
 
-### Phase 1: AI Component Foundation
+### Phase 1: Debug Infrastructure
 
-**Rationale:** All downstream code depends on `AIBehaviorState` and the expanded `AI` component existing. These have zero dependencies of their own. Must come first because AISystem cannot even be imported without them. Establishing the "separate marker from state" component pattern here prevents the most expensive architectural pitfall (Pitfall 6: AI marker overloaded with state data).
-**Delivers:** `AIBehaviorState` dataclass in `ecs/components.py`; `AI` component expanded with `is_hostile: bool` flag and state enum values; `AIState` enum with `IDLE`, `WANDER`, `CHASE`, `TALK`; `EntityFactory` updated to attach `AIBehaviorState()` for all AI entities with default state `"wander"`
-**Addresses:** AIState enum (P1), AI component fields (P1), TALK enum slot (P1), is_hostile flag (P1)
-**Avoids:** Pitfall 6 (AI marker overloaded with state data — must be a pure tag); Pitfall 5 (entity ID in AI state — all fields are coordinates from the start)
+**Rationale:** All other work depends on this. The toggle flag, system skeleton, surface strategy, and wiring into `Game.draw()` must exist before any overlay can be drawn. This phase also locks in the critical decisions that prevent the most severe pitfalls: SRCALPHA surface strategy, persist-based toggle, explicit-call wiring, clip-region insertion point, and z-order split between tile layer and entity layer. Getting these wrong early has MEDIUM recovery cost; getting them right here has zero rework cost later.
+**Delivers:** `config.DEBUG_MODE = False` added; `DebugRenderSystem` skeleton with pre-allocated SRCALPHA overlay surface and font objects in `__init__`; wired into `game_states.py` (import, `startup()` instantiation, `draw()` call inside clip block, F-key toggle using `persist["debug_enabled"]`, `transition_map()` `set_map()` call). Game runs identically with debug off; F-key flips the flag without crashing; frame time with debug disabled is identical to pre-overlay baseline.
+**Addresses:** Toggle on/off (P1 table stakes)
+**Avoids:** Pitfalls 2, 3, 4, 5, 6, 7 — all infrastructure pitfalls are eliminated by the design decisions made here
 
-### Phase 2: AISystem Skeleton and Turn Wiring
+### Phase 2: Core Overlays (MVP)
 
-**Rationale:** The turn wiring — removing the stub, calling AISystem explicitly, double `esper.process()` — must be established before any AI behavior can be tested in-game. With the skeleton and an IDLE no-op branch in place, ENEMY_TURN no longer immediately flips but the game stays stable because all entities idle. This phase proves the scaffolding works before adding behavioral complexity.
-**Delivers:** `ecs/systems/ai_system.py` with `AISystem(esper.Processor)`, explicit ENEMY_TURN branch call in `game_states.update()`, stub at lines 309-311 removed, IDLE no-op branch, dead entity guard (`Corpse` check), `set_map()` method, `end_enemy_turn()` called once outside AI loop
-**Addresses:** AISystem processor (P1), turn gate (P1), dead entity guard (P1), stub removal
-**Avoids:** Pitfall 1 (AI acts on player turn), Pitfall 2 (`end_enemy_turn()` inside loop), anti-pattern (esper.add_processor unconditional registration)
+**Rationale:** With infrastructure in place, the three highest-value overlays can be built as independent private methods without touching each other. Build order within this phase is: (a) AI state labels first — establishes entity iteration pattern and is the prerequisite for identifying which last-known markers belong to which entity; (b) FOV tile highlight second — establishes tile iteration pattern using the `VISIBLE` tile set; (c) last-known position marker third — reuses entity iteration from labels. Each overlay is individually testable before the next begins.
+**Delivers:** `_draw_ai_state_labels()` (abbreviated label above each NPC), `_draw_fov_tile_highlight()` (green tint on player VISIBLE tiles, drawn in tile-layer pass before `render_system.process()`), `_draw_last_known_marker()` (orange rect at `ChaseData.last_known_x/y`, drawn in entity-layer pass). Together these form a complete, usable debug session for FOV and chase debugging.
+**Addresses:** Player FOV highlight, NPC AI state label, last-known position marker (all P1 table stakes)
+**Avoids:** Pitfall 1 (all draws go to `self._overlay`, never directly to screen surface); Pitfall 6 (FOV highlight in tile-layer pass, labels and markers in entity-layer pass)
 
-### Phase 3: Wander Behavior
+### Phase 3: Extended Overlays (v1.x, conditional)
 
-**Rationale:** Wander is the simplest active behavior and makes the game feel immediately alive. All wander logic is self-contained and does not require player detection or LOS. Can be verified by watching enemies move randomly on each player action.
-**Delivers:** WANDER branch in AISystem with bounded direction persistence (`wander_dir`, `wander_steps`); claimed-tile reservation set; `_is_walkable()` check via `map_container.get_tile()`; monsters move every enemy turn; layer guard enforced in movement decisions
-**Addresses:** WANDER state (P1), bounded wander walk (P2), layer guard (P1)
-**Avoids:** Pitfall 3 (MovementRequest cross-turn collision), Pitfall 4 (enemies stack on same tile)
-
-### Phase 4: Chase Behavior and State Transitions
-
-**Rationale:** Chase requires a working wander system to transition from (Phase 3 dependency). FOV computation via `VisibilityService` and the WANDER→CHASE transition are the core combat AI deliverable. The "notices you" log message and last-known-position pursuit complete the player-facing experience.
-**Delivers:** CHASE branch with `VisibilityService.compute_visibility()` NPC FOV; greedy Manhattan step toward player; WANDER/IDLE→CHASE transition on player detection with `is_hostile` guard; CHASE→WANDER transition after `turns_chasing` cooldown; "The [name] notices you!" log message (one-shot on state change); `last_known_player_x/y` tracking for post-sight investigation
-**Addresses:** CHASE state (P1), all state transitions (P1), "notices you" message (P1), last-known-position (P2)
-**Avoids:** Pitfall 5 (entity ID in AI state — use coordinates not entity IDs for last-known-position)
-
-### Phase 5: Safety and Edge Cases
-
-**Rationale:** The "looks done but isn't" behaviors — portal safety, freeze/thaw correctness, multi-enemy turn verification, stub removal confirmation — are invisible until edge cases are hit. Addressing them as a dedicated phase before calling the milestone done prevents runtime surprises. The full checklist from PITFALLS.md is the acceptance criterion.
-**Delivers:** Portal tile exclusion from wander destinations; freeze/thaw AI state validation on map transition; claimed-tiles stress test with multiple adjacent enemies; `TurnOrder` documented as unused stub with comment; full PITFALLS.md "looks done but isn't" checklist green
-**Addresses:** Portal safety, freeze/thaw correctness, `TurnOrder` stub documentation
-**Avoids:** Pitfall 7 (enemies walk into portals), Pitfall 5 (freeze/thaw corruption), Pitfall 8 (TurnOrder misuse)
+**Rationale:** These features add signal density for specific bug scenarios that may or may not arise. Chase vectors are trivial given last-known markers already exist (one `pygame.draw.line()` + polygon arrowhead). Turns-without-sight counter is a one-line addition to the state label. NPC FOV cones are the most expensive feature (per-NPC shadowcast per frame when active) and should only be built if chase detection bugs are not diagnosable from state labels and markers. Per-layer toggles should be deferred until simultaneous overlay noise is actually a problem in practice.
+**Delivers:** `_draw_chase_vectors()` (arrow line from NPC position to last-known position using `math.atan2` arrowhead pattern); turns-without-sight counter appended to state label; `_draw_npc_fov_cones()` (per-NPC red/blue shadowcast tile tint via `VisibilityService.compute_visibility()`); per-overlay toggle dict extending single boolean.
+**Addresses:** Chase vector, turns-without-sight counter, NPC FOV cone, per-layer toggle (all P2 differentiators)
+**Avoids:** Premature implementation of P3 features (claimed-tiles, pathfinding intent) that require structural changes to `AISystem`
 
 ### Phase Ordering Rationale
 
-- Phases 1→2→3→4 form a strict linear dependency: the component must exist before the system, the skeleton must be wired before behavior can be tested, wander must work before chase can transition from it
-- Phase 5 is a safety pass after functional behavior is working; edge cases require working features to test against
-- `AIBehaviorState` as a separate component (not fields on `AI`) is a hard architectural decision in Phase 1; changing it later requires updating all call sites — must be right from the start
-- The explicit-call approach for AISystem (not esper.add_processor) is a foundational decision in Phase 2 that prevents the most subtle runtime bug (AI firing on every frame)
-- The double `esper.process()` approach is deliberately simple; architecture notes it as acceptable at current scale with a clear refactor path if VisibilitySystem cost grows
+- Infrastructure must precede overlays because the SRCALPHA surface, persist-based toggle, and clip-region insertion point are architectural decisions that constrain every subsequent draw call. Retrofitting these after overlay code exists costs MEDIUM effort and requires touching every call site.
+- Core overlays (Phase 2) are grouped together because all four read existing component data without structural changes to any other system. They share the entity and tile iteration skeleton established by the first overlay implemented.
+- Extended overlays (Phase 3) are explicitly conditional — the milestone succeeds with only Phases 1 and 2. Phase 3 is triggered by observing specific bugs that the MVP cannot diagnose.
+- No phase requires new ECS components or behavioral changes to `AISystem`, `RenderSystem`, `UISystem`, or `VisibilityService`. All changes to existing files are additive wiring.
 
 ### Research Flags
 
-Phases with standard patterns (skip deeper research — implementation details fully documented in research files):
-- **Phase 1:** Pure dataclass additions following established project convention; zero ambiguity; all patterns in `ecs/components.py` already
-- **Phase 2:** Follows the exact same explicit-call pattern as UISystem and RenderSystem; `set_map()` contract documented in ARCHITECTURE.md; turn guard pattern provided with code examples
-- **Phase 3:** `random.shuffle` + walkability check + claimed-tile set is trivially well-understood; code examples in both STACK.md and ARCHITECTURE.md
+Phases with standard patterns (skip `/gsd:research-phase`):
+- **Phase 1:** All APIs confirmed live against the running codebase. Insertion point identified in `game_states.py` lines 323-352. Toggle and persist pattern established. Implementation is mechanical and fully specified in STACK.md and ARCHITECTURE.md.
+- **Phase 2:** All overlay draw patterns verified. Component access confirmed. SRCALPHA + single-overlay architecture is resolved with code examples. No unknowns remain.
 
-Phases that benefit from one targeted source check during planning:
-- **Phase 4:** Verify the `VisibilityService.compute_visibility()` function signature and `is_transparent` callback shape against live source in `services/visibility_service.py` before writing chase LOS code; one read is sufficient
-- **Phase 5:** Verify `map_container.freeze()` / `thaw()` component handling in `map/map_container.py` lines 64-92 to confirm coordinate-based AI state survives correctly; confirm `DeathSystem` still removes `AI` component on death (death_system.py line 29)
+Phases that may need targeted investigation during planning:
+- **Phase 3, NPC FOV cones:** `AISystem._make_transparency_func()` is a private method. Before implementing NPC FOV cones, verify whether this function can be duplicated cleanly into `DebugRenderSystem` or must be extracted to `VisibilityService`. LOW risk — either path is a small change — but worth flagging before writing Phase 3 code.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All technologies verified against installed packages and live codebase; no new deps needed; alternatives explicitly evaluated and dismissed with specific rationale |
-| Features | HIGH | Based on direct codebase analysis + 30-year roguelike genre consensus across NetHack, DCSS, Angband, Brogue; all dependencies mapped against actual component and system files |
-| Architecture | HIGH | Derived from direct inspection of `game_states.py`, `movement_system.py`, `death_system.py`, and existing processor registration patterns; explicit-call pattern verified against UISystem/RenderSystem usage |
-| Pitfalls | HIGH | All pitfalls grounded in specific line references in the live codebase; the stub at lines 309-311 and entity ID reassignment in `thaw()` are confirmed present and verified |
+| Stack | HIGH | All APIs confirmed live against Python 3.13.11 + pygame 2.6.1. Performance benchmarked. Alpha discard confirmed as live behavior. No version changes needed. |
+| Features | HIGH | Derived from direct codebase analysis of all component fields. Feature dependency graph validated against source files. MVP scope is conservative and clearly bounded. |
+| Architecture | HIGH | Insertion point confirmed from `game_states.py` lines 323-352. Explicit-call pattern confirmed from `ai_system.py`, `render_system.py`, `ui_system.py`. No inferences — all verified from source. |
+| Pitfalls | HIGH | Seven pitfalls grounded in direct codebase inspection plus confirmed PyGame documented behaviors. Alpha-discard-on-non-SRCALPHA and per-tile surface allocation are verified mechanics, not opinions. |
 
-**Overall confidence:** HIGH
+**Overall confidence: HIGH**
 
 ### Gaps to Address
 
-- **Greedy chase in complex map geometry:** Manhattan step is sufficient for open dungeon rooms but may produce visibly stuck behavior in narrow L-shaped corridors or dead ends. Monitor during playtesting. A* (pathfinding PyPI package) is the deferred addition if greedy step fails — do not add preemptively.
-- **Double `esper.process()` VisibilitySystem overhead:** Running `esper.process()` twice per ENEMY_TURN also runs VisibilitySystem twice. At current entity counts this is negligible. Establish a performance baseline during Phase 2 wiring so any future regression is detectable.
-- **`is_transparent` callback shape for AISystem LOS:** The exact signature of the transparency function passed to `VisibilityService.compute_visibility()` should be confirmed against `services/visibility_service.py` before Phase 4. The pattern is established in `visibility_system.py` but AISystem will be a new caller.
-- **Wander behavior feel:** Whether `wander_steps = 3` produces natural-looking movement or jitter/drift is only verifiable by running the game. This is a playtest calibration gap, not a technical one. Start with 3 steps and adjust.
+- **Two-pass vs single-pass draw order:** PITFALLS.md recommends two draw sub-passes (tile-layer before entity render, entity-layer after). STACK.md and ARCHITECTURE.md describe a single system call. These are not contradictory — tile-level overlays (FOV highlight) call their sub-method before `render_system.process()`, entity-level overlays (AI labels, markers) call theirs after. The Phase 2 plan must make the insertion point explicit for each `_draw_X()` method.
+
+- **F1 vs F3 toggle key:** STACK.md suggests F1, ARCHITECTURE.md suggests F3. Check existing key bindings in `game_states.py` to confirm which key is unassigned before finalizing. One-line decision, not a design gap.
+
+- **`_make_transparency_func()` access for Phase 3:** The NPC FOV cone feature needs the same transparency function used by `AISystem._can_see_player()`. Whether to duplicate or extract this private method is an unresolved question deferred to Phase 3 planning. Not a blocker for Phases 1 or 2.
 
 ## Sources
 
-### Primary (HIGH confidence — direct codebase inspection)
-- `ecs/components.py` — AI marker, MovementRequest, AttackIntent, Stats.perception, Position.layer, TurnOrder stub
-- `ecs/systems/turn_system.py` — TurnSystem state machine, end_player_turn/end_enemy_turn API
-- `game_states.py` lines 309-311 — confirmed enemy turn stub; lines 118-129 — processor registration pattern
-- `ecs/systems/movement_system.py` — MovementRequest consumer, walkability checks, blocker detection
-- `ecs/systems/combat_system.py` — AttackIntent consumer pattern
-- `ecs/systems/death_system.py` line 29 — AI component removal on death
-- `ecs/systems/visibility_system.py` — VisibilityService integration and constructor injection pattern
-- `services/visibility_service.py` — `compute_visibility(origin, radius, transparency_fn)` API; returns set of (x,y)
-- `entities/entity_factory.py` — AI component attachment pattern
-- `entities/entity_registry.py` — EntityTemplate.ai bool field
-- `entities/monster.py` — `create_orc` using empty `AI()` constructor; must be updated
-- `map/map_container.py` lines 64-92 — freeze/thaw entity ID reassignment behavior confirmed
-- `.planning/codebase/ARCHITECTURE.md` — system registration pattern, set_map() contract
-- `.planning/codebase/CONCERNS.md` — fragile areas, known tech debt
+### Primary (HIGH confidence — live codebase + verified API calls)
+- `ecs/systems/render_system.py` — confirmed SRCALPHA per-tile pattern (lines 116-118), font init in `__init__`, `camera.apply_to_pos()` usage pattern
+- `game_states.py` — confirmed draw pipeline (lines 323-352), `set_clip()` usage (lines 339-348), `persist` dict pattern (lines 30-35), explicit system call pattern for `RenderSystem` and `UISystem`
+- `ecs/components.py` — confirmed `AIBehaviorState`, `ChaseData`, `Stats.perception`, `Position`, `Name` fields present
+- `ecs/systems/ai_system.py` — confirmed explicit-call pattern (not registered with esper), `_can_see_player()` and `_make_transparency_func()` patterns
+- `config.py` — confirmed `TILE_SIZE=32`, camera offsets (`offset_x=0`, `offset_y=48`)
+- Live pygame 2.6.1 API verification: SRCALPHA surface + fill + draw primitives confirmed; `pygame.gfxdraw.aacircle` + `filled_circle` confirmed available; alpha discard on non-SRCALPHA surfaces confirmed; `SysFont` rendering confirmed; single overlay vs per-tile performance benchmarked (1.03ms vs 1.16ms at 240 tiles)
 
-### Secondary (HIGH confidence — domain consensus)
-- Roguelike AI convention: IDLE/WANDER/CHASE state machine — 30-year consensus across NetHack, DCSS, Angband, Brogue; virtually all ASCII roguelike AI tutorials
-- Greedy Manhattan step sufficient for v1 tile-based dungeon — established by NetHack's success and DCSS's documented incremental AI improvement history
-- Roguelike AI pitfall: using player tile visibility_state for NPC sight — documented failure mode in RogueBasin wiki AI articles; HIGH confidence
-- ECS turn-based AI ordering patterns (group-act, simultaneous movement tile reservation) — well-established ECS/roguelike pattern
+### Secondary (HIGH confidence — established PyGame practice)
+- PyGame documentation: `pygame.Surface` SRCALPHA flag behavior, `pygame.draw` alpha handling (documented alpha-discard limitation), `surface.set_clip()` behavior
+- PyGame rendering patterns: pre-allocated overlay surface for per-frame alpha compositing, font object lifecycle management in ECS draw systems
 
 ---
-*Research completed: 2026-02-14*
+*Research completed: 2026-02-15*
 *Ready for roadmap: yes*
