@@ -134,6 +134,30 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 ---
 
+### Phase 22: Debug System Refinement
+
+**Goal:** Fix stale data after map transitions, align transparency logic with AI systems, and repair outdated verification tests.
+
+**Dependencies:** Phase 21 (all overlays must exist before they can be refined)
+
+**Requirements:** DBG-03, EXT-03
+
+**Gap Closure:** Closes integration and logic gaps from v1.3 audit.
+
+**Plans:** 1
+
+**Plans:**
+- [ ] 22-01-PLAN.md — Fix map synchronization and transparency logic
+
+**Success Criteria:**
+
+1. Entering a new map (e.g., a village) immediately updates the debug overlay with the new map's visibility and AI state.
+2. NPC FOV visualization in debug mode exactly matches the actual visibility used by the AI (tested against `#` wall fallback).
+3. `tests/verify_phase_20.py` passes with the updated `DebugRenderSystem.process` signature.
+4. Debug overlay remains functional and accurate across multiple map transitions in a single session.
+
+---
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -149,3 +173,4 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 19. Debug Infrastructure | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 20. Core Overlays | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 21. Extended Overlays | v1.3 | 3/3 | Complete | 2026-02-15 |
+| 22. Debug System Refinement | v1.3 | 0/1 | Pending | — |
