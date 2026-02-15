@@ -1,8 +1,9 @@
 import pygame
 import esper
-from config import TILE_SIZE, DEBUG_FOV_COLOR, DEBUG_CHASE_COLOR, DEBUG_LABEL_COLOR, DEBUG_FONT_SIZE
-from ecs.components import Position, AIBehaviorState, ChaseData, AIState
+from config import TILE_SIZE, DEBUG_FOV_COLOR, DEBUG_CHASE_COLOR, DEBUG_LABEL_COLOR, DEBUG_FONT_SIZE, DEBUG_NPC_FOV_COLOR
+from ecs.components import Position, AIBehaviorState, ChaseData, AIState, Stats
 from map.tile import VisibilityState
+from services.visibility_service import VisibilityService
 
 class DebugRenderSystem:
     def __init__(self, camera, map_container):
@@ -33,8 +34,45 @@ class DebugRenderSystem:
         surface.blit(self.overlay, (self.camera.offset_x, self.camera.offset_y))
 
     def _render_npc_fov(self):
-        # Placeholder for future NPC FOV rendering
-        pass
+        # Iterate over all entities with Position, Stats (for perception), and AIBehaviorState
+        for ent, (pos, stats, ai) in esper.get_components(Position, Stats, AIBehaviorState):
+            # Transparency function for shadowcasting, using the entity's layer
+            def transparency_func(x, y):
+                tile = self.map_container.get_tile(x, y, pos.layer)
+                if tile:
+                    return tile.transparent
+                return False
+
+            # Optimization: Only process entities within the self.camera viewport (plus margin)
+            margin = 10  # Margin to ensure we catch NPCs just off-screen whose FOV enters screen
+            
+            screen_x = pos.x * TILE_SIZE - self.camera.x
+            screen_y = pos.y * TILE_SIZE - self.camera.y
+            
+            # Check if NPC is roughly near the viewport
+            if -margin * TILE_SIZE < screen_x < self.camera.width + margin * TILE_SIZE and \
+               -margin * TILE_SIZE < screen_y < self.camera.height + margin * TILE_SIZE:
+               
+                # Compute visible tiles for this NPC
+                visible_tiles = VisibilityService.compute_visibility(
+                    (pos.x, pos.y), 
+                    stats.perception, 
+                    transparency_func
+                )
+                
+                # Render the visible tiles
+                for vx, vy in visible_tiles:
+                    # Calculate screen coordinates relative to camera
+                    vs_x = vx * TILE_SIZE - self.camera.x
+                    vs_y = vy * TILE_SIZE - self.camera.y
+                    
+                    # Only draw if the tile is actually on screen
+                    if 0 <= vs_x < self.camera.width and 0 <= vs_y < self.camera.height:
+                        pygame.draw.rect(
+                            self.overlay,
+                            DEBUG_NPC_FOV_COLOR,
+                            (vs_x, vs_y, TILE_SIZE, TILE_SIZE)
+                        )
 
     def _render_fov_overlay(self):
         # Calculate visible tile range based on camera position
