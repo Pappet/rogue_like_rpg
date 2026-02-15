@@ -2,34 +2,25 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-14)
+See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.2 AI Infrastructure — MILESTONE COMPLETE (all 4 phases shipped)
+**Current Focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 18 of 18 complete (Chase Behavior and State Transitions)
-Plan: 1/1 complete
-Status: Phase 18 complete, verified 6/6 must-haves (CHAS-01 through CHAS-05, SAFE-01)
-Last activity: 2026-02-15 — Phase 18 complete, chase AI implemented and verified
+Milestone: v1.2 AI Infrastructure — SHIPPED 2026-02-15
+Status: All milestones complete (v1.0, v1.1, v1.2). No active milestone.
+Last activity: 2026-02-15 — v1.2 milestone completed, audited, archived
 
-Progress: [██████████] 18 of 18+ phases complete (v1.0 + v1.1 shipped, v1.2 complete)
+Progress: [██████████] 3 milestones shipped (v1.0 MVP, v1.1 Investigation, v1.2 AI Infrastructure)
 
 ## Performance Metrics
 
-**Velocity (v1.1):**
-- Total plans completed: 3
-- Average duration: ~10min
-- Total execution time: ~32min
-
-**By Phase:**
+**By Phase (v1.2):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| Phase 12 | 1 | ~15min | ~15min |
-| Phase 13 | 1 | ~15min | ~15min |
-| Phase 14 | 1 | ~2min | ~2min |
 | Phase 15 | 1 | ~8min | ~8min |
 | Phase 16 | 1 | ~2min | ~2min |
 | Phase 17 | 1 | ~7min | ~7min |
@@ -39,20 +30,7 @@ Progress: [██████████] 18 of 18+ phases complete (v1.0 + v1.
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Relevant for v1.2:
-- AISystem uses explicit-call pattern (not esper.add_processor) — matches UISystem/RenderSystem convention; prevents AI firing every frame
-- AIBehaviorState is a separate component from AI marker — AI is a pure tag; state data lives in AIBehaviorState
-- AI state stores coordinates only — never entity IDs; freeze/thaw assigns new IDs breaking ID-based references
-- Raw strings in EntityTemplate converted to enums in EntityFactory (same pattern as sprite_layer -> SpriteLayer)
-- ResourceLoader validates AIState/Alignment enum values at load time for early failure with clear errors
-- AISystem uses explicit `== GameStates.ENEMY_TURN` check (not negation) — prevents WORLD_MAP state from triggering AI (Phase 16)
-- end_enemy_turn() is unconditional after entity loop — turn always closes even with zero eligible AI entities (Phase 16)
-- [Phase 17-wander-behavior]: Direct pos.x/pos.y mutation for AI wander — MovementSystem runs before AISystem, MovementRequest would lag one frame and break WNDR-04
-- [Phase 17-wander-behavior]: claimed_tiles as local set in process() — per-turn transient state prevents two NPCs targeting same tile in same turn
-- [Phase 18-chase-behavior]: NPC FOV reuses VisibilityService.compute_visibility() — same service as player, no duplication
-- [Phase 18-chase-behavior]: Detection block before match statement — state update routes naturally to CHASE case without extra dispatch
-- [Phase 18-chase-behavior]: player_entity as optional 4th arg to process() — backward-compatible call signature
+All decisions logged in PROJECT.md Key Decisions table. Milestone-specific decisions archived in milestones/ directory.
 
 ### Pending Todos
 
@@ -65,5 +43,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed 18-01-PLAN.md — Phase 18 (v1.2 AI Infrastructure) complete
+Stopped at: v1.2 milestone complete and archived. Next: `/gsd:new-milestone`
 Resume file: None

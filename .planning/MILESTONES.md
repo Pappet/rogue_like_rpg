@@ -33,3 +33,20 @@
 
 ---
 
+
+## v1.2 AI Infrastructure (Shipped: 2026-02-15)
+
+**Phases:** 4 (15-18) | **Plans:** 4 | **Tasks:** 8 | **Requirements:** 20/20 satisfied
+**Timeline:** 2 days (2026-02-14 → 2026-02-15)
+**Git range:** 3d9f98c → fb42bae | **Files changed:** 27 (+3,750/-32) | **Python LOC:** 5,959
+
+**Key accomplishments:**
+- AI component pipeline — AIState/Alignment enums, AIBehaviorState/ChaseData wired through full JSON-to-factory-to-death pipeline
+- AISystem processor owns enemy turns with layer filtering, corpse exclusion, and explicit-call pattern
+- Wander behavior — NPCs move randomly each turn with walkability, blocker detection, and per-turn tile reservation
+- Chase behavior — hostile NPCs detect player via FOV, pursue with greedy Manhattan steps, revert after losing sight
+- Safety guarantees — coordinates-only state storage (freeze/thaw safe), wrong-layer exclusion, dead entity skip
+- Post-ship fix: Player entity missing Blocker() component (NPCs could stack on player tile)
+
+---
+
