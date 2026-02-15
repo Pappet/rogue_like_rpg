@@ -10,28 +10,26 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 19 — Debug Infrastructure
-Plan: Not yet planned
-Status: Ready for /gsd:plan-phase 19
-Last activity: 2026-02-15 — v1.3 roadmap created (3 phases, 13 requirements)
+Plan: 01 (Complete)
+Status: Phase 19 complete, ready for Phase 20
+Last activity: 2026-02-15 — Completed 19-01-PLAN.md (Debug Infrastructure)
 
-Progress: [░░░░░░░░░░] 0 of 3 phases (v1.3 Debug Overlay System)
+Progress: [███░░░░░░░] 1 of 3 plans (v1.3 Debug Overlay System)
 
 ## Performance Metrics
 
-**By Phase (v1.2):**
+**By Phase (v1.3):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| Phase 15 | 1 | ~8min | ~8min |
-| Phase 16 | 1 | ~2min | ~2min |
-| Phase 17 | 1 | ~7min | ~7min |
-| Phase 18 | 1 | ~2min | ~2min |
+| Phase 19 | 1 | ~15min | ~15min |
 
 ## Accumulated Context
 
 ### Decisions
 
-All decisions logged in PROJECT.md Key Decisions table.
+- **Decoupled DebugRenderSystem from esper:** While other systems are managed by `esper.Processor`, the debug system is called explicitly in the `draw` method. This ensures it always renders on top of everything else and avoids any overhead when disabled, as `esper.process()` would still call it if registered. (2026-02-15)
+- **Persistence via `self.persist`:** Storing `debug_enabled` in the state persistence dictionary allows the player to keep the debug view on even when switching to the map and back. (2026-02-15)
 
 ### Pending Todos
 
@@ -44,5 +42,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Roadmap complete, ready to plan phase 19
-Resume file: None
+Stopped at: Completed Phase 19 Plan 01.
+Resume file: .planning/phases/20-core-overlays/20-01-PLAN.md (Next phase)
