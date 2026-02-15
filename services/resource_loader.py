@@ -12,6 +12,7 @@ from config import SpriteLayer
 from ecs.components import AIState, Alignment
 from map.tile_registry import TileRegistry, TileType
 from entities.entity_registry import EntityRegistry, EntityTemplate
+from entities.item_registry import ItemRegistry, ItemTemplate
 
 
 class ResourceLoader:
@@ -186,3 +187,62 @@ class ResourceLoader:
             )
 
             EntityRegistry.register(template)
+
+    @staticmethod
+    def load_items(filepath: str) -> None:
+        """Load item definitions from a JSON file into ItemRegistry.
+
+        Args:
+            filepath: Path to the items.json file.
+
+        Raises:
+            FileNotFoundError: If the JSON file does not exist at filepath.
+            ValueError: If the JSON is malformed or missing required fields.
+        """
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(
+                f"Item resource file not found: '{filepath}'. "
+                f"Expected a JSON file with item definitions."
+            )
+
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"Malformed JSON in item resource file '{filepath}': {exc}"
+            ) from exc
+
+        if not isinstance(data, list):
+            raise ValueError(
+                f"Item resource file '{filepath}' must contain a JSON array, "
+                f"got {type(data).__name__}."
+            )
+
+        required_fields = ("id", "name", "sprite", "sprite_layer", "weight", "material")
+
+        for item in data:
+            # --- validate required fields ---
+            for required_field in required_fields:
+                if required_field not in item:
+                    raise ValueError(
+                        f"Item entry missing required field '{required_field}': {item}"
+                    )
+
+            # --- build color tuple ---
+            raw_color = item.get("color", [255, 255, 255])
+            color = tuple(raw_color)
+
+            template = ItemTemplate(
+                id=item["id"],
+                name=item["name"],
+                sprite=item["sprite"],
+                color=color,
+                sprite_layer=item["sprite_layer"],
+                weight=float(item["weight"]),
+                material=item["material"],
+                description=item.get("description", ""),
+                stats=item.get("stats", {}),
+            )
+
+            ItemRegistry.register(template)

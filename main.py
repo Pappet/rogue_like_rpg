@@ -23,6 +23,7 @@ class GameController:
 
         ResourceLoader.load_tiles("assets/data/tile_types.json")
         ResourceLoader.load_entities("assets/data/entities.json")
+        ResourceLoader.load_items("assets/data/items.json")
         world = get_world()
         self.map_service.create_village_scenario(world)
         self.map_container = self.map_service.get_active_map()
