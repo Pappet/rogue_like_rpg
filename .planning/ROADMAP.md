@@ -5,6 +5,7 @@
 - ✅ **v1.0 MVP** — Phases 1-11 (shipped 2026-02-14)
 - ✅ **v1.1 Investigation System** — Phases 12-14 (shipped 2026-02-14)
 - ✅ **v1.2 AI Infrastructure** — Phases 15-18 (shipped 2026-02-15)
+- 🔄 **v1.3 Debug Overlay System** — Phases 19-21 (in progress)
 
 ## Phases
 
@@ -54,6 +55,74 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 ---
 
+## v1.3 Debug Overlay System
+
+**Goal:** Deliver an extensible debug overlay for visualizing internal game state — FOV tiles, AI state labels, chase markers, and direction vectors — as a dedicated `DebugRenderSystem` that sits after the main render pass and has zero performance impact when disabled.
+
+**Coverage:** 13/13 v1.3 requirements mapped (DBG-01 to DBG-05, OVL-01 to OVL-04, EXT-01 to EXT-04)
+
+---
+
+### Phase 19: Debug Infrastructure
+
+**Goal:** The debug toggle and system skeleton exist, are wired into the render pipeline, and the game runs identically with debug off.
+
+**Dependencies:** Phase 18 (game loop and render pipeline must be stable before inserting a new draw stage)
+
+**Requirements:** DBG-01, DBG-02, DBG-03, DBG-04, DBG-05
+
+**Plans:** 1
+
+**Success Criteria:**
+
+1. Pressing the debug hotkey (F1 or F3) flips a visible flag and does not crash the game or alter gameplay.
+2. The toggle state is preserved when transitioning between Game state and WorldMapState (stored in `persist["debug_enabled"]`).
+3. Frame time with debug disabled is identical to the pre-overlay baseline — no allocations happen in the disabled code path.
+4. `DebugRenderSystem` is instantiated in `Game.startup()`, called inside the `surface.set_clip(viewport_rect)` block after `render_system.process()`, and is not registered with `esper.add_processor()`.
+5. All debug draw calls target a pre-allocated `pygame.SRCALPHA` overlay surface created once in `__init__`; no per-frame surface allocation occurs.
+
+---
+
+### Phase 20: Core Overlays
+
+**Goal:** With debug enabled, a developer can see player FOV extent, NPC AI state, and NPC chase targets in a single glance at the game screen.
+
+**Dependencies:** Phase 19 (infrastructure and wiring must exist before any overlay can draw)
+
+**Requirements:** OVL-01, OVL-02, OVL-03, OVL-04
+
+**Plans:** 1
+
+**Success Criteria:**
+
+1. With debug on, every tile where the player has current line-of-sight shows a distinct green tint; tiles outside FOV are unaffected.
+2. With debug on, every NPC with an `AIBehaviorState` component shows a short label (W, C, I, or T) above its sprite.
+3. With debug on, every NPC in CHASE state shows an orange rectangle at its `ChaseData.last_known_x/y` coordinates.
+4. All overlays are clipped to the viewport region — no debug graphics appear over the header, sidebar, or message log.
+5. FOV tile tints render before entity sprites (tile-layer pass); AI labels and chase markers render after entity sprites (entity-layer pass) — no z-order bleed between the two.
+
+---
+
+### Phase 21: Extended Overlays
+
+**Goal:** A developer diagnosing a chase or detection bug can see the direction of NPC pursuit, how many turns remain until a chasing NPC gives up, the FOV cone each NPC is actively computing, and can silence any individual overlay layer independently.
+
+**Dependencies:** Phase 20 (core overlays must be validated in use before adding signal density)
+
+**Requirements:** EXT-01, EXT-02, EXT-03, EXT-04
+
+**Plans:** 1
+
+**Success Criteria:**
+
+1. With debug on, every CHASE-state NPC shows an arrow line from its current position to its last-known player position.
+2. The AI state label for a chasing NPC includes the turns-without-sight counter (e.g., `C(2)`), updating each enemy turn.
+3. With debug on, every NPC's computed FOV tiles receive a color tint distinguishing hostile from friendly NPCs; the tint reflects the actual shadowcast result from `VisibilityService`.
+4. Each overlay layer (FOV highlight, AI labels, chase markers, chase vectors, NPC FOV cones) can be toggled on or off independently without affecting other layers.
+5. Disabling all individual overlays via per-layer toggles produces a screen identical to having debug mode off.
+
+---
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -66,3 +135,6 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 16. AISystem Skeleton and Turn Wiring | v1.2 | 1/1 | Complete | 2026-02-14 |
 | 17. Wander Behavior | v1.2 | 1/1 | Complete | 2026-02-15 |
 | 18. Chase Behavior and State Transitions | v1.2 | 1/1 | Complete | 2026-02-15 |
+| 19. Debug Infrastructure | v1.3 | 0/1 | Pending | — |
+| 20. Core Overlays | v1.3 | 0/1 | Pending | — |
+| 21. Extended Overlays | v1.3 | 0/1 | Pending | — |
