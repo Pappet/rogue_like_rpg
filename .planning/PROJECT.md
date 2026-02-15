@@ -80,7 +80,20 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 
 ### Active
 
-(No active milestone — use `/gsd:new-milestone` to start next)
+## Current Milestone: v1.3 Debug Overlay System
+
+**Goal:** Extensible debug overlay for visualizing internal game state — visibility FOV, direction vectors, and future AI state — as a dedicated DebugRenderSystem after the main render pass.
+
+**Target features:**
+- DebugRenderSystem as separate ECS system at end of render pipeline
+- FOV/LOS tile highlighting via VisibilityService integration
+- Direction vector drawing on tiles (A* pathfinding prep)
+- Extensible data structure for future text labels, hitboxes, AI schedules
+- Global toggle (hotkey + config) for all debug overlays
+
+**Architectural constraints:**
+- Dedicated DebugRenderSystem, NOT embedded in RenderSystem — isolation and zero perf impact when off
+- Must support entity-specific debug components AND global state visualization
 
 ### Out of Scope
 
@@ -98,6 +111,7 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 ## Context
 
 **Shipped:** v1.0 MVP (2026-02-14), v1.1 Investigation System (2026-02-14), v1.2 AI Infrastructure (2026-02-15)
+**In progress:** v1.3 Debug Overlay System
 **Codebase:** 5,959 lines Python, 3 JSON data files
 **Tech stack:** Python 3.13, PyGame, esper ECS
 **Architecture:** ECS with data-driven JSON pipelines (tiles, entities, map prefabs); AISystem with state-driven behavior dispatch
@@ -136,4 +150,4 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 - Sprite-based 2D rendering
 
 ---
-*Last updated: 2026-02-15 after v1.2 milestone complete*
+*Last updated: 2026-02-15 after v1.3 milestone start*

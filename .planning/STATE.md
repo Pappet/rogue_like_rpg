@@ -5,15 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** Planning next milestone
+**Current Focus:** v1.3 Debug Overlay System
 
 ## Current Position
 
-Milestone: v1.2 AI Infrastructure — SHIPPED 2026-02-15
-Status: All milestones complete (v1.0, v1.1, v1.2). No active milestone.
-Last activity: 2026-02-15 — v1.2 milestone completed, audited, archived
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-15 — Milestone v1.3 started
 
-Progress: [██████████] 3 milestones shipped (v1.0 MVP, v1.1 Investigation, v1.2 AI Infrastructure)
+Progress: [░░░░░░░░░░] 0 of ?+ phases (v1.3 Debug Overlay System)
 
 ## Performance Metrics
 
@@ -30,7 +31,7 @@ Progress: [██████████] 3 milestones shipped (v1.0 MVP, v1.1 
 
 ### Decisions
 
-All decisions logged in PROJECT.md Key Decisions table. Milestone-specific decisions archived in milestones/ directory.
+All decisions logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
@@ -43,5 +44,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: v1.2 milestone complete and archived. Next: `/gsd:new-milestone`
+Stopped at: Defining v1.3 requirements
 Resume file: None
