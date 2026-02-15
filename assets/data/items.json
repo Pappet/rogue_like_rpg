@@ -1,0 +1,39 @@
+[
+  {
+    "id": "iron_sword",
+    "name": "Iron Sword",
+    "sprite": "/",
+    "color": [200, 200, 200],
+    "sprite_layer": "ITEMS",
+    "weight": 2.5,
+    "material": "iron",
+    "description": "A simple but sturdy iron sword.",
+    "stats": {
+      "power": 3
+    }
+  },
+  {
+    "id": "wooden_club",
+    "name": "Wooden Club",
+    "sprite": "",
+    "color": [139, 69, 19],
+    "sprite_layer": "ITEMS",
+    "weight": 1.5,
+    "material": "wood",
+    "description": "A heavy branch used as a primitive weapon.",
+    "stats": {
+      "power": 1
+    }
+  },
+  {
+    "id": "health_potion",
+    "name": "Health Potion",
+    "sprite": "!",
+    "color": [255, 0, 0],
+    "sprite_layer": "ITEMS",
+    "weight": 0.5,
+    "material": "glass",
+    "description": "A red liquid that restores health.",
+    "stats": {}
+  }
+]
