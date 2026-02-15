@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-14)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.2 AI Infrastructure — Phase 18: Chase Behavior and State Transitions
+**Current Focus:** v1.2 AI Infrastructure — MILESTONE COMPLETE (all 4 phases shipped)
 
 ## Current Position
 

@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 MVP** — Phases 1-11 (shipped 2026-02-14)
 - ✅ **v1.1 Investigation System** — Phases 12-14 (shipped 2026-02-14)
-- 🚧 **v1.2 AI Infrastructure** — Phases 15-18 (in progress)
+- ✅ **v1.2 AI Infrastructure** — Phases 15-18 (shipped 2026-02-15)
 
 ## Phases
 
@@ -42,7 +42,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 
 ---
 
-### 🚧 v1.2 AI Infrastructure (In Progress)
+### ✅ v1.2 AI Infrastructure (Shipped 2026-02-15)
 
 **Milestone Goal:** Lay the foundation for extensible NPC behavior with state-driven AI, wander logic, chase detection, and an AISystem processor that runs during enemy turns.
 
@@ -106,7 +106,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 18-01-PLAN.md — Implement chase detection, pursuit, lose-sight fallback in AISystem with verification tests
+- [x] 18-01-PLAN.md — Implement chase detection, pursuit, lose-sight fallback in AISystem with verification tests — completed 2026-02-15
 
 ---
 
@@ -121,4 +121,4 @@ Plans:
 | 15. AI Component Foundation | v1.2 | 1/1 | Complete | 2026-02-14 |
 | 16. AISystem Skeleton and Turn Wiring | v1.2 | 1/1 | Complete | 2026-02-14 |
 | 17. Wander Behavior | v1.2 | 1/1 | Complete | 2026-02-15 |
-| 18. Chase Behavior and State Transitions | v1.2 | 0/1 | Not started | - |
+| 18. Chase Behavior and State Transitions | v1.2 | 1/1 | Complete | 2026-02-15 |
