@@ -1,435 +1,761 @@
 # Architecture Research
 
-**Domain:** Roguelike RPG — Debug Overlay System Integration with ECS
+**Domain:** Roguelike RPG — Item & Inventory System Integration with Existing ECS
 **Researched:** 2026-02-15
-**Confidence:** HIGH (based on direct codebase analysis)
+**Confidence:** HIGH (based on direct codebase analysis — all integration points verified against source)
 
 ## Standard Architecture
 
 ### System Overview
 
 ```
-game_states.py Game.draw()
-┌─────────────────────────────────────────────────────────────────────┐
-│  surface.fill((0,0,0))                                               │
-│                                                                      │
-│  1. render_service.render_map()        ← map tiles                   │
-│       [viewport clip active]                                         │
-│                                                                      │
-│  2. render_system.process()            ← entities (sprite chars)     │
-│       [viewport clip active]                                         │
-│                                                                      │
-│  surface.set_clip(None)                ← clip reset before UI        │
-│                                                                      │
-│  3. ui_system.process()                ← header / sidebar / log      │
-│                                                                      │
-│  4. [INSERT] debug_render_system.process()   ← debug overlays        │
-│       [no clip — can draw anywhere]                                  │
-└─────────────────────────────────────────────────────────────────────┘
-```
+game_states.py Game state machine
+┌──────────────────────────────────────────────────────────────────────────┐
+│  PLAYER_TURN → ENEMY_TURN → PLAYER_TURN ...                              │
+│                                                                           │
+│  + INVENTORY state (new)     ← new state: full-screen inventory screen  │
+│  + TARGETING (existing)      ← unchanged                                 │
+└──────────────────────────────────────────────────────────────────────────┘
 
-The debug system slots into position 4: after all game rendering and UI, before
-`pygame.display.flip()`. This ordering means debug visuals appear on top of everything
-without affecting the game rendering path.
+Item Entity Lifecycle:
+┌────────────────┐  pick up   ┌────────────────────────────────────────┐
+│  On Ground     │ ─────────► │  In Inventory                          │
+│  has Position  │            │  no Position, owner ref via Contained  │
+│  SpriteLayer   │            │  component on item entity              │
+│  ITEMS = 3     │            └────────────────────────────────────────┘
+└────────────────┘                           │ equip
+        ▲                                    ▼
+        │ drop              ┌────────────────────────────────────────┐
+        └───────────────────│  Equipped                              │
+                            │  Equippable.equipped_by = owner_eid   │
+                            │  StatModifier component applies bonus  │
+                            └────────────────────────────────────────┘
+```
 
 ### Component Responsibilities
 
-| Component | Responsibility | Status |
-|-----------|----------------|--------|
-| `DebugRenderSystem` | Reads global debug flags, queries ECS components, draws overlays | **NEW** `ecs/systems/debug_render_system.py` |
-| `DebugConfig` | Runtime toggle state (which overlays are active) | **NEW** module-level singleton or dataclass in `debug_config.py` |
-| `DebugTag` (optional) | Per-entity component to suppress debug drawing for specific entities | Only if selective suppression is needed |
-| `RenderSystem` | Unchanged — draws entity sprites. No debug logic enters it | Existing — no changes |
-| `Game.draw()` | Calls `debug_render_system.process()` after `ui_system.process()` | **MODIFY** — add 3 lines |
-| `Game.get_event()` | Handles F3 (or chosen key) to toggle debug mode | **MODIFY** — add key handler |
-| `config.py` | Add `DEBUG_MODE = False` as the startup default | **MODIFY** — add constant |
+**New Components (add to `ecs/components.py`):**
 
-## Recommended Project Structure
+| Component | Responsibility | Notes |
+|-----------|----------------|-------|
+| `Portable` | Tag: entity can be picked up. Optional `weight: float = 1.0`. | Items on ground, in inventory, or equipped all have this. |
+| `Contained` | Links item to its container entity. `owner: int`, `slot: str = "pack"`. | On item entity. `owner` is the entity whose `Inventory` holds this item. `slot` = "pack" or equipment slot name. |
+| `Equippable` | Defines equipment slot and stat bonuses. `slot: str`, `bonus_power: int = 0`, `bonus_defense: int = 0`, etc. | Presence means item can be equipped. Separate from `Contained`. |
+| `Consumable` | Defines use effect. `effect: str`, `magnitude: int`, `charges: int = 1`. | Item is used up (or loses charges) on activation. |
+| `ItemMaterial` | `material: str` (e.g. "iron", "wood", "leather"). | Optional. Enables material-based descriptions and future resistances. |
+
+**Modified Components:**
+
+| Component | Change | Why |
+|-----------|--------|-----|
+| `Inventory` (existing stub) | Change `items: List` to `items: List[int]` — explicit list of entity IDs. Keep existing empty default. | Already stubbed correctly. The field is already `List` — just needs type annotation tightening and usage. |
+| `Stats` (existing) | No structural change. Combat system reads `Stats` directly. Equipment bonuses are computed separately, not stored here. | Avoids corrupting base stats on equip/unequip. See Pattern 2 below. |
+
+**Existing components that integrate unchanged:**
+
+| Component | Role in Item System |
+|-----------|---------------------|
+| `Position` | Items on the ground have `Position`. Items in inventory do NOT have `Position`. This is the primary location signal. |
+| `Renderable` | Items on ground rendered via `SpriteLayer.ITEMS` (value = 3, already in `config.py`). Items in inventory are not rendered by `RenderSystem`. |
+| `Name` | Item display name. Already used by inspect system. |
+| `Description` | Item flavor text. Already used by `ActionSystem.confirm_action()` inspect mode. |
+| `Blocker` | Items on ground do NOT have `Blocker`. Items never block movement. |
+
+---
+
+## Location Resolution: Position vs. Contained
+
+**The central design decision:** An item entity is in exactly one of three states:
 
 ```
-ecs/
-└── systems/
-    ├── render_system.py       # Unchanged
-    ├── debug_render_system.py # NEW — DebugRenderSystem class
+State 1: On Ground
+  has Position(x, y, layer)
+  has Renderable
+  no Contained component
 
-config.py                      # MODIFY — add DEBUG_MODE = False
+State 2: In Inventory (pack)
+  no Position component
+  has Contained(owner=<entity_id>, slot="pack")
+  no Renderable (or Renderable kept but ignored by RenderSystem filter)
 
-game_states.py                 # MODIFY — toggle handler + draw call
+State 3: Equipped
+  no Position component
+  has Contained(owner=<entity_id>, slot="weapon"|"armor"|"offhand"|...)
+  has Equippable (pre-existing, defines what slot it goes in)
 ```
 
-No new directories. No new service layer. No new components required for the base overlay.
+**Why no Position when carried:**
+- `RenderSystem` and `MovementSystem` query `(Position, Renderable)`. Removing `Position` from carried items is the cleanest filter — no system accidentally renders or moves an item in someone's pack.
+- Alternative (keeping Position, adding `InInventory` tag) was considered and rejected: it requires every system to check for the tag, not just the item-specific systems.
 
-### Structure Rationale
+**Pick-up flow:**
+1. Player moves onto item tile (or uses "Get" action).
+2. `PickupSystem` runs: removes `Position` from item, removes `Renderable` from item, adds `Contained(owner=player_eid, slot="pack")` to item, appends item entity ID to `Inventory.items` on player.
+3. Dispatch `"log_message"` event.
 
-- **`ecs/systems/debug_render_system.py`:** All draw-loop participants live in
-  `ecs/systems/`. Placing it here is consistent with `render_system.py` and
-  `ui_system.py`. It is an `esper.Processor` subclass matching the project pattern,
-  though it is called explicitly (not via `esper.process()`).
+**Drop flow:**
+1. Player selects item in inventory UI, chooses "Drop".
+2. `PickupSystem` (or `ItemActionSystem`): removes `Contained`, adds `Position(player.x, player.y, player.layer)`, adds `Renderable(item_sprite, SpriteLayer.ITEMS.value, item_color)`, removes item ID from `Inventory.items`.
 
-- **`config.py` for `DEBUG_MODE`:** All game constants live here. `DEBUG_MODE = False`
-  is the compile-time default. The runtime toggle flips a module-level variable. This
-  matches how `TILE_SIZE`, `SpriteLayer`, and `GameStates` are accessed across all
-  systems via `from config import ...`.
+---
 
-- **No `DebugTag` component initially:** Making debug drawing component-driven is
-  premature. The debug system queries existing components (`AIBehaviorState`, `Position`,
-  `Stats`, `Name`) that are already on entities. A `DebugTag` component is only needed
-  if you need to suppress or customise debug output per entity — defer until needed.
+## Equipment and Stat Bonuses
 
-## Architectural Patterns
+### Pattern 2: Computed Stats via EquipmentSystem — Do Not Modify Base Stats
 
-### Pattern 1: Global Debug State as a Mutable Module Variable
+**Problem:** `Stats` is a flat dataclass with integer fields. If equipment adds `+3 defense` by mutating `stats.defense`, the base value is lost. Unequipping becomes a bookkeeping nightmare.
 
-**What:** A single boolean `DEBUG_MODE` in `config.py` controls whether the debug system
-draws anything. The runtime toggle inverts it. All debug rendering is gated on this flag.
+**Solution:** Keep `Stats` as **base stats only**. Add an `EquipmentSystem` that computes **effective stats** at query time, or pre-computes a `EffectiveStats` component each turn.
 
-**When to use:** Always for this project. Module-level state in `config.py` is the
-established project pattern — every system already imports from `config`. Introducing a
-singleton class or a component adds indirection with no benefit.
+**Preferred approach for this codebase size:** Pre-compute `EffectiveStats` as a separate component, updated by `EquipmentSystem` each turn before `CombatSystem` runs.
 
-**Trade-offs:** Module state is global and mutable, which is fine for a single-player
-game with no concurrency. If testing requires isolated debug state, use a fixture to
-reset the value. The alternative — a `DebugConfig` dataclass passed through constructors
-— is cleaner architecturally but requires threading it through `Game.startup()` and every
-system constructor.
-
-**Example:**
 ```python
-# config.py — add at end of file
-DEBUG_MODE = False  # Runtime toggle; F3 inverts this
-
-# To toggle from game_states.py:
-import config
-config.DEBUG_MODE = not config.DEBUG_MODE
+# New component in ecs/components.py
+@dataclass
+class EffectiveStats:
+    power: int
+    defense: int
+    # Add other stat fields that equipment can modify
+    # Does NOT store hp/mana (those remain on Stats)
 ```
 
 ```python
-# ecs/systems/debug_render_system.py
-import config
-
-class DebugRenderSystem(esper.Processor):
-    def process(self, surface, camera, map_container, player_layer):
-        if not config.DEBUG_MODE:
-            return
-        self._draw_ai_state_labels(surface, camera, player_layer)
-        # Future overlays added as additional _draw_X() calls here
+# EquipmentSystem (new system)
+class EquipmentSystem(esper.Processor):
+    def process(self):
+        for ent, (stats,) in esper.get_components(Stats):
+            base_power = stats.power
+            base_defense = stats.defense
+            bonus_power = 0
+            bonus_defense = 0
+            # Sum bonuses from all equipped items
+            for item_eid, (contained, equippable) in esper.get_components(Contained, Equippable):
+                if contained.owner == ent and contained.slot != "pack":
+                    bonus_power += equippable.bonus_power
+                    bonus_defense += equippable.bonus_defense
+            # Write (or update) EffectiveStats
+            if esper.has_component(ent, EffectiveStats):
+                eff = esper.component_for_entity(ent, EffectiveStats)
+                eff.power = base_power + bonus_power
+                eff.defense = base_defense + bonus_defense
+            else:
+                esper.add_component(ent, EffectiveStats(
+                    power=base_power + bonus_power,
+                    defense=base_defense + bonus_defense
+                ))
 ```
 
-### Pattern 2: DebugRenderSystem Reads Existing Components — No Debug-Specific Components
+**CombatSystem change:** Change `attacker_stats.power` → `attacker_eff.power` and `target_stats.defense` → `target_eff.defense`. Fall back to `Stats` if no `EffectiveStats` present (handles non-equipped entities safely).
 
-**What:** The debug system queries the ECS for components that already exist
-(`AIBehaviorState`, `Position`, `Name`, `Stats`, `ChaseData`) and renders overlays
-based on their current values. No new components are added to entities for debug
-purposes.
-
-**When to use:** Always, unless you need per-entity debug suppression (rare). Adding a
-`DebugTag` component to every entity to enable debug drawing is unnecessary coupling —
-the debug system should be a read-only observer, not a participant in entity structure.
-
-**Trade-offs:** The debug system is tightly coupled to the shape of existing components.
-If `AIBehaviorState` fields change, `DebugRenderSystem` must be updated. This is
-acceptable — debug rendering is explicitly not production code and breakage is visible
-immediately.
-
-**Example — AI state labels:**
 ```python
-def _draw_ai_state_labels(self, surface, camera, player_layer):
-    font = pygame.font.SysFont('monospace', 10)
-    for ent, (behavior, pos) in esper.get_components(AIBehaviorState, Position):
-        if pos.layer != player_layer:
-            continue
-        screen_x, screen_y = camera.apply_to_pos(pos.x * TILE_SIZE, pos.y * TILE_SIZE)
-        label = behavior.state.value  # AIState enum → string
-        surf = font.render(label, True, (255, 255, 0))
-        surface.blit(surf, (screen_x, screen_y - 12))
+# CombatSystem — modified damage calculation
+def process(self):
+    for attacker, intent in list(esper.get_component(AttackIntent)):
+        target = intent.target_entity
+        try:
+            attacker_power = self._get_power(attacker)
+            target_defense = self._get_defense(target)
+            damage = max(0, attacker_power - target_defense)
+            ...
+
+def _get_power(self, entity) -> int:
+    eff = esper.try_component(entity, EffectiveStats)
+    if eff:
+        return eff.power
+    stats = esper.try_component(entity, Stats)
+    return stats.power if stats else 0
+
+def _get_defense(self, entity) -> int:
+    eff = esper.try_component(entity, EffectiveStats)
+    if eff:
+        return eff.defense
+    stats = esper.try_component(entity, Stats)
+    return stats.defense if stats else 0
 ```
 
-**Example — perception radius circles:**
+**Run order:** `EquipmentSystem` must process BEFORE `CombatSystem` each frame. Register it first in `game_states.py`.
+
+---
+
+## Item Entity Creation via JSON Pipeline
+
+### Pattern 3: Separate ItemRegistry — Do Not Bolt Items onto EntityTemplate
+
+**Why not reuse EntityTemplate for items:**
+- `EntityTemplate` has `hp`, `max_hp`, `power`, `defense`, `mana`, `max_mana`, `perception`, `intelligence`, `ai`, `blocker`, `default_state`, `alignment` — all creature fields.
+- Items have none of these. Forcing items through `EntityTemplate` creates a dataclass with ~12 meaningless zero fields plus item-specific fields shoehorned in.
+- The conditional-attachment pattern in `EntityFactory` (`if template.ai: ...`) would explode with item-specific branches.
+
+**Recommended approach:** Add `ItemTemplate` dataclass to `entities/entity_registry.py` (or a new `entities/item_registry.py`), and `ItemFactory` in `entities/entity_factory.py` (or `entities/item_factory.py`).
+
 ```python
-def _draw_perception_radii(self, surface, camera, player_layer):
-    for ent, (behavior, pos, stats) in esper.get_components(AIBehaviorState, Position, Stats):
-        if pos.layer != player_layer:
-            continue
-        cx, cy = camera.apply_to_pos(
-            pos.x * TILE_SIZE + TILE_SIZE // 2,
-            pos.y * TILE_SIZE + TILE_SIZE // 2
-        )
-        radius_px = stats.perception * TILE_SIZE
-        pygame.draw.circle(surface, (255, 100, 100), (cx, cy), radius_px, 1)
+# entities/item_registry.py — new file
+from dataclasses import dataclass, field
+from typing import Tuple, Dict
+
+@dataclass
+class ItemTemplate:
+    id: str
+    name: str
+    sprite: str
+    color: Tuple[int, int, int]
+    description: str = ""
+    # Portable
+    weight: float = 1.0
+    # Equippable (optional)
+    equippable: bool = False
+    equip_slot: str = ""          # "weapon", "armor", "offhand", "ring", etc.
+    bonus_power: int = 0
+    bonus_defense: int = 0
+    # Consumable (optional)
+    consumable: bool = False
+    effect: str = ""              # "heal", "damage", "mana_restore", etc.
+    magnitude: int = 0
+    charges: int = 1
+    # Material (optional)
+    material: str = ""
+
+class ItemRegistry:
+    _registry: Dict[str, ItemTemplate] = {}
+
+    @classmethod
+    def register(cls, template: ItemTemplate) -> None:
+        cls._registry[template.id] = template
+
+    @classmethod
+    def get(cls, template_id: str):
+        return cls._registry.get(template_id)
+
+    @classmethod
+    def clear(cls):
+        cls._registry.clear()
 ```
 
-### Pattern 3: Explicit Call After UI, Before Display Flip — No esper.process() Registration
+**JSON file:** `assets/data/items.json` — parallel to `entities.json`.
 
-**What:** `Game.draw()` calls `debug_render_system.process(surface, ...)` after
-`ui_system.process(surface)` and before the function returns. `DebugRenderSystem` is
-NOT registered with `esper.add_processor()`.
+```json
+[
+  {
+    "id": "iron_sword",
+    "name": "Iron Sword",
+    "sprite": "/",
+    "color": [180, 180, 200],
+    "description": "A well-worn iron sword.",
+    "weight": 3.0,
+    "equippable": true,
+    "equip_slot": "weapon",
+    "bonus_power": 3,
+    "material": "iron"
+  },
+  {
+    "id": "health_potion",
+    "name": "Health Potion",
+    "sprite": "!",
+    "color": [255, 0, 0],
+    "description": "A small vial of red liquid.",
+    "consumable": true,
+    "effect": "heal",
+    "magnitude": 20,
+    "charges": 1
+  }
+]
+```
 
-**When to use:** Always. This matches the existing explicit-call pattern for
-`render_system.process()` and `ui_system.process()` in `game_states.py`. Registering
-with `esper.add_processor()` would cause `debug_render_system.process()` to be called
-during `esper.process()` in `update()` (logic phase), not in `draw()` (render phase).
-The debug overlay must run in the render phase — it needs `surface` and `camera`.
+**ResourceLoader extension:** Add `ResourceLoader.load_items(filepath)` as a static method, parallel to `load_entities()`. Load into `ItemRegistry`. Call during startup in `main.py`.
 
-**Trade-offs:** Explicit call means manually threading `camera` and `map_container` into
-the constructor or `process()` signature. `RenderSystem` already does this — pass them
-the same way.
+**ItemFactory:** Creates item entity in world with Position (on ground) or without (spawning directly into an inventory).
 
-**Implementation in `game_states.py`:**
 ```python
-# Game.__init__()
-self.debug_render_system = None
+# entities/item_factory.py — new file
+import esper
+from config import SpriteLayer
+from ecs.components import Renderable, Name, Description, Portable, Equippable, Consumable, ItemMaterial, Contained
+from entities.item_registry import ItemRegistry
 
-# Game.startup()
-self.debug_render_system = DebugRenderSystem(self.camera, self.map_container)
+class ItemFactory:
+    @staticmethod
+    def create_on_ground(world, template_id: str, x: int, y: int, layer: int = 0) -> int:
+        """Spawn item at map position."""
+        template = ItemRegistry.get(template_id)
+        if template is None:
+            raise ValueError(f"Item template '{template_id}' not found.")
 
-# Game.draw() — after ui_system.process()
-if self.debug_render_system:
-    self.debug_render_system.process(surface, player_layer)
+        components = [
+            Position(x, y, layer),
+            Renderable(template.sprite, SpriteLayer.ITEMS.value, template.color),
+            Name(template.name),
+            Portable(weight=template.weight),
+        ]
+        if template.description:
+            components.append(Description(base=template.description))
+        if template.equippable:
+            components.append(Equippable(
+                slot=template.equip_slot,
+                bonus_power=template.bonus_power,
+                bonus_defense=template.bonus_defense,
+            ))
+        if template.consumable:
+            components.append(Consumable(
+                effect=template.effect,
+                magnitude=template.magnitude,
+                charges=template.charges,
+            ))
+        if template.material:
+            components.append(ItemMaterial(material=template.material))
 
-# Game.get_event() — in handle_player_input()
-if event.key == pygame.K_F3:
-    import config
-    config.DEBUG_MODE = not config.DEBUG_MODE
+        return world.create_entity(*components)
+
+    @staticmethod
+    def create_in_inventory(world, template_id: str, owner_eid: int) -> int:
+        """Spawn item directly into an owner's inventory (no Position)."""
+        template = ItemRegistry.get(template_id)
+        if template is None:
+            raise ValueError(f"Item template '{template_id}' not found.")
+
+        components = [
+            Name(template.name),
+            Portable(weight=template.weight),
+            Contained(owner=owner_eid, slot="pack"),
+        ]
+        if template.description:
+            components.append(Description(base=template.description))
+        if template.equippable:
+            components.append(Equippable(
+                slot=template.equip_slot,
+                bonus_power=template.bonus_power,
+                bonus_defense=template.bonus_defense,
+            ))
+        if template.consumable:
+            components.append(Consumable(
+                effect=template.effect,
+                magnitude=template.magnitude,
+                charges=template.charges,
+            ))
+        if template.material:
+            components.append(ItemMaterial(material=template.material))
+
+        item_eid = world.create_entity(*components)
+        inv = esper.component_for_entity(owner_eid, Inventory)
+        inv.items.append(item_eid)
+        return item_eid
 ```
 
-### Pattern 4: Extensibility via Private Draw Methods
+---
 
-**What:** `DebugRenderSystem.process()` calls a series of private `_draw_X()` methods.
-Each overlay type is one method. Enabling or disabling a specific overlay type is a
-one-line change in `process()`. Future overlay types (hitboxes, AI schedules, pathfinding
-waypoints) are added as new `_draw_X()` methods without touching existing ones.
+## Loot Drops and DeathSystem Integration
 
-**When to use:** Always. This is the simplest extensibility mechanism that fits the
-codebase size. It avoids an overlay registry, strategy pattern, or plugin system —
-all of which are overkill for 3-5 overlay types.
+### Pattern 4: DeathSystem Dispatches "entity_died" — LootSystem Listens
 
-**Trade-offs:** All overlay types are always available (just toggled off). Per-overlay
-toggles require adding boolean flags to `DebugConfig`. For the first milestone, a single
-`DEBUG_MODE` bool is sufficient. Per-overlay toggles can be added later if needed.
+**Do NOT modify `DeathSystem` to spawn loot inline.** It already dispatches `"entity_died"` and the handler is cleanly bounded.
 
-**Extensibility example:**
+**Add a `LootSystem`** that registers a handler for `"entity_died"` and queries the dead entity's `LootTable` component to spawn items.
+
 ```python
-class DebugRenderSystem(esper.Processor):
-    def process(self, surface, player_layer):
-        if not config.DEBUG_MODE:
-            return
-        # Phase 1 overlays
-        self._draw_ai_state_labels(surface, player_layer)
-        self._draw_perception_radii(surface, player_layer)
-        # Phase 2 overlays (add here when implementing)
-        # self._draw_tile_hitboxes(surface, player_layer)
-        # self._draw_ai_schedule(surface, player_layer)
-        # self._draw_pathfinding_waypoints(surface, player_layer)
-
-    def _draw_ai_state_labels(self, surface, player_layer):
-        ...
-
-    def _draw_perception_radii(self, surface, player_layer):
-        ...
+# New component
+@dataclass
+class LootTable:
+    entries: List[dict]
+    # Each entry: {"item_id": "iron_sword", "chance": 0.5, "count": 1}
 ```
+
+```python
+# ecs/systems/loot_system.py — new file
+import esper
+import random
+from ecs.components import Position, LootTable
+from entities.item_factory import ItemFactory
+
+class LootSystem(esper.Processor):
+    def __init__(self):
+        esper.set_handler("entity_died", self.on_entity_died)
+
+    def on_entity_died(self, entity):
+        try:
+            pos = esper.component_for_entity(entity, Position)
+            loot_table = esper.component_for_entity(entity, LootTable)
+        except KeyError:
+            return  # No position or no loot table — nothing to drop
+
+        for entry in loot_table.entries:
+            if random.random() < entry.get("chance", 1.0):
+                count = entry.get("count", 1)
+                for _ in range(count):
+                    ItemFactory.create_on_ground(
+                        esper,
+                        entry["item_id"],
+                        pos.x,
+                        pos.y,
+                        pos.layer
+                    )
+
+    def process(self):
+        pass
+```
+
+**EntityTemplate extension for loot:** Add `loot_table: List[dict] = field(default_factory=list)` to `EntityTemplate`. `EntityFactory.create()` attaches `LootTable(entries=template.loot_table)` if `template.loot_table` is non-empty. This matches the existing conditional-attachment pattern exactly.
+
+**JSON example:**
+```json
+{
+  "id": "orc",
+  ...existing fields...,
+  "loot_table": [
+    {"item_id": "iron_sword", "chance": 0.3, "count": 1},
+    {"item_id": "health_potion", "chance": 0.5, "count": 1}
+  ]
+}
+```
+
+---
+
+## Freeze/Thaw and Inventoried Items
+
+### Critical Pattern 5: Items in Inventory Must Freeze/Thaw with Their Owner
+
+**The problem:** `MapContainer.freeze()` calls `world.delete_entity(ent)` for all entities not in `exclude_entities`. Item entities in inventories have no `Position` component, so they exist in the esper world but are invisible to any position-based filter. They will be deleted by `freeze()` if not handled.
+
+**Solution:** When freezing, additionally exclude all item entities that are referenced in any `Inventory.items` list.
+
+This means `MapContainer.freeze()` needs to know which entities to exclude beyond the player. Two options:
+
+**Option A (recommended):** The caller (`Game.transition_map()`) computes the full exclusion list before calling `freeze()`.
+
+```python
+# In game_states.py — transition_map()
+def _collect_carried_items(self, owner_entity):
+    """Recursively collect all entity IDs in owner's inventory."""
+    carried = []
+    try:
+        inv = esper.component_for_entity(owner_entity, Inventory)
+        for item_eid in inv.items:
+            carried.append(item_eid)
+            # If items can contain items (bags), recurse here
+    except KeyError:
+        pass
+    return carried
+
+# Then in transition_map():
+carried_items = self._collect_carried_items(self.player_entity)
+exclusions = [self.player_entity] + carried_items
+self.map_container.freeze(self.world, exclude_entities=exclusions)
+```
+
+**Option B:** `MapContainer.freeze()` auto-detects carried items by checking for `Inventory` components. This puts inventory logic in `map_container.py`, which is a layer violation — map container should not know about item systems. Use Option A.
+
+**Thaw is safe:** When `thaw()` restores entities from `frozen_entities`, item entities that were frozen with the map will be restored into the world. Item entities that were excluded (carried items) remain in the world throughout — they are never deleted.
+
+**What gets frozen with the map:**
+- Monster entities on the map (they have `Position` pointing to this map)
+- Items on the ground (they have `Position` pointing to this map)
+- Corpses (they have `Position`)
+
+**What is excluded from freezing:**
+- Player entity (currently excluded by name)
+- All items in player's `Inventory.items` list
+- All items with `Contained(owner=player_eid, slot!="pack")` (equipped items)
+
+**Edge case — equipped items on frozen NPCs:** NPCs do not typically carry inventories in this architecture. If an NPC has carried items in a future extension, those items' `Contained` components reference the NPC entity ID. After thaw, the NPC entity ID changes (esper reassigns IDs on `create_entity()`). This is a known limitation: NPC inventories require ID remapping on thaw, which is complex. Defer NPC inventories until after player inventory is working.
+
+---
+
+## Inventory UI and Game State Machine
+
+### Pattern 6: INVENTORY as a New GameStates Value — Same Pattern as TARGETING
+
+**Existing pattern:** `GameStates.TARGETING` is a value in the `GameStates` enum. `TurnSystem.current_state` is set to `TARGETING` when targeting starts, and `Game.get_event()` routes to `handle_targeting_input()` when in that state.
+
+**New state:** Add `GameStates.INVENTORY = 5` to `config.py`. This follows the same pattern exactly.
+
+```python
+# config.py
+class GameStates(Enum):
+    PLAYER_TURN = 1
+    ENEMY_TURN = 2
+    TARGETING = 3
+    WORLD_MAP = 4
+    INVENTORY = 5  # NEW
+```
+
+**State transitions:**
+```
+PLAYER_TURN
+    │ player presses 'i' (or selects "Items" action)
+    ▼
+INVENTORY
+    │ player presses ESC or 'i' again
+    ▼
+PLAYER_TURN  (no turn consumed — opening inventory is free)
+
+INVENTORY
+    │ player selects "Use" consumable
+    ▼
+PLAYER_TURN (turn consumed — using an item costs a turn)
+
+INVENTORY
+    │ player selects "Equip" / "Unequip"
+    ▼
+PLAYER_TURN (turn consumed — equipping costs a turn)
+
+INVENTORY
+    │ player selects "Drop"
+    ▼
+PLAYER_TURN (turn consumed — dropping costs a turn)
+```
+
+**Input routing in `Game.get_event()`:**
+```python
+def get_event(self, event):
+    if self.turn_system.current_state == GameStates.TARGETING:
+        self.handle_targeting_input(event)
+    elif self.turn_system.current_state == GameStates.INVENTORY:
+        self.handle_inventory_input(event)   # NEW
+    elif self.turn_system.is_player_turn():
+        self.handle_player_input(event)
+```
+
+**Inventory screen rendering:**
+- Add `InventoryScreen` class (or render method on an `InventorySystem`) — draws a full-screen or overlay panel listing inventory contents.
+- Called from `Game.draw()` when `turn_system.current_state == GameStates.INVENTORY`.
+- Reads `Inventory.items`, queries `Name` and `Equippable`/`Consumable` on each item entity.
+
+**"Items" action already stubbed:** `party_service.py` already adds `Action(name="Items")` to the player's `ActionList`. The handler in `Game.handle_player_input()` needs to be wired to set `turn_system.current_state = GameStates.INVENTORY`.
+
+---
+
+## New Systems Required
+
+| System | File | Registration | Purpose |
+|--------|------|--------------|---------|
+| `EquipmentSystem` | `ecs/systems/equipment_system.py` | `esper.add_processor()` before `CombatSystem` | Computes `EffectiveStats` from `Stats` + equipped items each frame |
+| `PickupSystem` | `ecs/systems/pickup_system.py` | `esper.add_processor()` | Handles `PickupRequest` component → moves item from ground to inventory |
+| `LootSystem` | `ecs/systems/loot_system.py` | `esper.add_processor()` | Listens for `entity_died`, spawns loot from `LootTable` |
+| `ItemActionSystem` | `ecs/systems/item_action_system.py` | explicit call, like `ActionSystem` | Handles use/equip/unequip/drop requests from inventory UI |
+
+**Alternatively:** `PickupSystem` and `ItemActionSystem` can be unified into a single `ItemSystem` that handles all item interactions. The separation is cleaner for testing but adds files. Unify for the first milestone, split later if complexity warrants.
+
+---
 
 ## Data Flow
 
-### Debug Toggle Flow
+### Pick-Up Flow
 
 ```
-Player presses F3
+Player moves onto item tile
     │
     ▼
-Game.get_event() → handle_player_input()
-    │
-    ├─► config.DEBUG_MODE = not config.DEBUG_MODE
+MovementSystem.process()
+    moves player to (x, y)
+    detects item entity at (x, y) — no Blocker, so no attack
     │
     ▼
-Next Game.draw() call
+(After move: player and item are at same position)
     │
-    ├─► render_service.render_map()         [always runs]
-    ├─► render_system.process()             [always runs]
-    ├─► ui_system.process()                 [always runs]
+    ▼ player presses 'g' (or "Get" triggers automatically)
+Game.handle_player_input()
+    esper.add_component(player, PickupRequest())
     │
-    └─► debug_render_system.process()
-            │
-            ├─ config.DEBUG_MODE == False → return immediately (no cost)
-            │
-            └─ config.DEBUG_MODE == True
-                ├─► _draw_ai_state_labels()
-                │     esper.get_components(AIBehaviorState, Position)
-                │     → screen coords via camera.apply_to_pos()
-                │     → pygame.font.render() + surface.blit()
-                │
-                └─► _draw_perception_radii()
-                      esper.get_components(AIBehaviorState, Position, Stats)
-                      → pygame.draw.circle()
+    ▼
+PickupSystem.process()
+    for ent, (pos, req) in get_components(Position, PickupRequest):
+        find item at (pos.x, pos.y, pos.layer) with Portable
+        if found:
+            esper.remove_component(item, Position)
+            esper.remove_component(item, Renderable)
+            esper.add_component(item, Contained(owner=ent, slot="pack"))
+            inv = esper.component_for_entity(ent, Inventory)
+            inv.items.append(item_eid)
+            esper.dispatch_event("log_message", f"You pick up the {item_name}.")
+        esper.remove_component(ent, PickupRequest)
+    turn_system.end_player_turn()
 ```
 
-### Key Data Flows
+### Equipment Flow
 
-1. **World-to-screen coordinate conversion:** `DebugRenderSystem` uses the same
-   `camera.apply_to_pos(pixel_x, pixel_y)` call as `RenderSystem`. No new coordinate
-   system. The camera is injected via the constructor (same pattern as `RenderSystem`).
+```
+Player in INVENTORY state, selects item, presses 'e'
+    │
+    ▼
+handle_inventory_input()
+    esper.add_component(player, EquipRequest(item_eid=selected_item))
+    │
+    ▼
+ItemSystem.process()
+    for ent, req in get_component(EquipRequest):
+        item = req.item_eid
+        equippable = esper.component_for_entity(item, Equippable)
+        slot = equippable.slot
+        # Unequip existing item in same slot
+        for other_item_eid in esper.component_for_entity(ent, Inventory).items:
+            other_contained = esper.try_component(other_item_eid, Contained)
+            if other_contained and other_contained.slot == slot:
+                other_contained.slot = "pack"
+        # Equip new item
+        contained = esper.component_for_entity(item, Contained)
+        contained.slot = slot
+        esper.remove_component(ent, EquipRequest)
+    # EffectiveStats updated next frame by EquipmentSystem
+```
 
-2. **Layer filtering:** All debug draw methods must filter by `pos.layer != player_layer`
-   to avoid drawing overlays for entities on other map layers. This mirrors the check in
-   `RenderSystem.process()` (line 28-29 of render_system.py).
+### Loot Drop Flow
 
-3. **No-clip rendering:** `Game.draw()` calls `surface.set_clip(None)` before
-   `ui_system.process()`. The debug system runs after this reset, so it can draw
-   anywhere on the screen including UI areas — useful for text labels near screen edges.
-   Debug draws within the viewport are naturally positioned correctly via camera
-   coordinates.
+```
+CombatSystem → target HP <= 0 → dispatch "entity_died"
+    │
+    ▼
+DeathSystem.on_entity_died()    [existing — unchanged]
+    transforms entity to corpse
+    │
+    ▼
+LootSystem.on_entity_died()     [NEW — also registered for "entity_died"]
+    reads LootTable on entity
+    for each entry: roll chance → ItemFactory.create_on_ground()
+```
 
-## Scaling Considerations
+Both `DeathSystem` and `LootSystem` register handlers for `"entity_died"`. Esper dispatches to all registered handlers. Order of handler execution follows registration order — `DeathSystem` runs first (registered in `Game.startup()` first), `LootSystem` second. This is correct: corpse transformation happens before loot spawning, which is the logical order.
 
-This is a debug system for a single-player roguelike. Scaling is not a concern.
-
-| Concern | Notes |
-|---------|-------|
-| Performance when DEBUG_MODE=False | Single bool check in `process()`, immediate return. Zero ECS queries. Negligible cost. |
-| Performance when DEBUG_MODE=True | One `esper.get_components()` call per overlay type per frame. At 3-10 AI entities per map, this is negligible. |
-| Font rendering cost | `pygame.font.SysFont().render()` is called per entity per frame when debug is on. Cache font objects in `__init__` — do not create them in draw methods. |
-| Screen-space clutter | At >20 AI entities on screen, text labels overlap. This is a debug tool, not production UI — it is acceptable. |
-
-## Anti-Patterns
-
-### Anti-Pattern 1: Putting Debug Logic Inside RenderSystem
-
-**What people do:** Add `if config.DEBUG_MODE:` branches inside `RenderSystem.process()`
-to draw debug overlays alongside entity sprites.
-
-**Why it's wrong:** Pollutes the production rendering code with debug concerns. Makes
-`RenderSystem` harder to read, test, and reason about. When debug code is removed or
-changed, the risk of accidentally affecting production rendering is high. The explicit
-call pattern used in this codebase exists precisely to keep systems single-purpose.
-
-**Do this instead:** Create a separate `DebugRenderSystem` that runs after
-`RenderSystem`. The production render path remains untouched.
-
-### Anti-Pattern 2: Registering DebugRenderSystem with esper.add_processor()
-
-**What people do:** Call `esper.add_processor(self.debug_render_system)` in `startup()`
-alongside the other systems.
-
-**Why it's wrong:** `esper.process()` is called in `Game.update()` (the logic phase),
-not in `Game.draw()` (the render phase). Debug rendering requires the `surface` and
-`camera` objects that are only available in the draw phase. Registered processors receive
-no arguments — the `process()` signature would have to change, requiring a stored
-`surface` reference that becomes stale between frames.
-
-**Do this instead:** Call `debug_render_system.process(surface, player_layer)` explicitly
-in `Game.draw()`, matching the pattern used for `render_system` and `ui_system`.
-
-### Anti-Pattern 3: Adding DebugComponent to Every Entity
-
-**What people do:** Create a `DebugInfo` component attached to each entity, storing
-debug-displayable strings. The debug system then queries for `DebugInfo`.
-
-**Why it's wrong:** This spreads debug state into the ECS entity graph. Every entity
-gets a component it only uses in debug mode. It also requires updating `DebugInfo`
-contents in every system that changes the state being debugged (AISystem updates the AI
-state string, CombatSystem updates HP info, etc.) — duplicating data that already exists
-in `AIBehaviorState`, `Stats`, and `ChaseData`.
-
-**Do this instead:** Query the existing components directly from `DebugRenderSystem`.
-The debug system is a read-only observer. The data already exists; just read it.
-
-### Anti-Pattern 4: Storing Font Objects as Method-Local Variables
-
-**What people do:** In `_draw_ai_state_labels()`, call
-`pygame.font.SysFont('monospace', 10)` at the top of the method.
-
-**Why it's wrong:** `pygame.font.SysFont()` loads a font from disk on every call. At
-60 FPS with debug mode enabled, this is 60 disk/cache operations per frame per method.
-It causes visible frame drops when debug mode is on.
-
-**Do this instead:** Create font objects once in `DebugRenderSystem.__init__()` and
-store them as instance attributes. `RenderSystem` already demonstrates this pattern
-(`self.font = pygame.font.SysFont('monospace', TILE_SIZE)` in `__init__`).
+---
 
 ## Integration Points
 
 ### New Files
 
-| File | Purpose | Notes |
-|------|---------|-------|
-| `ecs/systems/debug_render_system.py` | `DebugRenderSystem(esper.Processor)` class | Mirrors `render_system.py` structure |
+| File | Purpose |
+|------|---------|
+| `entities/item_registry.py` | `ItemTemplate` dataclass + `ItemRegistry` singleton |
+| `entities/item_factory.py` | `ItemFactory.create_on_ground()`, `ItemFactory.create_in_inventory()` |
+| `ecs/systems/equipment_system.py` | `EquipmentSystem` — computes `EffectiveStats` each frame |
+| `ecs/systems/pickup_system.py` | `PickupSystem` — handles `PickupRequest` → inventory transfer |
+| `ecs/systems/loot_system.py` | `LootSystem` — listens to `entity_died`, spawns loot |
+| `ecs/systems/item_action_system.py` | `ItemActionSystem` — handles use/equip/drop from inventory UI |
+| `assets/data/items.json` | Item template data (sprites, bonuses, effects) |
 
 ### Modified Files
 
-| File | Change | Lines Affected |
-|------|--------|----------------|
-| `config.py` | Add `DEBUG_MODE = False` | After existing constants |
-| `game_states.py` (imports) | `from ecs.systems.debug_render_system import DebugRenderSystem` | Top of file |
-| `game_states.py` `Game.__init__()` | Add `self.debug_render_system = None` | After `self.render_system = None` |
-| `game_states.py` `Game.startup()` | Instantiate: `self.debug_render_system = DebugRenderSystem(self.camera, self.map_container)` | After `self.render_system = RenderSystem(...)` |
-| `game_states.py` `Game.draw()` | Add call after `ui_system.process()` | 2 lines: null-guard + `.process()` call |
-| `game_states.py` `handle_player_input()` | Add `K_F3` toggle handler | In the `KEYDOWN` block |
-| `game_states.py` `transition_map()` | Call `self.debug_render_system.set_map(new_map)` | Step 8, alongside other `set_map()` calls |
+| File | Change | Scope |
+|------|--------|-------|
+| `ecs/components.py` | Add: `Portable`, `Contained`, `Equippable`, `Consumable`, `ItemMaterial`, `EffectiveStats`, `LootTable`, `PickupRequest`, `EquipRequest`. Tighten `Inventory.items: List[int]`. | ~60 lines added |
+| `config.py` | Add `GameStates.INVENTORY = 5` | 1 line |
+| `entities/entity_registry.py` | Add `loot_table: List[dict]` field to `EntityTemplate` with `field(default_factory=list)` | 1 line |
+| `entities/entity_factory.py` | Add `if template.loot_table: components.append(LootTable(...))` | 3 lines |
+| `services/resource_loader.py` | Add `ResourceLoader.load_items(filepath)` static method | ~60 lines |
+| `game_states.py` | Add `INVENTORY` state routing, wire new systems, extend `_collect_carried_items()` into `transition_map()`, wire "Items" action handler | ~40 lines |
+| `ecs/systems/combat_system.py` | Change `attacker_stats.power` and `target_stats.defense` to use `_get_power()` / `_get_defense()` helpers that prefer `EffectiveStats` | ~10 lines |
+| `main.py` | Add `ResourceLoader.load_items("assets/data/items.json")` call | 1 line |
 
 ### Unchanged Files
 
 | File | Reason |
 |------|--------|
-| `ecs/systems/render_system.py` | Zero changes. Debug is fully separate. |
-| `ecs/systems/ui_system.py` | Zero changes. |
-| `ecs/systems/ai_system.py` | Zero changes. Debug reads AI state, does not affect it. |
-| `ecs/components.py` | No new components required for the base overlay. |
-| `services/visibility_service.py` | Not relevant to debug rendering. |
-| All other systems | Not affected. |
+| `map/map_container.py` | `freeze()`/`thaw()` unchanged. Exclusion list is computed by caller. |
+| `ecs/systems/death_system.py` | Unchanged. `LootSystem` is a separate handler on the same event. |
+| `ecs/systems/movement_system.py` | Items have no `Blocker` — MovementSystem is unaware of them. |
+| `ecs/systems/render_system.py` | Items on ground are rendered automatically via `(Position, Renderable)` query — no changes needed. |
+| `ecs/systems/action_system.py` | Inspect mode already shows entities with `Name` at target tile — items on ground are described for free. |
+| `ecs/systems/ai_system.py` | AI does not interact with items in this milestone. |
 
 ### Internal Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| `Game.draw()` → `DebugRenderSystem` | Direct method call with `surface`, `player_layer` | Matches `RenderSystem` call pattern exactly |
-| `DebugRenderSystem` → ECS | `esper.get_components(...)` read-only queries | No component mutation from debug system |
-| `DebugRenderSystem` → Camera | `self.camera.apply_to_pos(pixel_x, pixel_y)` | Injected in constructor; add `set_camera()` if needed |
-| `DebugRenderSystem` → MapContainer | `self.map_container` for tile queries (hitbox overlays) | Add `set_map()` method; called in `transition_map()` |
-| `Game.get_event()` → `config.DEBUG_MODE` | `import config; config.DEBUG_MODE = not config.DEBUG_MODE` | Direct module attribute mutation |
+| `EquipmentSystem` → `CombatSystem` | `EffectiveStats` component (written by Equipment, read by Combat) | Run order matters: Equipment before Combat |
+| `LootSystem` ↔ `DeathSystem` | Both listen to `"entity_died"` esper event | Registration order determines call order |
+| `PickupSystem` → `Inventory` | Directly mutates `Inventory.items` list and `Contained` component | System owns the pick-up transaction |
+| `ItemFactory` → `ItemRegistry` | Direct call: `ItemRegistry.get(template_id)` | Same pattern as `EntityFactory` → `EntityRegistry` |
+| `Game.transition_map()` → `MapContainer.freeze()` | Caller computes exclusion list including carried items | No inventory logic in map container |
+| Inventory UI → `Inventory` component | Reads `Inventory.items`, queries `Name`/`Equippable`/`Consumable` per item | UI is read-only; mutations go via request components |
 
-## Suggested Build Order
+---
 
-Dependencies drive this order:
+## Recommended Build Order
 
-1. **Add `DEBUG_MODE = False` to `config.py`** — zero dependencies. All subsequent
-   work imports this flag. Test: `from config import DEBUG_MODE` works.
+Dependencies drive this order. Each step is independently testable before the next begins.
 
-2. **Create `DebugRenderSystem` skeleton** — depends on step 1. Implement
-   `__init__(self, camera, map_container)`, `set_map()`, and a `process()` that returns
-   immediately when `config.DEBUG_MODE` is False. No overlay drawing yet.
-   Test: instantiate the class without errors.
+**Step 1 — Components (foundation, zero deps):**
+Add all new components to `ecs/components.py`: `Portable`, `Contained`, `Equippable`, `Consumable`, `ItemMaterial`, `EffectiveStats`, `LootTable`, `PickupRequest`, `EquipRequest`. Tighten `Inventory` type annotation.
+- Test: `from ecs.components import Portable, Contained, ...` imports without error.
 
-3. **Wire `DebugRenderSystem` into `game_states.py`** — depends on step 2. Add import,
-   instantiate in `startup()`, add explicit call in `draw()`, add F3 key handler in
-   `get_event()`. Add `set_map()` call in `transition_map()`.
-   Test: game runs normally; F3 key does not crash; debug mode boolean flips.
+**Step 2 — ItemRegistry + ItemTemplate (no game deps):**
+Create `entities/item_registry.py` with `ItemTemplate` and `ItemRegistry`. Write `ResourceLoader.load_items()`. Create `assets/data/items.json` with 2-3 test items.
+- Test: Load JSON, verify `ItemRegistry.get("iron_sword")` returns correct template.
 
-4. **Implement AI state label overlay** — depends on step 3. Implement
-   `_draw_ai_state_labels()`: query `(AIBehaviorState, Position)`, filter by
-   `player_layer`, convert to screen coordinates, render text.
-   Test: enable debug mode, confirm AI state text appears above each NPC.
+**Step 3 — ItemFactory (depends on Steps 1+2):**
+Create `entities/item_factory.py` with `create_on_ground()` and `create_in_inventory()`.
+- Test: Create item in world, verify `(Position, Renderable, Portable)` are present for ground item.
 
-5. **Implement perception radius overlay** — depends on step 4. Implement
-   `_draw_perception_radii()`: query `(AIBehaviorState, Position, Stats)`, draw circle
-   with radius `stats.perception * TILE_SIZE`.
-   Test: enable debug mode, confirm circles appear centered on NPCs at correct scale.
+**Step 4 — EquipmentSystem + CombatSystem change (depends on Step 1):**
+Create `EquipmentSystem`. Modify `CombatSystem` to use `_get_power()` / `_get_defense()` helpers.
+Register `EquipmentSystem` before `CombatSystem` in `game_states.py`.
+- Test: Entity with no equipment gets `EffectiveStats` equal to base `Stats`. Entity with equipped sword gets `EffectiveStats.power = base + bonus`.
 
-6. **Future overlays** — each is a new `_draw_X()` method added to step 4's framework.
-   Chase target arrows, last-known-position markers, tile hitboxes: each is independent
-   and adds one method plus one call in `process()`.
+**Step 5 — LootTable → EntityTemplate + EntityFactory + LootSystem (depends on Steps 1+3):**
+Add `loot_table` field to `EntityTemplate`. Extend `EntityFactory` to attach `LootTable`. Create `LootSystem`. Update `entities.json` orc with a test loot entry.
+- Test: Kill orc, verify item entity appears at orc's position.
 
-Steps 1-3 form the infrastructure; they can be done in one commit. Steps 4-5 are each
-independently releasable overlays.
+**Step 6 — PickupSystem (depends on Steps 1+3):**
+Create `PickupSystem`. Add `PickupRequest` handling. Wire player `'g'` key in `Game.handle_player_input()`.
+- Test: Item on ground, player walks onto it and presses 'g', item moves from ground to `Inventory.items`.
+
+**Step 7 — freeze/thaw exclusion fix (depends on Step 6):**
+Add `_collect_carried_items()` to `Game`. Modify `transition_map()` to pass full exclusion list to `freeze()`.
+- Test: Player picks up item, transitions map, transitions back — item still in inventory.
+
+**Step 8 — Inventory UI + INVENTORY game state (depends on Steps 1+6):**
+Add `GameStates.INVENTORY = 5`. Add input routing in `get_event()`. Add `handle_inventory_input()`. Create inventory rendering (draw panel with item list). Wire "Items" action handler.
+- Test: Press 'i' — inventory screen appears. ESC returns to game. Items listed correctly.
+
+**Step 9 — ItemActionSystem: equip/unequip/use/drop (depends on Steps 1+4+6+8):**
+Create `ItemActionSystem`. Wire equip/unequip, use (consumable), drop from inventory UI.
+- Test: Equip sword — `EffectiveStats.power` increases. Use potion — HP increases, potion removed from inventory. Drop item — item appears on ground at player position.
+
+---
+
+## Anti-Patterns
+
+### Anti-Pattern 1: Modifying Base Stats on Equip
+
+**What people do:** `stats.defense += equippable.bonus_defense` when equipping.
+**Why it's wrong:** Unequipping requires `stats.defense -= equippable.bonus_defense`. If the item is ever destroyed, dropped, or the player crashes, the base stat is permanently corrupted. Stacking multiple items compounds the error.
+**Do this instead:** Keep `Stats` as immutable base values. `EquipmentSystem` computes `EffectiveStats` from scratch each frame. `CombatSystem` reads `EffectiveStats`.
+
+### Anti-Pattern 2: Storing Item Entity IDs in Position
+
+**What people do:** Add a `List[int]` field to `Position` for "items at this location" so the pickup system can find them.
+**Why it's wrong:** Every `Position` component now maintains a list that must be kept in sync with item entity positions. Whenever an item is moved, the old tile's list must be updated and the new tile's list too. This is a spatial index — esper already handles this via component queries.
+**Do this instead:** `PickupSystem` queries `(Position, Portable)` and filters by `(pos.x == player.x and pos.y == player.y)`. No auxiliary data structure needed.
+
+### Anti-Pattern 3: Keeping Position on Carried Items (with InInventory Tag)
+
+**What people do:** Add an `InInventory` tag component to carried items and keep `Position` set to the owner's position, thinking it makes item location queries simpler.
+**Why it's wrong:** Every system that queries `(Position, X)` now iterates over carried items too. `MovementSystem`, `RenderSystem`, `VisibilitySystem` all get false hits. Every system needs to check for `InInventory` to skip these entities.
+**Do this instead:** Remove `Position` from carried items. The `Contained` component is the location signal for carried items. Systems that care about items-on-ground query `(Position, Portable)`. Systems that care about inventory contents query `(Contained, ...)`.
+
+### Anti-Pattern 4: Putting Loot Drop Logic in DeathSystem
+
+**What people do:** Add loot spawning code directly inside `DeathSystem.on_entity_died()`.
+**Why it's wrong:** `DeathSystem` is responsible for entity transformation (corpse state). Mixing loot spawning creates a system with two responsibilities. Testing becomes harder: you cannot test loot drops independently of death transformation. Future changes to either concern require modifying the same function.
+**Do this instead:** `LootSystem` registers its own handler for `"entity_died"`. It runs after `DeathSystem` because it is registered later. Both are self-contained.
+
+### Anti-Pattern 5: Freezing Without Excluding Carried Items
+
+**What people do:** Call `map_container.freeze(world, exclude_entities=[player_entity])` without accounting for item entities in the player's inventory.
+**Why it's wrong:** Carried item entities have no `Position` but exist in the esper world. `freeze()` iterates `world._entities` and deletes everything not in `exclude_entities`. Carried items are deleted. The player's `Inventory.items` list now contains stale entity IDs pointing to deleted entities. Accessing them in any system raises `KeyError`.
+**Do this instead:** Before calling `freeze()`, collect all entity IDs in the player's `Inventory.items` and add them to the exclusion list.
+
+---
 
 ## Sources
 
-- Direct codebase analysis: `game_states.py` — `Game.draw()` render pipeline (lines 323-352)
-- Direct codebase analysis: `game_states.py` — explicit-call pattern for `render_system` and `ui_system`
-- Direct codebase analysis: `ecs/systems/render_system.py` — `camera.apply_to_pos()` usage, font init in `__init__`
-- Direct codebase analysis: `ecs/systems/ui_system.py` — constructor injection pattern, explicit call in `draw()`
-- Direct codebase analysis: `ecs/systems/ai_system.py` — explicit-call pattern (not registered with `esper.add_processor()`)
-- Direct codebase analysis: `ecs/components.py` — `AIBehaviorState`, `Position`, `Stats`, `ChaseData`, `Name` fields
-- Direct codebase analysis: `config.py` — `DEBUG_MODE` placement conventions, `SpriteLayer` enum pattern
+- Direct codebase analysis: `ecs/components.py` — existing `Inventory`, `Stats`, `Position`, `Renderable` structures
+- Direct codebase analysis: `entities/entity_registry.py` — `EntityTemplate` flyweight pattern
+- Direct codebase analysis: `entities/entity_factory.py` — conditional component attachment pattern
+- Direct codebase analysis: `services/resource_loader.py` — JSON loading pattern for `load_entities()`
+- Direct codebase analysis: `ecs/systems/death_system.py` — `esper.set_handler("entity_died", ...)` event pattern
+- Direct codebase analysis: `ecs/systems/combat_system.py` — `Stats` usage, `AttackIntent` pattern
+- Direct codebase analysis: `map/map_container.py` — `freeze()`/`thaw()` implementation, `exclude_entities` parameter
+- Direct codebase analysis: `game_states.py` — `GameStates` enum, `transition_map()`, `TARGETING` state routing
+- Direct codebase analysis: `config.py` — `SpriteLayer.ITEMS = 3` (already defined), `GameStates` enum
+- Direct codebase analysis: `services/party_service.py` — `Inventory()` component already on player, `Action(name="Items")` already in `ActionList`
 
 ---
-*Architecture research for: Roguelike RPG — Debug Overlay System Integration*
+*Architecture research for: Roguelike RPG — Item & Inventory System Integration with Existing ECS*
 *Researched: 2026-02-15*

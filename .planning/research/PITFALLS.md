@@ -1,239 +1,402 @@
 # Pitfalls Research
 
-**Domain:** PyGame debug overlay visualization — adding per-frame debug rendering to an existing tile-based ECS roguelike
+**Domain:** Item & Inventory system added to existing esper ECS rogue-like
 **Researched:** 2026-02-15
-**Confidence:** HIGH (based on direct codebase inspection + PyGame rendering mechanics)
+**Confidence:** HIGH — derived from direct codebase analysis of `map_container.py` (freeze/thaw),
+`ecs/systems/render_system.py`, `ecs/systems/ai_system.py`, `ecs/systems/death_system.py`,
+`ecs/systems/combat_system.py`, `entities/entity_factory.py`, `ecs/components.py`, and the
+v1.2 decision log in `.planning/PROJECT.md`
 
 ---
 
 ## Critical Pitfalls
 
-### Pitfall 1: Allocating a New SRCALPHA Surface Per Tile Per Frame
+### Pitfall 1: Freeze/Thaw Destroys Inventory Item References (Entity ID Staleness)
 
 **What goes wrong:**
-The existing `draw_targeting_ui` in `render_system.py` (lines 116–118) already does this:
-```python
-s = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
-s.fill(range_color)
-surface.blit(s, (screen_x, screen_y))
-```
-A debug overlay that draws semi-transparent highlights over every visible tile (e.g., FOV overlay, pathfinding cost map, AI state coloring) will replicate this pattern. At 40×40 = 1,600 possible tiles, this allocates up to 1,600 surfaces per frame at 60 fps. PyGame's `Surface()` constructor is not cheap — it calls into SDL's memory allocator. At 60 fps and 1,600 tiles, that is 96,000 `Surface` allocations per second, each allocated from and returned to the Python memory manager. This causes visible frame stuttering at larger viewport sizes, even on fast hardware.
+`MapContainer.thaw()` calls `world.create_entity()` for every frozen entity, assigning brand-new
+integer IDs. If `Inventory.items` stores entity IDs as bare integers, every ID in every inventory
+is stale after a map transition. An NPC that survived freeze/thaw will hold IDs pointing to dead
+or recycled entities. `esper.component_for_entity(stale_id, ...)` raises `KeyError` or, worse,
+silently returns the wrong entity's component if that ID was recycled.
 
 **Why it happens:**
-`pygame.SRCALPHA` is required for per-pixel alpha. The instinct is to create a fresh surface each time because it is simple and obviously correct. The existing targeting code uses this pattern for a small number of tiles (range circle), making it seem like an acceptable approach.
+The existing `Inventory` component (`ecs/components.py` line 52) is `items: List` with no
+enforced type — the natural first implementation stores `int` entity IDs. The freeze/thaw
+contract in `map_container.py` lines 86-92 gives no ID-preservation guarantee: `thaw()` calls
+`world.create_entity()` and re-attaches component objects; the integer IDs are reassigned by
+esper's internal counter. This is an established codebase decision: "Coordinates-only AI state:
+Never entity IDs; freeze/thaw assigns new IDs breaking references" (PROJECT.md, v1.2 decisions).
+Item inventories are the first place that design principle must be applied to data structures
+other than AI state.
 
 **How to avoid:**
-Pre-allocate one overlay surface the size of the entire viewport, created once at debug system initialization with `pygame.SRCALPHA`:
-```python
-class DebugOverlaySystem:
-    def __init__(self, camera):
-        self._overlay = pygame.Surface(
-            (camera.width, camera.height), pygame.SRCALPHA
-        )
+Inventoried item entities must be excluded from the freeze pass together with their carrier.
+Implement a `get_entity_closure(entity_id)` helper that returns the entity plus all IDs in its
+`Inventory.items` and `Equipment` slots (recursively, for nested containers — not needed in v1.4
+but the helper should be written to support it). Pass the full closure to `freeze()`:
 
-    def draw(self, surface, camera, ...):
-        self._overlay.fill((0, 0, 0, 0))   # clear with transparent black
-        # draw all debug primitives onto self._overlay at local coords
-        for tile_x, tile_y in tiles_to_highlight:
-            screen_x, screen_y = camera.apply_to_pos(tile_x * TILE_SIZE, tile_y * TILE_SIZE)
-            local_x = screen_x - camera.offset_x
-            local_y = screen_y - camera.offset_y
-            pygame.draw.rect(self._overlay, (255, 0, 0, 60),
-                             (local_x, local_y, TILE_SIZE, TILE_SIZE))
-        surface.blit(self._overlay, (camera.offset_x, camera.offset_y))
+```python
+# In transition_map() in game_states.py, replace:
+self.map_container.freeze(self.world, exclude_entities=[self.player_entity])
+
+# With:
+exclude = get_entity_closure(self.player_entity)
+self.map_container.freeze(self.world, exclude_entities=exclude)
 ```
-One allocation at init, one `fill` + one `blit` per frame. `pygame.draw.rect` into an SRCALPHA surface is fast and does not allocate.
+
+Never store bare entity IDs in `Inventory.items`. If a cross-reference must be stored (e.g.,
+"this item is equipped by entity X"), store it in a component on the item itself
+(`InInventory(owner: int)` written at pickup time) so that the component survives freeze as
+object state — not as an ID cached in the carrier's list.
 
 **Warning signs:**
-Frame time spikes correlate with number of visible tiles (not game logic complexity). Python profiler shows `pygame.Surface.__init__` as a top caller. FPS drops when panning the camera over a large area.
+- Inventory panel shows items but equipping/using raises `KeyError`
+- Items silently disappear from player inventory after the first map transition
+- NPC with loot drops nothing on death because its `Inventory.items` list holds stale IDs
 
-**Phase to address:**
-The first phase that introduces any per-tile overlay rendering. The pre-allocated overlay surface pattern must be in the initial implementation — retrofitting it later requires touching every overlay draw call.
+**Phase to address:** The phase that establishes the item entity foundation and pickup/drop.
+`get_entity_closure()` must exist and be wired into `transition_map()` before any test that
+combines "player holds an item" with "player crosses a portal."
 
 ---
 
-### Pitfall 2: Creating Font Objects Inside the Draw Loop
+### Pitfall 2: RenderSystem Renders Inventoried Items at Phantom Positions
 
 **What goes wrong:**
-`pygame.font.SysFont('monospace', TILE_SIZE)` takes 5–30 ms depending on the system because it searches font paths and parses the font file. If a debug overlay renders text per-tile (e.g., tile coordinates, AI state labels, cost values), and the font object is created inside `process()` or `draw()`, the game will freeze for a visible frame on every call. Even creating it inside `__init__` but in a sub-method called from `draw()` is dangerous.
+`RenderSystem.process()` queries `esper.get_components(Position, Renderable)`. Items on the ground
+legitimately have `Position`. If a picked-up item's `Position` component is merely updated to the
+carrier's coordinates (rather than removed), the item glyph renders on the map at the carrier's
+tile — stacking with the carrier's own glyph. If `Position` is simply never removed and never
+updated, the item renders at (0,0) or wherever it last rested.
 
 **Why it happens:**
-The existing systems create fonts in `__init__` (`RenderSystem.__init__`, `UISystem.__init__`, `RenderService.__init__`). A debug overlay added hastily may not follow this pattern, especially if the overlay class is instantiated lazily or conditionally.
+Updating position feels easier than removing and re-adding a component. The `Position` component
+already exists; changing `pos.x, pos.y` is one line. The rendering consequence — a phantom glyph
+— only appears at runtime and may be missed if testing focuses on inventory logic rather than the
+map display.
 
 **How to avoid:**
-Font objects MUST be created in `__init__`, unconditionally, before the game loop starts:
+Use `Position` as the binary "on map" flag. The architectural constraint from PROJECT.md is
+explicit: "Items are entities — position OR parent reference, never both."
+
 ```python
-class DebugOverlaySystem:
-    def __init__(self):
-        # Created once — never inside draw() or process()
-        self.debug_font = pygame.font.SysFont('monospace', 12)
-        self.label_font = pygame.font.SysFont('monospace', 10)
+# Pickup: remove Position, add InInventory
+esper.remove_component(item_ent, Position)
+esper.add_component(item_ent, InInventory(owner=carrier_ent))
+
+# Drop: remove InInventory, add Position at drop location
+esper.remove_component(item_ent, InInventory)
+esper.add_component(item_ent, Position(drop_x, drop_y, drop_layer))
 ```
-Additionally, cache `font.render()` results for static strings. For dynamic text (coordinates, counters), accept that `font.render()` is called per frame but ensure only one call per visible label, not one call per tile.
+
+Write the assertion as the first test: after pickup, assert
+`esper.has_component(item_ent, Position)` is `False`. After drop, assert it is `True`.
 
 **Warning signs:**
-Momentary freeze (>16 ms frame) the first time the debug overlay appears. Stutter when the overlay content changes (new tiles enter viewport). `pygame.font.SysFont` visible in profiler under the draw path.
+- Item glyph visible at (0,0) after pickup
+- Two glyphs appear at the same tile when a character carrying an item stands on it
+- Item glyph remains at its original tile after being picked up
 
-**Phase to address:**
-The phase that introduces any text-bearing debug overlay. The font creation rule must be enforced in code review: no `pygame.font` constructor calls anywhere except `__init__` methods.
+**Phase to address:** Item pickup/drop phase — the `Position`-as-flag invariant is the first
+invariant enforced before any other item logic is built on top of it.
 
 ---
 
-### Pitfall 3: Debug Overlay Renders Outside the Viewport Clip Region
+### Pitfall 3: DeathSystem Leaves Orphaned Inventory Item Entities
 
 **What goes wrong:**
-`Game.draw()` sets `surface.set_clip(viewport_rect)` before rendering map and entities, then calls `surface.set_clip(None)` before rendering UI. If the debug overlay's `draw()` call is inserted after `surface.set_clip(None)` (to avoid being clipped away), debug graphics will bleed into the header, sidebar, and message log areas. The existing UI chrome occupies the top 48 px (header), right 160 px (sidebar), and bottom 140 px of the 800×600 screen — these areas will display debug tile markers that look like rendering corruption.
+`DeathSystem.on_entity_died()` strips AI, Stats, Blocker, and related components and converts
+the entity to a corpse (death_system.py lines 29-43). It does NOT touch `Inventory` or any item
+entities referenced by it. Item entities in a dead NPC's inventory survive in the ECS world
+with no `Position` and no owner reference. They are invisible (RenderSystem skips them — no
+`Position`), cannot be picked up (no map position), and accumulate silently across many combat
+sessions.
 
 **Why it happens:**
-The natural insertion point for a debug draw call is at the end of `Game.draw()`, after `ui_system.process()`, which is after the clip has been cleared. This makes the overlay visible (not clipped to the viewport) but unintentionally draws over the UI.
+DeathSystem operates on the dying entity itself. Item cleanup requires reaching out to a
+different set of entities (the items), which is a second concern the current system has no reason
+to know about. The entity leak is silent — no crash, no visible artifact — so it survives testing.
 
 **How to avoid:**
-Insert the debug overlay draw call *inside* the clipped viewport block, after the entity render but before `surface.set_clip(None)`:
+Extend `DeathSystem.on_entity_died()` with an inventory drop pass. When `Inventory` is present
+on the dead entity, iterate `inv.items`, call `find_drop_position()` for each, and assign
+`Position` to each item entity before removing `Inventory` from the corpse:
+
 ```python
-# In Game.draw():
-surface.set_clip(viewport_rect)
-if self.render_service and self.map_container:
-    self.render_service.render_map(surface, self.map_container, self.camera, player_layer)
-if self.render_system:
-    self.render_system.process(surface, player_layer)
-# DEBUG OVERLAY HERE — clip is active, won't bleed into UI
-if self.debug_overlay and self.debug_overlay.enabled:
-    self.debug_overlay.draw(surface, self.camera, self.map_container)
-surface.set_clip(None)   # reset AFTER debug overlay
-if self.ui_system:
-    self.ui_system.process(surface)
+# In on_entity_died, before removing Inventory:
+if esper.has_component(entity, Inventory):
+    inv = esper.component_for_entity(entity, Inventory)
+    try:
+        death_pos = esper.component_for_entity(entity, Position)
+        for item_ent in list(inv.items):
+            drop_pos = find_drop_position(death_pos.x, death_pos.y, death_pos.layer)
+            if drop_pos:
+                esper.add_component(item_ent, Position(drop_pos.x, drop_pos.y, drop_pos.layer))
+            else:
+                esper.delete_entity(item_ent, immediate=True)
+    except KeyError:
+        pass
+    esper.remove_component(entity, Inventory)
 ```
-Alternatively, set and immediately restore the clip inside `DebugOverlaySystem.draw()`, but the single clip block in `Game.draw()` is simpler and consistent with existing patterns.
 
 **Warning signs:**
-Debug tile markers visible inside the header or sidebar. Debug text appearing behind the message log. Rectangles drawn in the bottom-right corner over the sidebar action list.
+- ECS entity count grows unboundedly during extended play (`len(esper._world._entities)`)
+- NPCs that visually had items (pre-death investigation showed them) drop nothing
+- Memory consumption increases proportionally to combat session length
 
-**Phase to address:**
-The phase wiring the debug overlay into `Game.draw()`. The clip insertion point must be specified explicitly in the phase plan — "after entity render, before `set_clip(None)`" is not obvious.
+**Phase to address:** The loot drop / DeathSystem extension phase. Must be addressed before
+any NPC template includes an `Inventory` component. A diagnostic test: spawn an NPC with
+inventory, kill it, assert `esper.entity_exists(item_ent)` and the item has `Position`.
 
 ---
 
-### Pitfall 4: Debug State Leaking into Non-Debug Game States
+### Pitfall 4: AI System Processing Item Entities as Actors
 
 **What goes wrong:**
-The debug overlay toggle (`F3` key or similar) is stored on the `Game` state object as `self.debug_enabled = True`. When the player transitions to `WorldMapState` (press `M`) and back, `Game.startup()` is called again. If `startup()` re-initializes the overlay object without restoring the toggle state, the player's debug session is silently reset. Worse: if the debug flag is stored on the wrong object (e.g., on `map_container` or in a module-level global), it persists into `WorldMapState`, which draws a minimal world map — the debug overlay code runs in `WorldMapState.draw()` context where `self.camera` and `self.map_container` may be in different states, causing `AttributeError` or drawing garbage.
+`AISystem.process()` queries `esper.get_components(AI, AIBehaviorState, Position)`. Items will
+not naturally have `AI` components — but if an item JSON template is copy-pasted from a creature
+template without resetting the `"ai"` field, `EntityFactory.create()` will add `AI` and
+`AIBehaviorState` to the item. The AI system will then route a sword through wander/chase logic.
+
+A subtler issue: `AISystem._get_blocker_at()` scans all `(Position, Blocker)` entities to
+check tile occupancy. Items on the ground that accidentally carry `Blocker` will block NPC
+movement. This is not a crash — it silently makes dropped items impassable obstacles.
 
 **Why it happens:**
-Debug toggle state feels like "just a boolean" and gets stored wherever is convenient. The state machine (`GameController.flip_state()`) calls `startup()` on re-entry, which creates new system instances, silently resetting any instance-level flags.
+The JSON entity template pipeline has no type distinction between "creature" and "item" templates.
+`EntityFactory.create()` attaches `AI` whenever `template.ai` is truthy. A copied-and-edited
+JSON template is the most likely source of the error.
 
 **How to avoid:**
-Store the debug toggle in the `persist` dict alongside `camera`, `map_container`, etc.:
-```python
-# In Game.handle_player_input() or get_event():
-if event.key == pygame.K_F3:
-    self.persist["debug_enabled"] = not self.persist.get("debug_enabled", False)
-
-# In Game.draw():
-if self.persist.get("debug_enabled") and self.debug_overlay:
-    self.debug_overlay.draw(surface, self.camera, self.map_container)
-```
-The `persist` dict is the established cross-state communication channel in this codebase. Debug toggle belongs there, not on a state object that gets reconstructed.
+- Add an `"entity_type"` field to item templates with value `"item"`. Validate in
+  `EntityFactory` (or a dedicated `ItemFactory`) that item-type templates produce no `AI` or
+  `Blocker` components. Raise `ValueError` if they do.
+- Items on the ground must never have `Blocker`. Enforce this as a post-creation assertion in
+  `ItemFactory.create()`.
 
 **Warning signs:**
-Debug overlay resets to off every time the player opens/closes the world map. Debug overlay draws in the wrong context after state transitions. `AttributeError: 'WorldMapState' object has no attribute 'debug_overlay'` in error log.
+- AI system log messages reference item names
+- Dropped item prevents NPC movement through its tile
+- AI system performance degrades proportionally to item count on the ground
 
-**Phase to address:**
-The phase implementing the debug toggle key. Specify that the flag lives in `persist`, not on `self`.
+**Phase to address:** Item template and factory phase. The validation should be an assertion in
+`ItemFactory.create()` that fires at entity creation time, not discovered later in gameplay.
 
 ---
 
-### Pitfall 5: Alpha Blending the Overlay Directly onto the Screen Surface
+### Pitfall 5: Stat Recalculation Bugs — Delta Mutation Leads to Irreversible State
 
 **What goes wrong:**
-PyGame distinguishes between surfaces with per-pixel alpha (`pygame.SRCALPHA`) and surfaces with surface-level alpha (`surface.set_alpha()`). The main `screen` surface does NOT have `SRCALPHA` (it is a display surface created by `pygame.display.set_mode()`). Blitting a surface with `SRCALPHA` onto the screen surface works correctly — PyGame composites per-pixel alpha against the screen's RGB content. However, if the debug overlay draws directly onto `surface` (the screen) using `pygame.draw.rect(surface, (255, 0, 0, 60), ...)`, the alpha channel (60) is IGNORED. `pygame.draw` functions do not perform alpha compositing when drawing onto a non-SRCALPHA surface. The rectangle will be drawn as solid `(255, 0, 0)` with no transparency.
+The existing `Stats` component stores `power` and `defense` as plain integers. The natural
+equipment implementation applies a bonus as a delta: `stats.power += weapon.bonus_power` on equip,
+`stats.power -= weapon.bonus_power` on unequip. This produces three failure modes:
+
+1. **Double-apply**: Equipping a weapon that is already in the equipped slot adds the bonus
+   twice. The UI may not prevent this if the equip slot check is missed.
+2. **Unequip undershoots**: If the entity took a stat-lowering effect between equip and unequip,
+   the stored bonus is subtracted from an already-reduced value, pushing stats below base.
+3. **Corpse stat inflation**: DeathSystem removes `Stats` (`death_system.py` line 29) — so delta
+   mutation on a live entity is harmless post-death. But if any system reads stats from a corpse
+   before `on_entity_died` fires (e.g., a "corpse inspection" feature), it may read inflated
+   values from equipment that was never subtracted.
 
 **Why it happens:**
-`pygame.draw.rect(surface, (r, g, b, a), ...)` looks like it should be transparent because it accepts a 4-tuple. The alpha is silently discarded when `surface` does not have per-pixel alpha. This is a documented PyGame behavior that catches nearly every developer who first tries alpha blending.
+Delta mutation of a mutable dataclass field is the simplest implementation. There is no type
+system enforcement preventing it. The failure modes only appear at runtime in specific sequences
+(equip → debuff → unequip), which unit tests may not cover.
 
 **How to avoid:**
-Never call `pygame.draw` with a 4-tuple color directly onto the screen surface expecting transparency. Always draw debug primitives onto an intermediate SRCALPHA surface first, then blit that surface onto the screen. This is the pre-allocated overlay surface pattern from Pitfall 1:
-```python
-# WRONG — alpha is ignored, draws solid red:
-pygame.draw.rect(surface, (255, 0, 0, 60), (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
+Adopt a "base + recalculate" model before writing any equip logic. Add base fields to `Stats`:
 
-# CORRECT — draw onto SRCALPHA intermediate, then blit:
-pygame.draw.rect(self._overlay, (255, 0, 0, 60), (local_x, local_y, TILE_SIZE, TILE_SIZE))
-surface.blit(self._overlay, (camera.offset_x, camera.offset_y))
+```python
+@dataclass
+class Stats:
+    # Base values set from template — never modified by equipment
+    base_power: int
+    base_defense: int
+    # Effective values — recalculated from base + equipment on every equip/unequip
+    power: int
+    defense: int
+    # hp, mana etc remain mutable (they take damage)
+    hp: int
+    max_hp: int
+    ...
 ```
-The pre-allocated overlay surface (Pitfall 1's solution) automatically solves this — drawing on `self._overlay` (which has `SRCALPHA`) produces correct transparency.
+
+Write a `recalculate_stats(entity)` function that reads an `Equipment` component and writes
+effective values from scratch:
+
+```python
+def recalculate_stats(entity):
+    stats = esper.component_for_entity(entity, Stats)
+    bonus_power = 0
+    bonus_defense = 0
+    if esper.has_component(entity, Equipment):
+        equip = esper.component_for_entity(entity, Equipment)
+        for slot_item in equip.equipped.values():
+            if slot_item and esper.has_component(slot_item, ItemStats):
+                item_stats = esper.component_for_entity(slot_item, ItemStats)
+                bonus_power += item_stats.bonus_power
+                bonus_defense += item_stats.bonus_defense
+    stats.power = stats.base_power + bonus_power
+    stats.defense = stats.base_defense + bonus_defense
+```
+
+Call `recalculate_stats()` only on equip and unequip events — not every frame. All other systems
+(`CombatSystem`, AI perception checks) continue reading `stats.power` and `stats.defense` as
+before. No change required in `CombatSystem`.
 
 **Warning signs:**
-Debug highlights appear as fully opaque colored rectangles instead of transparent tints. The underlying tile character is not visible through the debug highlight. Semi-transparent color values in the code but solid rendering in game.
+- Unequipping an item results in lower stats than the pre-equip baseline
+- Stats grow with each equip/unequip cycle on the same item
+- UI shows correct base stats, but combat damage calculations use different values
 
-**Phase to address:**
-The phase implementing any colored tile highlight. Must be caught at the design stage — if the phase plan says "draw a semi-transparent overlay," it must explicitly specify the SRCALPHA intermediate surface pattern. A code review check: no `pygame.draw` call on the screen `surface` with a 4-tuple color.
+**Phase to address:** Equipment slot phase. The `base_power` / `base_defense` split and
+`recalculate_stats()` function must be written before any equip logic — never retrofitted.
 
 ---
 
-### Pitfall 6: Overlay Draws Every Frame Even When Disabled
+### Pitfall 6: Loot Drop Positioning on Occupied or Walled Death Tiles
 
 **What goes wrong:**
-A debug overlay system registered as an esper `Processor` runs every frame via `esper.process()`. Even with an `if not self.enabled: return` guard at the top of `process()`, the system still incurs the Python function call overhead and the `esper` dispatch overhead for every frame when disabled. At 60 fps in a single-threaded game loop, this is negligible by itself. The real problem is subtler: if the overlay pre-allocates resources (font surfaces, the SRCALPHA overlay surface) unconditionally in `__init__`, those resources exist in memory permanently, even in a production build where debug is always off. More critically, if the overlay system iterates all entities or all tiles to gather data for a disabled display, that data-gathering loop runs at full cost every frame.
+When a monster dies adjacent to a wall or in a narrow corridor, multiple loot items spawned at
+the exact death tile occupy the same position. `RenderSystem` renders only the highest
+sprite-layer item; the others are invisible. Pickup logic that returns "the first item at (x,y)"
+returns only one — the rest are permanently unreachable until the player moves to an adjacent tile
+where nothing was dropped.
 
 **Why it happens:**
-Adding a toggle to an esper `Processor` is easy (`if not self.enabled: return`), but the data-gathering phase (iterating tiles, computing AI state summaries, collecting positions) happens before the toggle check or is mixed into the draw phase.
+Loot drop code that does `Position(death_pos.x, death_pos.y)` for every item in the loot list
+is correct in intent but incorrect in spatial reasoning. Multiple entities at the same tile are
+not errors in the current ECS — the system has no uniqueness constraint on positions. The
+rendering and pickup bugs are the only symptoms.
 
 **How to avoid:**
-Separate data-gathering from drawing. Gate the entire `process()` method, including data-gathering, behind the enabled flag:
+Implement a `find_drop_positions(x, y, layer, count)` function that returns a list of distinct
+walkable tile positions starting from (x,y), then spreading to adjacent tiles:
+
 ```python
-def process(self):
-    if not self.enabled:
-        return           # zero cost when disabled — no iteration, no allocation
-    self._collect_debug_data()
-    self._draw_debug_data()
+def find_drop_positions(x, y, layer, count, map_container):
+    candidates = [(x, y)]
+    for dx, dy in [(0,1),(1,0),(0,-1),(-1,0),(1,1),(-1,1),(1,-1),(-1,-1)]:
+        candidates.append((x+dx, y+dy))
+    positions = []
+    for cx, cy in candidates:
+        tile = map_container.get_tile(cx, cy, layer)
+        if tile and tile.walkable and len(positions) < count:
+            positions.append((cx, cy))
+    return positions  # may be shorter than count if not enough walkable tiles
 ```
-Do NOT register `DebugOverlaySystem` with `esper.add_processor()` at all if it is not a persistent system. Instead, call it explicitly from `Game.draw()`, just like `UISystem.process()` and `RenderSystem.process()` are called explicitly (not via `esper.process()`). This is the pattern already established in this codebase:
-```python
-# Game.draw():
-if self.debug_overlay and self.persist.get("debug_enabled"):
-    self.debug_overlay.draw(surface, self.camera, self.map_container)
-```
-The debug overlay never enters `esper.process()` at all — it is an overlay on the draw call, not an ECS processor.
+
+Items that cannot be placed because no walkable tile is found within the scatter radius should
+be destroyed with a log message rather than silently placed on an impassable tile or stacked.
+
+Pickup logic must always return ALL items at a position, not just the first one. Use a
+list-returning function: `get_items_at(x, y, layer) -> List[int]`.
 
 **Warning signs:**
-Performance profiler shows debug system iterations even when overlay is toggled off. Frame budget consumed by data collection for a hidden display. Adding "if disabled return" does not fix the frame time because data-gathering runs before the check.
+- Killing a monster that drops 3+ items leaves only 1 item visible
+- Item count in world does not match expected loot over many combats
+- Player can stand on a tile and "pick up" the same item multiple times (recycled IDs)
 
-**Phase to address:**
-The phase that first integrates the debug overlay into the game loop. Specify explicitly: "debug overlay is NOT registered with esper; it is called explicitly from `Game.draw()` only when enabled."
+**Phase to address:** Loot drop / DeathSystem extension phase. A dedicated test: kill a monster
+with a 4-item loot table in a corner; assert 4 items exist in the world with distinct `Position`
+components, all on walkable tiles.
 
 ---
 
-### Pitfall 7: Breaking the Existing Render Order (Map → Entities → UI)
+### Pitfall 7: Inventory UI State Conflict with Game State Machine
 
 **What goes wrong:**
-The current render order in `Game.draw()` is: (1) fill black, (2) render map tiles, (3) render entity sprites via `RenderSystem`, (4) render UI chrome. A debug overlay inserted at the wrong point in this sequence produces incorrect z-ordering. Inserting before step 2 causes tiles to render over debug markers. Inserting between steps 2 and 3 causes entity sprites to render over tile-level debug markers (correct for tile overlays), but entity-level debug markers (health bars, AI state labels) must come after step 3. Inserting after step 4 (UI chrome) causes debug elements to render on top of the message log and sidebar — covering game-critical UI.
+The current state machine uses `GameStates.TARGETING` to block normal input during targeting.
+There is no `INVENTORY` state. If the inventory screen is opened by key press without adding a
+guard on `turn_system.current_state`, the player can interact with their inventory during
+`ENEMY_TURN` — equipping a sword while enemies are acting. The game won't crash, but item state
+mutations (equipping, consuming, dropping) fire at an unexpected point in the turn cycle. Stat
+recalculations triggered mid-enemy-turn affect enemies' current-turn combat if they act after
+the player's inventory interaction.
 
 **Why it happens:**
-There is no single correct insertion point — different debug layers need different positions in the render stack. Developers often pick one insertion point for all debug data, causing some elements to be occluded or to occlude the wrong things.
+Adding an inventory overlay feels like a UI concern, not a game-state concern. The instinct is
+to handle it with a flag on the `Game` state (`self.inventory_open = True`) rather than
+extending `GameStates`. But `Game.handle_player_input()` only guards movement input — it does
+not gate item actions behind turn state.
 
 **How to avoid:**
-Design the debug overlay with two draw passes from the start:
-```python
-# In Game.draw():
-surface.set_clip(viewport_rect)
-self.render_service.render_map(...)        # map tiles
-# PASS 1: tile-level overlays (FOV tint, grid, path cost)
-if debug_enabled:
-    self.debug_overlay.draw_tile_layer(surface, self.camera, self.map_container)
-self.render_system.process(...)            # entity sprites
-# PASS 2: entity-level overlays (HP bars, AI state labels)
-if debug_enabled:
-    self.debug_overlay.draw_entity_layer(surface, self.camera)
-surface.set_clip(None)
-self.ui_system.process(surface)           # UI chrome — no debug elements here
-```
-This is more code than one draw call, but prevents all z-ordering surprises. The two-pass structure is established at phase time, not discovered by accident during testing.
+Add `INVENTORY` to the `GameStates` enum in `config.py`. Treat opening inventory the same as
+entering targeting: `turn_system.set_state(GameStates.INVENTORY)`. Block all enemy AI
+processing while in `INVENTORY` state (the guard in `AISystem.process()` already checks
+`turn_system.current_state != GameStates.ENEMY_TURN`; add `INVENTORY` handling there or treat
+it as still being `PLAYER_TURN` depending on design intent).
+
+An acceptable alternative for v1.4 scope: allow inventory during player turn only by checking
+`turn_system.is_player_turn()` before processing any inventory key input — simpler, no new
+enum value needed. But document this as a known limitation.
 
 **Warning signs:**
-Entity sprites are invisible because the debug overlay renders over them. Tile grid lines appear on top of character sprites. Debug health bars visible inside the header area. Map tiles render over the FOV debug highlight.
+- Consuming a healing potion during enemy turn immediately before an enemy attack negates the
+  hit (HP was restored mid-turn-cycle)
+- Dropping a weapon while an enemy is attacking causes a `KeyError` if the weapon's entity ID
+  was referenced in the enemy's AttackIntent
+- Inventory interactions produce log messages out of turn sequence order
 
-**Phase to address:**
-The phase defining what the debug overlay will show. Before writing any drawing code, the phase plan must specify exactly where in `Game.draw()` each overlay element belongs.
+**Phase to address:** Inventory UI phase. The state guard must be designed before any key
+binding for inventory actions is implemented. Decide: new `INVENTORY` state OR `is_player_turn()`
+guard — document the choice explicitly.
+
+---
+
+### Pitfall 8: Material Interaction Cascades Create O(n²) Event Storms
+
+**What goes wrong:**
+Material interactions (fire spreads to wooden items, metal items conduct electricity to adjacent
+metal items, glass shatters on impact) are event-driven. If the event handler for "item_ignited"
+checks every item in the world for adjacency and fires another "item_ignited" event for each
+neighboring wooden item, a single fire source triggers a cascade. With 10 wooden items in a
+room, event 1 triggers 9 more events, each of which triggers up to 8 more — exponential growth
+bounded only by the world item count.
+
+**Why it happens:**
+Material interaction is designed event-by-event rather than as a spatial propagation step.
+`esper.dispatch_event()` is synchronous (fires the handler immediately in esper 3.x — confirmed
+by the existing usage pattern). Each event dispatches more events before the first handler
+returns.
+
+**How to avoid:**
+Do not fire material interaction events recursively within handlers. Instead, collect affected
+items into a "pending interactions" set during each turn's material processing step, then resolve
+the set once:
+
+```python
+# Per-turn material resolution — called once at end of PLAYER_TURN or ENEMY_TURN
+def resolve_material_interactions(pending_ignitions):
+    newly_ignited = set()
+    for item_ent in pending_ignitions:
+        if not esper.has_component(item_ent, Position):
+            continue  # in inventory — not a ground interaction
+        pos = esper.component_for_entity(item_ent, Position)
+        for neighbor in get_items_at_adjacent_tiles(pos.x, pos.y, pos.layer):
+            mat = esper.component_for_entity(neighbor, Material)
+            if mat.type == "wood" and neighbor not in newly_ignited:
+                newly_ignited.add(neighbor)
+    # Apply newly_ignited in a second pass — no recursive dispatch
+    for item_ent in newly_ignited:
+        apply_burn_effect(item_ent)
+```
+
+Limit cascade depth explicitly: fire spreads at most 1 tile per turn. This is both
+simulation-correct and O(n) per turn.
+
+**Warning signs:**
+- Game freezes for several seconds when a fire source appears near multiple wooden items
+- Stack overflow or recursion depth error in the message log
+- Turn processing time spikes from <1 ms to >100 ms when items are burning
+
+**Phase to address:** Material interaction phase (not the initial item foundation phase — this
+pitfall only matters once material types and interaction rules are introduced). Flag the phase
+plan: "fire material-interaction event processing via per-turn accumulator, not recursive
+dispatch."
 
 ---
 
@@ -241,12 +404,12 @@ The phase defining what the debug overlay will show. Before writing any drawing 
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Allocating `pygame.Surface(TILE_SIZE, TILE_SIZE, SRCALPHA)` per tile per frame | Simple, self-contained code | 96,000+ allocations/sec at 60fps; causes frame stutter on large maps | Never — pre-allocate one overlay surface |
-| Storing debug toggle as `self.debug_enabled` on the `Game` state | Simplest possible flag | Resets on every state transition (`startup()` reinitializes) | Never — use `persist` dict |
-| Calling `pygame.font.SysFont()` inside `draw()` | Easy conditional font creation | 5–30 ms freeze per call; visible every time the overlay is toggled on | Never — create fonts in `__init__` |
-| Drawing `pygame.draw.rect(screen_surface, (r,g,b,alpha), ...)` | Fewer lines of code | Alpha silently discarded; opaque rendering instead of transparent | Never for alpha effects — use SRCALPHA intermediate |
-| Registering debug overlay as an `esper.Processor` | Consistent with other systems | Runs every frame via `esper.process()` even when disabled; harder to control z-ordering | Never — call explicitly from `Game.draw()` |
-| One insertion point in `Game.draw()` for all debug elements | Simple integration | Tile overlays occlude entities or entity overlays bleed into UI | Acceptable only if all debug elements are tile-level overlays blit before entity render |
+| Store item entity IDs as bare `int` in `Inventory.items` | Simple list append | All IDs stale after freeze/thaw; silent `KeyError` on every map transition with carried items | Never — use entity closure exclusion from day one |
+| Apply equipment bonuses as deltas to `Stats.power`/`Stats.defense` | One-line equip implementation | Unequip undershoots, double-apply, no audit trail; requires full audit to fix | Never — base/effective split costs nothing up front |
+| Keep `Position(0,0)` on inventoried items | Avoids remove/re-add component churn | Phantom glyph rendered at (0,0) every frame; RenderSystem processes item on every pass | Never — remove `Position` on pickup; re-add on drop |
+| Skip `Inventory` cleanup in `DeathSystem` until NPC inventories exist | Faster first iteration | Silent entity leak accumulates; requires audit pass to find orphaned entities later | Only if the first phase guarantees no NPC carries `Inventory` — must fix before that changes |
+| Global constant weight limit for all carriers | Simple capacity validation | All characters identical capacity; no differentiation; hard to retrofit per-entity capacity later | Acceptable as an initial validation test only; replace with per-entity field before any UI shows capacity |
+| Process material interactions with recursive `dispatch_event` | Simplest event-driven model | Exponential cascade for adjacent materials; O(n²) freeze | Acceptable only if no more than 1 material interaction event can chain (e.g., glass shatters once, does not cascade) |
 
 ---
 
@@ -254,14 +417,15 @@ The phase defining what the debug overlay will show. Before writing any drawing 
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Debug overlay + `surface.set_clip()` | Inserting debug draw after `set_clip(None)` — overlay bleeds into UI chrome | Insert inside the `set_clip(viewport_rect)` block, after entity render |
-| Debug overlay + `esper.process()` | Registering `DebugOverlaySystem` as an esper processor for convenience | Call explicitly from `Game.draw()` — the pattern already used for `UISystem` and `RenderSystem` |
-| Debug overlay + `Game.startup()` | Storing toggle state on `self` — reset on every map transition | Store in `self.persist["debug_enabled"]` — survives `startup()` re-entry |
-| Debug overlay + alpha drawing | Calling `pygame.draw` with RGBA tuple on the screen surface | Pre-allocate a `SRCALPHA` surface; draw into it; blit onto screen |
-| Debug overlay + font rendering | Creating `SysFont` inside `draw()` or `process()` | Create in `__init__` unconditionally; `font.render()` inside draw is acceptable for dynamic text |
-| Debug overlay + `AISystem` data | Reading `AIBehaviorState` component in the overlay draw path | Components are safe to read during draw; do NOT write or add components from a draw method |
-| Debug overlay + map transitions | `map_container` reference goes stale after `transition_map()` | Debug overlay must receive the current `map_container` as a parameter to `draw()`, not store it at init — follow the same pattern as `RenderSystem.set_map()` |
-| Debug overlay + `VisibilityState` | Displaying FOV data: reading `tile.visibility_state` per tile in the draw path | Safe to read — `VisibilitySystem` writes this during `esper.process()` which completes before `draw()` in the same frame |
+| freeze/thaw + player inventory | `freeze(exclude_entities=[player_entity])` only; item entities freeze with the map and are destroyed | Compute full entity closure (player + all items in `Inventory.items` + `Equipment` slots) and exclude all from freeze |
+| RenderSystem + inventoried items | Item retains `Position` when picked up; rendered on map every frame | Remove `Position` component entirely on pickup; re-add on drop |
+| DeathSystem + NPC inventory | `on_entity_died` strips AI/Stats/Blocker but ignores `Inventory`; items become orphans | Extend `on_entity_died` to drop or destroy all inventoried items before removing `Inventory` component |
+| AISystem + items on ground | `_get_blocker_at` scans `(Position, Blocker)`; items with `Blocker` block NPC pathfinding | Items must never have `Blocker`; enforce in `ItemFactory.create()` with assertion |
+| Targeting system + item entities | `Targeting.potential_targets` (List of entity IDs) includes all entities in range; items in range become targettable | Filter `potential_targets` to only entities with `Stats` or an explicit `Targetable` tag component |
+| CombatSystem + equipped weapons | `CombatSystem` reads `stats.power` directly (combat_system.py line 14); weapon bonuses must be already applied in `Stats.power` | `recalculate_stats()` called on equip/unequip; `CombatSystem` reads effective value with no changes required |
+| JSON templates + item types | Copy-pasting creature template JSON with `"ai": true` or `"blocker": true` makes items behave as creatures | Add `"entity_type": "item"` field; `ItemFactory` asserts `ai=False, blocker=False` at creation time |
+| Inventory UI + game state machine | Opening inventory during `ENEMY_TURN` allows mid-enemy-turn item actions | Gate inventory key input behind `turn_system.is_player_turn()` or add `INVENTORY` to `GameStates` |
+| Material interactions + `dispatch_event` | Recursive event dispatch creates exponential cascade | Collect affected items in a set per turn; resolve set in a single pass at turn end |
 
 ---
 
@@ -269,24 +433,38 @@ The phase defining what the debug overlay will show. Before writing any drawing 
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| `pygame.Surface(TILE_SIZE, TILE_SIZE, SRCALPHA)` per tile per frame | Frame time spikes; profiler shows `Surface.__init__` as hot path | Pre-allocate one `(camera.width, camera.height)` SRCALPHA surface; reuse with `fill((0,0,0,0))` each frame | 20+ highlighted tiles at 60 fps; any production use |
-| `font.render(str, True, color)` per tile per frame for coordinate labels | 16 ms budget exceeded with 30+ labeled tiles | Render coordinate labels only for tiles under the mouse cursor, not all visible tiles | 30+ simultaneously labeled tiles at 60 fps |
-| Iterating all 1,600 tiles every frame when overlay is disabled | Baseline CPU cost increased even with no visible debug output | Gate all iteration behind the enabled flag; zero work when disabled | Immediately — always wasteful |
-| `esper.get_components(Position, AIBehaviorState)` called from the draw path for every entity every frame | Enemy turn frame budget doubles when overlay is visible | Cache AI state snapshot once per `update()` pass; debug overlay reads the cache in `draw()` | 10+ AI entities with the overlay on |
-| `pygame.draw.rect` with `SRCALPHA` color on screen surface | Transparent tint renders as solid opaque block | Use SRCALPHA intermediate surface (see Pitfall 5) | Always — PyGame's documented behavior |
+| `_get_blocker_at` linear scan over all `(Position, Blocker)` entities | AI turn gets slower as on-ground item count grows | Items never have `Blocker`; the scan stays bounded to actual creature blockers | Noticeable with 50+ items on ground and 10+ active NPCs |
+| `recalculate_stats()` called every frame instead of on equip/unequip events | Stats recalculation runs 60×/second for every entity with equipment | Call `recalculate_stats()` only from equip/unequip event handlers; stats are stable between those events | Immediately wasteful; noticeable with party of 3 + 20 equipped NPCs |
+| `esper.get_components(Position, Renderable)` grows with loot scatter | Render pass processes every on-ground item; frame time grows with item density | Camera bounds culling already present; no action needed until 500+ on-ground items | Not a v1.4 concern at typical loot density |
+| Synchronous recursive material cascade | Turn processing freezes with multiple adjacent flammable items | Per-turn accumulator pattern; max 1 tile spread per turn | Any room with 3+ adjacent wooden items near a fire source |
+
+---
+
+## UX Pitfalls
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Weight overflow silently rejected | Player presses pickup key; nothing happens; no feedback | Dispatch `log_message` event: "[color=red]Too heavy to carry.[/color]" on weight overflow |
+| Equipping an item to an occupied slot silently fails | Player selects new sword; old sword stays; new sword disappears | Auto-unequip old item to inventory on slot conflict; log the swap: "[color=yellow]Swapped [old] for [new].[/color]" |
+| Inventory UI opened during targeting mode | State conflict: cursor interacts with inventory items | Block inventory open when `turn_system.current_state == GameStates.TARGETING` |
+| Drop with no adjacent walkable tile silently destroys item | Rare item disappears near walls | Log "[color=orange]No room to drop item here.[/color]"; do not destroy silently unless explicitly documented |
+| Consumable used from inventory without confirmation | Single keypress destroys a rare potion | Require ENTER after selecting a consumable; or provide "used X" log with clear feedback |
 
 ---
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **Alpha transparency:** Debug highlights look transparent in testing — verify by overlapping a highlight with a visible tile character; the character must still be readable through the highlight
-- [ ] **Toggle persistence:** Debug overlay toggles correctly in a single session — verify by pressing `M` to open world map, returning to game, and confirming overlay state was preserved
-- [ ] **UI boundary:** Debug overlay appears correct on normal viewport tiles — verify that no debug elements appear inside the header (top 48 px), sidebar (right 160 px), or message log (bottom 140 px) regions
-- [ ] **Disabled performance:** Debug overlay is toggled off — measure frame time and confirm it is identical to the frame time before the debug system was added (zero overhead when off)
-- [ ] **Map transition:** Debug overlay works on the first map — verify it still works correctly after transitioning to a second map and that `map_container` reference is current
-- [ ] **Entity labels:** AI state labels appear above the correct entities — verify after enemies move that labels track entities, not the tiles where entities were at draw-start
-- [ ] **Font allocation:** Debug system initialized — verify `pygame.font.SysFont` does NOT appear in the draw-path profiler output
-- [ ] **Clip region:** Debug overlay draws inside viewport — check by setting `surface.set_clip(None)` before drawing and confirming that removing the clip causes UI bleed (proving the clip was previously active and correct)
+- [ ] **Pickup removes Position:** After pickup, `esper.has_component(item_ent, Position)` returns `False` and no glyph appears at the old tile
+- [ ] **Drop restores Position:** After drop, `esper.has_component(item_ent, Position)` returns `True` at a walkable tile
+- [ ] **Map transition with inventory:** Player picks up item, crosses portal, returns — inventory item count unchanged and all items usable
+- [ ] **NPC death with inventory:** Kill an NPC with items — no orphaned entities (world entity count delta equals expected drops); all dropped items have `Position` on walkable tiles
+- [ ] **Equip round-trip:** Equip item → verify `stats.power` increased; unequip → verify `stats.power` == original base value (not lower)
+- [ ] **Double-equip guard:** Equip same item to same slot twice — item count in inventory unchanged; stats unchanged; no error
+- [ ] **Loot in corner:** Kill monster with 4-item loot table against a wall — 4 distinct items on map at reachable tiles
+- [ ] **Render isolation:** Pick up item → no phantom glyph on map; drop item → glyph at correct position, not at (0,0)
+- [ ] **AI ignores items:** Items on ground — NPC wander/chase is not blocked; AI system does not route item entities through `_dispatch()`
+- [ ] **Weight capacity feedback:** Attempt pickup over weight limit — receives log message, item stays on ground
+- [ ] **Inventory state guard:** Attempting inventory action during `ENEMY_TURN` — blocked or no item state mutation occurs mid-turn
 
 ---
 
@@ -294,14 +472,11 @@ The phase defining what the debug overlay will show. Before writing any drawing 
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Per-tile surface allocation causing stutter | MEDIUM | Refactor to pre-allocated overlay surface; all draw calls into overlay surface instead of screen; one-time blit at end |
-| Alpha drawn opaque (draw on screen surface) | LOW | Add pre-allocated SRCALPHA overlay surface; redirect all `pygame.draw` calls to it |
-| Debug toggle resets on state transitions | LOW | Move flag from `self` to `self.persist["debug_enabled"]`; one-line change per access site |
-| Overlay bleeds into UI chrome | LOW | Move draw call inside the `set_clip(viewport_rect)` block in `Game.draw()` |
-| Font created inside draw loop | LOW | Move `SysFont` call to `__init__`; verify with profiler |
-| Overlay registered with esper causing frame cost when disabled | LOW | Remove from esper; call explicitly from `Game.draw()` behind enabled check |
-| Z-order wrong (overlay occludes entities or UI) | MEDIUM | Split into tile-layer and entity-layer draw passes; reorder within `Game.draw()` |
-| `map_container` stale after transition | LOW | Pass `map_container` as parameter to `draw()` rather than storing at init; follow `RenderSystem.set_map()` pattern |
+| Freeze/thaw ID staleness discovered after item milestone shipped | HIGH | Audit all `Inventory.items` and `Equipment` slot stores for bare int IDs; implement `get_entity_closure()`; wire into `transition_map()`; add test covering portal transit with carried item |
+| Delta-mutation stat bugs discovered after equipment system shipped | MEDIUM | Add `base_power`, `base_defense` fields to `Stats`; write migration that sets base = current − sum(equipped bonuses); replace all delta writes with `recalculate_stats()` calls; run round-trip test |
+| Orphaned item entities accumulate silently | LOW | Add diagnostic: track entity count before/after each `on_entity_died` call; write a cleanup scan for entities with no `Position` and no `InInventory` component; extend `DeathSystem` |
+| Phantom item rendering bugs | LOW | Add `assert not esper.has_component(item, Position)` in `pickup_item()`; add `assert esper.has_component(item, Position)` in `drop_item()`; fix the component lifecycle |
+| Material cascade freeze | LOW-MEDIUM | Replace recursive `dispatch_event` with per-turn accumulator pattern; cap spread at 1 tile per turn; profile to confirm O(n) |
 
 ---
 
@@ -309,24 +484,30 @@ The phase defining what the debug overlay will show. Before writing any drawing 
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| Per-tile SRCALPHA surface allocation | Phase: initial overlay draw implementation | Profiler: `Surface.__init__` must not appear under draw path; frame time with 1,600 tiles highlighted must be <2 ms |
-| Alpha ignored on screen surface | Phase: initial overlay draw implementation | Visual check: highlighted tile character is still readable through the tint |
-| Clip region not active during overlay draw | Phase: wiring overlay into `Game.draw()` | Visual check: move player to map edge; confirm no debug elements appear in header/sidebar/log |
-| Debug toggle lost on state transition | Phase: implementing the debug toggle key | Test: toggle on, press M, return to game, verify state preserved |
-| Font allocation in draw path | Phase: adding any text to the overlay | Profiler: `pygame.font.SysFont` must not appear under `Game.draw()` call tree |
-| Overlay runs when disabled | Phase: initial overlay integration | Frame time measurement: overlay off must be identical to pre-overlay baseline |
-| Wrong z-order | Phase: planning what the overlay shows | Phase plan must specify insertion point for each overlay element before any code is written |
-| Stale `map_container` after transition | Phase: any overlay that reads map data | Test: trigger map transition with overlay on; verify no `AttributeError` and overlay shows new map data |
+| Freeze/thaw ID staleness (Pitfall 1) | Item Entity Foundation — first phase; `get_entity_closure()` before any portal-transit test | Test: pick up item → cross portal → return → use item (no `KeyError`) |
+| Phantom rendering of inventoried items (Pitfall 2) | Item pickup/drop | Test: `assert not esper.has_component(item, Position)` immediately after pickup |
+| Orphaned item entities on death (Pitfall 3) | Loot drop / DeathSystem extension | Test: kill NPC with inventory → `esper.entity_exists(item)` True → item has `Position` on walkable tile |
+| AI processing item entities (Pitfall 4) | Item template pipeline | Validation: `ItemFactory.create()` asserts no `AI` component produced; `assert not esper.has_component(item, AI)` |
+| Stat recalculation bugs (Pitfall 5) | Equipment slots | Test: equip → unequip → assert `stats.power == stats.base_power`; property-based test for all combinations |
+| Loot drop positioning (Pitfall 6) | Loot drop / DeathSystem extension | Test: kill monster with 4-item loot in a corner → 4 items on distinct walkable tiles |
+| Inventory UI state conflict (Pitfall 7) | Inventory UI | Test: simulate inventory key input during `ENEMY_TURN` → no item state mutation; turn cycle unaffected |
+| Material cascade (Pitfall 8) | Material interactions phase | Profiling test: place 10 adjacent wooden items near fire source → turn resolves in <5 ms |
 
 ---
 
 ## Sources
 
-- Direct codebase inspection: `game_states.py` (draw order lines 323–352, clip region lines 339–348, persist dict lines 30–35), `ecs/systems/render_system.py` (per-tile SRCALPHA allocation lines 116–118), `services/render_service.py` (font init lines 8–9), `ecs/systems/ui_system.py` (font init lines 11–13), `config.py` (TILE_SIZE, viewport dimensions) — HIGH confidence
-- PyGame documentation: `pygame.Surface` SRCALPHA flag behavior, `pygame.draw` alpha handling (alpha discarded on non-SRCALPHA surfaces — documented limitation), `surface.set_clip()` behavior — HIGH confidence
-- PyGame rendering patterns: pre-allocated overlay surface pattern for per-frame alpha compositing, font object lifecycle — HIGH confidence (well-established PyGame best practice)
-- ECS draw pipeline analysis: esper `process()` vs. explicit system call patterns in this codebase — HIGH confidence (verified from `game_states.py` lines 302–352)
+- `map/map_container.py` lines 64-92: freeze/thaw implementation (entity deletion, create_entity, ID reassignment)
+- `ecs/components.py` lines 52-53: `Inventory` component definition (`items: List` — no type enforcement)
+- `ecs/systems/render_system.py` lines 26-66: RenderSystem queries `(Position, Renderable)` for all entities
+- `ecs/systems/ai_system.py` lines 49-58: AISystem filters `(AI, AIBehaviorState, Position)`; `_get_blocker_at` scans `(Position, Blocker)`
+- `ecs/systems/death_system.py` lines 11-47: `on_entity_died` strips components, no inventory handling
+- `ecs/systems/combat_system.py` lines 14: reads `stats.power` directly (no indirection layer)
+- `entities/entity_factory.py`: conditional component attachment from template fields; no entity-type validation
+- `.planning/PROJECT.md` — v1.2 decisions: "Coordinates-only AI state: Never entity IDs; freeze/thaw assigns new IDs breaking references"
+- `.planning/PROJECT.md` — v1.4 constraints: "Items are entities — position OR parent reference, never both"
+- Codebase version: post-v1.3, commit `68bfec9`
 
 ---
-*Pitfalls research for: PyGame debug overlay visualization — adding to existing tile-based ECS roguelike*
+*Pitfalls research for: Item & Inventory System — simulation-first items as ECS entities in esper rogue-like*
 *Researched: 2026-02-15*
