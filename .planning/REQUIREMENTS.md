@@ -9,38 +9,38 @@ Requirements for AI Infrastructure milestone. Each maps to roadmap phases.
 
 ### Behavior States
 
-- [ ] **BHVR-01**: AI entities have an AIState enum with IDLE, WANDER, CHASE, TALK states
-- [ ] **BHVR-02**: AI entities have an AIBehaviorState component separate from the AI marker
-- [ ] **BHVR-03**: AI entities have an is_hostile flag distinguishing enemies from friendly NPCs
-- [ ] **BHVR-04**: TALK state exists as a non-operational slot for future use
+- [x] **BHVR-01**: AI entities have an AIState enum with IDLE, WANDER, CHASE, TALK states
+- [x] **BHVR-02**: AI entities have an AIBehaviorState component separate from the AI marker
+- [x] **BHVR-03**: AI entities have an is_hostile flag distinguishing enemies from friendly NPCs
+- [x] **BHVR-04**: TALK state exists as a non-operational slot for future use
 
 ### AI System
 
-- [ ] **AISYS-01**: AISystem processor runs during ENEMY_TURN game state only
-- [ ] **AISYS-02**: AISystem guards against running in PLAYER_TURN, TARGETING, and WORLD_MAP states
-- [ ] **AISYS-03**: AISystem dispatches behavior per entity based on current AIState
-- [ ] **AISYS-04**: AISystem calls end_enemy_turn() after all entities have acted
-- [ ] **AISYS-05**: Dead entities (with Corpse component) are excluded from AI processing
+- [x] **AISYS-01**: AISystem processor runs during ENEMY_TURN game state only
+- [x] **AISYS-02**: AISystem guards against running in PLAYER_TURN, TARGETING, and WORLD_MAP states
+- [x] **AISYS-03**: AISystem dispatches behavior per entity based on current AIState
+- [x] **AISYS-04**: AISystem calls end_enemy_turn() after all entities have acted
+- [x] **AISYS-05**: Dead entities (with Corpse component) are excluded from AI processing
 
 ### Wander
 
-- [ ] **WNDR-01**: NPC in WANDER state moves randomly in cardinal directions
-- [ ] **WNDR-02**: Wander movement checks tile walkability before moving
-- [ ] **WNDR-03**: NPC skips turn if all adjacent tiles are blocked
-- [ ] **WNDR-04**: Tile reservation prevents two NPCs from claiming the same destination in one frame
+- [x] **WNDR-01**: NPC in WANDER state moves randomly in cardinal directions
+- [x] **WNDR-02**: Wander movement checks tile walkability before moving
+- [x] **WNDR-03**: NPC skips turn if all adjacent tiles are blocked
+- [x] **WNDR-04**: Tile reservation prevents two NPCs from claiming the same destination in one frame
 
 ### Chase
 
-- [ ] **CHAS-01**: NPC detects player within perception range using VisibilityService FOV
-- [ ] **CHAS-02**: NPC in CHASE state takes greedy Manhattan step toward player
-- [ ] **CHAS-03**: NPC transitions from WANDER/IDLE to CHASE when player is spotted
-- [ ] **CHAS-04**: "Notices you" message appears in log when NPC enters CHASE state
-- [ ] **CHAS-05**: NPC returns to WANDER after N turns without seeing player (lose-sight fallback)
+- [x] **CHAS-01**: NPC detects player within perception range using VisibilityService FOV
+- [x] **CHAS-02**: NPC in CHASE state takes greedy Manhattan step toward player
+- [x] **CHAS-03**: NPC transitions from WANDER/IDLE to CHASE when player is spotted
+- [x] **CHAS-04**: "Notices you" message appears in log when NPC enters CHASE state
+- [x] **CHAS-05**: NPC returns to WANDER after N turns without seeing player (lose-sight fallback)
 
 ### Safety
 
-- [ ] **SAFE-01**: AI state stores coordinates, not entity IDs (freeze/thaw safe)
-- [ ] **SAFE-02**: NPCs on other map layers do not act during current map's ENEMY_TURN
+- [x] **SAFE-01**: AI state stores coordinates, not entity IDs (freeze/thaw safe)
+- [x] **SAFE-02**: NPCs on other map layers do not act during current map's ENEMY_TURN
 
 ## Future Requirements
 
@@ -72,26 +72,26 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BHVR-01 | Phase 15 | Pending |
-| BHVR-02 | Phase 15 | Pending |
-| BHVR-03 | Phase 15 | Pending |
-| BHVR-04 | Phase 15 | Pending |
-| AISYS-01 | Phase 16 | Pending |
-| AISYS-02 | Phase 16 | Pending |
-| AISYS-03 | Phase 16 | Pending |
-| AISYS-04 | Phase 16 | Pending |
-| AISYS-05 | Phase 16 | Pending |
-| WNDR-01 | Phase 17 | Pending |
-| WNDR-02 | Phase 17 | Pending |
-| WNDR-03 | Phase 17 | Pending |
-| WNDR-04 | Phase 17 | Pending |
-| CHAS-01 | Phase 18 | Pending |
-| CHAS-02 | Phase 18 | Pending |
-| CHAS-03 | Phase 18 | Pending |
-| CHAS-04 | Phase 18 | Pending |
-| CHAS-05 | Phase 18 | Pending |
-| SAFE-01 | Phase 18 | Pending |
-| SAFE-02 | Phase 16 | Pending |
+| BHVR-01 | Phase 15 | ✓ Satisfied |
+| BHVR-02 | Phase 15 | ✓ Satisfied |
+| BHVR-03 | Phase 15 | ✓ Satisfied |
+| BHVR-04 | Phase 15 | ✓ Satisfied |
+| AISYS-01 | Phase 16 | ✓ Satisfied |
+| AISYS-02 | Phase 16 | ✓ Satisfied |
+| AISYS-03 | Phase 16 | ✓ Satisfied |
+| AISYS-04 | Phase 16 | ✓ Satisfied |
+| AISYS-05 | Phase 16 | ✓ Satisfied |
+| WNDR-01 | Phase 17 | ✓ Satisfied |
+| WNDR-02 | Phase 17 | ✓ Satisfied |
+| WNDR-03 | Phase 17 | ✓ Satisfied |
+| WNDR-04 | Phase 17 | ✓ Satisfied |
+| CHAS-01 | Phase 18 | ✓ Satisfied |
+| CHAS-02 | Phase 18 | ✓ Satisfied |
+| CHAS-03 | Phase 18 | ✓ Satisfied |
+| CHAS-04 | Phase 18 | ✓ Satisfied |
+| CHAS-05 | Phase 18 | ✓ Satisfied |
+| SAFE-01 | Phase 18 | ✓ Satisfied |
+| SAFE-02 | Phase 16 | ✓ Satisfied |
 
 **Coverage:**
 - v1.2 requirements: 20 total
@@ -100,4 +100,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-14*
-*Last updated: 2026-02-14 after roadmap creation*
+*Last updated: 2026-02-15 after v1.2 milestone audit*
