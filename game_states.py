@@ -332,6 +332,7 @@ class Game(GameState):
         self.visibility_system.set_map(new_map)
         self.action_system.set_map(new_map)
         self.render_system.set_map(new_map)
+        self.debug_render_system.set_map(new_map)
         
         # 9. Update Camera
         self.camera.update(target_x, target_y)
@@ -386,7 +387,7 @@ class Game(GameState):
         # 3. Render Debug Overlay (clipped to viewport)
         debug_flags = self.persist.get("debug_flags", {})
         if debug_flags.get("master") and hasattr(self, 'debug_render_system'):
-            self.debug_render_system.process(surface, debug_flags)
+            self.debug_render_system.process(surface, debug_flags, player_layer)
 
         # Reset clip for UI
         surface.set_clip(None)
