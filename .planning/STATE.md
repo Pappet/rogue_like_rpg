@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 
 ## Current Position
 
-Phase: 17 of 18 complete (Wander Behavior)
+Phase: 18 of 18 complete (Chase Behavior and State Transitions)
 Plan: 1/1 complete
-Status: Phase 17 complete, verified 4/4 must-haves
-Last activity: 2026-02-15 — Phase 17 complete, verified, ROADMAP updated
+Status: Phase 18 complete, verified 6/6 must-haves (CHAS-01 through CHAS-05, SAFE-01)
+Last activity: 2026-02-15 — Phase 18 complete, chase AI implemented and verified
 
-Progress: [████████░░] 17 of 18+ phases complete (v1.0 + v1.1 shipped, v1.2 in progress)
+Progress: [██████████] 18 of 18+ phases complete (v1.0 + v1.1 shipped, v1.2 complete)
 
 ## Performance Metrics
 
@@ -33,6 +33,7 @@ Progress: [████████░░] 17 of 18+ phases complete (v1.0 + v1.
 | Phase 15 | 1 | ~8min | ~8min |
 | Phase 16 | 1 | ~2min | ~2min |
 | Phase 17 | 1 | ~7min | ~7min |
+| Phase 18 | 1 | ~2min | ~2min |
 
 ## Accumulated Context
 
@@ -49,6 +50,9 @@ Relevant for v1.2:
 - end_enemy_turn() is unconditional after entity loop — turn always closes even with zero eligible AI entities (Phase 16)
 - [Phase 17-wander-behavior]: Direct pos.x/pos.y mutation for AI wander — MovementSystem runs before AISystem, MovementRequest would lag one frame and break WNDR-04
 - [Phase 17-wander-behavior]: claimed_tiles as local set in process() — per-turn transient state prevents two NPCs targeting same tile in same turn
+- [Phase 18-chase-behavior]: NPC FOV reuses VisibilityService.compute_visibility() — same service as player, no duplication
+- [Phase 18-chase-behavior]: Detection block before match statement — state update routes naturally to CHASE case without extra dispatch
+- [Phase 18-chase-behavior]: player_entity as optional 4th arg to process() — backward-compatible call signature
 
 ### Pending Todos
 
@@ -56,11 +60,10 @@ None.
 
 ### Blockers/Concerns
 
-- Phase 18 planning: verify VisibilityService.compute_visibility() signature against live source before writing chase LOS code (services/visibility_service.py)
-- Phase 18 planning: confirm freeze/thaw component handling (map/map_container.py lines 64-92) and that DeathSystem still removes AI component (death_system.py line 29)
+None.
 
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 17 complete. Next: `/gsd:plan-phase 18`
+Stopped at: Completed 18-01-PLAN.md — Phase 18 (v1.2 AI Infrastructure) complete
 Resume file: None
