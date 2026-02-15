@@ -10,26 +10,26 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 23 of 26 (Item Entity Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-15 — Roadmap created for v1.4 (4 phases, 22 requirements mapped)
+Plan: 1 of 4 in current phase (estimated)
+Status: In progress
+Last activity: 2026-02-15 — Completed 23-01-PLAN.md: Item Entity Foundation
 
-Progress: [░░░░░░░░░░] 0% (v1.4)
+Progress: [█░░░░░░░░░] 10% (v1.4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.4): 0
-- Average duration: —
-- Total execution time: —
+- Total plans completed (v1.4): 1
+- Average duration: 20m
+- Total execution time: 20m
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| — | — | — | — |
+| 23 | 1 | 20m | 20m |
 
-**Recent Trend:** Not enough data
+**Recent Trend:** Starting v1.4 execution.
 
 *Updated after each plan completion*
 
@@ -41,6 +41,7 @@ Progress: [░░░░░░░░░░] 0% (v1.4)
 - **EffectiveStats pattern (never delta-mutate Stats):** EquipmentSystem computes EffectiveStats each frame from base Stats + equipped bonuses; base Stats fields are never modified by equip/unequip. Eliminates irreversible state bugs.
 - **get_entity_closure() wired at Phase 23:** Freeze/thaw inventory corruption is binary — fix it at foundation or audit the whole milestone. Player + Inventory.items + equipped item IDs passed to MapContainer.freeze().
 - **LootSystem as separate event handler:** Registered alongside DeathSystem on "entity_died"; keeps loot spawning decoupled from corpse transformation and independently testable.
+- **Stats component base fields:** Explicitly named `base_hp`, `base_power`, etc., added to `Stats` component to support the Effective Stats pattern.
 
 ### Pending Todos
 
@@ -48,11 +49,10 @@ None.
 
 ### Blockers/Concerns
 
-- **Stats base field placement:** Research recommends explicit `base_power`/`base_defense` fields on Stats vs. reading existing `stats.power` as the base in EffectiveStats. Must be decided explicitly in Phase 23 plan and documented in PROJECT.md Key Decisions.
 - **NPC inventory freeze/thaw:** No NPC template may include an Inventory component until NPC inventory freeze/thaw ID remapping is implemented (not in v1.4 scope).
 
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Roadmap written for v1.4. Ready to plan Phase 23.
-Resume file: None
+Stopped at: Completed 23-01: Item Entity Foundation.
+Resume file: .planning/phases/23-item-entity-foundation/23-02-PLAN.md

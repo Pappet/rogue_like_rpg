@@ -152,6 +152,7 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 | Per-turn claimed_tiles set | Transient local set prevents two NPCs targeting same tile in same turn | ✓ Good |
 | NPC FOV via VisibilityService | Reuses player FOV service; no duplication; consistent results | ✓ Good |
 | Detection block before match/case | State update in detection routes naturally to CHASE case | ✓ Good |
+| Stats component base fields | Explicit base_hp, base_power, etc., for Effective Stats pattern | ✓ Good |
 
 ## Constraints
 
