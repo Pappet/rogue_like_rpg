@@ -87,10 +87,10 @@ Plans:
   2. An NPC never moves onto a tile that is not walkable (walls, blocking entities).
   3. An NPC that has no walkable adjacent tiles takes no move action (skips turn without error).
   4. Two NPCs that would move to the same tile in one turn: only one succeeds — the second picks a different destination or skips (no two NPCs stack on the same tile).
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 17-01: Implement WANDER branch in AISystem with walkability check, claimed-tile reservation set, and skip-turn fallback
+- [ ] 17-01-PLAN.md — Implement wander behavior with walkability checks, entity blocker detection, claimed-tile reservation, and verification tests
 
 #### Phase 18: Chase Behavior and State Transitions
 
@@ -120,5 +120,5 @@ Plans:
 | 14. Inspection Output | v1.1 | 1/1 | Complete | 2026-02-14 |
 | 15. AI Component Foundation | v1.2 | 1/1 | Complete | 2026-02-14 |
 | 16. AISystem Skeleton and Turn Wiring | v1.2 | 1/1 | Complete | 2026-02-14 |
-| 17. Wander Behavior | v1.2 | 0/TBD | Not started | - |
+| 17. Wander Behavior | v1.2 | 0/1 | Planning complete | - |
 | 18. Chase Behavior and State Transitions | v1.2 | 0/TBD | Not started | - |
