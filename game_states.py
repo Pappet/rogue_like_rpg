@@ -14,6 +14,7 @@ from ecs.systems.action_system import ActionSystem
 from ecs.systems.combat_system import CombatSystem
 from ecs.systems.death_system import DeathSystem
 from ecs.systems.ai_system import AISystem
+from ecs.systems.debug_render_system import DebugRenderSystem
 from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats
 from map.tile import VisibilityState
 
@@ -151,6 +152,11 @@ class Game(GameState):
         self.ui_system = UISystem(self.turn_system, self.player_entity)
         self.action_system = ActionSystem(self.map_container, self.turn_system)
         self.render_system = RenderSystem(self.camera, self.map_container)
+        
+        # Initialize Debug System (persistent toggle)
+        if "debug_enabled" not in self.persist:
+            self.persist["debug_enabled"] = False
+        self.debug_render_system = DebugRenderSystem(self.camera, self.map_container)
 
         # Register event handlers
         esper.set_handler("change_map", self.transition_map)
@@ -166,6 +172,12 @@ class Game(GameState):
 
     def handle_player_input(self, event):
         if event.type == pygame.KEYDOWN:
+            # Debug Toggle
+            if event.key == pygame.K_F3:
+                self.persist["debug_enabled"] = not self.persist["debug_enabled"]
+                print(f"Debug mode: {self.persist['debug_enabled']}")
+                return
+
             # World Map Toggle
             if event.key == pygame.K_m:
                 self.next_state = "WORLD_MAP"
@@ -344,10 +356,14 @@ class Game(GameState):
         if self.render_system:
             self.render_system.process(surface, player_layer)
 
+        # 3. Render Debug Overlay (clipped to viewport)
+        if self.persist.get("debug_enabled") and hasattr(self, 'debug_render_system'):
+            self.debug_render_system.process(surface)
+
         # Reset clip for UI
         surface.set_clip(None)
 
-        # 3. Render UI
+        # 4. Render UI
         if self.ui_system:
             self.ui_system.process(surface)
 
