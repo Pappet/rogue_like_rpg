@@ -173,4 +173,4 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 19. Debug Infrastructure | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 20. Core Overlays | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 21. Extended Overlays | v1.3 | 3/3 | Complete | 2026-02-15 |
-| 22. Debug System Refinement | v1.3 | 0/1 | Pending | — |
+| 22. Debug System Refinement | v1.3 | 0/1 | Planned | — |
