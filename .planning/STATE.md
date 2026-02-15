@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-14)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.2 AI Infrastructure — Phase 17: Wander Behavior
+**Current Focus:** v1.2 AI Infrastructure — Phase 18: Chase Behavior and State Transitions
 
 ## Current Position
 
-Phase: 17 of 18 (Wander Behavior)
-Plan: 1 of 1 in current phase
-Status: Phase 17 plan 01 complete
-Last activity: 2026-02-15 — Phase 17 plan 01 complete, all 5 wander tests pass
+Phase: 17 of 18 complete (Wander Behavior)
+Plan: 1/1 complete
+Status: Phase 17 complete, verified 4/4 must-haves
+Last activity: 2026-02-15 — Phase 17 complete, verified, ROADMAP updated
 
-Progress: [████░░░░░░] 16 of 18+ phases complete (v1.0 + v1.1 shipped, v1.2 in progress)
+Progress: [████████░░] 17 of 18+ phases complete (v1.0 + v1.1 shipped, v1.2 in progress)
 
 ## Performance Metrics
 
@@ -62,5 +62,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed 17-01-PLAN.md. Phase 17 plan 01 complete. Next: `/gsd:plan-phase 18` or verify phase complete.
+Stopped at: Phase 17 complete. Next: `/gsd:plan-phase 18`
 Resume file: None
