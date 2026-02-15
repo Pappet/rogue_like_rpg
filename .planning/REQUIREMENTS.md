@@ -84,13 +84,34 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | — |
+| ITEM-01 | Phase 23 | Pending |
+| ITEM-02 | Phase 23 | Pending |
+| ITEM-03 | Phase 23 | Pending |
+| ITEM-04 | Phase 23 | Pending |
+| ITEM-05 | Phase 23 | Pending |
+| INV-06 | Phase 23 | Pending |
+| INV-01 | Phase 24 | Pending |
+| INV-02 | Phase 24 | Pending |
+| INV-03 | Phase 24 | Pending |
+| INV-04 | Phase 24 | Pending |
+| INV-05 | Phase 24 | Pending |
+| CONS-03 | Phase 24 | Pending |
+| CONS-04 | Phase 24 | Pending |
+| EQUIP-01 | Phase 25 | Pending |
+| EQUIP-02 | Phase 25 | Pending |
+| EQUIP-03 | Phase 25 | Pending |
+| EQUIP-04 | Phase 25 | Pending |
+| EQUIP-05 | Phase 25 | Pending |
+| EQUIP-06 | Phase 25 | Pending |
+| CONS-01 | Phase 26 | Pending |
+| CONS-02 | Phase 26 | Pending |
+| CONS-05 | Phase 26 | Pending |
 
 **Coverage:**
 - v1 requirements: 22 total
-- Mapped to phases: 0
-- Unmapped: 22 ⚠️
+- Mapped to phases: 22
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-15*
-*Last updated: 2026-02-15 after initial definition*
+*Last updated: 2026-02-15 after roadmap creation*

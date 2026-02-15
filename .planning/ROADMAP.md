@@ -6,6 +6,7 @@
 - ✅ **v1.1 Investigation System** — Phases 12-14 (shipped 2026-02-14)
 - ✅ **v1.2 AI Infrastructure** — Phases 15-18 (shipped 2026-02-15)
 - ✅ **v1.3 Debug Overlay System** — Phases 19-22 (shipped 2026-02-15)
+- 🚧 **v1.4 Item & Inventory System** — Phases 23-26 (in progress)
 
 ## Phases
 
@@ -53,108 +54,113 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 </details>
 
+<details>
+<summary>✅ v1.3 Debug Overlay System (Phases 19-22) — SHIPPED 2026-02-15</summary>
+
+- [x] Phase 19: Debug Infrastructure (1/1 plans) — completed 2026-02-15
+- [x] Phase 20: Core Overlays (1/1 plans) — completed 2026-02-15
+- [x] Phase 21: Extended Overlays (3/3 plans) — completed 2026-02-15
+- [x] Phase 22: Debug System Refinement (1/1 plans) — completed 2026-02-15
+
+</details>
+
 ---
 
-## v1.3 Debug Overlay System
+## 🚧 v1.4 Item & Inventory System (In Progress)
 
-**Goal:** Deliver an extensible debug overlay for visualizing internal game state — FOV tiles, AI state labels, chase markers, and direction vectors — as a dedicated `DebugRenderSystem` that sits after the main render pass and has zero performance impact when disabled.
+**Milestone Goal:** Simulation-first item system where items are full ECS entities with physical properties, a weight-based inventory, equipment slots with dynamic stat modification, consumable items, contextual loot drops, and a full inventory management UI.
 
-**Coverage:** 13/13 v1.3 requirements mapped (DBG-01 to DBG-05, OVL-01 to OVL-04, EXT-01 to EXT-04)
+**Coverage:** 22/22 v1.4 requirements mapped (ITEM-01 to ITEM-05, INV-01 to INV-06, EQUIP-01 to EQUIP-06, CONS-01 to CONS-05)
 
 ---
 
-### Phase 19: Debug Infrastructure
+### Phase 23: Item Entity Foundation
 
-**Goal:** The debug toggle and system skeleton exist, are wired into the render pipeline, and the game runs identically with debug off.
+**Goal:** Items exist as first-class ECS entities in the world and survive map transitions intact.
 
-**Dependencies:** Phase 18 (game loop and render pipeline must be stable before inserting a new draw stage)
+**Dependencies:** Phase 22 (stable ECS and render pipeline)
 
-**Requirements:** DBG-01, DBG-02, DBG-03, DBG-04, DBG-05
+**Requirements:** ITEM-01, ITEM-02, ITEM-03, ITEM-04, ITEM-05, INV-06
 
-**Plans:** 1
+**Plans:** TBD
 
 **Plans:**
-- [x] 19-01-PLAN.md — Implement DebugRenderSystem and toggle hotkey
+- [ ] 23-01-PLAN.md — TBD
 
 **Success Criteria:**
 
-1. Pressing the debug hotkey (F1 or F3) flips a visible flag and does not crash the game or alter gameplay.
-2. The toggle state is preserved when transitioning between Game state and WorldMapState (stored in `persist["debug_enabled"]`).
-3. Frame time with debug disabled is identical to the pre-overlay baseline — no allocations happen in the disabled code path.
-4. `DebugRenderSystem` is instantiated in `Game.startup()`, called inside the `surface.set_clip(viewport_rect)` block after `render_system.process()`, and is not registered with `esper.add_processor()`.
-5. All debug draw calls target a pre-allocated `pygame.SRCALPHA` overlay surface created once in `__init__`; no per-frame surface allocation occurs.
+1. An item placed on the ground via `ItemFactory.create_on_ground()` renders on the map at its tile position using the existing `RenderSystem` — no changes to the render pipeline required.
+2. Item templates defined in `assets/data/items.json` are loaded through the `ItemRegistry`/`ItemFactory` pipeline; a missing or malformed template raises a clear error at startup, not silently at runtime.
+3. Each item entity carries a `Portable` component with a `weight` field (kg) and an `ItemMaterial` component with a material type (wood, metal, glass, etc.).
+4. Picking up an item and crossing a portal into a new map and back returns the carried item with its entity ID and all components intact — no silent destruction or orphaned references.
+5. A `get_entity_closure(player_entity)` helper returns the player plus all items in `Inventory.items` plus equipped item IDs; `transition_map()` passes this full list to `MapContainer.freeze()`.
 
 ---
 
-### Phase 20: Core Overlays
+### Phase 24: Pickup, Inventory Screen, and Loot Drops
 
-**Goal:** With debug enabled, a developer can see player FOV extent, NPC AI state, and NPC chase targets in a single glance at the game screen.
+**Goal:** The player can acquire items from the world, see what they are carrying, drop them, and monsters produce contextual loot when they die.
 
-**Dependencies:** Phase 19 (infrastructure and wiring must exist before any overlay can draw)
+**Dependencies:** Phase 23 (item entities must exist before pickup or loot logic can run)
 
-**Requirements:** OVL-01, OVL-02, OVL-03, OVL-04
+**Requirements:** INV-01, INV-02, INV-03, INV-04, INV-05, CONS-03, CONS-04
 
-**Plans:** 1
+**Plans:** TBD
 
 **Plans:**
-- [x] 20-01-PLAN.md — Implement Core Debug Overlays
+- [ ] 24-01-PLAN.md — TBD
 
 **Success Criteria:**
 
-1. With debug on, every tile where the player has current line-of-sight shows a distinct green tint; tiles outside FOV are unaffected.
-2. With debug on, every NPC with an `AIBehaviorState` component shows a short label (W, C, I, or T) above its sprite.
-3. With debug on, every NPC in CHASE state shows an orange rectangle at its `ChaseData.last_known_x/y` coordinates.
-4. All overlays are clipped to the viewport region — no debug graphics appear over the header, sidebar, or message log.
-5. FOV tile tints render before entity sprites (tile-layer pass); AI labels and chase markers render after entity sprites (entity-layer pass) — no z-order bleed between the two.
+1. Pressing G picks up an item at the player's current position, removes its `Position` component, appends its entity ID to `Inventory.items`, and logs "You pick up the [item name]." in the message log.
+2. Attempting to pick up an item that would exceed the player's weight capacity is rejected with a log message ("Too heavy to carry.") and the item remains on the ground.
+3. Pressing I opens a modal inventory screen (`GameStates.INVENTORY`) showing a list of carried item names; arrow keys navigate the list; Escape closes it without consuming a turn.
+4. Pressing D from the inventory screen drops the selected item at the player's current tile position, restoring its `Position` component and removing it from `Inventory.items`.
+5. When a monster with a loot table dies, at least one contextually appropriate item (e.g., a wolf drops a pelt, not gold) spawns on or adjacent to the death tile — if the death tile is occupied, the item scatters to a walkable neighbor.
 
 ---
 
-### Phase 21: Extended Overlays
+### Phase 25: Equipment Slots and Combat Integration
 
-**Goal:** A developer diagnosing a chase or detection bug can see the direction of NPC pursuit, how many turns remain until a chasing NPC gives up, the FOV cone each NPC is actively computing, and can silence any individual overlay layer independently.
+**Goal:** The player can equip items to body slots, see their loadout, and equipped gear meaningfully changes combat outcomes.
 
-**Dependencies:** Phase 20 (core overlays must be validated in use before adding signal density)
+**Dependencies:** Phase 24 (equip actions are initiated from the inventory screen; items must already be pickable)
 
-**Requirements:** EXT-01, EXT-02, EXT-03, EXT-04
+**Requirements:** EQUIP-01, EQUIP-02, EQUIP-03, EQUIP-04, EQUIP-05, EQUIP-06
 
-**Plans:** 3
+**Plans:** TBD
 
 **Plans:**
-- [x] 21-01-PLAN.md — Implement granular debug flags and input handling
-- [x] 21-02-PLAN.md — Implement chase vectors and sight-loss counters
-- [x] 21-03-PLAN.md — Implement NPC field-of-view visualization
+- [ ] 25-01-PLAN.md — TBD
 
 **Success Criteria:**
 
-1. With debug on, every CHASE-state NPC shows an arrow line from its current position to its last-known player position.
-2. The AI state label for a chasing NPC includes the turns-without-sight counter (e.g., `C(2)`), updating each enemy turn.
-3. With debug on, every NPC's computed FOV tiles receive a color tint distinguishing hostile from friendly NPCs; the tint reflects the actual shadowcast result from `VisibilityService`.
-4. Each overlay layer (FOV highlight, AI labels, chase markers, chase vectors, NPC FOV cones) can be toggled on or off independently without affecting other layers.
-5. Disabling all individual overlays via per-layer toggles produces a screen identical to having debug mode off.
+1. From the inventory screen, pressing E (or Enter) on an equippable item moves it from `Inventory.items` to the matching equipment slot; if that slot was occupied, the displaced item moves back into `Inventory.items` automatically.
+2. Pressing U (or a dedicated unequip key) from the equipment loadout view moves the selected item from its slot back into `Inventory.items`.
+3. The sidebar UI displays the player's current equipment loadout (head, body, main_hand, off_hand, feet, accessory) with item names or "—" for empty slots.
+4. `EquipmentSystem` computes an `EffectiveStats` component each frame from base `Stats` plus the sum of all equipped item bonuses; base `Stats` values are never mutated by equip or unequip actions.
+5. `CombatSystem` uses `EffectiveStats` for all damage and defense calculations; equipping a sword increases attack output and unequipping it returns damage to the base value in the next combat exchange.
 
 ---
 
-### Phase 22: Debug System Refinement
+### Phase 26: Consumables and Polish
 
-**Goal:** Fix stale data after map transitions, align transparency logic with AI systems, and repair outdated verification tests.
+**Goal:** The player can use consumable items with immediate, observable effects, and items communicate their physical nature through descriptions.
 
-**Dependencies:** Phase 21 (all overlays must exist before they can be refined)
+**Dependencies:** Phase 25 (use action is initiated from the inventory screen; full item pipeline must be complete)
 
-**Requirements:** DBG-03, EXT-03
+**Requirements:** CONS-01, CONS-02, CONS-05
 
-**Gap Closure:** Closes integration and logic gaps from v1.3 audit.
-
-**Plans:** 1
+**Plans:** TBD
 
 **Plans:**
-- [x] 22-01-PLAN.md — Fix map synchronization and transparency logic — completed 2026-02-15
+- [ ] 26-01-PLAN.md — TBD
 
 **Success Criteria:**
 
-1. Entering a new map (e.g., a village) immediately updates the debug overlay with the new map's visibility and AI state.
-2. NPC FOV visualization in debug mode exactly matches the actual visibility used by the AI (tested against `#` wall fallback).
-3. `tests/verify_phase_20.py` passes with the updated `DebugRenderSystem.process` signature.
-4. Debug overlay remains functional and accurate across multiple map transitions in a single session.
+1. Pressing U on a consumable item in the inventory screen triggers its effect immediately: a health potion restores HP (capped at max), logs "You drink the health potion. (+N HP)", and the item entity is deleted — it no longer appears in inventory.
+2. Drinking a health potion when already at full HP logs a message ("You are already at full health.") and does not delete the item.
+3. Investigating a material-bearing item (e.g., a wooden club) or reading its inventory description includes the material type in the output (e.g., "A sturdy club made of wood.").
 
 ---
 
@@ -174,3 +180,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 20. Core Overlays | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 21. Extended Overlays | v1.3 | 3/3 | Complete | 2026-02-15 |
 | 22. Debug System Refinement | v1.3 | 1/1 | Complete | 2026-02-15 |
+| 23. Item Entity Foundation | v1.4 | 0/TBD | Not started | - |
+| 24. Pickup, Inventory Screen, and Loot Drops | v1.4 | 0/TBD | Not started | - |
+| 25. Equipment Slots and Combat Integration | v1.4 | 0/TBD | Not started | - |
+| 26. Consumables and Polish | v1.4 | 0/TBD | Not started | - |
