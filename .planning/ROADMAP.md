@@ -82,10 +82,11 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 **Requirements:** ITEM-01, ITEM-02, ITEM-03, ITEM-04, ITEM-05, INV-06
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 **Plans:**
-- [ ] 23-01-PLAN.md — TBD
+- [ ] 23-01-PLAN.md — ECS Components and Data Loading
+- [ ] 23-02-PLAN.md — Item Factory and Map Persistence
 
 **Success Criteria:**
 
@@ -180,7 +181,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 20. Core Overlays | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 21. Extended Overlays | v1.3 | 3/3 | Complete | 2026-02-15 |
 | 22. Debug System Refinement | v1.3 | 1/1 | Complete | 2026-02-15 |
-| 23. Item Entity Foundation | v1.4 | 0/TBD | Not started | - |
+| 23. Item Entity Foundation | v1.4 | 0/2 | In Progress | - |
 | 24. Pickup, Inventory Screen, and Loot Drops | v1.4 | 0/TBD | Not started | - |
 | 25. Equipment Slots and Combat Integration | v1.4 | 0/TBD | Not started | - |
 | 26. Consumables and Polish | v1.4 | 0/TBD | Not started | - |
