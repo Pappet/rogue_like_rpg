@@ -90,20 +90,47 @@ class DebugRenderSystem:
         return "?"
 
     def _render_chase_targets(self):
-         for ent, (chase_data, ai_state) in esper.get_components(ChaseData, AIBehaviorState):
+        for ent, (chase_data, ai_state, pos) in esper.get_components(ChaseData, AIBehaviorState, Position):
             if ai_state.state == AIState.CHASE:
-                # Draw box at last known position
+                # Calculate NPC screen center
+                npc_center_x = pos.x * TILE_SIZE - self.camera.x + TILE_SIZE // 2
+                npc_center_y = pos.y * TILE_SIZE - self.camera.y + TILE_SIZE // 2
+
+                # Calculate target screen center
                 target_x = chase_data.last_known_x
                 target_y = chase_data.last_known_y
-                
-                screen_x = target_x * TILE_SIZE - self.camera.x
-                screen_y = target_y * TILE_SIZE - self.camera.y
-                
-                # Check bounds
-                if -TILE_SIZE < screen_x < self.camera.width and -TILE_SIZE < screen_y < self.camera.height:
-                     pygame.draw.rect(
+                target_center_x = target_x * TILE_SIZE - self.camera.x + TILE_SIZE // 2
+                target_center_y = target_y * TILE_SIZE - self.camera.y + TILE_SIZE // 2
+
+                # Optimization: Cull if both points are significantly off-screen
+                margin = TILE_SIZE * 2
+                npc_on_screen = -margin < npc_center_x < self.camera.width + margin and \
+                                -margin < npc_center_y < self.camera.height + margin
+                target_on_screen = -margin < target_center_x < self.camera.width + margin and \
+                                   -margin < target_center_y < self.camera.height + margin
+
+                if npc_on_screen or target_on_screen:
+                    # Draw line from NPC to target
+                    pygame.draw.line(
                         self.overlay,
                         DEBUG_CHASE_COLOR,
-                        (screen_x, screen_y, TILE_SIZE, TILE_SIZE),
-                        2 # Width of 2 for outline
+                        (npc_center_x, npc_center_y),
+                        (target_center_x, target_center_y),
+                        2
+                    )
+
+                    # Draw a circle at the target position
+                    pygame.draw.circle(
+                        self.overlay,
+                        DEBUG_CHASE_COLOR,
+                        (target_center_x, target_center_y),
+                        TILE_SIZE // 4
+                    )
+
+                    # Draw outline at target tile
+                    pygame.draw.rect(
+                        self.overlay,
+                        DEBUG_CHASE_COLOR,
+                        (target_x * TILE_SIZE - self.camera.x, target_y * TILE_SIZE - self.camera.y, TILE_SIZE, TILE_SIZE),
+                        1
                     )
