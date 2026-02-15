@@ -1,50 +1,96 @@
-# Requirements: v1.3 Debug Overlay System
+# Requirements: Rogue Like RPG — v1.4 Item & Inventory System
 
-## Debug Infrastructure
+**Defined:** 2026-02-15
+**Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
 
-| REQ-ID | Requirement | Phase | Status |
-|--------|-------------|-------|--------|
-| DBG-01 | Global debug toggle via F-key hotkey | 19 | Pending |
-| DBG-02 | Toggle state survives state transitions (persist dict) | 19 | Pending |
-| DBG-03 | DebugRenderSystem as dedicated ECS system (explicit-call, not esper-registered) | 19 | Pending |
-| DBG-04 | Pre-allocated SRCALPHA overlay surface (no per-tile allocation) | 19 | Pending |
-| DBG-05 | Zero performance impact when debug disabled (early return) | 19 | Pending |
+## v1 Requirements
 
-## Core Overlays
+Requirements for v1.4 milestone. Each maps to roadmap phases.
 
-| REQ-ID | Requirement | Phase | Status |
-|--------|-------------|-------|--------|
-| OVL-01 | Player FOV tile highlight (green tint on VISIBLE tiles) | 20 | Pending |
-| OVL-02 | NPC AI state label (W/C/I/T text above entities) | 20 | Pending |
-| OVL-03 | Last-known position marker (orange rect at ChaseData coordinates) | 20 | Pending |
-| OVL-04 | Overlays render within viewport clip region only | 20 | Pending |
+### Item Entity
 
-## Extended Overlays
+- [ ] **ITEM-01**: Item exists as a full ECS entity with identity continuity across ground, inventory, and equipped states
+- [ ] **ITEM-02**: Item templates are defined in JSON (items.json) and loaded via ItemRegistry/ItemFactory pipeline
+- [ ] **ITEM-03**: Items on the ground are rendered on the map via existing RenderSystem
+- [ ] **ITEM-04**: Items have weight (kg) used for carry capacity checks
+- [ ] **ITEM-05**: Items have a material type (wood, metal, glass, etc.) stored as a component
 
-| REQ-ID | Requirement | Phase | Status |
-|--------|-------------|-------|--------|
-| EXT-01 | Chase vector arrows (NPC to last-known position) | 21 | Pending |
-| EXT-02 | Turns-without-sight counter on state label | 21 | Pending |
-| EXT-03 | NPC FOV cone visualization (per-NPC shadowcast tint) | 21 | Pending |
-| EXT-04 | Per-overlay toggle (extend single bool to dict) | 21 | Pending |
+### Inventory
+
+- [ ] **INV-01**: Player can pick up items at their position with the G key
+- [ ] **INV-02**: Pickup is rejected with a log message when over weight capacity
+- [ ] **INV-03**: Player can open inventory screen with the I key (modal GameStates.INVENTORY)
+- [ ] **INV-04**: Inventory screen lists carried items with arrow-key navigation
+- [ ] **INV-05**: Player can drop items from inventory with the D key, restoring them to the map
+- [ ] **INV-06**: Carried items survive map transitions (freeze/thaw entity closure)
+
+### Equipment
+
+- [ ] **EQUIP-01**: Equipment slots exist (head, body, main_hand, off_hand, feet, accessory)
+- [ ] **EQUIP-02**: Player can equip items to matching slots from inventory
+- [ ] **EQUIP-03**: Player can unequip items back to inventory
+- [ ] **EQUIP-04**: Effective stats are computed as base stats + equipped bonuses each frame
+- [ ] **EQUIP-05**: CombatSystem uses effective stats for damage calculation
+- [ ] **EQUIP-06**: Current equipment loadout is visible in the sidebar UI
+
+### Consumable & Loot
+
+- [ ] **CONS-01**: Consumable items can be used from inventory (U key)
+- [ ] **CONS-02**: Health potion restores HP on use and is destroyed afterward
+- [ ] **CONS-03**: Monsters have contextual loot tables (wolves drop pelts, not gold)
+- [ ] **CONS-04**: Loot items spawn at monster position on death via entity_died event
+- [ ] **CONS-05**: Material type appears in item descriptions and investigation output
+
+## v2 Requirements
+
+Deferred to future release. Tracked but not in current roadmap.
+
+### Material Interactions
+
+- **MATX-01**: Wood items catch fire when exposed to fire damage
+- **MATX-02**: Metal items conduct electricity (lightning damage bonus)
+- **MATX-03**: Glass items shatter on impact/drop from height
+
+### Advanced Inventory
+
+- **AINV-01**: Nested containers (bags-in-bags) with recursive weight calculation
+- **AINV-02**: Identified/unidentified items with per-run name mapping
+- **AINV-03**: Pick up all items at position (G key variant)
+
+### Advanced Consumables
+
+- **ACONS-01**: Mana restore consumable
+- **ACONS-02**: Poison consumable
+- **ACONS-03**: Teleport scroll consumable
+
+## Out of Scope
+
+Explicitly excluded. Documented to prevent scope creep.
+
+| Feature | Reason |
+|---------|--------|
+| Nested containers (bags-in-bags) | Flat inventory sufficient for v1.4; adds recursive weight complexity |
+| Item stacking (10x Health Potion) | Each item is a unique entity; stacking contradicts identity continuity |
+| Drag-and-drop inventory UI | Requires mouse input system not yet built; arrow-key sufficient |
+| Item durability/repair | Future simulation hook; not needed for core item loop |
+| Crafting system | Independent milestone; too large for v1.4 scope |
+| NPC economy/trading | Requires NPC interaction system not yet built |
+| Auto-sort inventory | Low priority QoL; manual management sufficient |
+| Item cursing/blessing | Adds UI affordances and content design beyond v1.4 scope |
 
 ## Traceability
 
-| REQ-ID | Phase | Plan | Verified |
-|--------|-------|------|----------|
-| DBG-01 | 19 | — | — |
-| DBG-02 | 19 | — | — |
-| DBG-03 | 19 | — | — |
-| DBG-04 | 19 | — | — |
-| DBG-05 | 19 | — | — |
-| OVL-01 | 20 | — | — |
-| OVL-02 | 20 | — | — |
-| OVL-03 | 20 | — | — |
-| OVL-04 | 20 | — | — |
-| EXT-01 | 21 | — | — |
-| EXT-02 | 21 | — | — |
-| EXT-03 | 21 | — | — |
-| EXT-04 | 21 | — | — |
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| — | — | — |
+
+**Coverage:**
+- v1 requirements: 22 total
+- Mapped to phases: 0
+- Unmapped: 22 ⚠️
 
 ---
-*Created: 2026-02-15 for v1.3 Debug Overlay System*
+*Requirements defined: 2026-02-15*
+*Last updated: 2026-02-15 after initial definition*
