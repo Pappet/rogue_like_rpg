@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 19 — Debug Infrastructure
-Plan: 01 (Complete)
-Status: Phase 19 complete, ready for Phase 20
-Last activity: 2026-02-15 — Completed 19-01-PLAN.md (Debug Infrastructure)
+Phase: 20 — Core Overlays
+Plan: Not yet planned
+Status: Ready for /gsd:plan-phase 20
+Last activity: 2026-02-15 — Phase 19 complete
 
-Progress: [███░░░░░░░] 1 of 3 plans (v1.3 Debug Overlay System)
+Progress: [███░░░░░░░] 1 of 3 phases (v1.3 Debug Overlay System)
 
 ## Performance Metrics
 

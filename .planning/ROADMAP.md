@@ -73,6 +73,9 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 **Plans:** 1
 
+**Plans:**
+- [x] 19-01-PLAN.md — Implement DebugRenderSystem and toggle hotkey
+
 **Success Criteria:**
 
 1. Pressing the debug hotkey (F1 or F3) flips a visible flag and does not crash the game or alter gameplay.
@@ -135,6 +138,6 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 16. AISystem Skeleton and Turn Wiring | v1.2 | 1/1 | Complete | 2026-02-14 |
 | 17. Wander Behavior | v1.2 | 1/1 | Complete | 2026-02-15 |
 | 18. Chase Behavior and State Transitions | v1.2 | 1/1 | Complete | 2026-02-15 |
-| 19. Debug Infrastructure | v1.3 | 0/1 | Pending | — |
+| 19. Debug Infrastructure | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 20. Core Overlays | v1.3 | 0/1 | Pending | — |
 | 21. Extended Overlays | v1.3 | 0/1 | Pending | — |
