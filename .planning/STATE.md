@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 21 — Extended Overlays (Complete)
+Phase: 22 — Debug System Refinement (Complete)
 Milestone: v1.3 Debug Overlay System (Complete)
 Status: Ready for v1.4 Planning
 Last activity: 2026-02-15 — Milestone v1.3 Complete
 
-Progress: [██████████] 3 of 3 phases (v1.3 Debug Overlay System)
+Progress: [██████████] 4 of 4 phases (v1.3 Debug Overlay System)
 
 ## Performance Metrics
 
@@ -25,6 +25,7 @@ Progress: [██████████] 3 of 3 phases (v1.3 Debug Overlay Sys
 | Phase 19 | 1 | ~15min | ~15min |
 | Phase 20 | 1 | ~15min | ~15min |
 | Phase 21 | 3 | ~45min | ~15min |
+| Phase 22 | 1 | ~15min | ~15min |
 
 ## Accumulated Context
 

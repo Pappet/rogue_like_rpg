@@ -5,7 +5,7 @@
 - ✅ **v1.0 MVP** — Phases 1-11 (shipped 2026-02-14)
 - ✅ **v1.1 Investigation System** — Phases 12-14 (shipped 2026-02-14)
 - ✅ **v1.2 AI Infrastructure** — Phases 15-18 (shipped 2026-02-15)
-- ✅ **v1.3 Debug Overlay System** — Phases 19-21 (shipped 2026-02-15)
+- ✅ **v1.3 Debug Overlay System** — Phases 19-22 (shipped 2026-02-15)
 
 ## Phases
 
@@ -147,7 +147,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 **Plans:** 1
 
 **Plans:**
-- [ ] 22-01-PLAN.md — Fix map synchronization and transparency logic
+- [x] 22-01-PLAN.md — Fix map synchronization and transparency logic — completed 2026-02-15
 
 **Success Criteria:**
 
@@ -173,4 +173,4 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 19. Debug Infrastructure | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 20. Core Overlays | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 21. Extended Overlays | v1.3 | 3/3 | Complete | 2026-02-15 |
-| 22. Debug System Refinement | v1.3 | 0/1 | Planned | — |
+| 22. Debug System Refinement | v1.3 | 1/1 | Complete | 2026-02-15 |

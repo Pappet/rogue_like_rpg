@@ -50,3 +50,18 @@
 
 ---
 
+
+## v1.3 Debug Overlay System (Shipped: 2026-02-15)
+
+**Phases:** 4 (19-22) | **Plans:** 6 | **Requirements:** 13/13 satisfied
+**Timeline:** 1 day (2026-02-15)
+
+**Key accomplishments:**
+- Decoupled `DebugRenderSystem` with independent overlay surface and zero performance impact when disabled
+- Multi-layer debug visualization — FOV highlights, AI state labels, and chase targets
+- Granular diagnostic controls — independent toggles for FOV, labels, chase vectors, and NPC FOV cones
+- Advanced AI visualization — NPC sight-loss counters, chase direction vectors, and hostile-distinguishing FOV tints
+- Bulletproof integration — persistent debug state across map transitions, layer-aware rendering, and map-syncing
+- Alignment with AI logic — debug visibility uses identical `#` wall fallback as pathfinding/detection
+- Automated verification — passing regression tests for the expanded debug pipeline
+
