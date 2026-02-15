@@ -2,7 +2,7 @@ import pygame
 import esper
 from config import TILE_SIZE, DEBUG_FOV_COLOR, DEBUG_CHASE_COLOR, DEBUG_LABEL_COLOR, DEBUG_FONT_SIZE, DEBUG_NPC_FOV_COLOR
 from ecs.components import Position, AIBehaviorState, ChaseData, AIState, Stats
-from map.tile import VisibilityState
+from map.tile import VisibilityState, SpriteLayer
 from services.visibility_service import VisibilityService
 
 class DebugRenderSystem:
@@ -15,33 +15,50 @@ class DebugRenderSystem:
         # Create overlay surface with camera dimensions and transparency
         self.overlay = pygame.Surface((camera.width, camera.height), pygame.SRCALPHA)
 
-    def process(self, surface, flags):
+    def set_map(self, map_container):
+        """Update the internal map reference when switching levels."""
+        self.map_container = map_container
+
+    def _is_transparent(self, x, y, layer):
+        """Helper to determine if a tile is transparent, handling '#' wall fallback."""
+        tile = self.map_container.get_tile(x, y, layer)
+        if tile is None or not tile.transparent:
+            return False
+        
+        # Fallback for old tile systems where '#' character indicates a wall
+        if tile.sprites.get(SpriteLayer.GROUND) == "#":
+            return False
+            
+        return True
+
+    def process(self, surface, flags, player_layer):
         # 1. Clear the overlay
         self.overlay.fill((0, 0, 0, 0))
 
         # 2. Render Layers
         if flags.get("player_fov", True):
-            self._render_fov_overlay()
+            self._render_fov_overlay(player_layer)
         if flags.get("npc_fov", False):
-            self._render_npc_fov()
+            self._render_npc_fov(player_layer)
         if flags.get("chase", True):
-            self._render_chase_targets()
+            self._render_chase_targets(player_layer)
         if flags.get("labels", True):
-            self._render_ai_labels()
+            self._render_ai_labels(player_layer)
 
         # 3. Blit overlay to the main surface at the camera's viewport position
         # The camera offset is applied when blitting the overlay to the screen
         surface.blit(self.overlay, (self.camera.offset_x, self.camera.offset_y))
 
-    def _render_npc_fov(self):
+    def _render_npc_fov(self, player_layer):
         # Iterate over all entities with Position, Stats (for perception), and AIBehaviorState
         for ent, (pos, stats, ai) in esper.get_components(Position, Stats, AIBehaviorState):
-            # Transparency function for shadowcasting, using the entity's layer
+            # Only process NPCs on the player's current layer
+            if pos.layer != player_layer:
+                continue
+
+            # Transparency function for shadowcasting
             def transparency_func(x, y):
-                tile = self.map_container.get_tile(x, y, pos.layer)
-                if tile:
-                    return tile.transparent
-                return False
+                return self._is_transparent(x, y, pos.layer)
 
             # Optimization: Only process entities within the self.camera viewport (plus margin)
             margin = 10  # Margin to ensure we catch NPCs just off-screen whose FOV enters screen
@@ -74,7 +91,7 @@ class DebugRenderSystem:
                             (vs_x, vs_y, TILE_SIZE, TILE_SIZE)
                         )
 
-    def _render_fov_overlay(self):
+    def _render_fov_overlay(self, player_layer):
         # Calculate visible tile range based on camera position
         # Convert camera pixel coordinates to tile coordinates
         start_col = max(0, self.camera.x // TILE_SIZE)
@@ -86,8 +103,8 @@ class DebugRenderSystem:
         # Iterate only visible tiles within the viewport
         for y in range(start_row, end_row):
             for x in range(start_col, end_col):
-                # Check visibility on the first layer (ground)
-                tile = self.map_container.get_tile(x, y, 0)
+                # Check visibility on the player's layer
+                tile = self.map_container.get_tile(x, y, player_layer)
                 if tile and tile.visibility_state == VisibilityState.VISIBLE:
                     # Calculate position on overlay surface relative to camera viewport
                     screen_x = x * TILE_SIZE - self.camera.x
@@ -99,9 +116,13 @@ class DebugRenderSystem:
                         (screen_x, screen_y, TILE_SIZE, TILE_SIZE)
                     )
 
-    def _render_ai_labels(self):
+    def _render_ai_labels(self, player_layer):
         # Iterate over entities with AIBehaviorState and Position
         for ent, (ai_state, pos) in esper.get_components(AIBehaviorState, Position):
+            # Filter by layer
+            if pos.layer != player_layer:
+                continue
+
             # Calculate screen position relative to camera viewport
             screen_x = pos.x * TILE_SIZE - self.camera.x
             screen_y = pos.y * TILE_SIZE - self.camera.y
@@ -133,8 +154,12 @@ class DebugRenderSystem:
             return "T"
         return "?"
 
-    def _render_chase_targets(self):
+    def _render_chase_targets(self, player_layer):
         for ent, (chase_data, ai_state, pos) in esper.get_components(ChaseData, AIBehaviorState, Position):
+            # Filter by layer
+            if pos.layer != player_layer:
+                continue
+
             if ai_state.state == AIState.CHASE:
                 # Calculate NPC screen center
                 npc_center_x = pos.x * TILE_SIZE - self.camera.x + TILE_SIZE // 2
