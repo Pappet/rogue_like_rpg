@@ -153,9 +153,18 @@ class Game(GameState):
         self.action_system = ActionSystem(self.map_container, self.turn_system)
         self.render_system = RenderSystem(self.camera, self.map_container)
         
-        # Initialize Debug System (persistent toggle)
-        if "debug_enabled" not in self.persist:
-            self.persist["debug_enabled"] = False
+        # Initialize Debug System (persistent flags)
+        if "debug_flags" not in self.persist:
+            # Migrate old setting if it exists
+            old_debug = self.persist.pop("debug_enabled", False)
+            self.persist["debug_flags"] = {
+                "master": old_debug,
+                "player_fov": True,
+                "npc_fov": False,
+                "chase": True,
+                "labels": True
+            }
+        
         self.debug_render_system = DebugRenderSystem(self.camera, self.map_container)
 
         # Register event handlers
@@ -172,11 +181,29 @@ class Game(GameState):
 
     def handle_player_input(self, event):
         if event.type == pygame.KEYDOWN:
-            # Debug Toggle
+            # Debug Toggles
             if event.key == pygame.K_F3:
-                self.persist["debug_enabled"] = not self.persist["debug_enabled"]
-                print(f"Debug mode: {self.persist['debug_enabled']}")
+                self.persist["debug_flags"]["master"] = not self.persist["debug_flags"]["master"]
+                print(f"Debug master: {self.persist['debug_flags']['master']}")
                 return
+            
+            if self.persist["debug_flags"].get("master"):
+                if event.key == pygame.K_F4:
+                    self.persist["debug_flags"]["player_fov"] = not self.persist["debug_flags"]["player_fov"]
+                    print(f"Debug player_fov: {self.persist['debug_flags']['player_fov']}")
+                    return
+                elif event.key == pygame.K_F5:
+                    self.persist["debug_flags"]["npc_fov"] = not self.persist["debug_flags"]["npc_fov"]
+                    print(f"Debug npc_fov: {self.persist['debug_flags']['npc_fov']}")
+                    return
+                elif event.key == pygame.K_F6:
+                    self.persist["debug_flags"]["chase"] = not self.persist["debug_flags"]["chase"]
+                    print(f"Debug chase: {self.persist['debug_flags']['chase']}")
+                    return
+                elif event.key == pygame.K_F7:
+                    self.persist["debug_flags"]["labels"] = not self.persist["debug_flags"]["labels"]
+                    print(f"Debug labels: {self.persist['debug_flags']['labels']}")
+                    return
 
             # World Map Toggle
             if event.key == pygame.K_m:
@@ -357,8 +384,9 @@ class Game(GameState):
             self.render_system.process(surface, player_layer)
 
         # 3. Render Debug Overlay (clipped to viewport)
-        if self.persist.get("debug_enabled") and hasattr(self, 'debug_render_system'):
-            self.debug_render_system.process(surface)
+        debug_flags = self.persist.get("debug_flags", {})
+        if debug_flags.get("master") and hasattr(self, 'debug_render_system'):
+            self.debug_render_system.process(surface, debug_flags)
 
         # Reset clip for UI
         surface.set_clip(None)
