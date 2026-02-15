@@ -103,10 +103,10 @@ Plans:
   3. An NPC in CHASE state moves one step toward the player using a greedy Manhattan step each enemy turn.
   4. After the player leaves the NPC's line-of-sight for N turns, the NPC returns to WANDER state (loses sight fallback).
   5. AI state that tracks last-known player position stores tile coordinates, not entity IDs, so it survives map freeze/thaw without corruption.
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 18-01: Implement CHASE branch with VisibilityService FOV detection, greedy Manhattan step, WANDER/IDLE→CHASE transition with log message, CHASE→WANDER cooldown, and coordinate-only state fields
+- [ ] 18-01-PLAN.md — Implement chase detection, pursuit, lose-sight fallback in AISystem with verification tests
 
 ---
 
@@ -121,4 +121,4 @@ Plans:
 | 15. AI Component Foundation | v1.2 | 1/1 | Complete | 2026-02-14 |
 | 16. AISystem Skeleton and Turn Wiring | v1.2 | 1/1 | Complete | 2026-02-14 |
 | 17. Wander Behavior | v1.2 | 1/1 | Complete | 2026-02-15 |
-| 18. Chase Behavior and State Transitions | v1.2 | 0/TBD | Not started | - |
+| 18. Chase Behavior and State Transitions | v1.2 | 0/1 | Not started | - |
