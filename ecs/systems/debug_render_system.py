@@ -71,6 +71,12 @@ class DebugRenderSystem:
             # Check if entity is roughly within viewport (adding margin for labels)
             if -TILE_SIZE < screen_x < self.camera.width and -TILE_SIZE < screen_y < self.camera.height:
                 state_code = self._get_state_code(ai_state.state)
+
+                # Fetch ChaseData if it exists to show turns without sight
+                if esper.has_component(ent, ChaseData):
+                    chase = esper.component_for_entity(ent, ChaseData)
+                    state_code += f" T:{chase.turns_without_sight}"
+
                 text_surf = self.font.render(state_code, True, DEBUG_LABEL_COLOR)
                 # Draw above the sprite, centered horizontally
                 text_rect = text_surf.get_rect(center=(screen_x + TILE_SIZE // 2, screen_y - 10))
