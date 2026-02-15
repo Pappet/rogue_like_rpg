@@ -96,6 +96,9 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 **Plans:** 1
 
+**Plans:**
+- [x] 20-01-PLAN.md — Implement Core Debug Overlays
+
 **Success Criteria:**
 
 1. With debug on, every tile where the player has current line-of-sight shows a distinct green tint; tiles outside FOV are unaffected.
@@ -114,7 +117,12 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 **Requirements:** EXT-01, EXT-02, EXT-03, EXT-04
 
-**Plans:** 1
+**Plans:** 3
+
+**Plans:**
+- [ ] 21-01-PLAN.md — Implement granular debug flags and input handling
+- [ ] 21-02-PLAN.md — Implement chase vectors and sight-loss counters
+- [ ] 21-03-PLAN.md — Implement NPC field-of-view visualization
 
 **Success Criteria:**
 
@@ -139,5 +147,5 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 17. Wander Behavior | v1.2 | 1/1 | Complete | 2026-02-15 |
 | 18. Chase Behavior and State Transitions | v1.2 | 1/1 | Complete | 2026-02-15 |
 | 19. Debug Infrastructure | v1.3 | 1/1 | Complete | 2026-02-15 |
-| 20. Core Overlays | v1.3 | 0/1 | Pending | — |
-| 21. Extended Overlays | v1.3 | 0/1 | Pending | — |
+| 20. Core Overlays | v1.3 | 1/1 | Complete | 2026-02-15 |
+| 21. Extended Overlays | v1.3 | 0/3 | Pending | — |
