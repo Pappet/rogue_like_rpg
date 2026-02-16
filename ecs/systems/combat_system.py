@@ -20,6 +20,10 @@ class CombatSystem(esper.Processor):
                 # Subtract HP from the base stats
                 target_stats.hp -= damage
                 
+                # Update effective HP to avoid stale death check if it's a separate component
+                if target_eff is not target_stats:
+                    target_eff.hp -= damage
+                
                 # Get names for logging
                 attacker_name = self._get_name(attacker)
                 target_name = self._get_name(target)
@@ -31,7 +35,8 @@ class CombatSystem(esper.Processor):
                     esper.dispatch_event("log_message", f"{attacker_name} attacks {target_name} but deals no damage.")
                 
                 # Death Check
-                if target_stats.hp <= 0:
+                # Use effective HP for death check to account for bonuses
+                if target_eff.hp <= 0:
                     esper.dispatch_event("entity_died", target)
                 
             except KeyError:
