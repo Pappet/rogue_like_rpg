@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Optional
 
 
 class AIState(str, Enum):
@@ -14,6 +14,15 @@ class Alignment(str, Enum):
     HOSTILE = "hostile"
     NEUTRAL = "neutral"
     FRIENDLY = "friendly"
+
+
+class SlotType(str, Enum):
+    HEAD = "head"
+    BODY = "body"
+    MAIN_HAND = "main_hand"
+    OFF_HAND = "off_hand"
+    FEET = "feet"
+    ACCESSORY = "accessory"
 
 
 @dataclass
@@ -58,6 +67,17 @@ class Stats:
     max_carry_weight: float = 20.0
 
 @dataclass
+class EffectiveStats:
+    hp: int
+    max_hp: int
+    power: int
+    defense: int
+    mana: int
+    max_mana: int
+    perception: int
+    intelligence: int
+
+@dataclass
 class StatModifiers:
     hp: int = 0
     power: int = 0
@@ -71,12 +91,20 @@ class Portable:
     weight: float # kg
 
 @dataclass
+class Equippable:
+    slot: SlotType
+
+@dataclass
 class ItemMaterial:
     material: str # e.g., 'iron', 'wood', 'glass'
 
 @dataclass
 class Inventory:
     items: List = field(default_factory=list)
+
+@dataclass
+class Equipment:
+    slots: Dict[SlotType, Optional[int]] = field(default_factory=lambda: {s: None for s in SlotType})
 
 @dataclass
 class Name:
