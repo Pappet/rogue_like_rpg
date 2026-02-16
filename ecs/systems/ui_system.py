@@ -60,7 +60,10 @@ class UISystem(esper.Processor):
         
         # Player Stats (HP/Mana)
         try:
-            stats = esper.component_for_entity(self.player_entity, Stats)
+            if esper.has_component(self.player_entity, EffectiveStats):
+                stats = esper.component_for_entity(self.player_entity, EffectiveStats)
+            else:
+                stats = esper.component_for_entity(self.player_entity, Stats)
             stats_text = f"HP: {stats.hp}/{stats.max_hp}  MP: {stats.mana}/{stats.max_mana}"
             stats_surf = self.small_font.render(stats_text, True, (255, 255, 255))
             surface.blit(stats_surf, (SCREEN_WIDTH - stats_surf.get_width() - 20, (HEADER_HEIGHT - stats_surf.get_height()) // 2))
