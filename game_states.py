@@ -15,7 +15,7 @@ from ecs.systems.combat_system import CombatSystem
 from ecs.systems.death_system import DeathSystem
 from ecs.systems.ai_system import AISystem
 from ecs.systems.debug_render_system import DebugRenderSystem
-from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats, Inventory, Name
+from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats, Inventory, Name, Portable
 from map.tile import VisibilityState
 from config import SCREEN_WIDTH, SCREEN_HEIGHT
 
@@ -218,6 +218,11 @@ class Game(GameState):
                 self.done = True
                 return
 
+            # Pickup Item
+            if event.key == pygame.K_g:
+                self.pickup_item()
+                return
+
             # Action Selection
             try:
                 action_list = esper.component_for_entity(self.player_entity, ActionList)
@@ -285,6 +290,57 @@ class Game(GameState):
         
         # For now, we end player turn immediately after requesting movement
         # In the future, we might wait for movement to complete
+        if self.turn_system:
+            self.turn_system.end_player_turn()
+
+    def pickup_item(self):
+        try:
+            player_pos = esper.component_for_entity(self.player_entity, Position)
+            inventory = esper.component_for_entity(self.player_entity, Inventory)
+            stats = esper.component_for_entity(self.player_entity, Stats)
+        except KeyError:
+            return
+
+        # 1. Find items at player's (x, y)
+        items_here = []
+        for ent, (pos, portable) in esper.get_components(Position, Portable):
+            if pos.x == player_pos.x and pos.y == player_pos.y and pos.layer == player_pos.layer:
+                items_here.append(ent)
+        
+        if not items_here:
+            esper.dispatch_event("log_message", "There is nothing here to pick up.")
+            return
+
+        # For now, pick up the first item found
+        item_ent = items_here[0]
+        portable = esper.component_for_entity(item_ent, Portable)
+        
+        # 2. Calculate current weight
+        current_weight = 0
+        for inv_item_id in inventory.items:
+            try:
+                inv_portable = esper.component_for_entity(inv_item_id, Portable)
+                current_weight += inv_portable.weight
+            except KeyError:
+                pass
+        
+        # 3. Check capacity
+        if current_weight + portable.weight > stats.max_carry_weight:
+            esper.dispatch_event("log_message", "Too heavy to carry.")
+            return
+
+        # 4. Success: Move item to inventory
+        esper.remove_component(item_ent, Position)
+        inventory.items.append(item_ent)
+        
+        try:
+            name_comp = esper.component_for_entity(item_ent, Name)
+            item_name = name_comp.name
+        except KeyError:
+            item_name = "item"
+            
+        esper.dispatch_event("log_message", f"You pick up the {item_name}.")
+        
         if self.turn_system:
             self.turn_system.end_player_turn()
 
@@ -518,11 +574,51 @@ class InventoryState(GameState):
                     self.selected_idx = (self.selected_idx - 1) % len(inventory.items)
                 elif event.key == pygame.K_DOWN:
                     self.selected_idx = (self.selected_idx + 1) % len(inventory.items)
+                elif event.key == pygame.K_d:
+                    self.drop_item()
             except KeyError:
                 pass
 
     def update(self, dt):
         pass
+
+    def drop_item(self):
+        try:
+            inventory = self.world.component_for_entity(self.player_entity, Inventory)
+            if not inventory.items or self.selected_idx >= len(inventory.items):
+                return
+            
+            item_ent = inventory.items.pop(self.selected_idx)
+            
+            # Get player position
+            player_pos = self.world.component_for_entity(self.player_entity, Position)
+            
+            # Add Position to item
+            self.world.add_component(item_ent, Position(player_pos.x, player_pos.y, player_pos.layer))
+            
+            # Ensure SpriteLayer.ITEMS
+            try:
+                renderable = self.world.component_for_entity(item_ent, Renderable)
+                renderable.layer = SpriteLayer.ITEMS.value
+            except KeyError:
+                pass
+                
+            try:
+                name_comp = self.world.component_for_entity(item_ent, Name)
+                item_name = name_comp.name
+            except KeyError:
+                item_name = "item"
+            
+            esper.dispatch_event("log_message", f"You drop the {item_name}.")
+            
+            # Adjust selected index if it's now out of bounds
+            if len(inventory.items) == 0:
+                self.selected_idx = 0
+            elif self.selected_idx >= len(inventory.items):
+                self.selected_idx = len(inventory.items) - 1
+            
+        except KeyError:
+            pass
 
     def draw(self, surface):
         # Draw a semi-transparent overlay
