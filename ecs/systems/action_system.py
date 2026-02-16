@@ -1,7 +1,7 @@
 import esper
 import math
 from config import GameStates, TILE_SIZE
-from ecs.components import Position, Renderable, Stats, EffectiveStats, Inventory, Targeting, Action, ActionList, Portal, Name, Description
+from ecs.components import Position, Renderable, Stats, EffectiveStats, Inventory, Targeting, Action, ActionList, Portal, Name, Description, ItemMaterial, Portable
 from map.tile import VisibilityState
 from map.tile_registry import TileRegistry
 
@@ -9,6 +9,28 @@ class ActionSystem(esper.Processor):
     def __init__(self, map_container, turn_system):
         self.map_container = map_container
         self.turn_system = turn_system
+
+    @staticmethod
+    def get_detailed_description(world, entity_id) -> str:
+        """Generates a detailed physical description for an item or entity."""
+        desc_comp = world.try_component(entity_id, Description)
+        material_comp = world.try_component(entity_id, ItemMaterial)
+        portable_comp = world.try_component(entity_id, Portable)
+        
+        # We might also want stats for wounded descriptions
+        stats_comp = world.try_component(entity_id, Stats)
+        
+        parts = []
+        if desc_comp:
+            parts.append(desc_comp.get(stats_comp))
+        
+        if material_comp:
+            parts.append(f"Material: {material_comp.material}")
+            
+        if portable_comp:
+            parts.append(f"Weight: {portable_comp.weight}kg")
+            
+        return "\n".join(parts)
 
     def set_map(self, map_container):
         self.map_container = map_container
@@ -215,19 +237,12 @@ class ActionSystem(esper.Processor):
                         if name_comp is None:
                             continue
 
-                        desc_comp = esper.try_component(ent, Description)
-                        ent_stats = esper.try_component(ent, Stats)
-
-                        if desc_comp is not None:
-                            esper.dispatch_event(
-                                "log_message",
-                                f"[color=white]{name_comp.name}[/color]: {desc_comp.get(ent_stats)}"
-                            )
-                        else:
-                            esper.dispatch_event(
-                                "log_message",
-                                f"[color=white]{name_comp.name}[/color]"
-                            )
+                        detailed_desc = ActionSystem.get_detailed_description(self.world, ent)
+                        
+                        # Show name in yellow
+                        esper.dispatch_event("log_message", f"[color=yellow]{name_comp.name}[/color]")
+                        if detailed_desc:
+                            esper.dispatch_event("log_message", detailed_desc)
             else:
                 # Execute action logic (for now just print and end turn)
                 print(f"Executed {targeting.action.name} at ({targeting.target_x}, {targeting.target_y})")
