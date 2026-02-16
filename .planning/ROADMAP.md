@@ -131,13 +131,14 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 **Requirements:** EQUIP-01, EQUIP-02, EQUIP-03, EQUIP-04, EQUIP-05, EQUIP-06
 
-**Plans:** 4 plans
+**Plans:** 4 plans + 1 gap-fix
 
 **Plans:**
 - [x] 25-01-PLAN.md — Equipment Infrastructure
 - [x] 25-02-PLAN.md — Equipment System and Integration
 - [x] 25-03-PLAN.md — Equipment Logic and UI
-- [ ] 25-04-PLAN.md — Combat Integration
+- [x] 25-04-PLAN.md — Combat Integration
+- [x] 25-GAP-FIX-PLAN.md — Critical Bug Fixes (UI Crash & Combat Death Logic)
 
 **Success Criteria:**
 
@@ -157,10 +158,11 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 **Requirements:** CONS-01, CONS-02, CONS-05
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 **Plans:**
-- [ ] 26-01-PLAN.md — TBD
+- [ ] 26-01-PLAN.md — Consumable Foundation
+- [ ] 26-02-PLAN.md — Use Action and Inspection Polish
 
 **Success Criteria:**
 
@@ -188,5 +190,5 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 22. Debug System Refinement | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 23. Item Entity Foundation | v1.4 | 2/2 | Complete | 2026-02-15 |
 | 24. Pickup, Inventory Screen, and Loot Drops | v1.4 | 3/3 | Complete | 2026-02-16 |
-| 25. Equipment Slots and Combat Integration | v1.4 | 3/4 | In Progress | - |
-| 26. Consumables and Polish | v1.4 | 0/TBD | Not started | - |
+| 25. Equipment Slots and Combat Integration | v1.4 | 5/5 | Complete | 2026-02-16 |
+| 26. Consumables and Polish | v1.4 | 0/2 | Not started | - |
