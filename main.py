@@ -1,7 +1,7 @@
 import pygame
 import sys
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, HEADER_HEIGHT, SIDEBAR_WIDTH, LOG_HEIGHT
-from game_states import TitleScreen, Game, WorldMapState
+from game_states import TitleScreen, Game, WorldMapState, InventoryState
 from services.map_service import MapService
 from services.render_service import RenderService
 from services.resource_loader import ResourceLoader
@@ -39,6 +39,7 @@ class GameController:
             "TITLE": TitleScreen(),
             "GAME": Game(),
             "WORLD_MAP": WorldMapState(),
+            "INVENTORY": InventoryState(),
         }
         self.state_name = "TITLE"
         self.state = self.states[self.state_name]

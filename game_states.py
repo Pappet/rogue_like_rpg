@@ -15,8 +15,9 @@ from ecs.systems.combat_system import CombatSystem
 from ecs.systems.death_system import DeathSystem
 from ecs.systems.ai_system import AISystem
 from ecs.systems.debug_render_system import DebugRenderSystem
-from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats
+from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats, Inventory, Name
 from map.tile import VisibilityState
+from config import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class GameState:
     def __init__(self):
@@ -208,6 +209,12 @@ class Game(GameState):
             # World Map Toggle
             if event.key == pygame.K_m:
                 self.next_state = "WORLD_MAP"
+                self.done = True
+                return
+
+            # Inventory Toggle
+            if event.key == pygame.K_i:
+                self.next_state = "INVENTORY"
                 self.done = True
                 return
 
@@ -479,3 +486,86 @@ class WorldMapState(GameState):
                 pygame.draw.rect(surface, (255, 255, 0), p_rect) # Yellow player
         except Exception:
             pass
+
+class InventoryState(GameState):
+    def __init__(self):
+        super().__init__()
+        self.player_entity = None
+        self.world = None
+        self.selected_idx = 0
+        self.font = pygame.font.Font(None, 32)
+        self.title_font = pygame.font.Font(None, 48)
+
+    def startup(self, persistent):
+        self.persist = persistent
+        self.player_entity = self.persist.get("player_entity")
+        self.world = get_world()
+        self.selected_idx = 0
+
+    def get_event(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE or event.key == pygame.K_i:
+                self.done = True
+                self.next_state = "GAME"
+            
+            # Navigate list
+            try:
+                inventory = self.world.component_for_entity(self.player_entity, Inventory)
+                if not inventory.items:
+                    return
+
+                if event.key == pygame.K_UP:
+                    self.selected_idx = (self.selected_idx - 1) % len(inventory.items)
+                elif event.key == pygame.K_DOWN:
+                    self.selected_idx = (self.selected_idx + 1) % len(inventory.items)
+            except KeyError:
+                pass
+
+    def update(self, dt):
+        pass
+
+    def draw(self, surface):
+        # Draw a semi-transparent overlay
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 200))
+        surface.blit(overlay, (0, 0))
+
+        # Draw inventory box
+        box_width = 400
+        box_height = 500
+        box_x = (SCREEN_WIDTH - box_width) // 2
+        box_y = (SCREEN_HEIGHT - box_height) // 2
+        pygame.draw.rect(surface, (50, 50, 50), (box_x, box_y, box_width, box_height))
+        pygame.draw.rect(surface, (200, 200, 200), (box_x, box_y, box_width, box_height), 2)
+
+        # Draw title
+        title_text = self.title_font.render("Inventory", True, (255, 255, 255))
+        surface.blit(title_text, (box_x + 20, box_y + 20))
+
+        # Draw items
+        try:
+            inventory = self.world.component_for_entity(self.player_entity, Inventory)
+            
+            if not inventory.items:
+                empty_text = self.font.render("Your inventory is empty.", True, (150, 150, 150))
+                surface.blit(empty_text, (box_x + 20, box_y + 80))
+            else:
+                for i, item_id in enumerate(inventory.items):
+                    try:
+                        name_comp = self.world.component_for_entity(item_id, Name)
+                        item_name = name_comp.name
+                    except KeyError:
+                        item_name = f"Unknown Item ({item_id})"
+
+                    color = (255, 255, 255)
+                    if i == self.selected_idx:
+                        color = (255, 255, 0)
+                        # Draw selection highlight
+                        highlight_rect = pygame.Rect(box_x + 10, box_y + 80 + i * 35, box_width - 20, 30)
+                        pygame.draw.rect(surface, (100, 100, 100), highlight_rect)
+
+                    item_text = self.font.render(item_name, True, color)
+                    surface.blit(item_text, (box_x + 20, box_y + 85 + i * 35))
+        except KeyError:
+            empty_text = self.font.render("No inventory found.", True, (150, 150, 150))
+            surface.blit(empty_text, (box_x + 20, box_y + 80))
