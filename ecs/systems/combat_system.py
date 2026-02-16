@@ -1,5 +1,5 @@
 import esper
-from ecs.components import Stats, AttackIntent, Name
+from ecs.components import Stats, EffectiveStats, AttackIntent, Name
 
 class CombatSystem(esper.Processor):
     def process(self):
@@ -7,13 +7,17 @@ class CombatSystem(esper.Processor):
             target = intent.target_entity
             
             try:
-                attacker_stats = esper.component_for_entity(attacker, Stats)
+                # Use EffectiveStats for calculations if available, fall back to base Stats
+                attacker_eff = esper.try_component(attacker, EffectiveStats) or esper.component_for_entity(attacker, Stats)
+                target_eff = esper.try_component(target, EffectiveStats) or esper.component_for_entity(target, Stats)
+                
+                # Base Stats component is still needed for persistent HP modification
                 target_stats = esper.component_for_entity(target, Stats)
                 
-                # Calculate damage
-                damage = max(0, attacker_stats.power - target_stats.defense)
+                # Calculate damage using effective values
+                damage = max(0, attacker_eff.power - target_eff.defense)
                 
-                # Subtract HP
+                # Subtract HP from the base stats
                 target_stats.hp -= damage
                 
                 # Get names for logging

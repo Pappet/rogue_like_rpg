@@ -1,7 +1,7 @@
 import esper
 import math
 from config import GameStates, TILE_SIZE
-from ecs.components import Position, Renderable, Stats, Inventory, Targeting, Action, ActionList, Portal, Name, Description
+from ecs.components import Position, Renderable, Stats, EffectiveStats, Inventory, Targeting, Action, ActionList, Portal, Name, Description
 from map.tile import VisibilityState
 from map.tile_registry import TileRegistry
 
@@ -47,9 +47,9 @@ class ActionSystem(esper.Processor):
         return False
 
     def start_targeting(self, entity, action):
-        # 1. Check resources
-        stats = esper.component_for_entity(entity, Stats)
-        if action.cost_mana > stats.mana:
+        # 1. Check resources using effective stats
+        eff = esper.try_component(entity, EffectiveStats) or esper.component_for_entity(entity, Stats)
+        if action.cost_mana > eff.mana:
             return False # Not enough mana
         
         # 2. Transition to targeting mode
@@ -66,7 +66,7 @@ class ActionSystem(esper.Processor):
         )
         
         if action.targeting_mode == "inspect":
-            targeting.range = stats.perception
+            targeting.range = eff.perception
 
         if action.targeting_mode == "auto":
             # Find potential targets in LoS and range
@@ -171,14 +171,14 @@ class ActionSystem(esper.Processor):
                 if tile_visibility != VisibilityState.VISIBLE:
                     return False
 
-            stats = esper.component_for_entity(entity, Stats)
-
-            # Final resource check
-            if targeting.action.cost_mana > stats.mana:
+            # Final resource check using effective stats
+            eff = esper.try_component(entity, EffectiveStats) or esper.component_for_entity(entity, Stats)
+            if targeting.action.cost_mana > eff.mana:
                 self.cancel_targeting(entity)
                 return False
 
-            # Consume resources
+            # Consume resources from base stats
+            stats = esper.component_for_entity(entity, Stats)
             stats.mana -= targeting.action.cost_mana
 
             # Dispatch inspection output for inspect mode
