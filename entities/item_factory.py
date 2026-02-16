@@ -1,5 +1,5 @@
 from entities.item_registry import ItemRegistry
-from ecs.components import Name, Renderable, Portable, ItemMaterial, StatModifiers, Position
+from ecs.components import Name, Renderable, Portable, ItemMaterial, StatModifiers, Position, Equippable, SlotType
 from config import SpriteLayer
 
 class ItemFactory:
@@ -38,6 +38,9 @@ class ItemFactory:
         
         world.add_component(entity, Portable(weight=template.weight))
         world.add_component(entity, ItemMaterial(material=template.material))
+
+        if template.slot:
+            world.add_component(entity, Equippable(slot=SlotType(template.slot)))
         
         if template.stats:
             world.add_component(entity, StatModifiers(

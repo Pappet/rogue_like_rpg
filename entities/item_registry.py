@@ -21,6 +21,7 @@ class ItemTemplate:
     weight: float      # kg
     material: str
     description: str = ""
+    slot: Optional[str] = None
     stats: Dict[str, int] = field(default_factory=dict)
 
 
