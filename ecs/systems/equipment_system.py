@@ -3,7 +3,7 @@ from ecs.components import Stats, Equipment, EffectiveStats, StatModifiers
 
 class EquipmentSystem(esper.Processor):
     def process(self):
-        for ent, (stats, equipment) in self.world.get_components(Stats, Equipment):
+        for ent, (stats, equipment) in esper.get_components(Stats, Equipment):
             # 1. Start with base values
             max_hp = stats.base_max_hp
             power = stats.base_power
@@ -17,9 +17,9 @@ class EquipmentSystem(esper.Processor):
             
             # 2. Iterate over equipped items
             for slot, item_id in equipment.slots.items():
-                if item_id is not None and self.world.entity_exists(item_id):
-                    if self.world.has_component(item_id, StatModifiers):
-                        mods = self.world.component_for_entity(item_id, StatModifiers)
+                if item_id is not None and esper.entity_exists(item_id):
+                    if esper.has_component(item_id, StatModifiers):
+                        mods = esper.component_for_entity(item_id, StatModifiers)
                         hp_bonus += mods.hp
                         max_hp += mods.hp
                         power += mods.power
@@ -35,8 +35,8 @@ class EquipmentSystem(esper.Processor):
             current_mana = stats.mana + mana_bonus
             
             # 4. Update or create the EffectiveStats component
-            if self.world.has_component(ent, EffectiveStats):
-                eff = self.world.component_for_entity(ent, EffectiveStats)
+            if esper.has_component(ent, EffectiveStats):
+                eff = esper.component_for_entity(ent, EffectiveStats)
                 eff.hp = current_hp
                 eff.max_hp = max_hp
                 eff.power = power
@@ -56,4 +56,4 @@ class EquipmentSystem(esper.Processor):
                     perception=perception,
                     intelligence=intelligence
                 )
-                self.world.add_component(ent, eff)
+                esper.add_component(ent, eff)
