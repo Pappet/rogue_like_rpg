@@ -164,6 +164,11 @@ class ChaseData:
 
 
 @dataclass
+class LootTable:
+    entries: List[Tuple[str, float]] = field(default_factory=list)
+
+
+@dataclass
 class WanderData:
     """Stub component for wander state. Fields added when wander behavior is implemented."""
     pass
