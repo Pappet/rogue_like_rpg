@@ -75,9 +75,15 @@ class UISystem(esper.Processor):
         pygame.draw.rect(surface, (40, 40, 40), self.sidebar_rect)
         pygame.draw.line(surface, (100, 100, 100), (SCREEN_WIDTH - SIDEBAR_WIDTH, HEADER_HEIGHT), (SCREEN_WIDTH - SIDEBAR_WIDTH, SCREEN_HEIGHT), 2)
         
+        # --- Resource Bars ---
+        next_y = self.sidebar_rect.y + 15
+        next_y = self.draw_stats_bars(surface, self.sidebar_rect.x + 10, next_y, SIDEBAR_WIDTH - 20)
+        
         # Actions Title
+        next_y += 10
         title_surf = self.font.render("Actions", True, (200, 200, 200))
-        surface.blit(title_surf, (self.sidebar_rect.x + 10, self.sidebar_rect.y + 10))
+        surface.blit(title_surf, (self.sidebar_rect.x + 10, next_y))
+        next_y += 35
         
         # Get ActionList component
         try:
@@ -91,7 +97,7 @@ class UISystem(esper.Processor):
             
             if i == action_list.selected_idx:
                 # Draw selection highlight
-                bg_rect = pygame.Rect(self.sidebar_rect.x + 5, self.sidebar_rect.y + 45 + i * 30, SIDEBAR_WIDTH - 10, 25)
+                bg_rect = pygame.Rect(self.sidebar_rect.x + 5, next_y + i * 30, SIDEBAR_WIDTH - 10, 25)
                 color = (80, 80, 80) if available else (60, 60, 60)
                 pygame.draw.rect(surface, color, bg_rect)
             
@@ -101,15 +107,15 @@ class UISystem(esper.Processor):
                 color = (80, 80, 80)
                 
             action_surf = self.small_font.render(action.name, True, color)
-            surface.blit(action_surf, (self.sidebar_rect.x + 15, self.sidebar_rect.y + 48 + i * 30))
+            surface.blit(action_surf, (self.sidebar_rect.x + 15, next_y + 3 + i * 30))
             
             # Show mana cost if any
             if action.cost_mana > 0:
                 cost_surf = self.small_font.render(f"{action.cost_mana} MP", True, (100, 100, 255))
-                surface.blit(cost_surf, (self.sidebar_rect.x + SIDEBAR_WIDTH - cost_surf.get_width() - 10, self.sidebar_rect.y + 48 + i * 30))
+                surface.blit(cost_surf, (self.sidebar_rect.x + SIDEBAR_WIDTH - cost_surf.get_width() - 10, next_y + 3 + i * 30))
 
         # --- Equipment Section ---
-        next_y = self.sidebar_rect.y + 45 + len(action_list.actions) * 30 + 20
+        next_y = next_y + len(action_list.actions) * 30 + 20
         equip_title = self.font.render("Equipment", True, (200, 200, 200))
         surface.blit(equip_title, (self.sidebar_rect.x + 10, next_y))
         next_y += 35
@@ -157,13 +163,62 @@ class UISystem(esper.Processor):
         except KeyError:
             pass
 
-    def is_action_available(self, action):
+    def draw_stats_bars(self, surface, x, y, width):
         try:
+            eff = esper.try_component(self.player_entity, EffectiveStats)
             stats = esper.component_for_entity(self.player_entity, Stats)
-            if action.cost_mana > stats.mana:
-                return False
-            # Add other resource checks here
-        except KeyError:
-            return False
             
-        return True
+            hp = eff.hp if eff else stats.hp
+            max_hp = eff.max_hp if eff else stats.max_hp
+            mana = eff.mana if eff else stats.mana
+            max_mana = eff.max_mana if eff else stats.max_mana
+            
+            # HP Bar
+            self._draw_bar(surface, x, y, width, 18, hp, max_hp, (180, 30, 30), "HP")
+            # Mana Bar
+            self._draw_bar(surface, x, y + 25, width, 18, mana, max_mana, (30, 30, 180), "MP")
+            
+            return y + 50
+        except KeyError:
+            return y
+
+    def _draw_bar(self, surface, x, y, width, height, val, max_val, color, label):
+        # Background
+        pygame.draw.rect(surface, (20, 20, 20), (x, y, width, height))
+        if max_val > 0:
+            fill_width = int((val / max_val) * width)
+            fill_width = max(0, min(width, fill_width))
+            if fill_width > 0:
+                pygame.draw.rect(surface, color, (x, y, fill_width, height))
+        # Border
+        pygame.draw.rect(surface, (100, 100, 100), (x, y, width, height), 1)
+        
+        # Label and values
+        text = f"{label}: {val}/{max_val}"
+        text_surf = self.small_font.render(text, True, (255, 255, 255))
+        # Center text in bar
+        text_x = x + (width - text_surf.get_width()) // 2
+        text_y = y + (height - text_surf.get_height()) // 2
+        surface.blit(text_surf, (text_x, text_y))
+
+        def is_action_available(self, action):
+
+            try:
+
+                eff = esper.try_component(self.player_entity, EffectiveStats) or esper.component_for_entity(self.player_entity, Stats)
+
+                if action.cost_mana > eff.mana:
+
+                    return False
+
+                # Add other resource checks here
+
+            except KeyError:
+
+                return False
+
+                
+
+            return True
+
+    
