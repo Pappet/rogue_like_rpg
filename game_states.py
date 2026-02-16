@@ -16,7 +16,8 @@ from ecs.systems.death_system import DeathSystem
 from ecs.systems.ai_system import AISystem
 from ecs.systems.equipment_system import EquipmentSystem
 from ecs.systems.debug_render_system import DebugRenderSystem
-from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats, Inventory, Name, Portable
+from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats, Inventory, Name, Portable, Equipment, Equippable, SlotType
+import services.equipment_service as equipment_service
 from map.tile import VisibilityState
 from config import SCREEN_WIDTH, SCREEN_HEIGHT
 
@@ -585,6 +586,9 @@ class InventoryState(GameState):
                     self.selected_idx = (self.selected_idx + 1) % len(inventory.items)
                 elif event.key == pygame.K_d:
                     self.drop_item()
+                elif event.key == pygame.K_e or event.key == pygame.K_RETURN:
+                    selected_item_id = inventory.items[self.selected_idx]
+                    equipment_service.equip_item(self.world, self.player_entity, selected_item_id)
             except KeyError:
                 pass
 
@@ -597,6 +601,19 @@ class InventoryState(GameState):
             if not inventory.items or self.selected_idx >= len(inventory.items):
                 return
             
+            item_ent = inventory.items[self.selected_idx]
+
+            # Before dropping, check if item is equipped
+            try:
+                equipment = self.world.component_for_entity(self.player_entity, Equipment)
+                for slot, equipped_id in equipment.slots.items():
+                    if equipped_id == item_ent:
+                        equipment_service.unequip_item(self.world, self.player_entity, slot)
+                        break
+            except KeyError:
+                pass
+            
+            # Now drop it
             item_ent = inventory.items.pop(self.selected_idx)
             
             # Get player position
@@ -661,6 +678,19 @@ class InventoryState(GameState):
                         item_name = name_comp.name
                     except KeyError:
                         item_name = f"Unknown Item ({item_id})"
+
+                    # Check if equipped
+                    try:
+                        equipment = self.world.component_for_entity(self.player_entity, Equipment)
+                        is_equipped = False
+                        for equipped_id in equipment.slots.values():
+                            if equipped_id == item_id:
+                                is_equipped = True
+                                break
+                        if is_equipped:
+                            item_name += " (E)"
+                    except KeyError:
+                        pass
 
                     color = (255, 255, 255)
                     if i == self.selected_idx:
