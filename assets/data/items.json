@@ -64,6 +64,10 @@
     "weight": 0.5,
     "material": "glass",
     "description": "A red liquid that restores health.",
-    "stats": {}
+    "stats": {},
+    "consumable": {
+      "effect_type": "heal_hp",
+      "amount": 10
+    }
   }
 ]
