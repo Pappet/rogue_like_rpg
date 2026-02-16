@@ -18,6 +18,7 @@ from ecs.systems.equipment_system import EquipmentSystem
 from ecs.systems.debug_render_system import DebugRenderSystem
 from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats, Inventory, Name, Portable, Equipment, Equippable, SlotType
 import services.equipment_service as equipment_service
+import services.consumable_service as consumable_service
 from map.tile import VisibilityState
 from config import SCREEN_WIDTH, SCREEN_HEIGHT
 
@@ -589,6 +590,13 @@ class InventoryState(GameState):
                 elif event.key == pygame.K_e or event.key == pygame.K_RETURN:
                     selected_item_id = inventory.items[self.selected_idx]
                     equipment_service.equip_item(self.world, self.player_entity, selected_item_id)
+                elif event.key == pygame.K_u:
+                    selected_item_id = inventory.items[self.selected_idx]
+                    if consumable_service.use_item(self.world, self.player_entity, selected_item_id):
+                        if "turn_system" in self.persist:
+                            self.persist["turn_system"].end_player_turn()
+                        self.done = True
+                        self.next_state = "GAME"
             except KeyError:
                 pass
 
@@ -653,16 +661,23 @@ class InventoryState(GameState):
         surface.blit(overlay, (0, 0))
 
         # Draw inventory box
-        box_width = 400
+        box_width = 760
         box_height = 500
         box_x = (SCREEN_WIDTH - box_width) // 2
         box_y = (SCREEN_HEIGHT - box_height) // 2
         pygame.draw.rect(surface, (50, 50, 50), (box_x, box_y, box_width, box_height))
         pygame.draw.rect(surface, (200, 200, 200), (box_x, box_y, box_width, box_height), 2)
+        
+        # Vertical separator
+        pygame.draw.line(surface, (100, 100, 100), (box_x + 380, box_y + 20), (box_x + 380, box_y + box_height - 20), 1)
 
         # Draw title
         title_text = self.title_font.render("Inventory", True, (255, 255, 255))
         surface.blit(title_text, (box_x + 20, box_y + 20))
+        
+        # Draw Details label
+        details_label = self.title_font.render("Details", True, (255, 255, 255))
+        surface.blit(details_label, (box_x + 400, box_y + 20))
 
         # Draw items
         try:
@@ -696,11 +711,28 @@ class InventoryState(GameState):
                     if i == self.selected_idx:
                         color = (255, 255, 0)
                         # Draw selection highlight
-                        highlight_rect = pygame.Rect(box_x + 10, box_y + 80 + i * 35, box_width - 20, 30)
+                        highlight_rect = pygame.Rect(box_x + 10, box_y + 80 + i * 35, 360, 30)
                         pygame.draw.rect(surface, (100, 100, 100), highlight_rect)
 
                     item_text = self.font.render(item_name, True, color)
                     surface.blit(item_text, (box_x + 20, box_y + 85 + i * 35))
+                
+                # Draw selected item details
+                if self.selected_idx < len(inventory.items):
+                    item_id = inventory.items[self.selected_idx]
+                    detailed_desc = ActionSystem.get_detailed_description(self.world, item_id)
+                    lines = detailed_desc.split('\n')
+                    for j, line in enumerate(lines):
+                        detail_text = self.font.render(line, True, (200, 200, 200))
+                        surface.blit(detail_text, (box_x + 400, box_y + 80 + j * 30))
+                    
+                    # Also show usage hints
+                    hint_y = box_y + box_height - 60
+                    hints = ["[U] Use  [E] Equip  [D] Drop"]
+                    for k, hint in enumerate(hints):
+                        hint_text = self.font.render(hint, True, (150, 150, 255))
+                        surface.blit(hint_text, (box_x + 400, hint_y + k * 30))
+                        
         except KeyError:
             empty_text = self.font.render("No inventory found.", True, (150, 150, 150))
             surface.blit(empty_text, (box_x + 20, box_y + 80))
