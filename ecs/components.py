@@ -55,6 +55,7 @@ class Stats:
     base_max_mana: int = 0
     base_perception: int = 0
     base_intelligence: int = 0
+    max_carry_weight: float = 20.0
 
 @dataclass
 class StatModifiers:
