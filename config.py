@@ -54,29 +54,15 @@ class SpriteLayer(Enum):
 
 class GameStates(Enum):
 
-
-
-
-
     PLAYER_TURN = 1
-
-
-
-
 
     ENEMY_TURN = 2
 
-
-
-
-
     TARGETING = 3
 
-
-
-
-
     WORLD_MAP = 4
+
+    INVENTORY = 5
 
 
 
