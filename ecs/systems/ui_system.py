@@ -201,24 +201,14 @@ class UISystem(esper.Processor):
         text_y = y + (height - text_surf.get_height()) // 2
         surface.blit(text_surf, (text_x, text_y))
 
-        def is_action_available(self, action):
-
-            try:
-
-                eff = esper.try_component(self.player_entity, EffectiveStats) or esper.component_for_entity(self.player_entity, Stats)
-
-                if action.cost_mana > eff.mana:
-
-                    return False
-
-                # Add other resource checks here
-
-            except KeyError:
-
+    def is_action_available(self, action):
+        try:
+            eff = esper.try_component(self.player_entity, EffectiveStats) or esper.component_for_entity(self.player_entity, Stats)
+            if action.cost_mana > eff.mana:
                 return False
-
-                
-
-            return True
+            # Add other resource checks here
+        except KeyError:
+            return False
+        return True
 
     
