@@ -136,7 +136,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 **Plans:**
 - [x] 25-01-PLAN.md — Equipment Infrastructure
 - [x] 25-02-PLAN.md — Equipment System and Integration
-- [ ] 25-03-PLAN.md — Equipment Logic and UI
+- [x] 25-03-PLAN.md — Equipment Logic and UI
 - [ ] 25-04-PLAN.md — Combat Integration
 
 **Success Criteria:**
@@ -188,5 +188,5 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 22. Debug System Refinement | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 23. Item Entity Foundation | v1.4 | 2/2 | Complete | 2026-02-15 |
 | 24. Pickup, Inventory Screen, and Loot Drops | v1.4 | 3/3 | Complete | 2026-02-16 |
-| 25. Equipment Slots and Combat Integration | v1.4 | 2/4 | In Progress | - |
+| 25. Equipment Slots and Combat Integration | v1.4 | 3/4 | In Progress | - |
 | 26. Consumables and Polish | v1.4 | 0/TBD | Not started | - |

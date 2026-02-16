@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 25 of 26 (Equipment Slots and Combat Integration)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-16 — Completed Phase 25 Plan 02 (EquipmentSystem).
+Last activity: 2026-02-16 — Completed Phase 25 Plan 03 (Equipment Logic and UI).
 
-Progress: [█████████░] 92% (v1.4)
+Progress: [██████████] 95% (v1.4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.4): 7
+- Total plans completed (v1.4): 8
 - Average duration: 23m
-- Total execution time: 160m
+- Total execution time: 183m
 
 **By Phase:**
 
@@ -29,9 +29,9 @@ Progress: [█████████░] 92% (v1.4)
 |-------|-------|-------|----------|
 | 23 | 2 | 50m | 25m |
 | 24 | 3 | 75m | 25m |
-| 25 | 2 | 35m | 17m |
+| 25 | 3 | 58m | 19m |
 
-**Recent Trend:** Completed Phase 25 Plan 01.
+**Recent Trend:** Completed Phase 25 Plan 03.
 
 ## Quick Tasks Completed
 
@@ -56,6 +56,7 @@ Progress: [█████████░] 92% (v1.4)
 - **Equipment Inventory Persistence:** Equipped items remain in the `Inventory.items` list for simple UI listing and persistence; equipment status is tracked via entity ID references in the `Equipment.slots` map. (v1.4 refinement)
 - **Equipment Slot Definitions:** Uses `SlotType` enum (HEAD, BODY, MAIN_HAND, OFF_HAND, FEET, ACCESSORY).
 - **Equipment Component:** Stores mapping of `SlotType` to entity ID references.
+- **Equipment Interaction:** Pressing E/Enter in inventory toggles equipment status via `equipment_service`; equipped items are marked with `(E)` in UI; sidebar displays full loadout and combat stats from `EffectiveStats`. (v1.4 UI refinement)
 
 ### Pending Todos
 
