@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 24 of 26 (Pickup, Inventory Screen, and Loot Drops)
-Plan: 2 of 3 in current phase (Phase 24-02 Complete)
+Plan: 3 of 3 in current phase (Phase 24 Complete)
 Status: In progress
-Last activity: 2026-02-16 — Completed Phase 24-02 (Pickup and Drop Logic)
+Last activity: 2026-02-16 — Completed Phase 24-03 (Loot Drops)
 
-Progress: [█████░░░░░] 50% (v1.4)
+Progress: [██████░░░░] 60% (v1.4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.4): 4
+- Total plans completed (v1.4): 5
 - Average duration: 25m
-- Total execution time: 100m
+- Total execution time: 125m
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 23 | 2 | 50m | 25m |
-| 24 | 2 | 50m | 25m |
+| 24 | 3 | 75m | 25m |
 
-**Recent Trend:** Completed Phase 24-02.
+**Recent Trend:** Completed Phase 24.
 
 *Updated after each plan completion*
 
@@ -44,6 +44,8 @@ Progress: [█████░░░░░] 50% (v1.4)
 - **LootSystem as separate event handler:** Registered alongside DeathSystem on "entity_died"; keeps loot spawning decoupled from corpse transformation and independently testable.
 - **Stats component base fields:** Explicitly named `base_hp`, `base_power`, etc., added to `Stats` component to support the Effective Stats pattern.
 - **ItemFactory Implementation:** `ItemFactory` creates items from templates. Items on ground have a `Position`, while carried items (in an inventory) do not.
+- **Spatial Loot Scattering:** If an entity's death tile is blocked, loot drops search 8 neighbors for a walkable tile, preventing lost items in walls. (v1.4 loot policy)
+- **DeathSystem as Loot Spawner:** LootTable processing is integrated directly into DeathSystem's `on_entity_died` handler, leveraging the existing map-aware system for spatial checks.
 
 ### Pending Todos
 
