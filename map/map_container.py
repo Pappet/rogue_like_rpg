@@ -30,6 +30,11 @@ class MapContainer:
             return layer.tiles[y][x]
         return None
 
+    def is_walkable(self, x: int, y: int) -> bool:
+        """Returns True if the tile at (x, y) on layer 0 is walkable."""
+        tile = self.get_tile(x, y, 0)
+        return tile.walkable if tile else False
+
     def on_exit(self, current_turn: int):
         """Updates the last visited turn and transitions VISIBLE tiles to SHROUDED."""
         self.last_visited_turn = current_turn

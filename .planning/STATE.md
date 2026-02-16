@@ -30,7 +30,13 @@ Progress: [████████░░] 80% (v1.4)
 | 23 | 2 | 50m | 25m |
 | 24 | 3 | 75m | 25m |
 
-**Recent Trend:** Completed Phase 24.
+**Recent Trend:** Completed Phase 24 and fixed MapContainer attribute error.
+
+## Quick Tasks Completed
+
+| Task | Description | Date |
+|------|-------------|------|
+| fix-map-container-attribute-error | Implement `is_walkable` in `MapContainer` | 2026-02-16 |
 
 *Updated after each plan completion*
 
