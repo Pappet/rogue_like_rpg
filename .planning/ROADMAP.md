@@ -92,7 +92,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 1. An item placed on the ground via `ItemFactory.create_on_ground()` renders on the map at its tile position using the existing `RenderSystem` — no changes to the render pipeline required.
 2. Item templates defined in `assets/data/items.json` are loaded through the `ItemRegistry`/`ItemFactory` pipeline; a missing or malformed template raises a clear error at startup, not silently at runtime.
-3. Each item entity carries a `Portable` component with a `weight` field (kg) and an `ItemMaterial` component with a material type (wood, metal, glass, etc.).
+3. Each item entity carries a `Portable` component with a `weight` weight field (kg) and an `ItemMaterial` component with a material type (wood, metal, glass, etc.).
 4. Picking up an item and crossing a portal into a new map and back returns the carried item with its entity ID and all components intact — no silent destruction or orphaned references.
 5. A `get_entity_closure(player_entity)` helper returns the player plus all items in `Inventory.items` plus equipped item IDs; `transition_map()` passes this full list to `MapContainer.freeze()`.
 
@@ -134,18 +134,18 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 **Plans:** 4 plans
 
 **Plans:**
-- [ ] 25-01-PLAN.md — Equipment Infrastructure
+- [x] 25-01-PLAN.md — Equipment Infrastructure
 - [ ] 25-02-PLAN.md — Equipment System and Integration
 - [ ] 25-03-PLAN.md — Equipment Logic and UI
 - [ ] 25-04-PLAN.md — Combat Integration
 
 **Success Criteria:**
 
-1. From the inventory screen, pressing E (or Enter) on an equippable item moves it from `Inventory.items` to the matching equipment slot; if that slot was occupied, the displaced item moves back into `Inventory.items` automatically.
-2. Pressing U (or a dedicated unequip key) from the equipment loadout view moves the selected item from its slot back into `Inventory.items`.
-3. The sidebar UI displays the player's current equipment loadout (head, body, main_hand, off_hand, feet, accessory) with item names or "—" for empty slots.
-4. `EquipmentSystem` computes an `EffectiveStats` component each frame from base `Stats` plus the sum of all equipped item bonuses; base `Stats` values are never mutated by equip or unequip actions.
-5. `CombatSystem` uses `EffectiveStats` for all damage and defense calculations; equipping a sword increases attack output and unequipping it returns damage to the base value in the next combat exchange.
+1. From the inventory screen, pressing E (or Enter) on an equippable item toggles its equipment status in the matching slot; items remain in the inventory list and are marked with (E) when equipped.
+2. The sidebar UI displays the player's current equipment loadout (head, body, main_hand, off_hand, feet, accessory) and effective combat stats (Power, Defense).
+3. `EquipmentSystem` computes an `EffectiveStats` component each frame from base `Stats` plus the sum of all equipped item bonuses; base `Stats` values are never mutated by equip or unequip actions.
+4. `CombatSystem` uses `EffectiveStats` for all damage and defense calculations; equipping a sword increases attack output and unequipping it returns damage to the base value.
+5. `ActionSystem` and UI bars (HP/MP) correctly handle increases to maximum HP/MP from equipment bonuses using `EffectiveStats`.
 
 ---
 

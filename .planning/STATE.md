@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.4 Item & Inventory System — Phase 24: Pickup, Inventory Screen, and Loot Drops
+**Current Focus:** v1.4 Item & Inventory System — Phase 25: Equipment Slots and Combat Integration
 
 ## Current Position
 
-Phase: 24 of 26 (Pickup, Inventory Screen, and Loot Drops)
-Plan: 3 of 3 in current phase (Phase 24 Complete)
-Status: Complete
-Last activity: 2026-02-16 — Completed Phase 24-03 (Loot Drops)
+Phase: 25 of 26 (Equipment Slots and Combat Integration)
+Plan: 1 of 4 in current phase
+Status: In Progress
+Last activity: 2026-02-16 — Completed Phase 25 Plan 01 (Foundation).
 
-Progress: [████████░░] 80% (v1.4)
+Progress: [█████████░] 90% (v1.4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.4): 5
-- Average duration: 25m
-- Total execution time: 125m
+- Total plans completed (v1.4): 6
+- Average duration: 23m
+- Total execution time: 140m
 
 **By Phase:**
 
@@ -29,8 +29,9 @@ Progress: [████████░░] 80% (v1.4)
 |-------|-------|-------|----------|
 | 23 | 2 | 50m | 25m |
 | 24 | 3 | 75m | 25m |
+| 25 | 1 | 15m | 15m |
 
-**Recent Trend:** Completed Phase 24 and fixed MapContainer attribute error.
+**Recent Trend:** Completed Phase 25 Plan 01.
 
 ## Quick Tasks Completed
 
@@ -52,6 +53,9 @@ Progress: [████████░░] 80% (v1.4)
 - **ItemFactory Implementation:** `ItemFactory` creates items from templates. Items on ground have a `Position`, while carried items (in an inventory) do not.
 - **Spatial Loot Scattering:** If an entity's death tile is blocked, loot drops search 8 neighbors for a walkable tile, preventing lost items in walls. (v1.4 loot policy)
 - **DeathSystem as Loot Spawner:** LootTable processing is integrated directly into DeathSystem's `on_entity_died` handler, leveraging the existing map-aware system for spatial checks.
+- **Equipment Inventory Persistence:** Equipped items remain in the `Inventory.items` list for simple UI listing and persistence; equipment status is tracked via entity ID references in the `Equipment.slots` map. (v1.4 refinement)
+- **Equipment Slot Definitions:** Uses `SlotType` enum (HEAD, BODY, MAIN_HAND, OFF_HAND, FEET, ACCESSORY).
+- **Equipment Component:** Stores mapping of `SlotType` to entity ID references.
 
 ### Pending Todos
 
@@ -63,7 +67,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-15
-Stopped at: Completed Phase 23.
-Resume file: .planning/phases/24-pickup-inventory-screen-loot-drops/24-01-PLAN.md
+Last session: 2026-02-16
+Stopped at: Completed Phase 24 and refined Phase 25 plans.
+Resume file: .planning/phases/25-equipment-slots-combat-integration/25-01-PLAN.md
 Process Group PGID: 113499
