@@ -6,7 +6,7 @@
 - ✅ **v1.1 Investigation System** — Phases 12-14 (shipped 2026-02-14)
 - ✅ **v1.2 AI Infrastructure** — Phases 15-18 (shipped 2026-02-15)
 - ✅ **v1.3 Debug Overlay System** — Phases 19-22 (shipped 2026-02-15)
-- 🚧 **v1.4 Item & Inventory System** — Phases 23-26 (in progress)
+- ✅ **v1.4 Item & Inventory System** — Phases 23-26 (shipped 2026-02-16)
 
 ## Phases
 
@@ -161,8 +161,8 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 **Plans:** 2 plans
 
 **Plans:**
-- [ ] 26-01-PLAN.md — Consumable Foundation
-- [ ] 26-02-PLAN.md — Use Action and Inspection Polish
+- [x] 26-01-PLAN.md — Consumable Foundation
+- [x] 26-02-PLAN.md — Use Action and Inspection Polish
 
 **Success Criteria:**
 
@@ -191,4 +191,4 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 23. Item Entity Foundation | v1.4 | 2/2 | Complete | 2026-02-15 |
 | 24. Pickup, Inventory Screen, and Loot Drops | v1.4 | 3/3 | Complete | 2026-02-16 |
 | 25. Equipment Slots and Combat Integration | v1.4 | 5/5 | Complete | 2026-02-16 |
-| 26. Consumables and Polish | v1.4 | 0/2 | Not started | - |
+| 26. Consumables and Polish | v1.4 | 2/2 | Complete | 2026-02-16 |
