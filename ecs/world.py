@@ -13,3 +13,5 @@ def reset_world():
     Clears the current world state.
     """
     esper.clear_database()
+    if hasattr(esper, "event_registry"):
+        esper.event_registry.clear()
