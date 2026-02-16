@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.4 Item & Inventory System — Complete
+**Current Focus:** v1.4 Item & Inventory System — Bug Fixing
 
 ## Current Position
 
 Phase: 26 of 26 (Consumables and Polish)
-Plan: 2 of 2 in current phase
-Status: Complete
-Last activity: 2026-02-16 — Completed Phase 26: Consumables and Polish (Plan 02). Milestone v1.4 Complete.
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-16 — Fixed AttributeError in ConsumableService call.
 
 Progress: [██████████] 100% (Phase 26) / 100% (v1.4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.4): 12
-- Average duration: 21m
-- Total execution time: 275m
+- Total plans completed (v1.4): 13
+- Average duration: 20m
+- Total execution time: 280m
 
 **By Phase:**
 
@@ -30,15 +30,16 @@ Progress: [██████████] 100% (Phase 26) / 100% (v1.4)
 | 23 | 2 | 50m | 25m |
 | 24 | 3 | 75m | 25m |
 | 25 | 5 | 110m | 22m |
-| 26 | 2 | 40m | 20m |
+| 26 | 3 | 45m | 15m |
 
-**Recent Trend:** Completed v1.4 milestone.
+**Recent Trend:** Completed v1.4 bug fixes efficiently.
 
 ## Quick Tasks Completed
 
 | Task | Description | Date |
 |------|-------------|------|
 | fix-map-container-attribute-error | Implement `is_walkable` in `MapContainer` | 2026-02-16 |
+| fix-consumable-service-call | Fix AttributeError in `ConsumableService.use_item` | 2026-02-16 |
 
 *Updated after each plan completion*
 
@@ -64,7 +65,7 @@ Progress: [██████████] 100% (Phase 26) / 100% (v1.4)
 
 ### Pending Todos
 
-None.
+- [ ] Milestone v1.5 Planning (Dungeon Progression / Map Generation)
 
 ### Blockers/Concerns
 
@@ -74,7 +75,11 @@ None.
 
 Last session: 2026-02-16
 Stopped at: Completed Phase 26. v1.4 Milestone Complete.
-Resume file: .planning/phases/26-consumables-and-polish/26-02-SUMMARY.md
+Resume file: .planning/phases/26-consumables-and-polish/26-03-SUMMARY.md
 Process Group PGID: 113499
 Process Group PGID: 121781
 Process Group PGID: 122100
+Process Group PGID: 122539
+Process Group PGID: 122553
+Process Group PGID: 122565
+Process Group PGID: 122654
