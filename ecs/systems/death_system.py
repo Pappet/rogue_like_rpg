@@ -3,6 +3,7 @@ import random
 from ecs.components import Name, Renderable, Blocker, AI, Corpse, Stats, AIBehaviorState, ChaseData, WanderData, LootTable, Position
 from config import SpriteLayer
 from entities.item_factory import ItemFactory
+from ecs.world import get_world
 
 class DeathSystem(esper.Processor):
     def __init__(self):
@@ -60,11 +61,12 @@ class DeathSystem(esper.Processor):
 
     def _handle_loot_drops(self, loot_table, pos):
         """Roll for loot and spawn items, scattering if needed."""
+        world = get_world()
         for template_id, chance in loot_table.entries:
             if random.random() < chance:
                 # Find a valid position for the loot
                 drop_x, drop_y = self._find_drop_position(pos.x, pos.y)
-                ItemFactory.create_on_ground(self.world, template_id, drop_x, drop_y, pos.layer)
+                ItemFactory.create_on_ground(world, template_id, drop_x, drop_y, pos.layer)
                 esper.dispatch_event("log_message", f"The {template_id} drops to the ground.")
 
     def _find_drop_position(self, x, y):
