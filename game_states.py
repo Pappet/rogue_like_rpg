@@ -14,6 +14,7 @@ from ecs.systems.action_system import ActionSystem
 from ecs.systems.combat_system import CombatSystem
 from ecs.systems.death_system import DeathSystem
 from ecs.systems.ai_system import AISystem
+from ecs.systems.equipment_system import EquipmentSystem
 from ecs.systems.debug_render_system import DebugRenderSystem
 from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats, Inventory, Name, Portable
 from map.tile import VisibilityState
@@ -123,8 +124,13 @@ class Game(GameState):
             self.ai_system = AISystem()
             self.persist["ai_system"] = self.ai_system
 
+        self.equipment_system = self.persist.get("equipment_system")
+        if not self.equipment_system:
+            self.equipment_system = EquipmentSystem()
+            self.persist["equipment_system"] = self.equipment_system
+
         # Clear existing processors to avoid duplicates when re-entering state
-        for processor_type in [VisibilitySystem, MovementSystem, CombatSystem, TurnSystem, DeathSystem]:
+        for processor_type in [VisibilitySystem, MovementSystem, CombatSystem, TurnSystem, DeathSystem, EquipmentSystem]:
             try:
                 esper.remove_processor(processor_type)
             except KeyError:
@@ -136,6 +142,7 @@ class Game(GameState):
         esper.add_processor(self.combat_system)
         esper.add_processor(self.death_system)
         esper.add_processor(self.turn_system)
+        esper.add_processor(self.equipment_system)
         
         if not self.persist.get("player_entity"):
             party_service = PartyService()
