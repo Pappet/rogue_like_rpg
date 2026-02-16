@@ -592,7 +592,7 @@ class InventoryState(GameState):
                     equipment_service.equip_item(self.world, self.player_entity, selected_item_id)
                 elif event.key == pygame.K_u:
                     selected_item_id = inventory.items[self.selected_idx]
-                    if consumable_service.use_item(self.world, self.player_entity, selected_item_id):
+                    if consumable_service.ConsumableService.use_item(self.world, self.player_entity, selected_item_id):
                         if "turn_system" in self.persist:
                             self.persist["turn_system"].end_player_turn()
                         self.done = True
