@@ -158,11 +158,12 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 **Requirements:** CONS-01, CONS-02, CONS-05
 
-**Plans:** 2 plans
+**Plans:** 3 plans
 
 **Plans:**
 - [x] 26-01-PLAN.md — Consumable Foundation
 - [x] 26-02-PLAN.md — Use Action and Inspection Polish
+- [ ] 26-03-PLAN.md — Fix ConsumableService AttributeError
 
 **Success Criteria:**
 
@@ -191,4 +192,4 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 23. Item Entity Foundation | v1.4 | 2/2 | Complete | 2026-02-15 |
 | 24. Pickup, Inventory Screen, and Loot Drops | v1.4 | 3/3 | Complete | 2026-02-16 |
 | 25. Equipment Slots and Combat Integration | v1.4 | 5/5 | Complete | 2026-02-16 |
-| 26. Consumables and Polish | v1.4 | 2/2 | Complete | 2026-02-16 |
+| 26. Consumables and Polish | v1.4 | 2/3 | In Progress | - |
