@@ -244,7 +244,9 @@ class ResourceLoader:
                 weight=float(item["weight"]),
                 material=item["material"],
                 description=item.get("description", ""),
+                slot=item.get("slot"),
                 stats=item.get("stats", {}),
+                consumable=item.get("consumable"),
             )
 
             ItemRegistry.register(template)

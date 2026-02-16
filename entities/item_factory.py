@@ -1,5 +1,5 @@
 from entities.item_registry import ItemRegistry
-from ecs.components import Name, Renderable, Portable, ItemMaterial, StatModifiers, Position, Equippable, SlotType
+from ecs.components import Name, Renderable, Portable, ItemMaterial, StatModifiers, Position, Equippable, SlotType, Consumable
 from config import SpriteLayer
 
 class ItemFactory:
@@ -50,6 +50,13 @@ class ItemFactory:
                 mana=template.stats.get("mana", 0),
                 perception=template.stats.get("perception", 0),
                 intelligence=template.stats.get("intelligence", 0)
+            ))
+        
+        if template.consumable:
+            world.add_component(entity, Consumable(
+                effect_type=template.consumable.get("effect_type"),
+                amount=template.consumable.get("amount", 0),
+                consumed_on_use=template.consumable.get("consumed_on_use", True)
             ))
             
         return entity

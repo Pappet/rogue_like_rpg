@@ -23,6 +23,7 @@ class ItemTemplate:
     description: str = ""
     slot: Optional[str] = None
     stats: Dict[str, int] = field(default_factory=dict)
+    consumable: Optional[Dict] = None
 
 
 class ItemRegistry:

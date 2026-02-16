@@ -200,3 +200,10 @@ class LootTable:
 class WanderData:
     """Stub component for wander state. Fields added when wander behavior is implemented."""
     pass
+
+
+@dataclass
+class Consumable:
+    effect_type: str
+    amount: int
+    consumed_on_use: bool = True
