@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.4 Item & Inventory System — Phase 23: Item Entity Foundation
+**Current Focus:** v1.4 Item & Inventory System — Phase 24: Pickup, Inventory Screen, and Loot Drops
 
 ## Current Position
 
-Phase: 23 of 26 (Item Entity Foundation)
-Plan: 2 of 4 in current phase (estimated)
+Phase: 24 of 26 (Pickup, Inventory Screen, and Loot Drops)
+Plan: 1 of 1 in current phase (Phase 24-01 Complete)
 Status: In progress
-Last activity: 2026-02-15 — Completed 23-02-PLAN.md: Item Factory and Persistence
+Last activity: 2026-02-16 — Completed Phase 24-01 (Inventory Screen and Navigation)
 
-Progress: [██░░░░░░░░] 20% (v1.4)
+Progress: [████░░░░░░] 40% (v1.4)
 
 ## Performance Metrics
 
@@ -29,7 +29,7 @@ Progress: [██░░░░░░░░] 20% (v1.4)
 |-------|-------|-------|----------|
 | 23 | 2 | 50m | 25m |
 
-**Recent Trend:** Executing Phase 23.
+**Recent Trend:** Completed Phase 23.
 
 *Updated after each plan completion*
 
@@ -55,6 +55,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed 23-02: Item Factory and Persistence.
-Resume file: .planning/phases/23-item-entity-foundation/23-03-PLAN.md
+Stopped at: Completed Phase 23.
+Resume file: .planning/phases/24-pickup-inventory-screen-loot-drops/24-01-PLAN.md
 Process Group PGID: 113499
