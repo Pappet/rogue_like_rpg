@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 25 of 26 (Equipment Slots and Combat Integration)
-Plan: 3 of 4 in current phase
-Status: In Progress
-Last activity: 2026-02-16 — Completed Phase 25 Plan 03 (Equipment Logic and UI).
+Plan: 4 of 4 in current phase
+Status: Phase Complete
+Last activity: 2026-02-16 — Completed Phase 25 Plan GAP-FIX.
 
-Progress: [██████████] 95% (v1.4)
+Progress: [██████████] 100% (v1.4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.4): 8
-- Average duration: 23m
-- Total execution time: 183m
+- Total plans completed (v1.4): 10
+- Average duration: 22m
+- Total execution time: 220m
 
 **By Phase:**
 
@@ -29,7 +29,7 @@ Progress: [██████████] 95% (v1.4)
 |-------|-------|-------|----------|
 | 23 | 2 | 50m | 25m |
 | 24 | 3 | 75m | 25m |
-| 25 | 3 | 58m | 19m |
+| 25 | 5 | 95m | 19m |
 
 **Recent Trend:** Completed Phase 25 Plan 03.
 
@@ -57,6 +57,7 @@ Progress: [██████████] 95% (v1.4)
 - **Equipment Slot Definitions:** Uses `SlotType` enum (HEAD, BODY, MAIN_HAND, OFF_HAND, FEET, ACCESSORY).
 - **Equipment Component:** Stores mapping of `SlotType` to entity ID references.
 - **Equipment Interaction:** Pressing E/Enter in inventory toggles equipment status via `equipment_service`; equipped items are marked with `(E)` in UI; sidebar displays full loadout and combat stats from `EffectiveStats`. (v1.4 UI refinement)
+- **Immediate Effective HP Update in Combat:** CombatSystem manually updates `EffectiveStats.hp` after applying damage to base `Stats.hp`. This prevents stale death checks and ensuring consistency between systems without waiting for the next `EquipmentSystem` process. (v1.4 gap fix)
 
 ### Pending Todos
 
