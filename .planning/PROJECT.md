@@ -77,55 +77,33 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 - ✓ CHAS-05: Lose-sight revert to WANDER after N turns — v1.2
 - ✓ SAFE-01: AI state stores coordinates only (freeze/thaw safe) — v1.2
 - ✓ SAFE-02: Wrong-layer NPCs excluded from ENEMY_TURN — v1.2
+- ✓ ITEM-01: Items as full ECS entities with identity continuity — v1.4
+- ✓ ITEM-02: Physical properties (weight, material) in data — v1.4
+- ✓ INV-01: Weight-based inventory capacity limits — v1.4
+- ✓ EQUIP-01: Equipment slots with dynamic stat modification — v1.4
+- ✓ CONS-01: Consumable items with use-effects — v1.4
+- ✓ LOOT-01: Contextual loot drops from monsters — v1.4
 
 ### Active
 
-## Current Milestone: v1.4 Item & Inventory System
+## Current Milestone: v1.5 Dungeon Progression (Planning)
 
-**Goal:** Simulation-first item system where items are full ECS entities with physical properties, a weight-based inventory, equipment slots with dynamic stat modification, consumable items, contextual loot drops, and a full inventory management UI.
+**Goal:** Implement map depth, stairs, and more robust procedural generation to create a sense of descent and progression.
 
 **Target features:**
-- Items as full ECS entities with identity continuity (same entity on ground, in inventory, equipped)
-- Physical properties: weight (kg), material (wood, metal, glass, etc.) with interaction rules
-- Component-based item behavior: Portable, Equippable, Consumable, ItemPhysics
-- Flat inventory system with weight-based capacity limits
-- Equipment slots (head, body, hands, etc.) with dynamic stat modification (base + bonus)
-- Consumable items with use-effects (healing, buffs) and destruction on use
-- Contextual loot tables — monsters drop thematic items, death transforms entity or drops inventory
-- Full inventory management UI: pick up, equip/unequip, use, drop
-- JSON-driven item templates extending existing entity registry pipeline
-
-**Architectural constraints:**
-- Items are entities, not abstract data — position OR parent reference, never both
-- Stat calculation: base stats + sum of equipped item bonuses, recalculated on equip/unequip
-- Material interactions: wood burns, metal conducts, glass shatters (event-driven hooks)
-- Flat inventory only (no nested containers this milestone)
-
-### Out of Scope
-
-- Multiplayer — single-player focus
-- 3D graphics — sprite-based 2D
-- Dedicated description sidebar panel — message log output sufficient
-- Showing exact stat numbers — Description threshold system preferred
-- Cursor snap to nearest entity — deferred to v2
-- Mouse click investigation — requires mouse input system (v2)
-- A* pathfinding — greedy Manhattan sufficient; add only if playtesting reveals stuck NPCs
-- Group aggro — individual AI decisions sufficient for foundation
-- NPC portal transit — transition_map() is player-coupled; requires refactor
-- Bounded wander (direction persistence) — low complexity, not needed for foundation
-- Nested containers (bag-in-bag) — flat inventory sufficient for v1.4 foundation
-- Durability/wear system — future hook, not this milestone
-- Crafting system — future hook, not this milestone
-- NPC economy/trading — future hook, not this milestone
+- Stair tiles (up/down) with transition logic
+- Map depth tracking
+- Level-scaled monster and loot spawning
+- More complex room-and-corridor generators
 
 ## Context
 
-**Shipped:** v1.0 MVP (2026-02-14), v1.1 Investigation System (2026-02-14), v1.2 AI Infrastructure (2026-02-15), v1.3 Debug Overlay System (2026-02-15)
-**In progress:** v1.4 Item & Inventory System
+**Shipped:** v1.0 MVP (2026-02-14), v1.1 Investigation System (2026-02-14), v1.2 AI Infrastructure (2026-02-15), v1.3 Debug Overlay System (2026-02-15), v1.4 Item & Inventory System (2026-02-16)
+**In progress:** v1.5 Dungeon Progression
 **Codebase:** 5,959 lines Python, 3 JSON data files
 **Tech stack:** Python 3.13, PyGame, esper ECS
-**Architecture:** ECS with data-driven JSON pipelines (tiles, entities, map prefabs); AISystem with state-driven behavior dispatch
-**Tests:** 28 investigation tests + 7 AISystem tests + 5 wander tests + 6 chase tests + entity factory tests
+**Architecture:** ECS with data-driven JSON pipelines (tiles, entities, map prefabs); AISystem with state-driven behavior dispatch; EffectiveStats equipment pipeline
+**Tests:** 28 investigation tests + 7 AISystem tests + 5 wander tests + 6 chase tests + entity factory tests + inventory/equipment verification tests
 
 ## Key Decisions
 
@@ -153,6 +131,10 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 | NPC FOV via VisibilityService | Reuses player FOV service; no duplication; consistent results | ✓ Good |
 | Detection block before match/case | State update in detection routes naturally to CHASE case | ✓ Good |
 | Stats component base fields | Explicit base_hp, base_power, etc., for Effective Stats pattern | ✓ Good |
+| Items as entities with position XOR parent | No phantom rendering; simple RenderSystem integration | ✓ Good |
+| EffectiveStats pattern | Clean unequip/equip; no irreversible state mutation | ✓ Good |
+| get_entity_closure() for transitions | Ensures inventory and equipment travel with player | ✓ Good |
+| ConsumableService healing safety | Prevents wasting items at full HP | ✓ Good |
 
 ## Constraints
 

@@ -65,3 +65,20 @@
 - Alignment with AI logic — debug visibility uses identical `#` wall fallback as pathfinding/detection
 - Automated verification — passing regression tests for the expanded debug pipeline
 
+---
+
+
+## v1.4 Item & Inventory System (Shipped: 2026-02-16)
+
+**Phases:** 4 (23-26) | **Plans:** 13 | **Requirements:** 22/22 satisfied
+**Timeline:** 1 day (2026-02-16)
+
+**Key accomplishments:**
+- **Item Entity Pipeline:** Items are first-class ECS entities with identity continuity across world, inventory, and equipment states.
+- **Physical Properties:** Weight and material data-driven through JSON, enabling simulation-first mechanics like capacity limits.
+- **Inventory Management:** Full UI for navigating, picking up, dropping, equipping, and using items from a weight-bounded inventory.
+- **Equipment System:** Component-based slot mapping with dynamic `EffectiveStats` calculation, ensuring base stats are never permanently mutated.
+- **Consumables:** Data-driven healing potions with safety checks and immediate stat feedback.
+- **Detailed Inspection:** Physical item properties (material, weight) integrated into both inventory descriptions and world inspection modes.
+- **Safety & Persistence:** Item closure tracking during map transitions prevents entity loss or duplication.
+

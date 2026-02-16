@@ -64,9 +64,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 </details>
 
----
-
-## 🚧 v1.4 Item & Inventory System (In Progress)
+## ✅ v1.4 Item & Inventory System — SHIPPED 2026-02-16
 
 **Milestone Goal:** Simulation-first item system where items are full ECS entities with physical properties, a weight-based inventory, equipment slots with dynamic stat modification, consumable items, contextual loot drops, and a full inventory management UI.
 
@@ -163,7 +161,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 **Plans:**
 - [x] 26-01-PLAN.md — Consumable Foundation
 - [x] 26-02-PLAN.md — Use Action and Inspection Polish
-- [ ] 26-03-PLAN.md — Fix ConsumableService AttributeError
+- [x] 26-03-PLAN.md — Fix ConsumableService AttributeError
 
 **Success Criteria:**
 
@@ -192,4 +190,4 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 23. Item Entity Foundation | v1.4 | 2/2 | Complete | 2026-02-15 |
 | 24. Pickup, Inventory Screen, and Loot Drops | v1.4 | 3/3 | Complete | 2026-02-16 |
 | 25. Equipment Slots and Combat Integration | v1.4 | 5/5 | Complete | 2026-02-16 |
-| 26. Consumables and Polish | v1.4 | 2/3 | In Progress | - |
+| 26. Consumables and Polish | v1.4 | 3/3 | Complete | 2026-02-16 |
