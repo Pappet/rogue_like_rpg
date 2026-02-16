@@ -38,6 +38,7 @@ Progress: [██████████] 100% (Phase 26) / 100% (v1.4)
 
 | Task | Description | Date |
 |------|-------------|------|
+| fix-consumable-service-call | Fix AttributeError in ConsumableService call | 2026-02-16 |
 | fix-map-container-attribute-error | Implement `is_walkable` in `MapContainer` | 2026-02-16 |
 | fix-consumable-service-call | Fix AttributeError in `ConsumableService.use_item` | 2026-02-16 |
 
