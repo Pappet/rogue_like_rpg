@@ -11,10 +11,10 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 Phase: 24 of 26 (Pickup, Inventory Screen, and Loot Drops)
 Plan: 3 of 3 in current phase (Phase 24 Complete)
-Status: In progress
+Status: Complete
 Last activity: 2026-02-16 — Completed Phase 24-03 (Loot Drops)
 
-Progress: [██████░░░░] 60% (v1.4)
+Progress: [████████░░] 80% (v1.4)
 
 ## Performance Metrics
 

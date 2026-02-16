@@ -85,8 +85,8 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 **Plans:** 2 plans
 
 **Plans:**
-- [ ] 23-01-PLAN.md — ECS Components and Data Loading
-- [ ] 23-02-PLAN.md — Item Factory and Map Persistence
+- [x] 23-01-PLAN.md — ECS Components and Data Loading
+- [x] 23-02-PLAN.md — Item Factory and Map Persistence
 
 **Success Criteria:**
 
@@ -106,10 +106,12 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 **Requirements:** INV-01, INV-02, INV-03, INV-04, INV-05, CONS-03, CONS-04
 
-**Plans:** TBD
+**Plans:** 3 plans
 
 **Plans:**
-- [ ] 24-01-PLAN.md — TBD
+- [x] 24-01-PLAN.md — Inventory Screen and Navigation
+- [x] 24-02-PLAN.md — Pickup and Drop Logic
+- [x] 24-03-PLAN.md — Loot Drops
 
 **Success Criteria:**
 
@@ -181,7 +183,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 20. Core Overlays | v1.3 | 1/1 | Complete | 2026-02-15 |
 | 21. Extended Overlays | v1.3 | 3/3 | Complete | 2026-02-15 |
 | 22. Debug System Refinement | v1.3 | 1/1 | Complete | 2026-02-15 |
-| 23. Item Entity Foundation | v1.4 | 0/2 | In Progress | - |
-| 24. Pickup, Inventory Screen, and Loot Drops | v1.4 | 0/TBD | Not started | - |
+| 23. Item Entity Foundation | v1.4 | 2/2 | Complete | 2026-02-15 |
+| 24. Pickup, Inventory Screen, and Loot Drops | v1.4 | 3/3 | Complete | 2026-02-16 |
 | 25. Equipment Slots and Combat Integration | v1.4 | 0/TBD | Not started | - |
 | 26. Consumables and Polish | v1.4 | 0/TBD | Not started | - |
