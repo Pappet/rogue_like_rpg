@@ -162,6 +162,7 @@ class ResourceLoader:
             description = item.get("description", "")
             wounded_text = item.get("wounded_text", "")
             wounded_threshold = float(item.get("wounded_threshold", 0.5))
+            loot_table = item.get("loot_table", [])
 
             template = EntityTemplate(
                 id=item["id"],
@@ -184,6 +185,7 @@ class ResourceLoader:
                 description=description,
                 wounded_text=wounded_text,
                 wounded_threshold=wounded_threshold,
+                loot_table=loot_table,
             )
 
             EntityRegistry.register(template)

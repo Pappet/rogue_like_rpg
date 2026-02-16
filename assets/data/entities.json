@@ -19,6 +19,11 @@
     "blocker": true,
     "description": "A generic orc",
     "wounded_text": "A wounded orc",
-    "wounded_threshold": 0.5
+    "wounded_threshold": 0.5,
+    "loot_table": [
+      ["iron_sword", 0.1],
+      ["wooden_club", 0.5],
+      ["health_potion", 0.2]
+    ]
   }
 ]

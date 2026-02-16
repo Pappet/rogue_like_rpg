@@ -33,6 +33,7 @@ class EntityTemplate:
     description: str = ""
     wounded_text: str = ""
     wounded_threshold: float = 0.5
+    loot_table: list = None  # List of [template_id, chance] pairs
 
 
 class EntityRegistry:

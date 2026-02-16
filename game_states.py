@@ -116,6 +116,7 @@ class Game(GameState):
         if not self.death_system:
             self.death_system = DeathSystem()
             self.persist["death_system"] = self.death_system
+        self.death_system.set_map(self.map_container)
 
         self.ai_system = self.persist.get("ai_system")
         if not self.ai_system:
@@ -396,6 +397,7 @@ class Game(GameState):
         self.action_system.set_map(new_map)
         self.render_system.set_map(new_map)
         self.debug_render_system.set_map(new_map)
+        self.death_system.set_map(new_map)
         
         # 9. Update Camera
         self.camera.update(target_x, target_y)

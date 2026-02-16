@@ -5,7 +5,7 @@ This mirrors the data-driven approach used for tiles in Phase 9.
 """
 
 from config import SpriteLayer
-from ecs.components import Position, Renderable, Stats, Name, Blocker, AI, Description, AIBehaviorState, AIState, Alignment
+from ecs.components import Position, Renderable, Stats, Name, Blocker, AI, Description, AIBehaviorState, AIState, Alignment, LootTable
 from entities.entity_registry import EntityRegistry
 
 
@@ -81,5 +81,10 @@ class EntityFactory:
                     wounded_threshold=template.wounded_threshold,
                 )
             )
+
+        if template.loot_table:
+            # Convert list of lists [id, chance] to list of tuples (id, chance)
+            entries = [(entry[0], float(entry[1])) for entry in template.loot_table]
+            components.append(LootTable(entries=entries))
 
         return world.create_entity(*components)
