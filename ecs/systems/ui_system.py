@@ -1,7 +1,7 @@
 import esper
 import pygame
 from config import HEADER_HEIGHT, SIDEBAR_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT, LOG_HEIGHT, GameStates
-from ecs.components import ActionList, Stats, Targeting
+from ecs.components import ActionList, Stats, Targeting, Equipment, EffectiveStats, Name, SlotType
 from ui.message_log import MessageLog
 
 class UISystem(esper.Processor):
@@ -104,6 +104,55 @@ class UISystem(esper.Processor):
             if action.cost_mana > 0:
                 cost_surf = self.small_font.render(f"{action.cost_mana} MP", True, (100, 100, 255))
                 surface.blit(cost_surf, (self.sidebar_rect.x + SIDEBAR_WIDTH - cost_surf.get_width() - 10, self.sidebar_rect.y + 48 + i * 30))
+
+        # --- Equipment Section ---
+        next_y = self.sidebar_rect.y + 45 + len(action_list.actions) * 30 + 20
+        equip_title = self.font.render("Equipment", True, (200, 200, 200))
+        surface.blit(equip_title, (self.sidebar_rect.x + 10, next_y))
+        next_y += 35
+
+        try:
+            equipment = esper.component_for_entity(self.player_entity, Equipment)
+            for slot in SlotType:
+                item_id = equipment.slots.get(slot)
+                item_name = "—"
+                if item_id is not None:
+                    try:
+                        item_name = esper.component_for_entity(item_id, Name).name
+                    except KeyError:
+                        item_name = "Unknown"
+                
+                slot_name = slot.value.replace('_', ' ').title()
+                slot_surf = self.small_font.render(f"{slot_name}:", True, (150, 150, 150))
+                item_surf = self.small_font.render(item_name, True, (255, 255, 255))
+                
+                surface.blit(slot_surf, (self.sidebar_rect.x + 15, next_y))
+                surface.blit(item_surf, (self.sidebar_rect.x + 105, next_y))
+                next_y += 22
+        except KeyError:
+            pass
+
+        # --- Combat Stats Section ---
+        next_y += 10
+        stats_title = self.font.render("Combat Stats", True, (200, 200, 200))
+        surface.blit(stats_title, (self.sidebar_rect.x + 10, next_y))
+        next_y += 35
+
+        try:
+            if esper.has_component(self.player_entity, EffectiveStats):
+                combat_stats = esper.component_for_entity(self.player_entity, EffectiveStats)
+            else:
+                combat_stats = esper.component_for_entity(self.player_entity, Stats)
+            
+            power_surf = self.small_font.render(f"Power: {combat_stats.power}", True, (255, 255, 255))
+            defense_surf = self.small_font.render(f"Defense: {combat_stats.defense}", True, (255, 255, 255))
+            
+            surface.blit(power_surf, (self.sidebar_rect.x + 15, next_y))
+            next_y += 22
+            surface.blit(defense_surf, (self.sidebar_rect.x + 15, next_y))
+            next_y += 22
+        except KeyError:
+            pass
 
     def is_action_available(self, action):
         try:
