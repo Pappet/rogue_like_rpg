@@ -252,7 +252,11 @@ def test_entity_listed_at_visible_tile(fresh_world_and_capture):
     result = action_system.confirm_action(player)
     assert result is True
 
-    assert any("[color=white]Orc[/color]: A menacing orc." in msg for msg in captured), (
+    # Entity name and description are now dispatched as separate messages.
+    assert any("[color=yellow]Orc[/color]" in msg for msg in captured), (
+        f"Expected entity name in yellow, got: {captured}"
+    )
+    assert any("A menacing orc." in msg for msg in captured), (
         f"Expected entity description in messages, got: {captured}"
     )
 

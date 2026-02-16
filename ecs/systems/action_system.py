@@ -237,7 +237,7 @@ class ActionSystem(esper.Processor):
                         if name_comp is None:
                             continue
 
-                        detailed_desc = ActionSystem.get_detailed_description(self.world, ent)
+                        detailed_desc = ActionSystem.get_detailed_description(esper, ent)
                         
                         # Show name in yellow
                         esper.dispatch_event("log_message", f"[color=yellow]{name_comp.name}[/color]")
