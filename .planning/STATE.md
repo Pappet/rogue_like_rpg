@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.4 Item & Inventory System — Phase 26: Consumables and Polish
+**Current Focus:** v1.4 Item & Inventory System — Complete
 
 ## Current Position
 
 Phase: 26 of 26 (Consumables and Polish)
-Plan: 1 of 1 in current phase
-Status: Phase Complete
-Last activity: 2026-02-16 — Completed Phase 26: Consumables and Polish (Plan 01).
+Plan: 2 of 2 in current phase
+Status: Complete
+Last activity: 2026-02-16 — Completed Phase 26: Consumables and Polish (Plan 02). Milestone v1.4 Complete.
 
 Progress: [██████████] 100% (Phase 26) / 100% (v1.4)
 
@@ -21,7 +21,7 @@ Progress: [██████████] 100% (Phase 26) / 100% (v1.4)
 **Velocity:**
 - Total plans completed (v1.4): 12
 - Average duration: 21m
-- Total execution time: 255m
+- Total execution time: 275m
 
 **By Phase:**
 
@@ -29,8 +29,8 @@ Progress: [██████████] 100% (Phase 26) / 100% (v1.4)
 |-------|-------|-------|----------|
 | 23 | 2 | 50m | 25m |
 | 24 | 3 | 75m | 25m |
-| 25 | 6 | 110m | 18m |
-| 26 | 1 | 20m | 20m |
+| 25 | 5 | 110m | 22m |
+| 26 | 2 | 40m | 20m |
 
 **Recent Trend:** Completed v1.4 milestone.
 
@@ -60,6 +60,7 @@ Progress: [██████████] 100% (Phase 26) / 100% (v1.4)
 - **Equipment Interaction:** Pressing E/Enter in inventory toggles equipment status via `equipment_service`; equipped items are marked with `(E)` in UI; sidebar displays full loadout and combat stats from `EffectiveStats`. (v1.4 UI refinement)
 - **Immediate Effective HP Update in Combat:** CombatSystem manually updates `EffectiveStats.hp` after applying damage to base `Stats.hp`. This prevents stale death checks and ensuring consistency between systems without waiting for the next `EquipmentSystem` process. (v1.4 gap fix)
 - **Consumable System:** Uses a `Consumable` component with `effect_type` and `amount`. Managed by `ConsumableService`. Full-health checks prevent wasting items. Immediate `EffectiveStats` update ensures UI consistency.
+- **Detailed Physical Descriptions:** Centralized in `ActionSystem.get_detailed_description`, including material and weight. Consistent across Inventory UI and Inspection mode.
 
 ### Pending Todos
 
@@ -73,6 +74,7 @@ None.
 
 Last session: 2026-02-16
 Stopped at: Completed Phase 26. v1.4 Milestone Complete.
-Resume file: .planning/phases/26-consumables-and-polish/26-01-PLAN.md
+Resume file: .planning/phases/26-consumables-and-polish/26-02-SUMMARY.md
 Process Group PGID: 113499
 Process Group PGID: 121781
+Process Group PGID: 122100
