@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 29 of 32 (Pathfinding Service)
-Plan: 1 of 1 in current phase
-Status: Phase 29 Complete
-Last activity: 2026-02-19 — Completed Pathfinding Service implementation.
+Plan: 2 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-19 — Completed AI Navigation Integration (29-02).
 
-Progress: [███████░░░] 70% (Phase 29) / 70% (v1.5)
+Progress: [███████░░░] 66% (Phase 29) / 72% (v1.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.5): 6
+- Total plans completed (v1.5): 8
 - Average duration: 25m
-- Total execution time: 150m
+- Total execution time: 200m
 
 **By Phase:**
 
@@ -29,17 +29,18 @@ Progress: [███████░░░] 70% (Phase 29) / 70% (v1.5)
 |-------|-------|-------|----------|
 | 27 | 3 | 75m | 25m |
 | 28 | 3 | 75m | 25m |
-| 29 | 0 | 0m | 0m |
+| 29 | 2 | 50m | 25m |
 | 30 | 0 | 0m | 0m |
 | 31 | 0 | 0m | 0m |
 | 32 | 0 | 0m | 0m |
 
-**Recent Trend:** Completed Day/Night cycle with viewport tinting and perception multipliers.
+**Recent Trend:** Completed Pathfinding Service and AI Navigation Integration.
 
 ## Quick Tasks Completed
 
 | Task | Description | Date |
 |------|-------------|------|
+| 29-02 | AI Navigation Integration into AISystem | 2026-02-19 |
 | 29-01 | Implement PathfindingService and PathData component | 2026-02-19 |
 | smooth-tint-transitions | Interpolate viewport tint for smooth transitions | 2026-02-18 |
 | 28-03 | Update VisibilitySystem and run verification | 2026-02-18 |
@@ -75,6 +76,8 @@ Progress: [███████░░░] 70% (Phase 29) / 70% (v1.5)
 - **Detailed Physical Descriptions:** Centralized in `ActionSystem.get_detailed_description`, including material and weight. Consistent across Inventory UI and Inspection mode.
 - **Synchronized WorldClock:** `round_counter` is derived from `total_ticks + 1`. 1 turn = 1 tick. 60 ticks = 1 hour. (v1.5 foundation)
 - **Time-consuming map transitions:** Portals can have `travel_ticks` which advance the world clock during transitions. (v1.5 foundation)
+- **AI Navigation Fallback:** If A* pathfinding fails or a path is blocked, the AI reverts to a greedy Manhattan step to maintain pressure on the target while waiting for a path to clear. (v1.5)
+- **Dynamic Path Invalidation:** NPCs automatically clear and recompute paths if the target moves or if their next step is blocked by an entity. (v1.5)
 
 ### Pending Todos
 
