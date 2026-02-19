@@ -29,9 +29,9 @@ See archived roadmaps in `.planning/milestones/`.
 **Goal:** Implement the core timekeeping service and integrate it into the turn loop.
 
 **Plans:** 3 plans
-- [ ] 27-01-PLAN.md — WorldClock Service and Turn Integration
-- [ ] 27-02-PLAN.md — Map Travel and UI Header
-- [ ] 27-03-PLAN.md — Verification
+- [x] 27-01-PLAN.md — WorldClock Service and Turn Integration
+- [x] 27-02-PLAN.md — Map Travel and UI Header
+- [x] 27-03-PLAN.md — Verification
 
 **Requirements:** CLK-01, CLK-02, CLK-03, CLK-04, CLK-05
 
@@ -120,7 +120,7 @@ See archived roadmaps in `.planning/milestones/`.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 27 | v1.5 | 0/3 | In Progress | - |
+| 27 | v1.5 | 3/3 | Done | - |
 | 28 | v1.5 | 0/1 | Pending | - |
 | 29 | v1.5 | 0/1 | Pending | - |
 | 30 | v1.5 | 0/1 | Pending | - |

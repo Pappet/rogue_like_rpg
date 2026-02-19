@@ -9,42 +9,43 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 27 of 32 (WorldClock Foundation)
-Plan: 1 of 3 in current phase
+Phase: 28 of 32 (Day/Night Visual Cycle)
+Plan: 0 of 1 in current phase
 Status: In progress
-Last activity: 2026-02-17 — Completed 27-01-PLAN.md: Implement WorldClockService.
+Last activity: 2026-02-17 — Completed Phase 27: WorldClock Foundation.
 
-Progress: [███░░░░░░░] 33% (Phase 27) / 1% (v1.5)
+Progress: [██████████] 100% (Phase 27) / 37% (v1.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.5): 1
+- Total plans completed (v1.5): 3
 - Average duration: 25m
-- Total execution time: 25m
+- Total execution time: 75m
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 27 | 1 | 25m | 25m |
+| 27 | 3 | 75m | 25m |
 | 28 | 0 | 0m | 0m |
 | 29 | 0 | 0m | 0m |
 | 30 | 0 | 0m | 0m |
 | 31 | 0 | 0m | 0m |
 | 32 | 0 | 0m | 0m |
 
-**Recent Trend:** Completed initial WorldClock integration.
+**Recent Trend:** Completed WorldClock foundation with verification.
 
 ## Quick Tasks Completed
 
 | Task | Description | Date |
 |------|-------------|------|
+| 27-03 | Comprehensive Verification of World Clock | 2026-02-17 |
+| 27-02 | Map Travel and UI Header | 2026-02-17 |
 | 27-01 | Implement WorldClockService and integrate into TurnSystem | 2026-02-17 |
 | fix-action-system-world-attribute | Fix AttributeError in ActionSystem.confirm_action | 2026-02-16 |
 | fix-consumable-service-call | Fix AttributeError in ConsumableService call | 2026-02-16 |
 | fix-map-container-attribute-error | Implement `is_walkable` in `MapContainer` | 2026-02-16 |
-| fix-consumable-service-call | Fix AttributeError in `ConsumableService.use_item` | 2026-02-16 |
 
 *Updated after each plan completion*
 
@@ -68,6 +69,7 @@ Progress: [███░░░░░░░] 33% (Phase 27) / 1% (v1.5)
 - **Consumable System:** Uses a `Consumable` component with `effect_type` and `amount`. Managed by `ConsumableService`. Full-health checks prevent wasting items. Immediate `EffectiveStats` update ensures UI consistency.
 - **Detailed Physical Descriptions:** Centralized in `ActionSystem.get_detailed_description`, including material and weight. Consistent across Inventory UI and Inspection mode.
 - **Synchronized WorldClock:** `round_counter` is derived from `total_ticks + 1`. 1 turn = 1 tick. 60 ticks = 1 hour. (v1.5 foundation)
+- **Time-consuming map transitions:** Portals can have `travel_ticks` which advance the world clock during transitions. (v1.5 foundation)
 
 ### Pending Todos
 
@@ -79,13 +81,6 @@ Progress: [███░░░░░░░] 33% (Phase 27) / 1% (v1.5)
 
 ## Session Continuity
 
-Last session: 2026-02-16
-Stopped at: Completed Phase 26. v1.4 Milestone Complete.
-Resume file: .planning/phases/26-consumables-and-polish/26-03-SUMMARY.md
-Process Group PGID: 113499
-Process Group PGID: 121781
-Process Group PGID: 122100
-Process Group PGID: 122539
-Process Group PGID: 122553
-Process Group PGID: 122565
-Process Group PGID: 122654
+Last session: 2026-02-17
+Stopped at: Completed Phase 27. WorldClock Foundation verified.
+Resume file: .planning/phases/27-world-clock-foundation/27-03-SUMMARY.md
