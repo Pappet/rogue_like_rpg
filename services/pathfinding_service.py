@@ -8,7 +8,7 @@ from map.map_container import MapContainer
 
 class PathfindingService:
     @staticmethod
-    def get_path(world, map_container: MapContainer, start: Tuple[int, int], end: Tuple[int, int]) -> List[Tuple[int, int]]:
+    def get_path(world, map_container: MapContainer, start: Tuple[int, int], end: Tuple[int, int], layer: int = 0) -> List[Tuple[int, int]]:
         """
         Calculates a path from start to end using A* algorithm.
         
@@ -17,6 +17,7 @@ class PathfindingService:
             map_container: The current map container for terrain walkability.
             start: (x, y) starting coordinates.
             end: (x, y) target coordinates.
+            layer: The map layer to path on.
             
         Returns:
             A list of (x, y) coordinates representing the path, excluding the start point.
@@ -36,12 +37,12 @@ class PathfindingService:
         for y in range(height):
             row = []
             for x in range(width):
-                row.append(1 if map_container.is_walkable(x, y) else 0)
+                row.append(1 if map_container.is_walkable(x, y, layer) else 0)
             matrix.append(row)
             
         # 2. Add entity blockers
         for ent, (pos, _) in world.get_components(Position, Blocker):
-            if 0 <= pos.x < width and 0 <= pos.y < height:
+            if pos.layer == layer and 0 <= pos.x < width and 0 <= pos.y < height:
                 matrix[pos.y][pos.x] = 0
                 
         # 3. Explicitly set destination as walkable (allowing pathing TO a target)

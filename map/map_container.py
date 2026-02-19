@@ -30,9 +30,9 @@ class MapContainer:
             return layer.tiles[y][x]
         return None
 
-    def is_walkable(self, x: int, y: int) -> bool:
-        """Returns True if the tile at (x, y) on layer 0 is walkable."""
-        tile = self.get_tile(x, y, 0)
+    def is_walkable(self, x: int, y: int, layer_idx: int = 0) -> bool:
+        """Returns True if the tile at (x, y) on specified layer is walkable."""
+        tile = self.get_tile(x, y, layer_idx)
         return tile.walkable if tile else False
 
     def on_exit(self, current_turn: int):
