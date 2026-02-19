@@ -20,7 +20,7 @@ from ecs.components import Position, MovementRequest, Renderable, ActionList, Ac
 import services.equipment_service as equipment_service
 import services.consumable_service as consumable_service
 from map.tile import VisibilityState
-from config import SCREEN_WIDTH, SCREEN_HEIGHT
+from config import SCREEN_WIDTH, SCREEN_HEIGHT, DN_SETTINGS
 
 class GameState:
     def __init__(self):
@@ -475,6 +475,13 @@ class Game(GameState):
         debug_flags = self.persist.get("debug_flags", {})
         if debug_flags.get("master") and hasattr(self, 'debug_render_system'):
             self.debug_render_system.process(surface, debug_flags, player_layer)
+
+        # 3.5. Apply Viewport Tint
+        if self.world_clock and self.render_service:
+            phase = self.world_clock.phase
+            tint_color = DN_SETTINGS.get(phase, {}).get("tint")
+            if tint_color:
+                self.render_service.apply_viewport_tint(surface, tint_color, viewport_rect)
 
         # Reset clip for UI
         surface.set_clip(None)
