@@ -5,9 +5,10 @@ from ecs.components import ActionList, Stats, Targeting, Equipment, EffectiveSta
 from ui.message_log import MessageLog
 
 class UISystem(esper.Processor):
-    def __init__(self, turn_system, player_entity):
+    def __init__(self, turn_system, player_entity, world_clock):
         self.turn_system = turn_system
         self.player_entity = player_entity
+        self.world_clock = world_clock
         pygame.font.init()
         self.font = pygame.font.SysFont('Arial', 24)
         self.small_font = pygame.font.SysFont('Arial', 18)
@@ -34,9 +35,15 @@ class UISystem(esper.Processor):
         
         # Round info
         round_text = f"Round: {self.turn_system.round_counter}"
-        round_surf = self.font.render(round_text, True, (255, 255, 255))
+        round_surf = self.small_font.render(round_text, True, (255, 255, 255))
         surface.blit(round_surf, (20, (HEADER_HEIGHT - round_surf.get_height()) // 2))
         
+        # Clock info: Day X - HH:MM (PHASE)
+        if self.world_clock:
+            time_str = f"Day {self.world_clock.day} - {self.world_clock.hour:02d}:{self.world_clock.minute:02d} ({self.world_clock.phase.upper()})"
+            time_surf = self.font.render(time_str, True, (200, 200, 255))
+            surface.blit(time_surf, (150, (HEADER_HEIGHT - time_surf.get_height()) // 2))
+
         # Turn info
         if self.turn_system.current_state == GameStates.PLAYER_TURN:
             turn_str = "Player Turn"
