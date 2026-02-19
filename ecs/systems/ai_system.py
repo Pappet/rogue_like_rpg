@@ -2,8 +2,9 @@ import random
 
 import esper
 from config import GameStates, SpriteLayer
-from ecs.components import AI, AIBehaviorState, Blocker, Corpse, Position, AIState, ChaseData, Name, Stats, Alignment, EffectiveStats
+from ecs.components import AI, AIBehaviorState, Blocker, Corpse, Position, AIState, ChaseData, Name, Stats, Alignment, EffectiveStats, PathData
 from services.visibility_service import VisibilityService
+from services.pathfinding_service import PathfindingService
 
 CARDINAL_DIRS = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # N S W E
 LOSE_SIGHT_TURNS = 3
@@ -89,6 +90,13 @@ class AISystem(esper.Processor):
             except KeyError:
                 pass  # NPC has no Stats — cannot use perception for detection
 
+        # PathData Priority (Task 1)
+        # Note: CHASE state manages its own PathData to handle moving targets.
+        if behavior.state != AIState.CHASE and esper.has_component(ent, PathData):
+            path_data = esper.component_for_entity(ent, PathData)
+            if self._try_follow_path(ent, path_data, pos, claimed_tiles):
+                return
+
         match behavior.state:
             case AIState.IDLE:
                 pass  # No-op: idle entities do nothing
@@ -125,9 +133,9 @@ class AISystem(esper.Processor):
         # WNDR-03: No valid tile — entity skips turn silently
 
     def _chase(self, ent, behavior, pos, map_container, claimed_tiles, player_pos):
-        """Move NPC toward last known player position using greedy Manhattan step.
+        """Move NPC toward last known player position using PathfindingService (A*).
 
-        CHAS-02: One greedy Manhattan step per turn toward target.
+        CHAS-02: Pathfinding step per turn toward target.
         CHAS-05: After LOSE_SIGHT_TURNS without LOS, revert to WANDER.
         """
         try:
@@ -153,6 +161,8 @@ class AISystem(esper.Processor):
                 if chase_data.turns_without_sight >= LOSE_SIGHT_TURNS:
                     behavior.state = AIState.WANDER
                     esper.remove_component(ent, ChaseData)
+                    if esper.has_component(ent, PathData):
+                        esper.remove_component(ent, PathData)
                     return
         else:
             # No player_pos available — increment counter
@@ -160,10 +170,49 @@ class AISystem(esper.Processor):
             if chase_data.turns_without_sight >= LOSE_SIGHT_TURNS:
                 behavior.state = AIState.WANDER
                 esper.remove_component(ent, ChaseData)
+                if esper.has_component(ent, PathData):
+                    esper.remove_component(ent, PathData)
                 return
 
-        # Greedy Manhattan step toward last known position (CHAS-02)
-        tx, ty = chase_data.last_known_x, chase_data.last_known_y
+        # Pathfinding logic (Task 1 & 2)
+        target_pos = (chase_data.last_known_x, chase_data.last_known_y)
+        
+        path_data = None
+        if esper.has_component(ent, PathData):
+            path_data = esper.component_for_entity(ent, PathData)
+
+        # Destination Invalidation: Recompute if destination changed or no path exists
+        if path_data is None or path_data.destination != target_pos or not path_data.path:
+            path = PathfindingService.get_path(
+                esper,
+                map_container,
+                (pos.x, pos.y),
+                target_pos,
+                pos.layer
+            )
+            if path:
+                if path_data:
+                    path_data.path = path
+                    path_data.destination = target_pos
+                else:
+                    path_data = PathData(path=path, destination=target_pos)
+                    esper.add_component(ent, path_data)
+            else:
+                # Fallback to greedy Manhattan if A* fails
+                self._greedy_step(pos, target_pos, map_container, claimed_tiles)
+                return
+
+        # Try to follow the path (Task 1)
+        if not self._try_follow_path(ent, path_data, pos, claimed_tiles):
+            # If path failed (blocked), attempt greedy fallback
+            self._greedy_step(pos, target_pos, map_container, claimed_tiles)
+
+    def _greedy_step(self, pos, target_pos, map_container, claimed_tiles):
+        """Move entity one step toward target using greedy Manhattan distance.
+        
+        Used as a fallback when pathfinding fails or path is blocked.
+        """
+        tx, ty = target_pos
         dx = tx - pos.x
         dy = ty - pos.y
 
@@ -182,21 +231,45 @@ class AISystem(esper.Processor):
                 candidates.append((1 if dx > 0 else -1, 0))
 
         for step_x, step_y in candidates:
-            if step_x == 0 and step_y == 0:
-                continue
             nx, ny = pos.x + step_x, pos.y + step_y
             if (nx, ny) in claimed_tiles:
                 continue
             if not self._is_walkable(nx, ny, pos.layer, map_container):
                 continue
             if self._get_blocker_at(nx, ny, pos.layer):
-                continue  # Player tile has Blocker — NPC stays adjacent
+                continue
             # Valid step found — claim and move
             claimed_tiles.add((nx, ny))
             pos.x = nx
             pos.y = ny
-            return
-        # No valid step — NPC stays in place this turn
+            return True
+        return False
+
+    def _try_follow_path(self, ent, path_data, pos, claimed_tiles):
+        """Attempts to take the next step in the precomputed path.
+        
+        Returns True if a step was taken, False if blocked or empty.
+        Invalidates (clears) the path if it's blocked by an entity.
+        """
+        if not path_data.path:
+            return False
+            
+        nx, ny = path_data.path[0]
+        
+        if (nx, ny) in claimed_tiles:
+            return False
+            
+        if self._get_blocker_at(nx, ny, pos.layer):
+            # Blocked by entity (could be the player)
+            path_data.path = [] # Invalidate
+            return False
+            
+        # Move
+        path_data.path.pop(0)
+        claimed_tiles.add((nx, ny))
+        pos.x = nx
+        pos.y = ny
+        return True
 
     def _can_see_player(self, pos, stats, player_pos, map_container, ent=None):
         """Returns True if NPC at pos can see player_pos using FOV computation."""
