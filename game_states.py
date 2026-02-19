@@ -86,6 +86,7 @@ class Game(GameState):
         self.render_service = self.persist.get("render_service")
         self.camera = self.persist.get("camera")
         self.map_service = self.persist.get("map_service")
+        self.world_clock = self.persist.get("world_clock")
         
         # Initialize ECS
         self.world = get_world()
@@ -93,8 +94,11 @@ class Game(GameState):
         # Retrieve or initialize Systems
         self.turn_system = self.persist.get("turn_system")
         if not self.turn_system:
-            self.turn_system = TurnSystem()
+            self.turn_system = TurnSystem(self.world_clock)
             self.persist["turn_system"] = self.turn_system
+        else:
+            # Ensure it has the clock reference if it was persisted without it or re-instantiated
+            self.turn_system.world_clock = self.world_clock
 
         self.visibility_system = self.persist.get("visibility_system")
         if not self.visibility_system:
