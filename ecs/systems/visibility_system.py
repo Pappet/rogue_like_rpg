@@ -1,5 +1,5 @@
 import esper
-from ecs.components import Position, Stats, LightSource
+from ecs.components import Position, Stats, LightSource, EffectiveStats
 from services.visibility_service import VisibilityService
 from map.tile import VisibilityState
 from config import SpriteLayer
@@ -24,8 +24,13 @@ class VisibilitySystem(esper.Processor):
         # 0.1 Calculate intelligence-based memory threshold
         max_intel = 0
         for ent, stats in esper.get_component(Stats):
-            if stats.intelligence > max_intel:
-                max_intel = stats.intelligence
+            # Use EffectiveStats if available
+            intel = stats.intelligence
+            if esper.has_component(ent, EffectiveStats):
+                intel = esper.component_for_entity(ent, EffectiveStats).intelligence
+                
+            if intel > max_intel:
+                max_intel = intel
         
         # Memory factor: tiles are remembered for INT * 5 rounds
         memory_threshold = max_intel * 5
@@ -68,7 +73,13 @@ class VisibilitySystem(esper.Processor):
         # Get entities providing vision
         for ent, (pos, stats) in esper.get_components(Position, Stats):
             # Player party members or NPCs with stats provide vision based on perception
-            radius = stats.perception
+            # Use EffectiveStats if available, otherwise fallback to base stats
+            if esper.has_component(ent, EffectiveStats):
+                eff_stats = esper.component_for_entity(ent, EffectiveStats)
+                radius = eff_stats.perception
+            else:
+                radius = stats.perception
+            
             if esper.has_component(ent, LightSource):
                 radius = max(radius, esper.component_for_entity(ent, LightSource).radius)
             

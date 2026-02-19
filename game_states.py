@@ -138,19 +138,20 @@ class Game(GameState):
             self.equipment_system.world_clock = self.world_clock
 
         # Clear existing processors to avoid duplicates when re-entering state
-        for processor_type in [VisibilitySystem, MovementSystem, CombatSystem, TurnSystem, DeathSystem, EquipmentSystem]:
+        for processor_type in [TurnSystem, EquipmentSystem, VisibilitySystem, MovementSystem, CombatSystem, DeathSystem]:
             try:
                 esper.remove_processor(processor_type)
             except KeyError:
                 pass
         
-        # Re-add processors to esper
+        # Re-add processors to esper in correct order:
+        # Turn -> Equipment -> Visibility -> Movement -> Combat -> Death
+        esper.add_processor(self.turn_system)
+        esper.add_processor(self.equipment_system)
         esper.add_processor(self.visibility_system)
         esper.add_processor(self.movement_system)
         esper.add_processor(self.combat_system)
         esper.add_processor(self.death_system)
-        esper.add_processor(self.turn_system)
-        esper.add_processor(self.equipment_system)
         
         if not self.persist.get("player_entity"):
             party_service = PartyService()
