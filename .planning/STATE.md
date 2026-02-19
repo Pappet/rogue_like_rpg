@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 29 of 32 (Pathfinding Service)
-Plan: 0 of 1 in current phase
-Status: Phase 28 Complete
-Last activity: 2026-02-18 — Completed Day/Night visual cycle.
+Plan: 1 of 1 in current phase
+Status: Phase 29 Complete
+Last activity: 2026-02-19 — Completed Pathfinding Service implementation.
 
-Progress: [██████░░░░] 60% (Phase 29) / 60% (v1.5)
+Progress: [███████░░░] 70% (Phase 29) / 70% (v1.5)
 
 ## Performance Metrics
 
@@ -40,6 +40,7 @@ Progress: [██████░░░░] 60% (Phase 29) / 60% (v1.5)
 
 | Task | Description | Date |
 |------|-------------|------|
+| 29-01 | Implement PathfindingService and PathData component | 2026-02-19 |
 | smooth-tint-transitions | Interpolate viewport tint for smooth transitions | 2026-02-18 |
 | 28-03 | Update VisibilitySystem and run verification | 2026-02-18 |
 | 28-02 | Implement viewport tinting in RenderService | 2026-02-18 |
