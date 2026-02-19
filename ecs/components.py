@@ -214,3 +214,8 @@ class Consumable:
     effect_type: str
     amount: int
     consumed_on_use: bool = True
+
+
+@dataclass
+class Schedule:
+    schedule_id: str
