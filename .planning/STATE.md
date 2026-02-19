@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 27 of 32 (WorldClock Foundation)
-Plan: 0 of 1 in current phase
-Status: Milestone Initialized
-Last activity: 2026-02-17 — Initialized v1.5 milestone.
+Plan: 0 of 3 in current phase
+Status: Phase Planning Complete
+Last activity: 2026-02-17 — Created 3 plans for Phase 27.
 
 Progress: [----------] 0% (Phase 27) / 0% (v1.5)
 
@@ -66,6 +66,7 @@ Progress: [----------] 0% (Phase 27) / 0% (v1.5)
 - **Immediate Effective HP Update in Combat:** CombatSystem manually updates `EffectiveStats.hp` after applying damage to base `Stats.hp`. This prevents stale death checks and ensuring consistency between systems without waiting for the next `EquipmentSystem` process. (v1.4 gap fix)
 - **Consumable System:** Uses a `Consumable` component with `effect_type` and `amount`. Managed by `ConsumableService`. Full-health checks prevent wasting items. Immediate `EffectiveStats` update ensures UI consistency.
 - **Detailed Physical Descriptions:** Centralized in `ActionSystem.get_detailed_description`, including material and weight. Consistent across Inventory UI and Inspection mode.
+- **Synchronized WorldClock:** `round_counter` is derived from `total_ticks + 1`. 1 turn = 1 tick. 60 ticks = 1 hour. (v1.5 foundation)
 
 ### Pending Todos
 
