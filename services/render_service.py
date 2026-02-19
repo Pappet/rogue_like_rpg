@@ -7,6 +7,20 @@ class RenderService:
     def __init__(self):
         pygame.font.init()
         self.font = pygame.font.SysFont('monospace', TILE_SIZE)
+        self.tint_surface = None
+
+    def apply_viewport_tint(self, surface: pygame.Surface, tint_color: tuple, viewport_rect: pygame.Rect):
+        """Applies a semi-transparent color tint to the specified viewport area."""
+        if not tint_color or tint_color[3] == 0:
+            return  # No tint to apply
+
+        # Ensure we have a surface of the correct size
+        if self.tint_surface is None or self.tint_surface.get_size() != (viewport_rect.width, viewport_rect.height):
+            self.tint_surface = pygame.Surface((viewport_rect.width, viewport_rect.height), pygame.SRCALPHA)
+
+        # Fill with tint color and blit to the main surface
+        self.tint_surface.fill(tint_color)
+        surface.blit(self.tint_surface, (viewport_rect.x, viewport_rect.y))
 
     def render_map(self, surface: pygame.Surface, map_container: MapContainer, camera: Camera, player_layer: int = 0):
         """Renders the layered map tiles with ground occlusion."""
