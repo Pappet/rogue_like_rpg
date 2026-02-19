@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 30 of 32 (Schedule Data Pipeline)
-Plan: 0 of 3 in current phase
-Status: Planning complete, ready for execution
-Last activity: 2026-02-19 — Completed Planning for Phase 30.
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-19 — Completed Phase 30.
 
-Progress: [██████████] 0% (Phase 30) / 75% (v1.5)
+Progress: [██████████] 100% (Phase 30) / 84% (v1.5)
 
 ## Performance Metrics
 
@@ -79,6 +79,7 @@ Progress: [██████████] 0% (Phase 30) / 75% (v1.5)
 - **Time-consuming map transitions:** Portals can have `travel_ticks` which advance the world clock during transitions. (v1.5 foundation)
 - **AI Navigation Fallback:** If A* pathfinding fails or a path is blocked, the AI reverts to a greedy Manhattan step to maintain pressure on the target while waiting for a path to clear. (v1.5)
 - **Dynamic Path Invalidation:** NPCs automatically clear and recompute paths if the target moves or if their next step is blocked by an entity. (v1.5)
+- **Data-Driven Schedules:** NPC schedules are defined in JSON, loaded via `ResourceLoader` into a `ScheduleRegistry`, and associated with entities via `Schedule` components. (v1.5)
 
 ### Pending Todos
 
@@ -91,5 +92,5 @@ Progress: [██████████] 0% (Phase 30) / 75% (v1.5)
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed Phase 29. Planning for Phase 30 complete.
-Resume file: .planning/phases/30-schedule-data-pipeline/30-01-PLAN.md
+Stopped at: Completed Phase 30. Ready for Phase 31 (AISystem Schedule Support).
+Resume file: .planning/phases/31-aisystem-schedule-support/31-01-PLAN.md
