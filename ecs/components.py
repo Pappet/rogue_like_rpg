@@ -193,6 +193,12 @@ class ChaseData:
 
 
 @dataclass
+class PathData:
+    path: List[Tuple[int, int]]
+    destination: Tuple[int, int]
+
+
+@dataclass
 class LootTable:
     entries: List[Tuple[str, float]] = field(default_factory=list)
 
