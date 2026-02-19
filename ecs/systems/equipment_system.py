@@ -1,8 +1,17 @@
 import esper
 from ecs.components import Stats, Equipment, EffectiveStats, StatModifiers
+from config import DN_SETTINGS
 
 class EquipmentSystem(esper.Processor):
+    def __init__(self, world_clock):
+        super().__init__()
+        self.world_clock = world_clock
+
     def process(self):
+        # Fetch current phase and perception multiplier
+        phase = self.world_clock.phase
+        multiplier = DN_SETTINGS.get(phase, {}).get("perception", 1.0)
+
         for ent, (stats, equipment) in esper.get_components(Stats, Equipment):
             # 1. Start with base values
             max_hp = stats.base_max_hp
@@ -28,13 +37,16 @@ class EquipmentSystem(esper.Processor):
                         max_mana += mods.mana
                         perception += mods.perception
                         intelligence += mods.intelligence
+
+            # 3. Apply time-of-day multiplier to perception
+            perception = max(1, int(perception * multiplier))
             
-            # 3. Calculate current effective values
+            # 4. Calculate current effective values
             # StatModifiers.hp applies to both max_hp and current hp.
             current_hp = stats.hp + hp_bonus
             current_mana = stats.mana + mana_bonus
             
-            # 4. Update or create the EffectiveStats component
+            # 5. Update or create the EffectiveStats component
             if esper.has_component(ent, EffectiveStats):
                 eff = esper.component_for_entity(ent, EffectiveStats)
                 eff.hp = current_hp

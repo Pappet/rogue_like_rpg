@@ -132,8 +132,10 @@ class Game(GameState):
 
         self.equipment_system = self.persist.get("equipment_system")
         if not self.equipment_system:
-            self.equipment_system = EquipmentSystem()
+            self.equipment_system = EquipmentSystem(self.world_clock)
             self.persist["equipment_system"] = self.equipment_system
+        else:
+            self.equipment_system.world_clock = self.world_clock
 
         # Clear existing processors to avoid duplicates when re-entering state
         for processor_type in [VisibilitySystem, MovementSystem, CombatSystem, TurnSystem, DeathSystem, EquipmentSystem]:
