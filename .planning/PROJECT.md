@@ -86,23 +86,26 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 
 ### Active
 
-## Current Milestone: v1.5 Dungeon Progression (Planning)
+## Current Milestone: v1.5 World Clock & NPC Schedules
 
-**Goal:** Implement map depth, stairs, and more robust procedural generation to create a sense of descent and progression.
+**Goal:** Give the world a persistent time system that drives day/night cycles, NPC daily routines, and time-aware gameplay.
 
 **Target features:**
-- Stair tiles (up/down) with transition logic
-- Map depth tracking
-- Level-scaled monster and loot spawning
-- More complex room-and-corridor generators
+- WorldClock service tracking ticks, hours, days, and seasons
+- Day/Night visual cycle with ambient light and perception modifiers
+- NPC Schedule system with daily routines (SLEEP, WORK, PATROL, SOCIALIZE)
+- A* Pathfinding service for scheduled movement
+- Sleep behavior with waking triggers and visual indicators
+- Data-driven schedules via `schedules.json`
 
 ## Context
 
 **Shipped:** v1.0 MVP (2026-02-14), v1.1 Investigation System (2026-02-14), v1.2 AI Infrastructure (2026-02-15), v1.3 Debug Overlay System (2026-02-15), v1.4 Item & Inventory System (2026-02-16)
-**In progress:** v1.5 Dungeon Progression
+**In progress:** v1.5 World Clock & NPC Schedules
+**Upcoming:** v1.6 Dungeon Progression (stairs, depth, scaled spawns)
 **Codebase:** 5,959 lines Python, 3 JSON data files
 **Tech stack:** Python 3.13, PyGame, esper ECS
-**Architecture:** ECS with data-driven JSON pipelines (tiles, entities, map prefabs); AISystem with state-driven behavior dispatch; EffectiveStats equipment pipeline
+**Architecture:** ECS with data-driven JSON pipelines; AISystem with state-driven behavior; EffectiveStats equipment pipeline; WorldClock simulation heartbeat
 **Tests:** 28 investigation tests + 7 AISystem tests + 5 wander tests + 6 chase tests + entity factory tests + inventory/equipment verification tests
 
 ## Key Decisions

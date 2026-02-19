@@ -2,37 +2,39 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-15)
+See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.4 Item & Inventory System — Bug Fixing
+**Current Focus:** v1.5 World Clock & NPC Schedules — Planning
 
 ## Current Position
 
-Phase: 26 of 26 (Consumables and Polish)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-16 — Fixed AttributeError in ConsumableService call.
+Phase: 27 of 32 (WorldClock Foundation)
+Plan: 0 of 1 in current phase
+Status: Milestone Initialized
+Last activity: 2026-02-17 — Initialized v1.5 milestone.
 
-Progress: [██████████] 100% (Phase 26) / 100% (v1.4)
+Progress: [----------] 0% (Phase 27) / 0% (v1.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.4): 13
-- Average duration: 20m
-- Total execution time: 280m
+- Total plans completed (v1.5): 0
+- Average duration: 0m
+- Total execution time: 0m
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 23 | 2 | 50m | 25m |
-| 24 | 3 | 75m | 25m |
-| 25 | 5 | 110m | 22m |
-| 26 | 3 | 45m | 15m |
+| 27 | 0 | 0m | 0m |
+| 28 | 0 | 0m | 0m |
+| 29 | 0 | 0m | 0m |
+| 30 | 0 | 0m | 0m |
+| 31 | 0 | 0m | 0m |
+| 32 | 0 | 0m | 0m |
 
-**Recent Trend:** Completed v1.4 bug fixes efficiently.
+**Recent Trend:** Initializing v1.5.
 
 ## Quick Tasks Completed
 

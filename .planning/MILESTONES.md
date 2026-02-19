@@ -82,3 +82,17 @@
 - **Detailed Inspection:** Physical item properties (material, weight) integrated into both inventory descriptions and world inspection modes.
 - **Safety & Persistence:** Item closure tracking during map transitions prevents entity loss or duplication.
 
+---
+
+## v1.5 World Clock & NPC Schedules (In Progress)
+
+**Goal:** Give the world a persistent time system that drives day/night cycles, NPC daily routines, and time-aware gameplay.
+
+**Target features:**
+- World Clock (ticks, hours, days, seasons)
+- Day/Night Visual Cycle (ambient light, perception modifiers)
+- NPC Schedule System (SLEEP, WORK, PATROL, SOCIALIZE)
+- A* Pathfinding Service
+- NPC Sleep Behavior
+- Data-driven schedule templates
+

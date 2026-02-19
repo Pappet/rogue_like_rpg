@@ -1,117 +1,73 @@
-# Requirements: Rogue Like RPG — v1.4 Item & Inventory System
+# Requirements: Rogue Like RPG — v1.5 World Clock & NPC Schedules
 
-**Defined:** 2026-02-15
-**Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
+**Defined:** 2026-02-17
+**Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat. "Sehr offenes, simulationslastiges Roguelike — tiefgründig und offen, mit Leben."
 
 ## v1 Requirements
 
-Requirements for v1.4 milestone. Each maps to roadmap phases.
+Requirements for v1.5 milestone. Each maps to roadmap phases.
 
-### Item Entity
+### World Clock
+- **CLK-01**: WorldClock tracks ticks, hours (0-23), days; advances on each player turn
+- **CLK-02**: Time-of-day phases (DAWN, DAY, DUSK, NIGHT) derived from hour with configurable boundaries
+- **CLK-03**: `clock_tick` event dispatched on each advance with current time state
+- **CLK-04**: Map transitions advance clock by configurable travel duration (not free)
+- **CLK-05**: Current time and day displayed in header UI
 
-- [ ] **ITEM-01**: Item exists as a full ECS entity with identity continuity across ground, inventory, and equipped states
-- [ ] **ITEM-02**: Item templates are defined in JSON (items.json) and loaded via ItemRegistry/ItemFactory pipeline
-- [ ] **ITEM-03**: Items on the ground are rendered on the map via existing RenderSystem
-- [ ] **ITEM-04**: Items have weight (kg) used for carry capacity checks
-- [ ] **ITEM-05**: Items have a material type (wood, metal, glass, etc.) stored as a component
+### Day/Night Cycle
+- **DN-01**: Global ambient light multiplier derived from time-of-day phase
+- **DN-02**: Player perception stat reduced during NIGHT (configurable multiplier, e.g., 0.5x)
+- **DN-03**: RenderService applies time-based darkening tint (night is darker, dawn/dusk intermediate)
+- **DN-04**: VisibilitySystem uses effective perception (after time-of-day modifier) for FOV radius
 
-### Inventory
+### NPC Schedules
+- **SCHED-01**: Schedule component holds ordered list of time-ranged activity entries
+- **SCHED-02**: Schedule templates loaded from `schedules.json` via data pipeline
+- **SCHED-03**: ScheduleSystem checks current time each AI turn and updates NPC target + state
+- **SCHED-04**: New AIState values: SLEEP, WORK, PATROL, SOCIALIZE
+- **SCHED-05**: NPCs without schedules fall back to existing WANDER behavior (backward compatible)
 
-- [ ] **INV-01**: Player can pick up items at their position with the G key
-- [ ] **INV-02**: Pickup is rejected with a log message when over weight capacity
-- [ ] **INV-03**: Player can open inventory screen with the I key (modal GameStates.INVENTORY)
-- [ ] **INV-04**: Inventory screen lists carried items with arrow-key navigation
-- [ ] **INV-05**: Player can drop items from inventory with the D key, restoring them to the map
-- [ ] **INV-06**: Carried items survive map transitions (freeze/thaw entity closure)
+### Pathfinding
+- **PATH-01**: A* pathfinding service computes walkable paths on a single MapContainer layer
+- **PATH-02**: PathData component stores precomputed path as coordinate list
+- **PATH-03**: AI movement consumes one step from PathData per turn (replaces random wander for scheduled movement)
+- **PATH-04**: Path recomputed when destination changes or path is blocked
+- **PATH-05**: Pathfinding integrates with existing blocker detection (no walking through entities)
 
-### Equipment
+### Sleep Behavior
+- **SLEEP-01**: SLEEP state suppresses all detection (no WANDER→CHASE transition)
+- **SLEEP-02**: Adjacent combat or player bump wakes sleeping NPC (state → CHASE or ALERT)
+- **SLEEP-03**: Sleeping NPCs have visual indicator (dimmed color or 'z' overlay)
+- **SLEEP-04**: NPCs navigate to home position before entering SLEEP state
 
-- [ ] **EQUIP-01**: Equipment slots exist (head, body, main_hand, off_hand, feet, accessory)
-- [ ] **EQUIP-02**: Player can equip items to matching slots from inventory
-- [ ] **EQUIP-03**: Player can unequip items back to inventory
-- [ ] **EQUIP-04**: Effective stats are computed as base stats + equipped bonuses each frame
-- [ ] **EQUIP-05**: CombatSystem uses effective stats for damage calculation
-- [ ] **EQUIP-06**: Current equipment loadout is visible in the sidebar UI
-
-### Consumable & Loot
-
-- [ ] **CONS-01**: Consumable items can be used from inventory (U key)
-- [ ] **CONS-02**: Health potion restores HP on use and is destroyed afterward
-- [ ] **CONS-03**: Monsters have contextual loot tables (wolves drop pelts, not gold)
-- [ ] **CONS-04**: Loot items spawn at monster position on death via entity_died event
-- [ ] **CONS-05**: Material type appears in item descriptions and investigation output
-
-## v2 Requirements
-
-Deferred to future release. Tracked but not in current roadmap.
-
-### Material Interactions
-
-- **MATX-01**: Wood items catch fire when exposed to fire damage
-- **MATX-02**: Metal items conduct electricity (lightning damage bonus)
-- **MATX-03**: Glass items shatter on impact/drop from height
-
-### Advanced Inventory
-
-- **AINV-01**: Nested containers (bags-in-bags) with recursive weight calculation
-- **AINV-02**: Identified/unidentified items with per-run name mapping
-- **AINV-03**: Pick up all items at position (G key variant)
-
-### Advanced Consumables
-
-- **ACONS-01**: Mana restore consumable
-- **ACONS-02**: Poison consumable
-- **ACONS-03**: Teleport scroll consumable
+### Data Extension
+- **DATA-01**: `schedules.json` defines reusable schedule templates with time ranges and activities
+- **DATA-02**: Entity templates reference schedule by ID (`schedule_id` field)
+- **DATA-03**: At least 3 NPC archetypes with distinct schedules (Villager, Guard, Shopkeeper)
+- **DATA-04**: Village scenario populated with scheduled friendly NPCs
 
 ## Out of Scope
 
-Explicitly excluded. Documented to prevent scope creep.
-
 | Feature | Reason |
 |---------|--------|
-| Nested containers (bags-in-bags) | Flat inventory sufficient for v1.4; adds recursive weight complexity |
-| Item stacking (10x Health Potion) | Each item is a unique entity; stacking contradicts identity continuity |
-| Drag-and-drop inventory UI | Requires mouse input system not yet built; arrow-key sufficient |
-| Item durability/repair | Future simulation hook; not needed for core item loop |
-| Crafting system | Independent milestone; too large for v1.4 scope |
-| NPC economy/trading | Requires NPC interaction system not yet built |
-| Auto-sort inventory | Low priority QoL; manual management sufficient |
-| Item cursing/blessing | Adds UI affordances and content design beyond v1.4 scope |
+| Cross-map NPC pathfinding | Requires portal-aware graph; too complex for v1.5 |
+| NPC needs (hunger, thirst) | Depends on clock but is a separate milestone (v1.7) |
+| Weather system | Depends on clock but is a separate milestone |
+| Torch/lantern items | Light sources exist in components but torch item logic deferred |
+| NPC dialogue content | v1.6 milestone; TALK state remains placeholder |
+| Seasonal changes | Clock tracks season but no gameplay effect in v1.5 |
+| Save/Load clock state | Persistence milestone not yet planned |
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ITEM-01 | Phase 23 | Pending |
-| ITEM-02 | Phase 23 | Pending |
-| ITEM-03 | Phase 23 | Pending |
-| ITEM-04 | Phase 23 | Pending |
-| ITEM-05 | Phase 23 | Pending |
-| INV-06 | Phase 23 | Pending |
-| INV-01 | Phase 24 | Pending |
-| INV-02 | Phase 24 | Pending |
-| INV-03 | Phase 24 | Pending |
-| INV-04 | Phase 24 | Pending |
-| INV-05 | Phase 24 | Pending |
-| CONS-03 | Phase 24 | Pending |
-| CONS-04 | Phase 24 | Pending |
-| EQUIP-01 | Phase 25 | Pending |
-| EQUIP-02 | Phase 25 | Pending |
-| EQUIP-03 | Phase 25 | Pending |
-| EQUIP-04 | Phase 25 | Pending |
-| EQUIP-05 | Phase 25 | Pending |
-| EQUIP-06 | Phase 25 | Pending |
-| CONS-01 | Phase 26 | Pending |
-| CONS-02 | Phase 26 | Pending |
-| CONS-05 | Phase 26 | Pending |
-
-**Coverage:**
-- v1 requirements: 22 total
-- Mapped to phases: 22
-- Unmapped: 0 ✓
+| CLK-01, CLK-02, CLK-03, CLK-04, CLK-05 | Phase 27 | Pending |
+| DN-01, DN-02, DN-03, DN-04 | Phase 28 | Pending |
+| PATH-01, PATH-02, PATH-03, PATH-04, PATH-05 | Phase 29 | Pending |
+| SCHED-02, DATA-01 | Phase 30 | Pending |
+| SCHED-01, SCHED-03, SCHED-04, SCHED-05 | Phase 31 | Pending |
+| SLEEP-01, SLEEP-02, SLEEP-03, SLEEP-04, DATA-02, DATA-03, DATA-04 | Phase 32 | Pending |
 
 ---
-*Requirements defined: 2026-02-15*
-*Last updated: 2026-02-15 after roadmap creation*
+*Requirements defined: 2026-02-17*
