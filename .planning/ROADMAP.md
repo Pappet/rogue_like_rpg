@@ -48,6 +48,11 @@ See archived roadmaps in `.planning/milestones/`.
 
 **Goal:** Translate world time into visual atmosphere and gameplay perception limits.
 
+**Plans:** 3 plans
+- [ ] 28-01-PLAN.md — Configuration and Environment Logic
+- [ ] 28-02-PLAN.md — Visual Atmosphere Implementation
+- [ ] 28-03-PLAN.md — Gameplay Impact and Verification
+
 **Requirements:** DN-01, DN-02, DN-03, DN-04
 
 **Success Criteria:**
@@ -121,7 +126,7 @@ See archived roadmaps in `.planning/milestones/`.
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 27 | v1.5 | 3/3 | Done | - |
-| 28 | v1.5 | 0/1 | Pending | - |
+| 28 | v1.5 | 0/3 | Pending | - |
 | 29 | v1.5 | 0/1 | Pending | - |
 | 30 | v1.5 | 0/1 | Pending | - |
 | 31 | v1.5 | 0/1 | Pending | - |
