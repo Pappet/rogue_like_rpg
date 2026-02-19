@@ -23,6 +23,7 @@ class GameController:
         viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT
         self.camera = Camera(viewport_width, viewport_height, 0, HEADER_HEIGHT)
 
+        ResourceLoader.load_schedules("assets/data/schedules.json")
         ResourceLoader.load_tiles("assets/data/tile_types.json")
         ResourceLoader.load_entities("assets/data/entities.json")
         ResourceLoader.load_items("assets/data/items.json")

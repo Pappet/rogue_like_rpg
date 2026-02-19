@@ -13,10 +13,72 @@ from ecs.components import AIState, Alignment
 from map.tile_registry import TileRegistry, TileType
 from entities.entity_registry import EntityRegistry, EntityTemplate
 from entities.item_registry import ItemRegistry, ItemTemplate
+from entities.schedule_registry import schedule_registry, ScheduleTemplate, ScheduleEntry
 
 
 class ResourceLoader:
     """Service that parses JSON resource files and populates registries."""
+
+    @staticmethod
+    def load_schedules(filepath: str) -> None:
+        """Load schedule definitions from a JSON file into ScheduleRegistry.
+
+        Args:
+            filepath: Path to the schedules.json file.
+
+        Raises:
+            FileNotFoundError: If the JSON file does not exist at filepath.
+            ValueError: If the JSON is malformed or missing required fields.
+        """
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(
+                f"Schedule resource file not found: '{filepath}'."
+            )
+
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"Malformed JSON in schedule resource file '{filepath}': {exc}"
+            ) from exc
+
+        if not isinstance(data, list):
+            raise ValueError(
+                f"Schedule resource file '{filepath}' must contain a JSON array."
+            )
+
+        for item in data:
+            # Validate required fields
+            for field in ("id", "name", "entries"):
+                if field not in item:
+                    raise ValueError(f"Schedule entry missing required field '{field}': {item}")
+
+            entries = []
+            for entry_data in item["entries"]:
+                # Validate entry required fields
+                for field in ("start", "end", "activity"):
+                    if field not in entry_data:
+                        raise ValueError(f"Schedule entry data missing '{field}': {entry_data}")
+
+                target_pos = None
+                if "target_pos" in entry_data and entry_data["target_pos"] is not None:
+                    target_pos = tuple(entry_data["target_pos"])
+
+                entries.append(ScheduleEntry(
+                    start=int(entry_data["start"]),
+                    end=int(entry_data["end"]),
+                    activity=entry_data["activity"],
+                    target_pos=target_pos,
+                    target_meta=entry_data.get("target_meta")
+                ))
+
+            template = ScheduleTemplate(
+                id=item["id"],
+                name=item["name"],
+                entries=entries
+            )
+            schedule_registry.register(template)
 
     @staticmethod
     def load_tiles(filepath: str) -> None:
@@ -163,6 +225,7 @@ class ResourceLoader:
             wounded_text = item.get("wounded_text", "")
             wounded_threshold = float(item.get("wounded_threshold", 0.5))
             loot_table = item.get("loot_table", [])
+            schedule_id = item.get("schedule_id")
 
             template = EntityTemplate(
                 id=item["id"],
@@ -186,6 +249,7 @@ class ResourceLoader:
                 wounded_text=wounded_text,
                 wounded_threshold=wounded_threshold,
                 loot_table=loot_table,
+                schedule_id=schedule_id,
             )
 
             EntityRegistry.register(template)
