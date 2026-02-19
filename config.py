@@ -21,6 +21,13 @@ HEADER_HEIGHT = 48
 SIDEBAR_WIDTH = 160
 LOG_HEIGHT = 140
 
+# World Clock configuration
+TICKS_PER_HOUR = 60
+DAWN_START = 5
+DAY_START = 7
+DUSK_START = 18
+NIGHT_START = 20
+
 
 class SpriteLayer(Enum):
 
