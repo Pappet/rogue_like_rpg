@@ -164,7 +164,7 @@ class MapService:
             # Portal to house (placed one tile south of the wall)
             world.create_entity(
                 Position(door_vx, door_vy + 1, 0),
-                Portal(h["id"], h["h_size"][0] // 2, h["h_size"][1] - 2, 0, f"Enter {h['id']}"),
+                Portal(h["id"], h["h_size"][0] // 2, h["h_size"][1] - 2, 0, f"Enter {h['id']}", travel_ticks=120),
                 Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                 Name(f"Portal to {h['id']}")
             )

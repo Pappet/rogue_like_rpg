@@ -54,7 +54,8 @@ class ActionSystem(esper.Processor):
                         "target_map_id": portal.target_map_id,
                         "target_x": portal.target_x,
                         "target_y": portal.target_y,
-                        "target_layer": portal.target_layer
+                        "target_layer": portal.target_layer,
+                        "travel_ticks": portal.travel_ticks
                     })
                     # Note: change_map event will trigger map transition in game_states.py
                     # We end turn here, but the map transition might reset things.

@@ -164,7 +164,7 @@ class Game(GameState):
         else:
             self.player_entity = self.persist.get("player_entity")
 
-        self.ui_system = UISystem(self.turn_system, self.player_entity)
+        self.ui_system = UISystem(self.turn_system, self.player_entity, self.world_clock)
         self.action_system = ActionSystem(self.map_container, self.turn_system)
         self.render_system = RenderSystem(self.camera, self.map_container)
         
@@ -363,7 +363,14 @@ class Game(GameState):
         target_x = event_data["target_x"]
         target_y = event_data["target_y"]
         target_layer = event_data["target_layer"]
+        travel_ticks = event_data.get("travel_ticks", 0)
         
+        # Advance world clock
+        if self.world_clock:
+            self.world_clock.advance(travel_ticks)
+            if self.turn_system:
+                self.turn_system.round_counter = self.world_clock.total_ticks + 1
+
         # 1. Calculate memory threshold from player stats
         memory_threshold = 10
         try:
