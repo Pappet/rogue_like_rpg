@@ -12,7 +12,7 @@ class EquipmentSystem(esper.Processor):
         phase = self.world_clock.phase
         multiplier = DN_SETTINGS.get(phase, {}).get("perception", 1.0)
 
-        for ent, (stats, equipment) in esper.get_components(Stats, Equipment):
+        for ent, stats in esper.get_component(Stats):
             # 1. Start with base values
             max_hp = stats.base_max_hp
             power = stats.base_power
@@ -24,19 +24,21 @@ class EquipmentSystem(esper.Processor):
             hp_bonus = 0
             mana_bonus = 0
             
-            # 2. Iterate over equipped items
-            for slot, item_id in equipment.slots.items():
-                if item_id is not None and esper.entity_exists(item_id):
-                    if esper.has_component(item_id, StatModifiers):
-                        mods = esper.component_for_entity(item_id, StatModifiers)
-                        hp_bonus += mods.hp
-                        max_hp += mods.hp
-                        power += mods.power
-                        defense += mods.defense
-                        mana_bonus += mods.mana
-                        max_mana += mods.mana
-                        perception += mods.perception
-                        intelligence += mods.intelligence
+            # 2. Iterate over equipped items if Equipment component exists
+            if esper.has_component(ent, Equipment):
+                equipment = esper.component_for_entity(ent, Equipment)
+                for slot, item_id in equipment.slots.items():
+                    if item_id is not None and esper.entity_exists(item_id):
+                        if esper.has_component(item_id, StatModifiers):
+                            mods = esper.component_for_entity(item_id, StatModifiers)
+                            hp_bonus += mods.hp
+                            max_hp += mods.hp
+                            power += mods.power
+                            defense += mods.defense
+                            mana_bonus += mods.mana
+                            max_mana += mods.mana
+                            perception += mods.perception
+                            intelligence += mods.intelligence
 
             # 3. Apply time-of-day multiplier to perception
             perception = max(1, int(perception * multiplier))

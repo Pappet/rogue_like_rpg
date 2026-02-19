@@ -2,7 +2,7 @@ import random
 
 import esper
 from config import GameStates, SpriteLayer
-from ecs.components import AI, AIBehaviorState, Blocker, Corpse, Position, AIState, ChaseData, Name, Stats, Alignment
+from ecs.components import AI, AIBehaviorState, Blocker, Corpse, Position, AIState, ChaseData, Name, Stats, Alignment, EffectiveStats
 from services.visibility_service import VisibilityService
 
 CARDINAL_DIRS = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # N S W E
@@ -75,7 +75,7 @@ class AISystem(esper.Processor):
         ):
             try:
                 stats = esper.component_for_entity(ent, Stats)
-                if self._can_see_player(pos, stats, player_pos, map_container):
+                if self._can_see_player(pos, stats, player_pos, map_container, ent):
                     behavior.state = AIState.CHASE
                     esper.add_component(ent, ChaseData(
                         last_known_x=player_pos.x,
@@ -144,7 +144,7 @@ class AISystem(esper.Processor):
 
         # Sight check: update last_known position or increment lose-sight counter
         if player_pos is not None and stats is not None:
-            if self._can_see_player(pos, stats, player_pos, map_container):
+            if self._can_see_player(pos, stats, player_pos, map_container, ent):
                 chase_data.last_known_x = player_pos.x
                 chase_data.last_known_y = player_pos.y
                 chase_data.turns_without_sight = 0
@@ -198,11 +198,16 @@ class AISystem(esper.Processor):
             return
         # No valid step — NPC stays in place this turn
 
-    def _can_see_player(self, pos, stats, player_pos, map_container):
+    def _can_see_player(self, pos, stats, player_pos, map_container, ent=None):
         """Returns True if NPC at pos can see player_pos using FOV computation."""
         is_transparent = self._make_transparency_func(pos.layer, map_container)
+        
+        radius = stats.perception
+        if ent is not None and esper.has_component(ent, EffectiveStats):
+            radius = esper.component_for_entity(ent, EffectiveStats).perception
+            
         visible = VisibilityService.compute_visibility(
-            (pos.x, pos.y), stats.perception, is_transparent
+            (pos.x, pos.y), radius, is_transparent
         )
         return (player_pos.x, player_pos.y) in visible
 
