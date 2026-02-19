@@ -107,7 +107,7 @@ See archived roadmaps in `.planning/milestones/`.
 **Goal:** Wire NPC AI to follow their assigned schedules.
 
 **Plans:** 1 plan
-- [ ] 31-01-PLAN.md — ScheduleSystem Skeleton & Activity Integration
+- [x] 31-01-PLAN.md — ScheduleSystem Skeleton & Activity Integration
 
 **Requirements:** SCHED-01, SCHED-03, SCHED-04, SCHED-05
 
@@ -122,6 +122,11 @@ See archived roadmaps in `.planning/milestones/`.
 ### Phase 32: Sleep Behavior & Village Population
 
 **Goal:** Complete the simulation with sleep mechanics and a populated Village scenario.
+
+**Plans:** 3 plans
+- [ ] 32-01-PLAN.md — Sleep Mechanics & Visuals
+- [ ] 32-02-PLAN.md — Home Positions & Schedule Refinement
+- [ ] 32-03-PLAN.md — Village Population & Routines
 
 **Requirements:** SLEEP-01, SLEEP-02, SLEEP-03, SLEEP-04, DATA-02, DATA-03, DATA-04
 
@@ -142,5 +147,5 @@ See archived roadmaps in `.planning/milestones/`.
 | 28 | v1.5 | 3/3 | Done | 2026-02-18 |
 | 29 | v1.5 | 3/3 | Done | 2026-02-19 |
 | 30 | v1.5 | 3/3 | Done | 2026-02-19 |
-| 31 | v1.5 | 0/1 | In Progress | - |
-| 32 | v1.5 | 0/? | Pending | - |
+| 31 | v1.5 | 1/1 | Done | 2026-02-19 |
+| 32 | v1.5 | 0/3 | Pending | - |
