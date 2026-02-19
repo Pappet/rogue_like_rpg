@@ -141,6 +141,6 @@ See archived roadmaps in `.planning/milestones/`.
 | 27 | v1.5 | 3/3 | Done | 2026-02-17 |
 | 28 | v1.5 | 3/3 | Done | 2026-02-18 |
 | 29 | v1.5 | 3/3 | Done | 2026-02-19 |
-| 30 | v1.5 | 0/3 | Pending | - |
+| 30 | v1.5 | 3/3 | Done | 2026-02-19 |
 | 31 | v1.5 | 0/1 | In Progress | - |
 | 32 | v1.5 | 0/? | Pending | - |
