@@ -49,9 +49,9 @@ See archived roadmaps in `.planning/milestones/`.
 **Goal:** Translate world time into visual atmosphere and gameplay perception limits.
 
 **Plans:** 3 plans
-- [ ] 28-01-PLAN.md — Configuration and Environment Logic
-- [ ] 28-02-PLAN.md — Visual Atmosphere Implementation
-- [ ] 28-03-PLAN.md — Gameplay Impact and Verification
+- [x] 28-01-PLAN.md — Configuration and Environment Logic
+- [x] 28-02-PLAN.md — Visual Atmosphere Implementation
+- [x] 28-03-PLAN.md — Gameplay Impact and Verification
 
 **Requirements:** DN-01, DN-02, DN-03, DN-04
 
@@ -66,6 +66,11 @@ See archived roadmaps in `.planning/milestones/`.
 ### Phase 29: Pathfinding Service
 
 **Goal:** Provide NPCs with the ability to navigate purposefully to destinations.
+
+**Plans:** 3 plans
+- [ ] 29-01-PLAN.md — Infrastructure & Component
+- [ ] 29-02-PLAN.md — AI Integration
+- [ ] 29-03-PLAN.md — Verification
 
 **Requirements:** PATH-01, PATH-02, PATH-03, PATH-04, PATH-05
 
@@ -125,9 +130,6 @@ See archived roadmaps in `.planning/milestones/`.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 27 | v1.5 | 3/3 | Done | - |
-| 28 | v1.5 | 0/3 | Pending | - |
-| 29 | v1.5 | 0/1 | Pending | - |
-| 30 | v1.5 | 0/1 | Pending | - |
-| 31 | v1.5 | 0/1 | Pending | - |
-| 32 | v1.5 | 0/1 | Pending | - |
+| 27 | v1.5 | 3/3 | Done | 2026-02-17 |
+| 28 | v1.5 | 3/3 | Done | 2026-02-18 |
+| 29 | v1.5 | 0/3 | Pending | - |
