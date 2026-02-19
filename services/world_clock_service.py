@@ -38,6 +38,40 @@ class WorldClockService:
             return "dusk"
         return "unknown"
 
+    def get_interpolated_tint(self):
+        """Calculates an interpolated RGBA tint color based on the current time."""
+        from config import DN_SETTINGS
+        h = self.hour
+        m = self.minute
+        t = h + m / TICKS_PER_HOUR
+        
+        # Define transition points (hour, phase_name)
+        # We interpolate between these specific moments in time
+        points = [
+            (0, "night"),
+            (DAWN_START, "night"),
+            ((DAWN_START + DAY_START) / 2, "dawn"),
+            (DAY_START, "day"),
+            (DUSK_START, "day"),
+            ((DUSK_START + NIGHT_START) / 2, "dusk"),
+            (NIGHT_START, "night"),
+            (24, "night")
+        ]
+        
+        # Find the two points we are between
+        for i in range(len(points) - 1):
+            t1, p1 = points[i]
+            t2, p2 = points[i+1]
+            if t1 <= t < t2:
+                # Linear interpolation between color1 and color2
+                factor = (t - t1) / (t2 - t1)
+                color1 = DN_SETTINGS[p1]["tint"]
+                color2 = DN_SETTINGS[p2]["tint"]
+                return tuple(int(c1 + (c2 - c1) * factor) for c1, c2 in zip(color1, color2))
+        
+        # Fallback to current phase tint if loop fails
+        return DN_SETTINGS.get(self.phase, {}).get("tint", (0, 0, 0, 0))
+
     def advance(self, amount=1):
         """Increments total_ticks and dispatches event."""
         self.total_ticks += amount

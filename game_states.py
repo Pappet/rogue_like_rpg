@@ -479,9 +479,8 @@ class Game(GameState):
 
         # 3.5. Apply Viewport Tint
         if self.world_clock and self.render_service:
-            phase = self.world_clock.phase
-            tint_color = DN_SETTINGS.get(phase, {}).get("tint")
-            if tint_color:
+            tint_color = self.world_clock.get_interpolated_tint()
+            if tint_color and tint_color[3] > 0: # Only apply if alpha > 0
                 self.render_service.apply_viewport_tint(surface, tint_color, viewport_rect)
 
         # Reset clip for UI
