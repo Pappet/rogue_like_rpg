@@ -68,9 +68,9 @@ See archived roadmaps in `.planning/milestones/`.
 **Goal:** Provide NPCs with the ability to navigate purposefully to destinations.
 
 **Plans:** 3 plans
-- [ ] 29-01-PLAN.md — Infrastructure & Component
-- [ ] 29-02-PLAN.md — AI Integration
-- [ ] 29-03-PLAN.md — Verification
+- [x] 29-01-PLAN.md — Infrastructure & Component
+- [x] 29-02-PLAN.md — AI Integration
+- [x] 29-03-PLAN.md — Verification
 
 **Requirements:** PATH-01, PATH-02, PATH-03, PATH-04, PATH-05
 
@@ -86,6 +86,11 @@ See archived roadmaps in `.planning/milestones/`.
 ### Phase 30: Schedule Data Pipeline
 
 **Goal:** Load NPC routines from external data files.
+
+**Plans:** 3 plans
+- [ ] 30-01-PLAN.md — Schedule Registry and Components
+- [ ] 30-02-PLAN.md — Data Loading and Pipeline
+- [ ] 30-03-PLAN.md — Verification
 
 **Requirements:** SCHED-02, DATA-01
 
@@ -133,6 +138,6 @@ See archived roadmaps in `.planning/milestones/`.
 | 27 | v1.5 | 3/3 | Done | 2026-02-17 |
 | 28 | v1.5 | 3/3 | Done | 2026-02-18 |
 | 29 | v1.5 | 3/3 | Done | 2026-02-19 |
-| 30 | v1.5 | 0/? | Pending | - |
+| 30 | v1.5 | 0/3 | Pending | - |
 | 31 | v1.5 | 0/? | Pending | - |
 | 32 | v1.5 | 0/? | Pending | - |

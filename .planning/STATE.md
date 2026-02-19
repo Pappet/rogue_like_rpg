@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.5 World Clock & NPC Schedules — Planning
+**Current Focus:** v1.5 World Clock & NPC Schedules — Execution
 
 ## Current Position
 
-Phase: 29 of 32 (Pathfinding Service)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-19 — Completed Pathfinding Verification (29-03).
+Phase: 30 of 32 (Schedule Data Pipeline)
+Plan: 0 of 3 in current phase
+Status: Planning complete, ready for execution
+Last activity: 2026-02-19 — Completed Planning for Phase 30.
 
-Progress: [██████████] 100% (Phase 29) / 75% (v1.5)
+Progress: [██████████] 0% (Phase 30) / 75% (v1.5)
 
 ## Performance Metrics
 
@@ -30,7 +30,7 @@ Progress: [██████████] 100% (Phase 29) / 75% (v1.5)
 | 27 | 3 | 75m | 25m |
 | 28 | 3 | 75m | 25m |
 | 29 | 3 | 65m | 21m |
-| 30 | 0 | 0m | 0m |
+| 30 | 3 | 0m | 0m |
 | 31 | 0 | 0m | 0m |
 | 32 | 0 | 0m | 0m |
 
@@ -90,6 +90,6 @@ Progress: [██████████] 100% (Phase 29) / 75% (v1.5)
 
 ## Session Continuity
 
-Last session: 2026-02-17
-Stopped at: Completed Phase 27. WorldClock Foundation verified.
-Resume file: .planning/phases/27-world-clock-foundation/27-03-SUMMARY.md
+Last session: 2026-02-19
+Stopped at: Completed Phase 29. Planning for Phase 30 complete.
+Resume file: .planning/phases/30-schedule-data-pipeline/30-01-PLAN.md
