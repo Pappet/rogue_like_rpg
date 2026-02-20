@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 32 of 32 (Sleep Behavior & Village Population)
-Plan: 1 of 1 in current phase
-Status: Phase complete
-Last activity: 2026-02-19 — Completed Phase 32.
+Plan: 3 of 3 in current phase
+Status: Phase Complete
+Last activity: 2026-02-20 — Completed Phase 32 Plan 03 (Village Population).
 
 Progress: [██████████] 100% (Phase 32) / 100% (v1.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.5): 11
+- Total plans completed (v1.5): 13
 - Average duration: 25m
-- Total execution time: 265m
+- Total execution time: 315m
 
 **By Phase:**
 
@@ -30,19 +30,20 @@ Progress: [██████████] 100% (Phase 32) / 100% (v1.5)
 | 27 | 3 | 75m | 25m |
 | 28 | 3 | 75m | 25m |
 | 29 | 3 | 65m | 21m |
-| 30 | 3 | 0m | 0m |
+| 30 | 2 | 40m | 20m |
 | 31 | 1 | 25m | 25m |
-| 32 | 1 | 25m | 25m |
+| 32 | 3 | 75m | 25m |
 
-**Recent Trend:** Completed v1.5 core mechanics. NPCs now follow schedules and exhibit sleep behavior.
+**Recent Trend:** Milestone v1.5 complete. Village population and NPC routines fully implemented and verified.
 
 ## Quick Tasks Completed
 
 | Task | Description | Date |
 |------|-------------|------|
+| 32-03 | Populate Village Scenario with NPCs and routines | 2026-02-20 |
+| 32-02 | Implement Home Positions and Home-navigation for SLEEP | 2026-02-19 |
 | 32-01 | Implement Sleep Behavior and Wake-up Triggers | 2026-02-19 |
 | 31-01 | Implement ScheduleSystem and Activity state transitions | 2026-02-19 |
-| 30-03 | Schedule Registry and Component Verification | 2026-02-19 |
 | 30-02 | Data Loading and Schedule Pipeline Implementation | 2026-02-19 |
 | 30-01 | Schedule Entry and Template Data Structures | 2026-02-19 |
 | 29-03 | Pathfinding and NPC Navigation Verification | 2026-02-19 |
@@ -55,9 +56,6 @@ Progress: [██████████] 100% (Phase 32) / 100% (v1.5)
 | 27-03 | Comprehensive Verification of World Clock | 2026-02-17 |
 | 27-02 | Map Travel and UI Header | 2026-02-17 |
 | 27-01 | Implement WorldClockService and integrate into TurnSystem | 2026-02-17 |
-| fix-action-system-world-attribute | Fix AttributeError in ActionSystem.confirm_action | 2026-02-16 |
-| fix-consumable-service-call | Fix AttributeError in ConsumableService call | 2026-02-16 |
-| fix-map-container-attribute-error | Implement `is_walkable` in `MapContainer` | 2026-02-16 |
 
 *Updated after each plan completion*
 
@@ -88,10 +86,13 @@ Progress: [██████████] 100% (Phase 32) / 100% (v1.5)
 - **Centralized Wake-up Logic:** `ActionSystem.wake_up()` provides a single point of entry for transitioning entities from `SLEEP` to `IDLE`, including log messaging. (v1.5)
 - **Sleep Visuals:** NPCs in `SLEEP` state are rendered at 50% brightness to provide clear visual feedback of their state. (v1.5)
 - **Physical Wake-up Triggers:** Both bumping into an entity (MovementSystem) and hitting it with an attack (CombatSystem) will trigger the `wake_up` logic. (v1.5)
+- **Case-insensitive Schedule Activities:** `ScheduleSystem` converts activity names to uppercase before processing, ensuring consistency with JSON data definitions. (v1.5)
+- **Village Population Spawning:** NPCs (Guards, Shopkeepers, Villagers) are spawned in the village scenario and house interiors during initial map generation, before freezing containers to ensure persistence. (v1.5)
+- **Multi-state NPC Routines:** NPCs transition between WORK, SOCIALIZE, and SLEEP states based on world time, with specific target positions or "home" metadata for each state. (v1.5)
 
 ### Pending Todos
 
-- [ ] Milestone v1.5 Planning (Dungeon Progression / Map Generation)
+- [ ] Milestone v1.6 Planning (Dungeon Progression / Map Generation)
 
 ### Blockers/Concerns
 
@@ -99,6 +100,6 @@ Progress: [██████████] 100% (Phase 32) / 100% (v1.5)
 
 ## Session Continuity
 
-Last session: 2026-02-19
-Stopped at: Completed Phase 32 (Sleep Behavior).
+Last session: 2026-02-20
+Stopped at: Completed Milestone v1.5 (World Clock & NPC Schedules).
 Resume file: .planning/v1.6-PLANNING.md (Next Milestone)
