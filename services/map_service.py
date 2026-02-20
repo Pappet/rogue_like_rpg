@@ -169,6 +169,12 @@ class MapService:
                 Name(f"Portal to {h['id']}")
             )
 
+        # --- SPAWN VILLAGE NPCS ---
+        EntityFactory.create(world, "guard", 35, 35)
+        EntityFactory.create(world, "guard", 5, 35)
+        EntityFactory.create(world, "villager", 10, 10)
+        EntityFactory.create(world, "villager", 12, 12)
+
         village_container.freeze(world)
 
         # 2. Create House interiors
@@ -179,6 +185,14 @@ class MapService:
 
             # Populate house interior
             self.add_house_to_map(world, h_container, 0, 0, hi, hj, h["floors"])
+
+            # --- SPAWN HOUSE NPCS ---
+            if h["id"] == "Shop":
+                EntityFactory.create(world, "shopkeeper", 5, 5)
+            elif h["id"] == "Tavern":
+                EntityFactory.create(world, "shopkeeper", 7, 7)
+            elif h["id"] == "Cottage":
+                EntityFactory.create(world, "villager", 4, 4)
 
             # Portal back to Village
             vx, vy = h["v_pos"]
