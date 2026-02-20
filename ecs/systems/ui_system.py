@@ -4,7 +4,10 @@ from config import (
     HEADER_HEIGHT, SIDEBAR_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT, LOG_HEIGHT, GameStates,
     UI_PADDING, UI_MARGIN, UI_LINE_SPACING, UI_SECTION_SPACING,
     UI_COLOR_BG_HEADER, UI_COLOR_BG_SIDEBAR, UI_COLOR_BORDER,
-    UI_COLOR_TEXT_DIM, UI_COLOR_TEXT_BRIGHT, UI_COLOR_SECTION_TITLE, UI_BAR_HEIGHT
+    UI_COLOR_TEXT_DIM, UI_COLOR_TEXT_BRIGHT, UI_COLOR_SECTION_TITLE, UI_BAR_HEIGHT,
+    UI_COLOR_HP, UI_COLOR_MANA, UI_COLOR_TIME, UI_COLOR_SELECTION, UI_COLOR_SELECTION_DIM,
+    UI_COLUMN_OFFSET, UI_CLOCK_OFFSET, UI_ACTION_HEIGHT, UI_ACTION_HIGHLIGHT_HEIGHT,
+    UI_COLOR_BAR_BG, UI_COLOR_MANA_COST
 )
 from ecs.components import ActionList, Stats, Targeting, Equipment, EffectiveStats, Name, SlotType
 from ui.message_log import MessageLog
@@ -67,9 +70,9 @@ class UISystem(esper.Processor):
         # Clock info: Day X - HH:MM (PHASE)
         if self.world_clock:
             time_str = f"Day {self.world_clock.day} - {self.world_clock.hour:02d}:{self.world_clock.minute:02d} ({self.world_clock.phase.upper()})"
-            time_surf = self.font.render(time_str, True, (200, 200, 255))
+            time_surf = self.font.render(time_str, True, UI_COLOR_TIME)
             # Offset from round info
-            surface.blit(time_surf, (self.header_rect.x + UI_PADDING + 130, (HEADER_HEIGHT - time_surf.get_height()) // 2))
+            surface.blit(time_surf, (self.header_rect.x + UI_PADDING + UI_CLOCK_OFFSET, (HEADER_HEIGHT - time_surf.get_height()) // 2))
 
         # Turn info
         if self.turn_system.current_state == GameStates.PLAYER_TURN:
@@ -133,10 +136,10 @@ class UISystem(esper.Processor):
             max_mana = eff.max_mana if eff else stats.max_mana
             
             # HP Bar
-            self._draw_bar(surface, cursor.x, cursor.y, cursor.width, UI_BAR_HEIGHT, hp, max_hp, (180, 30, 30), "HP")
+            self._draw_bar(surface, cursor.x, cursor.y, cursor.width, UI_BAR_HEIGHT, hp, max_hp, UI_COLOR_HP, "HP")
             cursor.advance(UI_LINE_SPACING)
             # Mana Bar
-            self._draw_bar(surface, cursor.x, cursor.y, cursor.width, UI_BAR_HEIGHT, mana, max_mana, (30, 30, 180), "MP")
+            self._draw_bar(surface, cursor.x, cursor.y, cursor.width, UI_BAR_HEIGHT, mana, max_mana, UI_COLOR_MANA, "MP")
             cursor.advance(UI_SECTION_SPACING)
         except KeyError:
             pass
@@ -152,15 +155,14 @@ class UISystem(esper.Processor):
         for i, action in enumerate(action_list.actions):
             available = self.is_action_available(action)
             
-            line_height = 25
             if i == action_list.selected_idx:
                 # Draw selection highlight
-                bg_rect = pygame.Rect(cursor.x - 5, cursor.y, cursor.width + 10, line_height)
-                color = (80, 80, 80) if available else (60, 60, 60)
+                bg_rect = pygame.Rect(cursor.x - 5, cursor.y, cursor.width + 10, UI_ACTION_HIGHLIGHT_HEIGHT)
+                color = UI_COLOR_SELECTION if available else UI_COLOR_SELECTION_DIM
                 pygame.draw.rect(surface, color, bg_rect)
             
             if available:
-                color = UI_COLOR_TEXT_BRIGHT if i == action_list.selected_idx else (150, 150, 150)
+                color = UI_COLOR_TEXT_BRIGHT if i == action_list.selected_idx else UI_COLOR_TEXT_DIM
             else:
                 color = UI_COLOR_TEXT_DIM
                 
@@ -168,10 +170,10 @@ class UISystem(esper.Processor):
             surface.blit(action_surf, (cursor.x + 5, cursor.y + 3))
             
             if action.cost_mana > 0:
-                cost_surf = self.small_font.render(f"{action.cost_mana} MP", True, (100, 100, 255))
+                cost_surf = self.small_font.render(f"{action.cost_mana} MP", True, UI_COLOR_MANA_COST)
                 surface.blit(cost_surf, (cursor.x + cursor.width - cost_surf.get_width(), cursor.y + 3))
             
-            cursor.advance(30) # Match original layout step
+            cursor.advance(UI_ACTION_HEIGHT)
         
         cursor.advance(UI_SECTION_SPACING)
 
@@ -190,11 +192,11 @@ class UISystem(esper.Processor):
                         item_name = "Unknown"
                 
                 slot_name = slot.value.replace('_', ' ').title()
-                slot_surf = self.small_font.render(f"{slot_name}:", True, (150, 150, 150))
+                slot_surf = self.small_font.render(f"{slot_name}:", True, UI_COLOR_TEXT_DIM)
                 item_surf = self.small_font.render(item_name, True, UI_COLOR_TEXT_BRIGHT)
                 
                 surface.blit(slot_surf, (cursor.x + 5, cursor.y))
-                surface.blit(item_surf, (cursor.x + 95, cursor.y))
+                surface.blit(item_surf, (cursor.x + UI_COLUMN_OFFSET, cursor.y))
                 cursor.advance(UI_LINE_SPACING)
         except KeyError:
             pass
@@ -237,14 +239,14 @@ class UISystem(esper.Processor):
 
     def _draw_bar(self, surface, x, y, width, height, val, max_val, color, label):
         # Background
-        pygame.draw.rect(surface, (20, 20, 20), (x, y, width, height))
+        pygame.draw.rect(surface, UI_COLOR_BAR_BG, (x, y, width, height))
         if max_val > 0:
             fill_width = int((val / max_val) * width)
             fill_width = max(0, min(width, fill_width))
             if fill_width > 0:
                 pygame.draw.rect(surface, color, (x, y, fill_width, height))
         # Border
-        pygame.draw.rect(surface, (100, 100, 100), (x, y, width, height), 1)
+        pygame.draw.rect(surface, UI_COLOR_BORDER, (x, y, width, height), 1)
         
         # Label and values
         text = f"{label}: {val}/{max_val}"
