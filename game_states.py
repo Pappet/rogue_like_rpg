@@ -9,7 +9,7 @@ from ecs.systems.render_system import RenderSystem
 from ecs.systems.movement_system import MovementSystem
 from ecs.systems.turn_system import TurnSystem
 from ecs.systems.visibility_system import VisibilitySystem
-from ecs.systems.ui_system_old import UISystem
+from ecs.systems.ui_system import UISystem
 from ecs.systems.action_system import ActionSystem
 from ecs.systems.combat_system import CombatSystem
 from ecs.systems.death_system import DeathSystem
