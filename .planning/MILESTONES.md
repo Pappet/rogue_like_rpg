@@ -84,15 +84,29 @@
 
 ---
 
-## v1.5 World Clock & NPC Schedules (In Progress)
+## v1.5 World Clock & NPC Schedules (Shipped: 2026-02-20)
 
-**Goal:** Give the world a persistent time system that drives day/night cycles, NPC daily routines, and time-aware gameplay.
+**Phases:** 6 (27-32) | **Plans:** 13 | **Requirements:** 22/22 satisfied
+**Timeline:** 3 days (2026-02-17 → 2026-02-20)
+
+**Key accomplishments:**
+- **Synchronized World Clock:** Implemented `WorldClockService` (ticks, hours, days, seasons) advancing on each player turn.
+- **Day/Night visual cycle:** Viewport color tinting and perception modifiers driven by time-of-day phases.
+- **A* Pathfinding Service:** Robust NPC navigation supporting walkable paths and entity blocker detection.
+- **NPC Schedule System:** Data-driven routines (SLEEP, WORK, SOCIALIZE) loaded from `schedules.json`.
+- **Sleep mechanics:** NPCs navigate home to sleep, exhibit visual dimming, and wake up upon interaction.
+- **Village Population:** Created a populated Village scenario with friendly NPCs following daily schedules.
+
+---
+
+## v1.6 UI/UX Architecture & Input Overhaul (In Progress)
+
+**Goal:** Refactor the presentation and interaction layers to be modular, scalable, and player-friendly.
 
 **Target features:**
-- World Clock (ticks, hours, days, seasons)
-- Day/Night Visual Cycle (ambient light, perception modifiers)
-- NPC Schedule System (SLEEP, WORK, PATROL, SOCIALIZE)
-- A* Pathfinding Service
-- NPC Sleep Behavior
-- Data-driven schedule templates
+- Modular UI Rendering (Y-Cursor layout)
+- Unified InputManager (Command mapping)
+- Context-sensitive Interactions (Bump-to-Action)
+- Stateful Menu Overlays (Character/Inventory modals)
+- Feedback Enhancement (Floating combat text, log color categorization)
 

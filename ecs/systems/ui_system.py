@@ -7,7 +7,8 @@ from config import (
     UI_COLOR_TEXT_DIM, UI_COLOR_TEXT_BRIGHT, UI_COLOR_SECTION_TITLE, UI_BAR_HEIGHT,
     UI_COLOR_HP, UI_COLOR_MANA, UI_COLOR_TIME, UI_COLOR_SELECTION, UI_COLOR_SELECTION_DIM,
     UI_COLUMN_OFFSET, UI_CLOCK_OFFSET, UI_ACTION_HEIGHT, UI_ACTION_HIGHLIGHT_HEIGHT,
-    UI_COLOR_BAR_BG, UI_COLOR_MANA_COST
+    UI_COLOR_BAR_BG, UI_COLOR_MANA_COST, UI_SPACING_X,
+    UI_COLOR_PLAYER_TURN, UI_COLOR_TARGETING, UI_COLOR_ENV_TURN
 )
 from ecs.components import ActionList, Stats, Targeting, Equipment, EffectiveStats, Name, SlotType
 from ui.message_log import MessageLog
@@ -22,12 +23,18 @@ class LayoutCursor:
     def advance(self, dy):
         self.y += dy
 
+    def advance_x(self, dx):
+        self.x += dx
+
     def reset(self):
         self.y = self.initial_y
 
     def move_to(self, x, y):
         self.x = x
         self.y = y
+
+    def move_x(self, x):
+        self.x = x
 
 class UISystem(esper.Processor):
     def __init__(self, turn_system, player_entity, world_clock):
@@ -62,22 +69,27 @@ class UISystem(esper.Processor):
         pygame.draw.rect(surface, UI_COLOR_BG_HEADER, self.header_rect)
         pygame.draw.line(surface, UI_COLOR_BORDER, (0, HEADER_HEIGHT), (SCREEN_WIDTH, HEADER_HEIGHT), 2)
         
+        # Reset header cursor
+        self.header_cursor.move_to(self.header_rect.x + UI_PADDING, (HEADER_HEIGHT - self.small_font.get_height()) // 2)
+        
         # Round info
         round_text = f"Round: {self.turn_system.round_counter}"
         round_surf = self.small_font.render(round_text, True, UI_COLOR_TEXT_BRIGHT)
-        surface.blit(round_surf, (self.header_rect.x + UI_PADDING, (HEADER_HEIGHT - round_surf.get_height()) // 2))
+        surface.blit(round_surf, (self.header_cursor.x, (HEADER_HEIGHT - round_surf.get_height()) // 2))
+        self.header_cursor.advance_x(round_surf.get_width() + UI_SPACING_X)
         
         # Clock info: Day X - HH:MM (PHASE)
         if self.world_clock:
             time_str = f"Day {self.world_clock.day} - {self.world_clock.hour:02d}:{self.world_clock.minute:02d} ({self.world_clock.phase.upper()})"
             time_surf = self.font.render(time_str, True, UI_COLOR_TIME)
-            # Offset from round info
-            surface.blit(time_surf, (self.header_rect.x + UI_PADDING + UI_CLOCK_OFFSET, (HEADER_HEIGHT - time_surf.get_height()) // 2))
+            surface.blit(time_surf, (self.header_cursor.x, (HEADER_HEIGHT - time_surf.get_height()) // 2))
+            # Don't strictly need to advance X here as turn info is centered, 
+            # but it's good practice.
 
-        # Turn info
+        # Turn info (Centered)
         if self.turn_system.current_state == GameStates.PLAYER_TURN:
             turn_str = "Player Turn"
-            turn_color = (100, 255, 100)
+            turn_color = UI_COLOR_PLAYER_TURN
         elif self.turn_system.current_state == GameStates.TARGETING:
             try:
                 targeting = esper.component_for_entity(self.player_entity, Targeting)
@@ -87,15 +99,15 @@ class UISystem(esper.Processor):
                     turn_str = "Targeting..."
             except KeyError:
                 turn_str = "Targeting..."
-            turn_color = (100, 255, 255)
+            turn_color = UI_COLOR_TARGETING
         else:
             turn_str = "Environment Turn"
-            turn_color = (255, 100, 100)
+            turn_color = UI_COLOR_ENV_TURN
             
         turn_surf = self.font.render(turn_str, True, turn_color)
         surface.blit(turn_surf, (self.header_rect.centerx - turn_surf.get_width() // 2, (HEADER_HEIGHT - turn_surf.get_height()) // 2))
         
-        # Player Stats (HP/Mana)
+        # Player Stats (HP/Mana) - Right Aligned
         try:
             if esper.has_component(self.player_entity, EffectiveStats):
                 stats = esper.component_for_entity(self.player_entity, EffectiveStats)

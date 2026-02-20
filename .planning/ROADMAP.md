@@ -25,9 +25,9 @@
 **Goal:** Refactor the monolithic `ui_system.py` into a modular, dynamic layout system.
 
 **Plans:** 3 plans
-- [ ] 33-01-PLAN.md — Layout Constants and Y-Cursor Implementation (Wave 1)
-- [ ] 33-02-PLAN.md — Modular Rendering Functions (Sidebar, Header) (Wave 2)
-- [ ] 33-03-PLAN.md — Verification & Polish (Wave 3)
+- [x] 33-01-PLAN.md — Layout Constants and Y-Cursor Implementation (Wave 1)
+- [x] 33-02-PLAN.md — Modular Rendering Functions (Sidebar, Header) (Wave 2)
+- [x] 33-03-PLAN.md — Verification & Polish (Wave 3)
 
 **Requirements:** UI-MOD-01, UI-MOD-02, UI-MOD-03, UI-MOD-04
 
@@ -100,7 +100,7 @@
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 33 | v1.6 | 0/3 | Pending | - |
+| 33 | v1.6 | 3/3 | Done | 2026-02-20 |
 | 34 | v1.6 | 0/3 | Pending | - |
 | 35 | v1.6 | 0/3 | Pending | - |
 | 36 | v1.6 | 0/3 | Pending | - |

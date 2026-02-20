@@ -86,23 +86,26 @@ Provide an engaging and replayable dungeon-crawling experience with strategic tu
 
 ### Active
 
-## Current Milestone: v1.5 World Clock & NPC Schedules
+- Refactoring UI into modular components.
+- Unifying input handling with context-sensitive interactions.
+- Implementing stateful menu overlays.
 
-**Goal:** Give the world a persistent time system that drives day/night cycles, NPC daily routines, and time-aware gameplay.
+## Current Milestone: v1.6 UI/UX Architecture & Input Overhaul
+
+**Goal:** Refactor the presentation and interaction layers to be modular, scalable, and player-friendly.
 
 **Target features:**
-- WorldClock service tracking ticks, hours, days, and seasons
-- Day/Night visual cycle with ambient light and perception modifiers
-- NPC Schedule system with daily routines (SLEEP, WORK, PATROL, SOCIALIZE)
-- A* Pathfinding service for scheduled movement
-- Sleep behavior with waking triggers and visual indicators
-- Data-driven schedules via `schedules.json`
+- Modular UI rendering with dynamic layouting (Y-cursor).
+- Context-sensitive controls (Bump-to-Attack/Interact).
+- Stateful menu overlays (Character/Inventory screens).
+- Enhanced visual feedback (Floating combat text, colored message categories).
+- Unified InputManager for command mapping.
 
 ## Context
 
-**Shipped:** v1.0 MVP (2026-02-14), v1.1 Investigation System (2026-02-14), v1.2 AI Infrastructure (2026-02-15), v1.3 Debug Overlay System (2026-02-15), v1.4 Item & Inventory System (2026-02-16)
-**In progress:** v1.5 World Clock & NPC Schedules
-**Upcoming:** v1.6 Dungeon Progression (stairs, depth, scaled spawns)
+**Shipped:** v1.0 MVP (2026-02-14), v1.1 Investigation System (2026-02-14), v1.2 AI Infrastructure (2026-02-15), v1.3 Debug Overlay System (2026-02-15), v1.4 Item & Inventory System (2026-02-16), v1.5 World Clock & NPC Schedules (2026-02-20)
+**In progress:** v1.6 UI/UX Architecture & Input Overhaul
+**Upcoming:** v1.7 Dungeon Progression (stairs, depth, scaled spawns)
 **Codebase:** 5,959 lines Python, 3 JSON data files
 **Tech stack:** Python 3.13, PyGame, esper ECS
 **Architecture:** ECS with data-driven JSON pipelines; AISystem with state-driven behavior; EffectiveStats equipment pipeline; WorldClock simulation heartbeat
