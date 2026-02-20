@@ -44,9 +44,9 @@
 **Goal:** Centralize input and implement context-sensitive interactions.
 
 **Plans:** 3 plans
-- [ ] 34-01-PLAN.md — InputManager and Command Mapping
-- [ ] 34-02-PLAN.md — Context-Sensitive "Bump" Interactions
-- [ ] 34-03-PLAN.md — Hotbar Action Selection (1-9)
+- [ ] 34-01-PLAN.md — InputManager and Command Mapping (Wave 1)
+- [ ] 34-02-PLAN.md — Context-Sensitive "Bump" Interactions (Wave 2)
+- [ ] 34-03-PLAN.md — Hotbar Action Selection (1-9) (Wave 2)
 
 **Requirements:** INP-01, INP-02, INP-03, INP-04
 
