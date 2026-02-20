@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 30 of 32 (Schedule Data Pipeline)
-Plan: 3 of 3 in current phase
+Phase: 32 of 32 (Sleep Behavior & Village Population)
+Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-02-19 — Completed Phase 30.
+Last activity: 2026-02-19 — Completed Phase 32.
 
-Progress: [██████████] 100% (Phase 30) / 84% (v1.5)
+Progress: [██████████] 100% (Phase 32) / 100% (v1.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.5): 9
+- Total plans completed (v1.5): 11
 - Average duration: 25m
-- Total execution time: 215m
+- Total execution time: 265m
 
 **By Phase:**
 
@@ -31,15 +31,20 @@ Progress: [██████████] 100% (Phase 30) / 84% (v1.5)
 | 28 | 3 | 75m | 25m |
 | 29 | 3 | 65m | 21m |
 | 30 | 3 | 0m | 0m |
-| 31 | 0 | 0m | 0m |
-| 32 | 0 | 0m | 0m |
+| 31 | 1 | 25m | 25m |
+| 32 | 1 | 25m | 25m |
 
-**Recent Trend:** Completed Pathfinding Service suite. Ready for Schedule Data Pipeline (Phase 30).
+**Recent Trend:** Completed v1.5 core mechanics. NPCs now follow schedules and exhibit sleep behavior.
 
 ## Quick Tasks Completed
 
 | Task | Description | Date |
 |------|-------------|------|
+| 32-01 | Implement Sleep Behavior and Wake-up Triggers | 2026-02-19 |
+| 31-01 | Implement ScheduleSystem and Activity state transitions | 2026-02-19 |
+| 30-03 | Schedule Registry and Component Verification | 2026-02-19 |
+| 30-02 | Data Loading and Schedule Pipeline Implementation | 2026-02-19 |
+| 30-01 | Schedule Entry and Template Data Structures | 2026-02-19 |
 | 29-03 | Pathfinding and NPC Navigation Verification | 2026-02-19 |
 | 29-02 | AI Navigation Integration into AISystem | 2026-02-19 |
 | 29-01 | Implement PathfindingService and PathData component | 2026-02-19 |
@@ -80,6 +85,9 @@ Progress: [██████████] 100% (Phase 30) / 84% (v1.5)
 - **AI Navigation Fallback:** If A* pathfinding fails or a path is blocked, the AI reverts to a greedy Manhattan step to maintain pressure on the target while waiting for a path to clear. (v1.5)
 - **Dynamic Path Invalidation:** NPCs automatically clear and recompute paths if the target moves or if their next step is blocked by an entity. (v1.5)
 - **Data-Driven Schedules:** NPC schedules are defined in JSON, loaded via `ResourceLoader` into a `ScheduleRegistry`, and associated with entities via `Schedule` components. (v1.5)
+- **Centralized Wake-up Logic:** `ActionSystem.wake_up()` provides a single point of entry for transitioning entities from `SLEEP` to `IDLE`, including log messaging. (v1.5)
+- **Sleep Visuals:** NPCs in `SLEEP` state are rendered at 50% brightness to provide clear visual feedback of their state. (v1.5)
+- **Physical Wake-up Triggers:** Both bumping into an entity (MovementSystem) and hitting it with an attack (CombatSystem) will trigger the `wake_up` logic. (v1.5)
 
 ### Pending Todos
 
@@ -92,5 +100,5 @@ Progress: [██████████] 100% (Phase 30) / 84% (v1.5)
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed Phase 30. Ready for Phase 31 (AISystem Schedule Support).
-Resume file: .planning/phases/31-aisystem-schedule-support/31-01-PLAN.md
+Stopped at: Completed Phase 32 (Sleep Behavior).
+Resume file: .planning/v1.6-PLANNING.md (Next Milestone)
