@@ -7,7 +7,7 @@
 - ✅ **v1.2 AI Infrastructure** — Phases 15-18 (shipped 2026-02-15)
 - ✅ **v1.3 Debug Overlay System** — Phases 19-22 (shipped 2026-02-15)
 - ✅ **v1.4 Item & Inventory System** — Phases 23-26 (shipped 2026-02-16)
-- 🏗️ **v1.5 World Clock & NPC Schedules** — Phases 27-32 (In Progress)
+- ✅ **v1.5 World Clock & NPC Schedules** — Phases 27-32 (shipped 2026-02-20)
 
 ## Phases
 
@@ -16,7 +16,7 @@ See archived roadmaps in `.planning/milestones/`.
 
 ---
 
-## 🏗️ v1.5 World Clock & NPC Schedules
+## ✅ v1.5 World Clock & NPC Schedules
 
 **Milestone Goal:** Give the world a persistent time system that drives day/night cycles, NPC daily routines, and time-aware gameplay.
 
@@ -124,9 +124,9 @@ See archived roadmaps in `.planning/milestones/`.
 **Goal:** Complete the simulation with sleep mechanics and a populated Village scenario.
 
 **Plans:** 3 plans
-- [ ] 32-01-PLAN.md — Sleep Mechanics & Visuals
-- [ ] 32-02-PLAN.md — Home Positions & Schedule Refinement
-- [ ] 32-03-PLAN.md — Village Population & Routines
+- [x] 32-01-PLAN.md — Sleep Mechanics & Visuals
+- [x] 32-02-PLAN.md — Home Positions & Schedule Refinement
+- [x] 32-03-PLAN.md — Village Population & Routines
 
 **Requirements:** SLEEP-01, SLEEP-02, SLEEP-03, SLEEP-04, DATA-02, DATA-03, DATA-04
 
@@ -148,4 +148,4 @@ See archived roadmaps in `.planning/milestones/`.
 | 29 | v1.5 | 3/3 | Done | 2026-02-19 |
 | 30 | v1.5 | 3/3 | Done | 2026-02-19 |
 | 31 | v1.5 | 1/1 | Done | 2026-02-19 |
-| 32 | v1.5 | 0/3 | Pending | - |
+| 32 | v1.5 | 3/3 | Done | 2026-02-20 |
