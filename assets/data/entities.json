@@ -45,6 +45,7 @@
     "alignment": "neutral",
     "blocker": true,
     "description": "A common villager",
-    "schedule_id": "villager_routine"
+    "schedule_id": "villager_routine",
+    "home_pos": [10, 10]
   }
 ]
