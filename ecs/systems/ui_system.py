@@ -1,8 +1,30 @@
 import esper
 import pygame
-from config import HEADER_HEIGHT, SIDEBAR_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT, LOG_HEIGHT, GameStates
+from config import (
+    HEADER_HEIGHT, SIDEBAR_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT, LOG_HEIGHT, GameStates,
+    UI_PADDING, UI_MARGIN, UI_LINE_SPACING, UI_SECTION_SPACING,
+    UI_COLOR_BG_HEADER, UI_COLOR_BG_SIDEBAR, UI_COLOR_BORDER,
+    UI_COLOR_TEXT_DIM, UI_COLOR_TEXT_BRIGHT, UI_COLOR_SECTION_TITLE, UI_BAR_HEIGHT
+)
 from ecs.components import ActionList, Stats, Targeting, Equipment, EffectiveStats, Name, SlotType
 from ui.message_log import MessageLog
+
+class LayoutCursor:
+    def __init__(self, x, y, width):
+        self.x = x
+        self.y = y
+        self.initial_y = y
+        self.width = width
+
+    def advance(self, dy):
+        self.y += dy
+
+    def reset(self):
+        self.y = self.initial_y
+
+    def move_to(self, x, y):
+        self.x = x
+        self.y = y
 
 class UISystem(esper.Processor):
     def __init__(self, turn_system, player_entity, world_clock):
@@ -18,6 +40,10 @@ class UISystem(esper.Processor):
         self.sidebar_rect = pygame.Rect(SCREEN_WIDTH - SIDEBAR_WIDTH, HEADER_HEIGHT, SIDEBAR_WIDTH, SCREEN_HEIGHT - HEADER_HEIGHT)
         self.log_rect = pygame.Rect(0, SCREEN_HEIGHT - LOG_HEIGHT, SCREEN_WIDTH - SIDEBAR_WIDTH, LOG_HEIGHT)
         
+        # Layout Cursors
+        self.header_cursor = LayoutCursor(UI_PADDING, UI_PADDING, SCREEN_WIDTH - 2 * UI_PADDING)
+        self.sidebar_cursor = LayoutCursor(self.sidebar_rect.x + UI_PADDING, self.sidebar_rect.y + UI_PADDING, SIDEBAR_WIDTH - 2 * UI_PADDING)
+
         self.message_log = MessageLog(self.log_rect, self.small_font)
         
         # Register event handler
