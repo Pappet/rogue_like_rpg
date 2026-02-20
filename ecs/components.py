@@ -8,6 +8,10 @@ class AIState(str, Enum):
     WANDER = "wander"
     CHASE = "chase"
     TALK = "talk"
+    WORK = "work"
+    PATROL = "patrol"
+    SOCIALIZE = "socialize"
+    SLEEP = "sleep"
 
 
 class Alignment(str, Enum):
@@ -183,6 +187,13 @@ class Description:
 class AIBehaviorState:
     state: AIState
     alignment: Alignment
+
+
+@dataclass
+class Activity:
+    current_activity: str = "IDLE"
+    target_pos: Optional[Tuple[int, int]] = None
+    home_pos: Optional[Tuple[int, int]] = None
 
 
 @dataclass

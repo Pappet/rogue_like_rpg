@@ -5,7 +5,7 @@ This mirrors the data-driven approach used for tiles in Phase 9.
 """
 
 from config import SpriteLayer
-from ecs.components import Position, Renderable, Stats, Name, Blocker, AI, Description, AIBehaviorState, AIState, Alignment, LootTable, Schedule
+from ecs.components import Position, Renderable, Stats, Name, Blocker, AI, Description, AIBehaviorState, AIState, Alignment, LootTable, Schedule, Activity
 from entities.entity_registry import EntityRegistry
 
 
@@ -89,5 +89,6 @@ class EntityFactory:
 
         if template.schedule_id:
             components.append(Schedule(template.schedule_id))
+            components.append(Activity(home_pos=template.home_pos))
 
         return world.create_entity(*components)

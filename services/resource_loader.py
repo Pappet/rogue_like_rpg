@@ -226,6 +226,9 @@ class ResourceLoader:
             wounded_threshold = float(item.get("wounded_threshold", 0.5))
             loot_table = item.get("loot_table", [])
             schedule_id = item.get("schedule_id")
+            home_pos = None
+            if "home_pos" in item and item["home_pos"] is not None:
+                home_pos = tuple(item["home_pos"])
 
             template = EntityTemplate(
                 id=item["id"],
@@ -250,6 +253,7 @@ class ResourceLoader:
                 wounded_threshold=wounded_threshold,
                 loot_table=loot_table,
                 schedule_id=schedule_id,
+                home_pos=home_pos,
             )
 
             EntityRegistry.register(template)

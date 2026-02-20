@@ -35,6 +35,7 @@ class EntityTemplate:
     wounded_threshold: float = 0.5
     loot_table: list = None  # List of [template_id, chance] pairs
     schedule_id: Optional[str] = None
+    home_pos: Optional[Tuple[int, int]] = None
 
 
 class EntityRegistry:
