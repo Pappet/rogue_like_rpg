@@ -20,6 +20,7 @@ from ecs.systems.debug_render_system import DebugRenderSystem
 from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats, Inventory, Name, Portable, Equipment, Equippable, SlotType
 import services.equipment_service as equipment_service
 import services.consumable_service as consumable_service
+from services.input_manager import InputCommand
 from map.tile import VisibilityState
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, DN_SETTINGS
 
@@ -27,9 +28,11 @@ class GameState:
     def __init__(self):
         self.done = False
         self.next_state = None
+        self.input_manager = None
 
     def startup(self, persistent):
         self.persist = persistent
+        self.input_manager = self.persist.get("input_manager")
 
     def get_event(self, event):
         raise NotImplementedError
@@ -58,6 +61,11 @@ class TitleScreen(GameState):
                 self.done = True
                 self.next_state = "GAME"
 
+        command = self.input_manager.handle_event(event)
+        if command == InputCommand.CONFIRM:
+            self.done = True
+            self.next_state = "GAME"
+
     def update(self, dt):
         pass
 
@@ -82,7 +90,7 @@ class Game(GameState):
         self.ui_system = None
 
     def startup(self, persistent):
-        self.persist = persistent
+        super().startup(persistent)
         self.map_container = self.persist.get("map_container")
         self.render_service = self.persist.get("render_service")
         self.camera = self.persist.get("camera")
@@ -205,117 +213,120 @@ class Game(GameState):
         esper.set_handler("change_map", self.transition_map)
 
     def get_event(self, event):
-        if not self.turn_system:
+        if not self.turn_system or not self.input_manager:
+            return
+
+        command = self.input_manager.handle_event(event, self.turn_system.current_state)
+        if not command:
             return
 
         if self.turn_system.current_state == GameStates.TARGETING:
-            self.handle_targeting_input(event)
+            self.handle_targeting_input(command)
         elif self.turn_system.is_player_turn():
-            self.handle_player_input(event)
+            self.handle_player_input(command)
 
-    def handle_player_input(self, event):
-        if event.type == pygame.KEYDOWN:
-            # Debug Toggles
-            if event.key == pygame.K_F3:
-                self.persist["debug_flags"]["master"] = not self.persist["debug_flags"]["master"]
-                print(f"Debug master: {self.persist['debug_flags']['master']}")
+    def handle_player_input(self, command):
+        # Debug Toggles
+        if command == InputCommand.DEBUG_TOGGLE_MASTER:
+            self.persist["debug_flags"]["master"] = not self.persist["debug_flags"]["master"]
+            print(f"Debug master: {self.persist['debug_flags']['master']}")
+            return
+        
+        if self.persist["debug_flags"].get("master"):
+            if command == InputCommand.DEBUG_TOGGLE_PLAYER_FOV:
+                self.persist["debug_flags"]["player_fov"] = not self.persist["debug_flags"]["player_fov"]
+                print(f"Debug player_fov: {self.persist['debug_flags']['player_fov']}")
                 return
-            
-            if self.persist["debug_flags"].get("master"):
-                if event.key == pygame.K_F4:
-                    self.persist["debug_flags"]["player_fov"] = not self.persist["debug_flags"]["player_fov"]
-                    print(f"Debug player_fov: {self.persist['debug_flags']['player_fov']}")
-                    return
-                elif event.key == pygame.K_F5:
-                    self.persist["debug_flags"]["npc_fov"] = not self.persist["debug_flags"]["npc_fov"]
-                    print(f"Debug npc_fov: {self.persist['debug_flags']['npc_fov']}")
-                    return
-                elif event.key == pygame.K_F6:
-                    self.persist["debug_flags"]["chase"] = not self.persist["debug_flags"]["chase"]
-                    print(f"Debug chase: {self.persist['debug_flags']['chase']}")
-                    return
-                elif event.key == pygame.K_F7:
-                    self.persist["debug_flags"]["labels"] = not self.persist["debug_flags"]["labels"]
-                    print(f"Debug labels: {self.persist['debug_flags']['labels']}")
-                    return
-
-            # World Map Toggle
-            if event.key == pygame.K_m:
-                self.next_state = "WORLD_MAP"
-                self.done = True
+            elif command == InputCommand.DEBUG_TOGGLE_NPC_FOV:
+                self.persist["debug_flags"]["npc_fov"] = not self.persist["debug_flags"]["npc_fov"]
+                print(f"Debug npc_fov: {self.persist['debug_flags']['npc_fov']}")
+                return
+            elif command == InputCommand.DEBUG_TOGGLE_CHASE:
+                self.persist["debug_flags"]["chase"] = not self.persist["debug_flags"]["chase"]
+                print(f"Debug chase: {self.persist['debug_flags']['chase']}")
+                return
+            elif command == InputCommand.DEBUG_TOGGLE_LABELS:
+                self.persist["debug_flags"]["labels"] = not self.persist["debug_flags"]["labels"]
+                print(f"Debug labels: {self.persist['debug_flags']['labels']}")
                 return
 
-            # Inventory Toggle
-            if event.key == pygame.K_i:
-                self.next_state = "INVENTORY"
-                self.done = True
-                return
+        # World Map Toggle
+        if command == InputCommand.OPEN_WORLD_MAP:
+            self.next_state = "WORLD_MAP"
+            self.done = True
+            return
 
-            # Pickup Item
-            if event.key == pygame.K_g:
-                self.pickup_item()
-                return
+        # Inventory Toggle
+        if command == InputCommand.OPEN_INVENTORY:
+            self.next_state = "INVENTORY"
+            self.done = True
+            return
 
-            # Action Selection
-            try:
-                action_list = esper.component_for_entity(self.player_entity, ActionList)
-                if event.key == pygame.K_w:
-                    action_list.selected_idx = (action_list.selected_idx - 1) % len(action_list.actions)
-                elif event.key == pygame.K_s:
-                    action_list.selected_idx = (action_list.selected_idx + 1) % len(action_list.actions)
-                elif event.key == pygame.K_RETURN:
-                    selected_action = action_list.actions[action_list.selected_idx]
-                    if selected_action.requires_targeting:
-                        self.action_system.start_targeting(self.player_entity, selected_action)
-                    else:
-                        # Handle non-targeting actions
-                        if selected_action.name != "Move":
-                            self.action_system.perform_action(self.player_entity, selected_action)
-            except KeyError:
-                pass
+        # Pickup Item
+        if command == InputCommand.INTERACT:
+            self.pickup_item()
+            return
 
-            # Movement (only if 'Move' action is selected)
-            try:
-                action_list = esper.component_for_entity(self.player_entity, ActionList)
-                if action_list.actions[action_list.selected_idx].name == "Move":
-                    dx, dy = 0, 0
-                    if event.key == pygame.K_UP:
-                        dy = -1
-                    elif event.key == pygame.K_DOWN:
-                        dy = 1
-                    elif event.key == pygame.K_LEFT:
-                        dx = -1
-                    elif event.key == pygame.K_RIGHT:
-                        dx = 1
-                    
-                    if dx != 0 or dy != 0:
-                        self.move_player(dx, dy)
-            except KeyError:
-                pass
+        # Action Selection
+        try:
+            action_list = esper.component_for_entity(self.player_entity, ActionList)
+            if command == InputCommand.PREVIOUS_ACTION:
+                action_list.selected_idx = (action_list.selected_idx - 1) % len(action_list.actions)
+            elif command == InputCommand.NEXT_ACTION:
+                action_list.selected_idx = (action_list.selected_idx + 1) % len(action_list.actions)
+            elif command == InputCommand.CONFIRM:
+                selected_action = action_list.actions[action_list.selected_idx]
+                if selected_action.requires_targeting:
+                    self.action_system.start_targeting(self.player_entity, selected_action)
+                else:
+                    # Handle non-targeting actions
+                    if selected_action.name != "Move":
+                        self.action_system.perform_action(self.player_entity, selected_action)
+        except KeyError:
+            pass
 
-    def handle_targeting_input(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                self.action_system.cancel_targeting(self.player_entity)
-            elif event.key == pygame.K_RETURN:
-                self.action_system.confirm_action(self.player_entity)
-            elif event.key == pygame.K_TAB:
-                # Cycle targets in auto mode
-                self.action_system.cycle_targets(self.player_entity)
-            else:
-                # Manual movement of cursor
+        # Movement (only if 'Move' action is selected)
+        try:
+            action_list = esper.component_for_entity(self.player_entity, ActionList)
+            if action_list.actions[action_list.selected_idx].name == "Move":
                 dx, dy = 0, 0
-                if event.key == pygame.K_UP:
+                if command == InputCommand.MOVE_UP:
                     dy = -1
-                elif event.key == pygame.K_DOWN:
+                elif command == InputCommand.MOVE_DOWN:
                     dy = 1
-                elif event.key == pygame.K_LEFT:
+                elif command == InputCommand.MOVE_LEFT:
                     dx = -1
-                elif event.key == pygame.K_RIGHT:
+                elif command == InputCommand.MOVE_RIGHT:
                     dx = 1
                 
                 if dx != 0 or dy != 0:
-                    self.action_system.move_cursor(self.player_entity, dx, dy)
+                    self.move_player(dx, dy)
+        except KeyError:
+            pass
+
+    def handle_targeting_input(self, command):
+        if command == InputCommand.CANCEL:
+            self.action_system.cancel_targeting(self.player_entity)
+        elif command == InputCommand.CONFIRM:
+            self.action_system.confirm_action(self.player_entity)
+        elif command == InputCommand.NEXT_TARGET:
+            # Cycle targets in auto mode
+            self.action_system.cycle_targets(self.player_entity)
+        else:
+            # Manual movement of cursor
+            dx, dy = 0, 0
+            if command == InputCommand.MOVE_UP:
+                dy = -1
+            elif command == InputCommand.MOVE_DOWN:
+                dy = 1
+            elif command == InputCommand.MOVE_LEFT:
+                dx = -1
+            elif command == InputCommand.MOVE_RIGHT:
+                dx = 1
+            
+            if dx != 0 or dy != 0:
+                self.action_system.move_cursor(self.player_entity, dx, dy)
+
 
     def move_player(self, dx, dy):
         # Add movement request to player entity
@@ -518,14 +529,14 @@ class WorldMapState(GameState):
         self.title_text = self.font.render("World Map (M/ESC to return)", True, (255, 255, 255))
 
     def startup(self, persistent):
-        self.persist = persistent
+        super().startup(persistent)
         self.map_container = self.persist.get("map_container")
 
     def get_event(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_m or event.key == pygame.K_ESCAPE:
-                self.done = True
-                self.next_state = "GAME"
+        command = self.input_manager.handle_event(event, GameStates.WORLD_MAP)
+        if command == InputCommand.CANCEL:
+            self.done = True
+            self.next_state = "GAME"
 
     def update(self, dt):
         pass
@@ -603,41 +614,44 @@ class InventoryState(GameState):
         self.title_font = pygame.font.Font(None, 48)
 
     def startup(self, persistent):
-        self.persist = persistent
+        super().startup(persistent)
         self.player_entity = self.persist.get("player_entity")
         self.world = get_world()
         self.selected_idx = 0
 
     def get_event(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE or event.key == pygame.K_i:
-                self.done = True
-                self.next_state = "GAME"
-            
-            # Navigate list
-            try:
-                inventory = self.world.component_for_entity(self.player_entity, Inventory)
-                if not inventory.items:
-                    return
+        command = self.input_manager.handle_event(event, GameStates.INVENTORY)
+        if not command:
+            return
 
-                if event.key == pygame.K_UP:
-                    self.selected_idx = (self.selected_idx - 1) % len(inventory.items)
-                elif event.key == pygame.K_DOWN:
-                    self.selected_idx = (self.selected_idx + 1) % len(inventory.items)
-                elif event.key == pygame.K_d:
-                    self.drop_item()
-                elif event.key == pygame.K_e or event.key == pygame.K_RETURN:
-                    selected_item_id = inventory.items[self.selected_idx]
-                    equipment_service.equip_item(self.world, self.player_entity, selected_item_id)
-                elif event.key == pygame.K_u:
-                    selected_item_id = inventory.items[self.selected_idx]
-                    if consumable_service.ConsumableService.use_item(self.world, self.player_entity, selected_item_id):
-                        if "turn_system" in self.persist:
-                            self.persist["turn_system"].end_player_turn()
-                        self.done = True
-                        self.next_state = "GAME"
-            except KeyError:
-                pass
+        if command == InputCommand.CANCEL:
+            self.done = True
+            self.next_state = "GAME"
+        
+        # Navigate list
+        try:
+            inventory = self.world.component_for_entity(self.player_entity, Inventory)
+            if not inventory.items:
+                return
+
+            if command == InputCommand.MOVE_UP:
+                self.selected_idx = (self.selected_idx - 1) % len(inventory.items)
+            elif command == InputCommand.MOVE_DOWN:
+                self.selected_idx = (self.selected_idx + 1) % len(inventory.items)
+            elif command == InputCommand.DROP_ITEM:
+                self.drop_item()
+            elif command == InputCommand.EQUIP_ITEM or command == InputCommand.CONFIRM:
+                selected_item_id = inventory.items[self.selected_idx]
+                equipment_service.equip_item(self.world, self.player_entity, selected_item_id)
+            elif command == InputCommand.USE_ITEM:
+                selected_item_id = inventory.items[self.selected_idx]
+                if consumable_service.ConsumableService.use_item(self.world, self.player_entity, selected_item_id):
+                    if "turn_system" in self.persist:
+                        self.persist["turn_system"].end_player_turn()
+                    self.done = True
+                    self.next_state = "GAME"
+        except KeyError:
+            pass
 
     def update(self, dt):
         pass

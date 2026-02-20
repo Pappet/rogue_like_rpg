@@ -6,6 +6,7 @@ from services.map_service import MapService
 from services.render_service import RenderService
 from services.resource_loader import ResourceLoader
 from services.world_clock_service import WorldClockService
+from services.input_manager import InputManager
 from components.camera import Camera
 from ecs.world import get_world
 
@@ -18,6 +19,7 @@ class GameController:
         self.map_service = MapService()
         self.render_service = RenderService()
         self.world_clock = WorldClockService()
+        self.input_manager = InputManager()
         # Viewport is the area not covered by UI Header, Sidebar and Log
         viewport_width = SCREEN_WIDTH - SIDEBAR_WIDTH
         viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT
@@ -36,7 +38,8 @@ class GameController:
             "render_service": self.render_service,
             "camera": self.camera,
             "map_service": self.map_service,
-            "world_clock": self.world_clock
+            "world_clock": self.world_clock,
+            "input_manager": self.input_manager
         }
         
         self.states = {
