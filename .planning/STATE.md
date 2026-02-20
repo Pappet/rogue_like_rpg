@@ -10,29 +10,29 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 33 of 36 (UI Rendering Modularization)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-20 — Completed 33-01-PLAN.md
+Last activity: 2026-02-20 — Completed 33-02-PLAN.md
 
-Progress: [███░░░░░░░] 33% (Phase 33) / 8% (v1.6)
+Progress: [██████░░░░] 66% (Phase 33) / 15% (v1.6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.6): 1
-- Average duration: 5m
-- Total execution time: 5m
+- Total plans completed (v1.6): 2
+- Average duration: 7m
+- Total execution time: 15m
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 33 | 1 | 5m | 5m |
+| 33 | 2 | 15m | 7.5m |
 | 34 | 0 | 0m | 0m |
 | 35 | 0 | 0m | 0m |
 | 36 | 0 | 0m | 0m |
 
-**Recent Trend:** Completed initial UI infrastructure.
+**Recent Trend:** Completed UI rendering modularization.
 
 ## Quick Tasks Completed
 
@@ -40,6 +40,7 @@ Progress: [███░░░░░░░] 33% (Phase 33) / 8% (v1.6)
 |------|-------------|------|
 | v1.6-INIT | Initialize v1.6 Requirements and Roadmap | 2026-02-20 |
 | 33-01 | Add UI Layout Infrastructure (constants & cursor) | 2026-02-20 |
+| 33-02 | Refactor UI Rendering into Modular Functions | 2026-02-20 |
 
 *Updated after each plan completion*
 
@@ -51,19 +52,20 @@ Progress: [███░░░░░░░] 33% (Phase 33) / 8% (v1.6)
 - **Stateful Modals:** Transition from full-state screens to event-driven overlays that can be stacked.
 - **Bump-to-Action:** Primary interaction method for basic combat and NPC interaction.
 - **UI Infrastructure:** Established UI constants and `LayoutCursor` for dynamic stacking.
+- **Relative Positioning:** Header elements now use relative positioning based on `header_rect` boundaries and `UI_PADDING`.
 
 ### Pending Todos
 
-- [ ] Refactor `ui_system.py` logic into modular renderers.
+- [ ] Extract modular renderers into separate files/classes (Phase 33-03).
 - [ ] Implement `InputManager`.
 - [ ] Create Modal system.
 
 ### Blockers/Concerns
 
-- **Magic Numbers:** High density of hardcoded coordinates in `ui_system.py` and `game_states.py` (partially addressed by 33-01).
+- **Magic Numbers:** High density of hardcoded coordinates in `game_states.py` (addressed in `ui_system.py`).
 
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 33-01-PLAN.md.
-Resume file: .planning/phases/33-ui-rendering-modularization/33-02-PLAN.md
+Stopped at: Completed 33-02-PLAN.md.
+Resume file: .planning/phases/33-ui-rendering-modularization/33-03-PLAN.md
