@@ -68,6 +68,9 @@ class AISystem(esper.Processor):
         can see the player. If so, transition to CHASE and fire "notices you" message.
         The match statement then routes to the CHASE case naturally.
         """
+        if behavior.state == AIState.SLEEP:
+            return
+
         # Chase detection block (CHAS-01, CHAS-03, CHAS-04)
         if (
             behavior.alignment == Alignment.HOSTILE
@@ -106,6 +109,8 @@ class AISystem(esper.Processor):
                 self._chase(ent, behavior, pos, map_container, claimed_tiles, player_pos)
             case AIState.TALK:
                 pass  # Stub: talk behavior implemented later
+            case AIState.WORK | AIState.PATROL | AIState.SOCIALIZE | AIState.SLEEP:
+                pass  # Handled by ScheduleSystem + PathData Priority
 
     def _wander(self, ent, pos, map_container, claimed_tiles):
         """Move entity randomly to a walkable, unoccupied adjacent cardinal tile.

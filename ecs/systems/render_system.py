@@ -1,7 +1,7 @@
 import esper
 import pygame
 import math
-from ecs.components import Position, Renderable, Targeting
+from ecs.components import Position, Renderable, Targeting, AIBehaviorState, AIState
 from config import TILE_SIZE
 from map.tile import VisibilityState
 
@@ -58,6 +58,12 @@ class RenderSystem(esper.Processor):
                 color = rend.color
                 if depth_factor < 1.0:
                     color = tuple(max(0, int(c * depth_factor)) for c in rend.color)
+                
+                # Apply SLEEP darkening
+                if esper.has_component(ent, AIBehaviorState):
+                    behavior = esper.component_for_entity(ent, AIBehaviorState)
+                    if behavior.state == AIState.SLEEP:
+                        color = tuple(max(0, int(c * 0.5)) for c in color)
                 
                 renderables.append((rend.layer, pos, rend, color))
         
