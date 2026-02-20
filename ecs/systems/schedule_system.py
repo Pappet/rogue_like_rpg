@@ -60,23 +60,24 @@ class ScheduleSystem(esper.Processor):
                 resolved_target_pos = activity.home_pos
 
             # Check for activity or target change
-            activity_changed = current_entry.activity != activity.current_activity
+            activity_key = current_entry.activity.upper()
+            activity_changed = activity_key != activity.current_activity.upper()
             target_changed = resolved_target_pos != activity.target_pos
             
             if activity_changed or target_changed:
                 # Update Activity component
-                activity.current_activity = current_entry.activity
+                activity.current_activity = activity_key
                 activity.target_pos = resolved_target_pos
                 
                 # Update AI state
-                if current_entry.activity == "SLEEP":
+                if activity_key == "SLEEP":
                     # Check if at home
                     if resolved_target_pos is None or (pos.x == resolved_target_pos[0] and pos.y == resolved_target_pos[1]):
                         ai_state.state = AIState.SLEEP
                     else:
                         ai_state.state = AIState.IDLE # Move to home
                 else:
-                    new_state = self.ACTIVITY_TO_STATE.get(current_entry.activity)
+                    new_state = self.ACTIVITY_TO_STATE.get(activity_key)
                     if new_state:
                         ai_state.state = new_state
                 
@@ -100,7 +101,7 @@ class ScheduleSystem(esper.Processor):
                     # If target changed to None, remove PathData
                     if target_changed and esper.has_component(ent, PathData):
                         esper.remove_component(ent, PathData)
-            elif current_entry.activity == "SLEEP":
+            elif activity_key == "SLEEP":
                  # If we are in SLEEP activity but not yet SLEEP state (because we were traveling)
                  # Check if we reached home now
                  if ai_state.state != AIState.SLEEP:
