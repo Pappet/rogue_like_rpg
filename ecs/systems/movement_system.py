@@ -1,6 +1,7 @@
 import esper
 from ecs.components import Position, MovementRequest, Blocker, Stats, AttackIntent
 from map.map_container import MapContainer
+from services.interaction_resolver import InteractionResolver, InteractionType
 
 class MovementSystem(esper.Processor):
     def __init__(self, map_container: MapContainer, action_system=None):
@@ -19,16 +20,11 @@ class MovementSystem(esper.Processor):
             blocker_ent = self._get_blocker_at(new_x, new_y, pos.layer)
             
             if blocker_ent:
-                # Task 2: Wake up sleeping NPCs on bump
-                from ecs.components import AIBehaviorState, AIState
-                if self.action_system and esper.has_component(blocker_ent, AIBehaviorState):
-                    behavior = esper.component_for_entity(blocker_ent, AIBehaviorState)
-                    if behavior.state == AIState.SLEEP:
-                        self.action_system.wake_up(blocker_ent)
-
-                # If blocked by entity with Stats, it's an attack
-                if esper.has_component(blocker_ent, Stats):
-                    esper.add_component(ent, AttackIntent(target_entity=blocker_ent))
+                # Use InteractionResolver to handle the collision
+                interaction = InteractionResolver.resolve(esper, ent, blocker_ent)
+                
+                if interaction != InteractionType.NONE:
+                    InteractionResolver.execute(esper, interaction, ent, blocker_ent, self.action_system)
                     # Consume the movement request without moving
                     esper.remove_component(ent, MovementRequest)
                     continue

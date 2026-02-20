@@ -282,27 +282,22 @@ class Game(GameState):
                     # Handle non-targeting actions
                     if selected_action.name != "Move":
                         self.action_system.perform_action(self.player_entity, selected_action)
-        except KeyError:
+        except (KeyError, AttributeError):
             pass
 
-        # Movement (only if 'Move' action is selected)
-        try:
-            action_list = esper.component_for_entity(self.player_entity, ActionList)
-            if action_list.actions[action_list.selected_idx].name == "Move":
-                dx, dy = 0, 0
-                if command == InputCommand.MOVE_UP:
-                    dy = -1
-                elif command == InputCommand.MOVE_DOWN:
-                    dy = 1
-                elif command == InputCommand.MOVE_LEFT:
-                    dx = -1
-                elif command == InputCommand.MOVE_RIGHT:
-                    dx = 1
-                
-                if dx != 0 or dy != 0:
-                    self.move_player(dx, dy)
-        except KeyError:
-            pass
+        # Movement (available regardless of selected action)
+        dx, dy = 0, 0
+        if command == InputCommand.MOVE_UP:
+            dy = -1
+        elif command == InputCommand.MOVE_DOWN:
+            dy = 1
+        elif command == InputCommand.MOVE_LEFT:
+            dx = -1
+        elif command == InputCommand.MOVE_RIGHT:
+            dx = 1
+        
+        if dx != 0 or dy != 0:
+            self.move_player(dx, dy)
 
     def handle_targeting_input(self, command):
         if command == InputCommand.CANCEL:
