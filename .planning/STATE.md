@@ -2,60 +2,44 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-17)
+See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core Value:** Provide an engaging and replayable dungeon-crawling experience with strategic turn-based combat.
-**Current Focus:** v1.5 World Clock & NPC Schedules — Execution
+**Current Focus:** v1.6 UI/UX Architecture & Input Overhaul — Infrastructure
 
 ## Current Position
 
-Phase: 32 of 32 (Sleep Behavior & Village Population)
-Plan: 3 of 3 in current phase
-Status: Phase Complete
-Last activity: 2026-02-20 — Completed Phase 32 Plan 03 (Village Population).
+Phase: 33 of 36 (UI Rendering Modularization)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-20 — Completed 33-01-PLAN.md
 
-Progress: [██████████] 100% (Phase 32) / 100% (v1.5)
+Progress: [███░░░░░░░] 33% (Phase 33) / 8% (v1.6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.5): 13
-- Average duration: 25m
-- Total execution time: 315m
+- Total plans completed (v1.6): 1
+- Average duration: 5m
+- Total execution time: 5m
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 27 | 3 | 75m | 25m |
-| 28 | 3 | 75m | 25m |
-| 29 | 3 | 65m | 21m |
-| 30 | 2 | 40m | 20m |
-| 31 | 1 | 25m | 25m |
-| 32 | 3 | 75m | 25m |
+| 33 | 1 | 5m | 5m |
+| 34 | 0 | 0m | 0m |
+| 35 | 0 | 0m | 0m |
+| 36 | 0 | 0m | 0m |
 
-**Recent Trend:** Milestone v1.5 complete. Village population and NPC routines fully implemented and verified.
+**Recent Trend:** Completed initial UI infrastructure.
 
 ## Quick Tasks Completed
 
 | Task | Description | Date |
 |------|-------------|------|
-| 32-03 | Populate Village Scenario with NPCs and routines | 2026-02-20 |
-| 32-02 | Implement Home Positions and Home-navigation for SLEEP | 2026-02-19 |
-| 32-01 | Implement Sleep Behavior and Wake-up Triggers | 2026-02-19 |
-| 31-01 | Implement ScheduleSystem and Activity state transitions | 2026-02-19 |
-| 30-02 | Data Loading and Schedule Pipeline Implementation | 2026-02-19 |
-| 30-01 | Schedule Entry and Template Data Structures | 2026-02-19 |
-| 29-03 | Pathfinding and NPC Navigation Verification | 2026-02-19 |
-| 29-02 | AI Navigation Integration into AISystem | 2026-02-19 |
-| 29-01 | Implement PathfindingService and PathData component | 2026-02-19 |
-| smooth-tint-transitions | Interpolate viewport tint for smooth transitions | 2026-02-18 |
-| 28-03 | Update VisibilitySystem and run verification | 2026-02-18 |
-| 28-02 | Implement viewport tinting in RenderService | 2026-02-18 |
-| 28-01 | Define time-of-day settings and update stats pipeline | 2026-02-18 |
-| 27-03 | Comprehensive Verification of World Clock | 2026-02-17 |
-| 27-02 | Map Travel and UI Header | 2026-02-17 |
-| 27-01 | Implement WorldClockService and integrate into TurnSystem | 2026-02-17 |
+| v1.6-INIT | Initialize v1.6 Requirements and Roadmap | 2026-02-20 |
+| 33-01 | Add UI Layout Infrastructure (constants & cursor) | 2026-02-20 |
 
 *Updated after each plan completion*
 
@@ -63,43 +47,23 @@ Progress: [██████████] 100% (Phase 32) / 100% (v1.5)
 
 ### Decisions
 
-- **Items as entities with position XOR parent:** Position component removed on pickup; carried items have no Position, preventing phantom rendering with zero changes to RenderSystem or MovementSystem. (v1.4 architectural constraint)
-- **EffectiveStats pattern (never delta-mutate Stats):** EquipmentSystem computes EffectiveStats each frame from base Stats + equipped bonuses; base Stats fields are never modified by equip/unequip. Eliminates irreversible state bugs.
-- **get_entity_closure() wired at Phase 23:** Freeze/thaw inventory corruption is binary — fix it at foundation or audit the whole milestone. Player + Inventory.items + equipped item IDs passed to MapContainer.freeze().
-- **LootSystem as separate event handler:** Registered alongside DeathSystem on "entity_died"; keeps loot spawning decoupled from corpse transformation and independently testable.
-- **Stats component base fields:** Explicitly named `base_hp`, `base_power`, etc., added to `Stats` component to support the Effective Stats pattern.
-- **ItemFactory Implementation:** `ItemFactory` creates items from templates. Items on ground have a `Position`, while carried items (in an inventory) do not.
-- **Spatial Loot Scattering:** If an entity's death tile is blocked, loot drops search 8 neighbors for a walkable tile, preventing lost items in walls. (v1.4 loot policy)
-- **DeathSystem as Loot Spawner:** LootTable processing is integrated directly into DeathSystem's `on_entity_died` handler, leveraging the existing map-aware system for spatial checks.
-- **Equipment Inventory Persistence:** Equipped items remain in the `Inventory.items` list for simple UI listing and persistence; equipment status is tracked via entity ID references in the `Equipment.slots` map. (v1.4 refinement)
-- **Equipment Slot Definitions:** Uses `SlotType` enum (HEAD, BODY, MAIN_HAND, OFF_HAND, FEET, ACCESSORY).
-- **Equipment Component:** Stores mapping of `SlotType` to entity ID references.
-- **Equipment Interaction:** Pressing E/Enter in inventory toggles equipment status via `equipment_service`; equipped items are marked with `(E)` in UI; sidebar displays full loadout and combat stats from `EffectiveStats`. (v1.4 UI refinement)
-- **Immediate Effective HP Update in Combat:** CombatSystem manually updates `EffectiveStats.hp` after applying damage to base `Stats.hp`. This prevents stale death checks and ensuring consistency between systems without waiting for the next `EquipmentSystem` process. (v1.4 gap fix)
-- **Consumable System:** Uses a `Consumable` component with `effect_type` and `amount`. Managed by `ConsumableService`. Full-health checks prevent wasting items. Immediate `EffectiveStats` update ensures UI consistency.
-- **Detailed Physical Descriptions:** Centralized in `ActionSystem.get_detailed_description`, including material and weight. Consistent across Inventory UI and Inspection mode.
-- **Synchronized WorldClock:** `round_counter` is derived from `total_ticks + 1`. 1 turn = 1 tick. 60 ticks = 1 hour. (v1.5 foundation)
-- **Time-consuming map transitions:** Portals can have `travel_ticks` which advance the world clock during transitions. (v1.5 foundation)
-- **AI Navigation Fallback:** If A* pathfinding fails or a path is blocked, the AI reverts to a greedy Manhattan step to maintain pressure on the target while waiting for a path to clear. (v1.5)
-- **Dynamic Path Invalidation:** NPCs automatically clear and recompute paths if the target moves or if their next step is blocked by an entity. (v1.5)
-- **Data-Driven Schedules:** NPC schedules are defined in JSON, loaded via `ResourceLoader` into a `ScheduleRegistry`, and associated with entities via `Schedule` components. (v1.5)
-- **Centralized Wake-up Logic:** `ActionSystem.wake_up()` provides a single point of entry for transitioning entities from `SLEEP` to `IDLE`, including log messaging. (v1.5)
-- **Sleep Visuals:** NPCs in `SLEEP` state are rendered at 50% brightness to provide clear visual feedback of their state. (v1.5)
-- **Physical Wake-up Triggers:** Both bumping into an entity (MovementSystem) and hitting it with an attack (CombatSystem) will trigger the `wake_up` logic. (v1.5)
-- **Case-insensitive Schedule Activities:** `ScheduleSystem` converts activity names to uppercase before processing, ensuring consistency with JSON data definitions. (v1.5)
-- **Village Population Spawning:** NPCs (Guards, Shopkeepers, Villagers) are spawned in the village scenario and house interiors during initial map generation, before freezing containers to ensure persistence. (v1.5)
-- **Multi-state NPC Routines:** NPCs transition between WORK, SOCIALIZE, and SLEEP states based on world time, with specific target positions or "home" metadata for each state. (v1.5)
+- **Modular UI:** UI elements will be decoupled from `ui_system.py` into distinct render functions with a dynamic Y-cursor for layout.
+- **Stateful Modals:** Transition from full-state screens to event-driven overlays that can be stacked.
+- **Bump-to-Action:** Primary interaction method for basic combat and NPC interaction.
+- **UI Infrastructure:** Established UI constants and `LayoutCursor` for dynamic stacking.
 
 ### Pending Todos
 
-- [ ] Milestone v1.6 Planning (Dungeon Progression / Map Generation)
+- [ ] Refactor `ui_system.py` logic into modular renderers.
+- [ ] Implement `InputManager`.
+- [ ] Create Modal system.
 
 ### Blockers/Concerns
 
-- **NPC inventory freeze/thaw:** No NPC template may include an Inventory component until NPC inventory freeze/thaw ID remapping is implemented (not in v1.4 scope).
+- **Magic Numbers:** High density of hardcoded coordinates in `ui_system.py` and `game_states.py` (partially addressed by 33-01).
 
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed Milestone v1.5 (World Clock & NPC Schedules).
-Resume file: .planning/v1.6-PLANNING.md (Next Milestone)
+Stopped at: Completed 33-01-PLAN.md.
+Resume file: .planning/phases/33-ui-rendering-modularization/33-02-PLAN.md
