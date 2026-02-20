@@ -115,6 +115,7 @@ class UISystem(esper.Processor):
         self._draw_sidebar_actions(surface, self.sidebar_cursor)
         self._draw_sidebar_equipment(surface, self.sidebar_cursor)
         self._draw_sidebar_combat_stats(surface, self.sidebar_cursor)
+        self._draw_sidebar_needs(surface, self.sidebar_cursor)
 
     def _draw_section_title(self, surface, cursor, title):
         title_surf = self.font.render(title, True, UI_COLOR_SECTION_TITLE)
@@ -219,6 +220,19 @@ class UISystem(esper.Processor):
         except KeyError:
             pass
             
+        cursor.advance(UI_SECTION_SPACING)
+
+    def _draw_sidebar_needs(self, surface, cursor):
+        self._draw_section_title(surface, cursor, "Needs")
+        
+        hunger_surf = self.small_font.render("Hunger: 0%", True, UI_COLOR_TEXT_BRIGHT)
+        fatigue_surf = self.small_font.render("Fatigue: 0%", True, UI_COLOR_TEXT_BRIGHT)
+        
+        surface.blit(hunger_surf, (cursor.x + 5, cursor.y))
+        cursor.advance(UI_LINE_SPACING)
+        surface.blit(fatigue_surf, (cursor.x + 5, cursor.y))
+        cursor.advance(UI_LINE_SPACING)
+        
         cursor.advance(UI_SECTION_SPACING)
 
     def _draw_bar(self, surface, x, y, width, height, val, max_val, color, label):
