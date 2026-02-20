@@ -2,6 +2,10 @@ import esper
 from ecs.components import Stats, EffectiveStats, AttackIntent, Name
 
 class CombatSystem(esper.Processor):
+    def __init__(self, action_system=None):
+        super().__init__()
+        self.action_system = action_system
+
     def process(self):
         for attacker, intent in list(esper.get_component(AttackIntent)):
             target = intent.target_entity
@@ -23,6 +27,11 @@ class CombatSystem(esper.Processor):
                 # Update effective HP to avoid stale death check if it's a separate component
                 if target_eff is not target_stats:
                     target_eff.hp -= damage
+                
+                # Wake up target if sleeping
+                from ecs.components import AIBehaviorState, AIState
+                if self.action_system and esper.has_component(target, AIBehaviorState):
+                    self.action_system.wake_up(target)
                 
                 # Get names for logging
                 attacker_name = self._get_name(attacker)

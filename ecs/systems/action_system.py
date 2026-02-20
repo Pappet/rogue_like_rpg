@@ -260,3 +260,19 @@ class ActionSystem(esper.Processor):
         if esper.has_component(entity, Targeting):
             esper.remove_component(entity, Targeting)
         self.turn_system.current_state = GameStates.PLAYER_TURN
+
+    def wake_up(self, target_entity):
+        """Centralized logic to wake up a sleeping entity."""
+        from ecs.components import AIBehaviorState, AIState, Name
+        
+        try:
+            behavior = esper.component_for_entity(target_entity, AIBehaviorState)
+            if behavior.state == AIState.SLEEP:
+                behavior.state = AIState.IDLE
+                try:
+                    name = esper.component_for_entity(target_entity, Name)
+                    esper.dispatch_event("log_message", f"The {name.name} wakes up!")
+                except KeyError:
+                    esper.dispatch_event("log_message", "Something wakes up!")
+        except KeyError:
+            pass

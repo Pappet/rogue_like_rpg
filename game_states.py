@@ -14,6 +14,7 @@ from ecs.systems.action_system import ActionSystem
 from ecs.systems.combat_system import CombatSystem
 from ecs.systems.death_system import DeathSystem
 from ecs.systems.ai_system import AISystem
+from ecs.systems.schedule_system import ScheduleSystem
 from ecs.systems.equipment_system import EquipmentSystem
 from ecs.systems.debug_render_system import DebugRenderSystem
 from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats, Inventory, Name, Portable, Equipment, Equippable, SlotType
@@ -107,17 +108,28 @@ class Game(GameState):
         else:
             self.visibility_system.set_map(self.map_container)
 
+        self.action_system = self.persist.get("action_system")
+        if not self.action_system:
+            self.action_system = ActionSystem(self.map_container, self.turn_system)
+            self.persist["action_system"] = self.action_system
+        else:
+            self.action_system.set_map(self.map_container)
+            self.action_system.turn_system = self.turn_system
+
         self.movement_system = self.persist.get("movement_system")
         if not self.movement_system:
-            self.movement_system = MovementSystem(self.map_container)
+            self.movement_system = MovementSystem(self.map_container, self.action_system)
             self.persist["movement_system"] = self.movement_system
         else:
             self.movement_system.set_map(self.map_container)
+            self.movement_system.action_system = self.action_system
 
         self.combat_system = self.persist.get("combat_system")
         if not self.combat_system:
-            self.combat_system = CombatSystem()
+            self.combat_system = CombatSystem(self.action_system)
             self.persist["combat_system"] = self.combat_system
+        else:
+            self.combat_system.action_system = self.action_system
 
         self.death_system = self.persist.get("death_system")
         if not self.death_system:
@@ -129,6 +141,11 @@ class Game(GameState):
         if not self.ai_system:
             self.ai_system = AISystem()
             self.persist["ai_system"] = self.ai_system
+
+        self.schedule_system = self.persist.get("schedule_system")
+        if not self.schedule_system:
+            self.schedule_system = ScheduleSystem()
+            self.persist["schedule_system"] = self.schedule_system
 
         self.equipment_system = self.persist.get("equipment_system")
         if not self.equipment_system:
@@ -168,7 +185,6 @@ class Game(GameState):
             self.player_entity = self.persist.get("player_entity")
 
         self.ui_system = UISystem(self.turn_system, self.player_entity, self.world_clock)
-        self.action_system = ActionSystem(self.map_container, self.turn_system)
         self.render_system = RenderSystem(self.camera, self.map_container)
         
         # Initialize Debug System (persistent flags)
@@ -446,6 +462,9 @@ class Game(GameState):
                 player_layer = pos.layer
             except KeyError:
                 player_layer = 0
+            
+            # Update schedules before AI processing
+            self.schedule_system.process(self.world_clock, self.map_container)
             self.ai_system.process(self.turn_system, self.map_container, player_layer, self.player_entity)
 
     def draw(self, surface):
