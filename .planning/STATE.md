@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 36 of 36 (Feedback & Information Hierarchy)
-Plan: 1 of 3 in current phase
-Status: In Progress
-Last activity: 2026-02-21 — Completed 36-01-PLAN.md (FCT System).
+Plan: 3 of 3 in current phase
+Status: Milestone Complete
+Last activity: 2026-02-21 — Completed Phase 36 and Milestone v1.6.
 
-Progress: [█████████░] 100% (Phase 35) / 83% (v1.6)
+Progress: [██████████] 100% (Phase 36) / 100% (v1.6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.6): 10
+- Total plans completed (v1.6): 12
 - Average duration: 15m
-- Total execution time: 150m
+- Total execution time: 180m
 
 **By Phase:**
 
@@ -30,14 +30,17 @@ Progress: [█████████░] 100% (Phase 35) / 83% (v1.6)
 | 33 | 3 | 30m | 10m |
 | 34 | 3 | 30m | 10m |
 | 35 | 3 | 75m | 25m |
-| 36 | 1 | 15m | 15m |
+| 36 | 3 | 45m | 15m |
 
-**Recent Trend:** Implemented FCT system for immediate combat feedback.
+**Recent Trend:** Milestone v1.6 complete. UI/UX is now modular, responsive, and provides rich feedback (FCT, tooltips, categorized logs).
 
 ## Quick Tasks Completed
 
 | Task | Description | Date |
 |------|-------------|------|
+| v1.6-TD | Fix input leaks and centralize UI constants | 2026-02-21 |
+| 36-03 | Implement Examine Mode and Tooltips | 2026-02-21 |
+| 36-02 | Categorize Message Log and implement low-health alerts | 2026-02-21 |
 | 36-01 | Implement Floating Combat Text (FCT) system | 2026-02-21 |
 | 35-03 | Viewport Expansion and HUD Refactor | 2026-02-21 |
 | 35-02 | Implement Inventory and Character sheet modals | 2026-02-21 |
@@ -56,31 +59,29 @@ Progress: [█████████░] 100% (Phase 35) / 83% (v1.6)
 
 ### Decisions
 
-- **Modular UI:** UI elements will be decoupled from `ui_system.py` into distinct render functions with a dynamic Y-cursor for layout.
+- **Modular UI:** UI elements decoupled from `ui_system.py` into distinct render functions with a dynamic Y-cursor for layout.
 - **Stateful Modals:** Transition from full-state screens to event-driven overlays that can be stacked.
 - **Bump-to-Action:** Primary interaction method for basic combat and NPC interaction.
 - **UI Infrastructure:** Established UI constants and `LayoutCursor` for dynamic stacking.
-- **Relative Positioning:** Header elements now use relative positioning based on `header_rect` boundaries and `UI_PADDING`.
+- **Relative Positioning:** Header elements use relative positioning based on `header_rect` boundaries and `UI_PADDING`.
 - **Increased Resolution:** Decision to use 1280x720 as the base resolution for better visibility.
 - **Dynamic Header:** Header uses a horizontal cursor to prevent text overlaps.
-- **Centralized Input:** Input is now handled by a dedicated `InputManager` that maps keys to commands based on state.
-- **Hotbar Slots:** Player has a `HotbarSlots` component mapping keys 1-9 to specific `Action` objects for quick execution.
-- **Contextual Bump:** Collisions automatically resolve to Attack, Wake Up, or Talk based on target entity components and state.
-- **UI Stack Architecture:** Implemented a centralized `UIStack` manager to handle modal lifecycles (Inventory, Character Screen).
-- **Viewport Expansion:** Reclaimed the sidebar's screen real estate (220px) for the game world. Viewport width is now full screen width.
-- **Floating Combat Text (FCT):** Implemented an entity-based FCT system that supports fading and upward movement for immediate combat feedback.
-- **Global dt Support:** Standardized ECS `process()` methods to accept delta time (`dt`) for frame-rate independent updates.
+- **Centralized Input:** Input handled by dedicated `InputManager` mapping keys to commands based on state.
+- **Hotbar Slots:** Player has `HotbarSlots` component mapping keys 1-9 to specific `Action` objects for quick execution.
+- **Contextual Bump:** Collisions automatically resolve to Attack, Wake Up, or Talk based on target components.
+- **UI Stack Architecture:** Centralized `UIStack` manager handles modal lifecycles (Inventory, Character, Tooltips).
+- **Viewport Expansion:** Reclaimed sidebar space (220px) for the game world. Viewport width is now full screen width.
+- **Floating Combat Text (FCT):** Entity-based FCT system with fading and upward movement for immediate feedback.
+- **Log Categorization:** Messages are now color-coded by category (Damage, Healing, Loot, Alerts).
+- **Examine Mode:** Dedicated inspection mode with a cursor and detailed modal tooltips.
+- **Quick Transitions:** Reduced house entry/exit time to 1 tick for smoother exploration.
+- **Input Consumption:** Modal UI windows (Inventory, Character) consume all KEYDOWN events to prevent background leakage.
+- **Centralized UI Colors:** Magic numbers for UI colors and basic spacing centralized in `config.py`.
 
 ### Pending Todos
 
-- [ ] Implement Feedback & Information Hierarchy (Phase 36).
+- [ ] Milestone v1.7 Planning (Dungeon Progression / Leveling).
 
 ### Blockers/Concerns
 
-- **Magic Numbers:** Refactored in `ui_system.py`, but continue to monitor in new window implementations.
-
-## Session Continuity
-
-Last session: 2026-02-20
-Stopped at: Completed 35-01-PLAN.md.
-Resume file: .planning/phases/35-stateful-menus-viewport-expansion/35-02-PLAN.md
+- **Performance:** monitor impact of many FCT entities during large battles.
