@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 35 of 36 (Stateful Menus & Viewport Expansion)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-20 — Completed 35-01-PLAN.md.
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-20 — Completed 35-02-PLAN.md.
 
-Progress: [█░░░░░░░░░] 50% (Phase 35) / 38% (v1.6)
+Progress: [██████████] 100% (Phase 35) / 44% (v1.6)
 
 ## Performance Metrics
 
@@ -38,6 +38,7 @@ Progress: [█░░░░░░░░░] 50% (Phase 35) / 38% (v1.6)
 
 | Task | Description | Date |
 |------|-------------|------|
+| 35-02 | Implement Inventory and Character Modals | 2026-02-20 |
 | 35-01 | Implement UIStack and UIWindow infrastructure | 2026-02-20 |
 | 34-03 | Implement Hotbar Action Selection (1-9) | 2026-02-20 |
 | 34-02 | Implement Context-Sensitive "Bump" Interactions | 2026-02-20 |
@@ -64,6 +65,8 @@ Progress: [█░░░░░░░░░] 50% (Phase 35) / 38% (v1.6)
 - **Hotbar Slots:** Player has a `HotbarSlots` component mapping keys 1-9 to specific `Action` objects for quick execution.
 - **Contextual Bump:** Collisions automatically resolve to Attack, Wake Up, or Talk based on target entity components and state.
 - **UI Stack:** Implemented a LIFO stack for modal windows with input delegation and game pausing.
+- **Wants-to-Close Flag:** Windows use a `wants_to_close` flag to signal the UI stack owner to pop them, maintaining decoupling from the stack itself.
+- **Character Modal:** Established a dedicated Character Sheet modal for stats and equipment overview, accessible via 'C' key.
 
 ### Pending Todos
 
