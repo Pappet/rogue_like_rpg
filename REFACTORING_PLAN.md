@@ -64,21 +64,21 @@ Erstelle tests/test_smoke.py:
 **Hinweis:** Pygame-Abhängigkeit via `os.environ["SDL_VIDEODRIVER"] = "dummy"` vor dem Import mocken.
 
 ### Task 0.2 — Dependencies formalisieren
-```
+
 Erstelle requirements.txt:
+```
 pygame>=2.5
 esper>=3.0
 pathfinding>=1.0
-
-Optional: requirements-dev.txt mit pytest
 ```
+Optional: requirements-dev.txt mit pytest
+
 
 ### Task 0.3 — Git-Strategie
-```
+
 - Erstelle Branch: refactor/phase-X für jede Phase
 - Jede Phase endet mit einem Merge in main
 - Smoke-Tests müssen vor jedem Merge grün sein
-```
 
 ---
 
@@ -87,8 +87,9 @@ Optional: requirements-dev.txt mit pytest
 > **Ziel:** `config.py` entflechten, Magic Numbers eliminieren.
 
 ### Task 1.1 — Config in Module aufteilen
-```
+
 config.py aufteilen in:
+```
 ├── config/
 │   ├── __init__.py          # Re-exportiert alles für Rückwärtskompatibilität
 │   ├── game.py              # SCREEN_*, TILE_SIZE, TICKS_PER_HOUR, DN_SETTINGS
@@ -96,15 +97,16 @@ config.py aufteilen in:
 │   ├── colors.py            # COLOR_*, UI_COLOR_*
 │   ├── debug.py             # DEBUG_*
 │   └── enums.py             # SpriteLayer, GameStates, LogCategory, LOG_COLORS
-
+```
 Wichtig: config/__init__.py importiert alles → bestehende `from config import X`
 brechen NICHT. Migration der Imports kann später schrittweise passieren.
-```
+
 **Akzeptanz:** Alle bestehenden `from config import ...` funktionieren weiterhin. Smoke-Tests grün.
 
 ### Task 1.2 — Player-Stats externalisieren
-```
+
 Erstelle assets/data/player.json:
+```
 {
   "name": "Player",
   "sprite": "@",
@@ -116,16 +118,16 @@ Erstelle assets/data/player.json:
   "actions": [...],
   "hotbar": {...}
 }
-
-party_service.py lädt aus dieser Datei statt Hardcoding.
 ```
+party_service.py lädt aus dieser Datei statt Hardcoding.
+
 **Akzeptanz:** Änderungen an `player.json` wirken sich im Spiel aus ohne Code-Änderung.
 
 ### Task 1.3 — Legacy-Code entfernen
-```
+
 - Lösche entities/monster.py (komplett ersetzt durch EntityFactory)
 - Suche nach allen Referenzen und entferne sie
-```
+
 **Akzeptanz:** `grep -r "from entities.monster\|import monster" --include="*.py"` = 0 Treffer.
 
 ---
@@ -138,9 +140,9 @@ party_service.py lädt aus dieser Datei statt Hardcoding.
 > da `SystemInitializer` das einheitliche `set_map()` Interface voraussetzen sollte.
 
 ### Task 2.1 — Input-Handler extrahieren
-```
-Erstelle services/game_input_handler.py:
 
+Erstelle services/game_input_handler.py:
+```
 class GameInputHandler:
     def __init__(self, action_system, turn_system, ui_stack, player_entity):
         ...
@@ -153,15 +155,14 @@ class GameInputHandler:
 
     def handle_examine_input(self, command) -> None:
         ...
-
-Game.get_event() delegiert an GameInputHandler.
 ```
+Game.get_event() delegiert an GameInputHandler.
+
 **Akzeptanz:** `Game.get_event()` ist < 20 Zeilen. Alle Input-Tests laufen.
 
 ### Task 2.2 — Map-Transition-Logik extrahieren
-```
 Erstelle services/map_transition_service.py:
-
+```
 class MapTransitionService:
     def __init__(self, map_service, world_clock):
         ...
@@ -169,15 +170,15 @@ class MapTransitionService:
     def transition(self, event_data, player_entity, systems: dict) -> MapContainer:
         # Gesamte transition_map() Logik aus Game hierher
         # systems dict enthält alle Systems die set_map() brauchen
-
-Game registriert: esper.set_handler("change_map", self.map_transition.transition)
 ```
+Game registriert: esper.set_handler("change_map", self.map_transition.transition)
+
 **Akzeptanz:** `transition_map()` existiert nicht mehr in `game_states.py`.
 
 ### Task 2.3 — System-Initialisierung extrahieren
-```
-Erstelle services/system_initializer.py:
 
+Erstelle services/system_initializer.py:
+```
 class SystemInitializer:
     @staticmethod
     def initialize(persist: dict) -> dict:
@@ -195,19 +196,19 @@ class SystemInitializer:
             except KeyError:
                 pass
         esper.add_processor(...)
-
+```
 Ersetzt das fragile `if not persist.get("system"):` Pattern in startup().
 Game.startup() ruft SystemInitializer.initialize(self.persist) auf.
-```
+
 **Akzeptanz:** `Game.startup()` ist < 30 Zeilen. Kein `if not persist.get(...)` Pattern mehr.
 
 ### Task 2.4 — Examine/Tooltip-Logik extrahieren
-```
+
 Verschiebe update_examine_tooltip() in ui/windows/tooltip.py
 als TooltipManager Klasse oder als Teil des ExamineSystem.
 
 Game.update() ruft nur noch tooltip_manager.update() auf.
-```
+
 **Akzeptanz:** `game_states.py` Game-Klasse ist < 200 Zeilen total.
 
 ---
@@ -217,8 +218,8 @@ Game.update() ruft nur noch tooltip_manager.update() auf.
 > **Ziel:** Klare, konsistente Regeln wie Systems arbeiten.
 
 ### Task 3.1 — System-Kategorien definieren und dokumentieren
-```
-Definiere in CLAUDE.md drei Kategorien:
+
+Definiere in CLAUDE.md vier Kategorien:
 
 1. FRAME-PROCESSORS: Registriert bei esper, laufen über esper.process()
    → TurnSystem, EquipmentSystem, VisibilitySystem, MovementSystem,
@@ -232,38 +233,37 @@ Definiere in CLAUDE.md drei Kategorien:
 
 4. EVENT-SYSTEMS: Reagieren nur auf Events, kein process()
    → DeathSystem (entity_died)
-```
 
 ### Task 3.2 — DeathSystem korrekt kategorisieren
-```
+
 DeathSystem ist aktuell beides: Processor UND Event-Handler.
 - Entferne esper.add_processor(self.death_system) aus startup()
 - DeathSystem ist nur noch Event-Handler (set_handler in __init__ bleibt)
 - Leere process() Methode entfernen
 - DeathSystem muss weiterhin in persist gespeichert werden (wegen map_container Referenz)
-```
+
 **Akzeptanz:** `DeathSystem` hat keine leere `process()` mehr. Entity-Death funktioniert weiterhin.
 
 ### Task 3.3 — set_map() Pattern vereinheitlichen
-```
+
 Problem: Manche Systems bekommen map_container im Constructor,
 manche über set_map(), manche beides.
 
 Lösung: MapAwareSystem Mixin:
-
+```
 class MapAwareSystem:
     def __init__(self):
         self._map_container = None
 
     def set_map(self, map_container):
         self._map_container = map_container
-
+```
 Alle Systems die Maps brauchen erben davon:
 → VisibilitySystem, MovementSystem, ActionSystem, DeathSystem, RenderSystem, DebugRenderSystem
 
 Rule: Constructor nimmt KEIN map_container mehr. set_map() wird nach
 Erstellung und bei jedem Map-Wechsel (MapTransitionService) aufgerufen.
-```
+
 **Akzeptanz:** Kein System hat `map_container` als Constructor-Parameter.
 
 ---
@@ -273,22 +273,22 @@ Erstellung und bei jedem Map-Wechsel (MapTransitionService) aufgerufen.
 > **Ziel:** freeze/thaw sicher machen, MapService fokussieren.
 
 ### Task 4.1 — freeze/thaw ohne esper-Internals
-```
+
 Problem: map_container.freeze() greift auf actual_world._entities zu
 (doppelte Indirektion: _world + _entities).
 
 Empfohlene Lösung — MapBound Marker Component:
-
+```
 @dataclass
 class MapBound:
     """Marker: Entity gehört zu dieser Map und wird mitgefroren."""
     pass
-
+```
 Vorgehen:
 1. Alle nicht-Party Entities beim Erstellen mit MapBound markieren
    (EntityFactory.create() setzt MapBound automatisch)
 2. freeze() iteriert nur Entities mit MapBound:
-
+```
    def freeze(self, world, exclude_entities):
        self.frozen_entities = []
        for ent, _ in list(esper.get_component(MapBound)):
@@ -300,24 +300,24 @@ Vorgehen:
                )
                world.delete_entity(ent)
        world.clear_dead_entities()
-
+```
 KNOWN_COMPONENT_TYPES muss alle Component-Klassen kennen (zentrales Registry
 in components.py oder via __subclasses__).
 
 Vorteil gegenüber Alternative: Keine Iteration aller Component-Typen nötig,
 klar welche Entities zur Map gehören.
-```
+
 **Akzeptanz:** `freeze()`/`thaw()` nutzt keine `_`-prefixed Attribute von esper. Smoke-Test für freeze/thaw bleibt grün.
 
 ### Task 4.2 — MapService aufteilen
-```
-services/map_service.py aufteilen:
 
+services/map_service.py aufteilen:
+```
 services/
 ├── map_service.py            # Nur Map-Registry + aktive Map Verwaltung
 ├── map_generator.py          # Village-Szenario, Terrain-Variety, Prefabs
 └── spawn_service.py          # Monster/NPC Spawning Logik
-
+```
 map_service.py behält:
   - register_map(), get_map(), set_active_map(), get_active_map()
 
@@ -329,12 +329,13 @@ map_generator.py bekommt:
 spawn_service.py bekommt:
   - spawn_monsters()
   - NPC-Spawning aus create_village_scenario()
-```
+
 **Akzeptanz:** `map_service.py` ist < 80 Zeilen.
 
 ### Task 4.3 — Village-Szenario daten-getrieben machen
-```
+
 Erstelle assets/data/scenarios/village.json:
+```
 {
   "id": "Village",
   "width": 40, "height": 40,
@@ -355,9 +356,9 @@ Erstelle assets/data/scenarios/village.json:
     ...
   ]
 }
-
-map_generator.py liest diese Datei statt Hardcoding.
 ```
+map_generator.py liest diese Datei statt Hardcoding.
+
 **Akzeptanz:** Neues Gebäude hinzufügen = nur JSON editieren.
 
 ---
@@ -367,7 +368,7 @@ map_generator.py liest diese Datei statt Hardcoding.
 > **Ziel:** Einheitliche Patterns, keine Inline-Imports, sauberes Error-Handling.
 
 ### Task 5.1 — Inline-Imports auflösen
-```
+
 Bekannte Stellen:
 - combat_system.py Zeile 34: `from ecs.components import AIBehaviorState, AIState` innerhalb process()
 - action_system.py Zeile 272: `from ecs.components import AIBehaviorState, AIState, Name` in wake_up()
@@ -375,11 +376,11 @@ Bekannte Stellen:
 Strategie:
 - Echte zirkuläre Abhängigkeiten über Interface/Protocol lösen
 - Lazy Imports nur wo wirklich nötig, mit Kommentar warum
-```
+
 **Akzeptanz:** `grep -rn "^\s\+from\|^\s\+import" --include="*.py" ecs/ services/` zeigt keine Imports innerhalb von Funktionsbodies (außer dokumentierte Ausnahmen).
 
 ### Task 5.2 — Error-Handling Pattern vereinheitlichen
-```
+
 Definiere klares Pattern:
 
 1. Component-Zugriff wo Entity garantiert Component hat:
@@ -392,18 +393,18 @@ Definiere klares Pattern:
    (Ausnahme: Legacy-Code der schrittweise migriert wird)
 
 Durchsuche alle Systems und migriere zu diesem Pattern.
-```
+
 **Akzeptanz:** Keine `try/except KeyError` um `component_for_entity()` Aufrufe mehr (außer wo explizit kommentiert).
 
 ### Task 5.3 — Logging statt print()
-```
+
 Nutze Python logging Modul (kein neues Service nötig):
 - Konfiguriere Logger am Programmstart in main.py
 - Logger pro Modul: logging.getLogger(__name__)
 - Level: DEBUG für AI/Pathfinding, INFO für Map/Combat-Events, WARNING für unerwartetes
 - Debug-Toggles steuern Log-Level zur Laufzeit
 - Ersetze alle print() Aufrufe
-```
+
 **Akzeptanz:** `grep -rn "^\s*print(" --include="*.py" ecs/ services/ game_states.py` = 0 Treffer.
 
 ---
@@ -413,7 +414,7 @@ Nutze Python logging Modul (kein neues Service nötig):
 > **Ziel:** Halbfertige Features entweder fertig machen oder sauber entfernen.
 
 ### Task 6.1 — Talk-Interaction
-```
+
 Aktuell: "You bump into X. They look at you."
 Minimal-Lösung: Einfaches Dialogue-System
 
@@ -422,29 +423,29 @@ Erstelle:
 - services/dialogue_service.py
 - Dialogue Component für NPCs
 - UI-Anzeige im Message Log oder als Window
-```
+
 **Akzeptanz:** Bump auf NEUTRAL NPC zeigt mindestens eine kontextuelle Dialogue-Zeile an.
 
 ### Task 6.2 — Ranged/Spells Action
-```
+
 Aktuell: print(f"Executed {targeting.action.name} at (...)")
 Minimal-Lösung:
 
 - Ranged: AttackIntent auf Ziel-Entity erstellen → CombatSystem verarbeitet
 - Spells: Einfacher Effekt (Damage in Area, Heal, Buff)
 - Erstelle services/ability_service.py für Action-Execution
-```
+
 **Akzeptanz:** Ranged-Action trifft Ziel und verursacht Schaden über CombatSystem. Spell zeigt Effekt und verbraucht Mana.
 
 ### Task 6.3 — Player Death
-```
+
 Aktuell: Kein Handling wenn Player HP ≤ 0 — Spiel läuft ohne Reaktion weiter.
 Minimal-Lösung:
 
 - DeathSystem.on_entity_died() prüft ob gestorbene Entity PlayerTag hat
 - → Dispatch "player_died" Event
 - → Game-Over Screen (neuer GameState) oder Respawn-Logik
-```
+
 **Akzeptanz:** Wenn Player HP ≤ 0 erreicht, erscheint Game-Over Screen oder Respawn.
 
 ### Task 6.4 — Audit aller TODO/FIXME/Stub-Kommentare
@@ -461,30 +462,30 @@ grep -rn "TODO\|FIXME\|HACK\|STUB\|XXX" --include="*.py"
 > **Ziel:** Projekt ist für zukünftige Entwicklung bereit.
 
 ### Task 7.1 — CLAUDE.md aktualisieren
-```
+
 Nach allen Refactoring-Phasen CLAUDE.md updaten:
 - Neue Projektstruktur (config/, map_generator.py, spawn_service.py, etc.)
 - System-Kategorien (Frame-Processor, Phase-System, Render-System, Event-System)
 - MapBound Component dokumentieren
 - MapAwareSystem Mixin dokumentieren
 - Neue Konventionen (Logging, Error-Handling)
-```
+
 
 ### Task 7.2 — README.md erstellen
-```
+
 - Projekt-Beschreibung
 - Screenshot/GIF
 - Setup-Anleitung
 - Feature-Liste
 - Architektur-Übersicht (kurz)
-```
+
 
 ### Task 7.3 — Pre-Commit Hooks (optional)
-```
+
 - Linting (ruff)
 - Type-Checking (mypy, zumindest partial)
 - Test-Run (nur Smoke-Tests für schnelles Feedback)
-```
+
 
 ---
 

@@ -1,67 +1,82 @@
+import json
+import os
 import esper
 from ecs.components import (
-    Position, Renderable, Stats, Name, Inventory, TurnOrder, 
+    Position, Renderable, Stats, Name, Inventory, TurnOrder,
     ActionList, Action, Blocker, Equipment, EffectiveStats, HotbarSlots, PlayerTag
 )
 from config import SpriteLayer
+
+_DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'assets', 'data', 'player.json')
+
+def _load_player_data():
+    with open(_DATA_PATH, 'r') as f:
+        return json.load(f)
+
+def _build_action(data: dict) -> Action:
+    """Build an Action from a JSON dict."""
+    return Action(
+        name=data["name"],
+        cost_mana=data.get("cost_mana", 0),
+        cost_arrows=data.get("cost_arrows", 0),
+        range=data.get("range", 0),
+        requires_targeting=data.get("requires_targeting", False),
+        targeting_mode=data.get("targeting_mode", "auto"),
+    )
 
 class PartyService:
     def __init__(self):
         pass
 
     def create_initial_party(self, x: int, y: int):
-        # Define some common actions
-        move_action = Action(name="Move")
-        wait_action = Action(name="Wait")
-        investigate_action = Action(name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect")
-        ranged_action = Action(name="Ranged", range=5, requires_targeting=True, targeting_mode="auto")
-        spells_action = Action(name="Spells", cost_mana=10, range=7, requires_targeting=True, targeting_mode="manual")
-        items_action = Action(name="Items")
+        data = _load_player_data()
 
-        # Create player entity in ECS
+        # Build actions from JSON
+        actions = [_build_action(a) for a in data["actions"]]
+        actions_by_name = {a.name: a for a in actions}
+        # Wait action is hotbar-only, not in the main action list
+        wait_action = Action(name="Wait")
+        actions_by_name["Wait"] = wait_action
+
+        # Build hotbar mapping
+        hotbar = {i: None for i in range(1, 10)}
+        for slot_str, action_name in data["hotbar"].items():
+            hotbar[int(slot_str)] = actions_by_name[action_name]
+
+        layer = SpriteLayer[data["sprite_layer"]].value
+        color = tuple(data["color"])
+
+        stat_fields = {
+            k: data[k] for k in
+            ("hp", "max_hp", "power", "defense", "mana", "max_mana", "perception", "intelligence")
+        }
+
         player_entity = esper.create_entity(
             PlayerTag(),
             Position(x, y),
-            Renderable("@", SpriteLayer.ENTITIES.value, (255, 255, 255)),
+            Renderable(data["sprite"], layer, color),
             Stats(
-                hp=100, max_hp=100, power=5, defense=2, mana=50, max_mana=50, perception=10, intelligence=10,
-                base_hp=100, base_max_hp=100, base_power=5, base_defense=2, base_mana=50, base_max_mana=50, base_perception=10, base_intelligence=10
+                **stat_fields,
+                **{f"base_{k}": v for k, v in stat_fields.items()},
+                max_carry_weight=data.get("max_carry_weight", 20.0),
             ),
             Equipment(),
-            EffectiveStats(
-                hp=100, max_hp=100, power=5, defense=2, mana=50, max_mana=50, perception=10, intelligence=10
-            ),
-            Name("Player"),
+            EffectiveStats(**stat_fields),
+            Name(data["name"]),
             Blocker(),
             Inventory(),
-            TurnOrder(priority=0), # Player usually has high priority
-            ActionList(actions=[
-                move_action,
-                Action(name="Enter Portal"),
-                investigate_action,
-                ranged_action,
-                spells_action,
-                items_action
-            ]),
-            HotbarSlots(slots={
-                1: move_action,
-                2: wait_action,
-                3: investigate_action,
-                4: ranged_action,
-                5: spells_action,
-                6: items_action
-            })
+            TurnOrder(priority=0),
+            ActionList(actions=actions),
+            HotbarSlots(slots=hotbar),
         )
-        
-        # We could create more heroes as separate entities or keep them in player's party
-        # For now, let's just return the player entity
+
         return player_entity
 
 def get_entity_closure(world, root_entity):
     """Find all entities that should travel with the root_entity (e.g., inventory items)."""
     closure = {root_entity}
     stack = [root_entity]
-    
+
     while stack:
         current = stack.pop()
         try:
@@ -71,7 +86,6 @@ def get_entity_closure(world, root_entity):
                     closure.add(item_id)
                     stack.append(item_id)
         except KeyError:
-            # Entity doesn't have an inventory
             pass
-    
+
     return list(closure)
