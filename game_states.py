@@ -99,6 +99,7 @@ class Game(GameState):
         self.camera = self.persist.get("camera")
         self.map_service = self.persist.get("map_service")
         self.world_clock = self.persist.get("world_clock")
+        self.ui_stack = self.persist.get("ui_stack")
         
         # Initialize ECS
         self.world = get_world()
@@ -218,6 +219,10 @@ class Game(GameState):
     def get_event(self, event):
         if not self.turn_system or not self.input_manager:
             return
+
+        if self.ui_stack and self.ui_stack.is_active():
+            if self.ui_stack.handle_event(event):
+                return
 
         command = self.input_manager.handle_event(event, self.turn_system.current_state)
         if not command:
@@ -473,6 +478,10 @@ class Game(GameState):
         esper.dispatch_event("log_message", f"Transitioned to {target_map_id}.")
 
     def update(self, dt):
+        if self.ui_stack and self.ui_stack.is_active():
+            self.ui_stack.update(dt)
+            return
+
         # Run ECS processing
         esper.process()
         
@@ -537,6 +546,9 @@ class Game(GameState):
         # 4. Render UI
         if self.ui_system:
             self.ui_system.process(surface)
+
+        if self.ui_stack:
+            self.ui_stack.draw(surface)
 
 class WorldMapState(GameState):
     def __init__(self):

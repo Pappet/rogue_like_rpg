@@ -105,6 +105,8 @@ class GameStates(Enum):
 
     INVENTORY = 5
 
+    MENU = 6
+
 
 
 
