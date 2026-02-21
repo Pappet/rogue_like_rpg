@@ -38,6 +38,7 @@ Progress: [██████████] 100% (Phase 36) / 100% (v1.6)
 
 | Task | Description | Date |
 |------|-------------|------|
+| hotbar-fixes | Fix hotbar 6, prioritize portal 'Enter'/'INTERACT' | 2026-02-21 |
 | v1.6-TD | Fix input leaks and centralize UI constants | 2026-02-21 |
 | 36-03 | Implement Examine Mode and Tooltips | 2026-02-21 |
 | 36-02 | Categorize Message Log and implement low-health alerts | 2026-02-21 |
