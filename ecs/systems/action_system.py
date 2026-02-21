@@ -4,10 +4,12 @@ from config import GameStates, TILE_SIZE, LogCategory
 from ecs.components import Position, Renderable, Stats, EffectiveStats, Inventory, Targeting, Action, ActionList, Portal, Name, Description, ItemMaterial, Portable
 from map.tile import VisibilityState
 from map.tile_registry import TileRegistry
+from ecs.systems.map_aware_system import MapAwareSystem
 
-class ActionSystem(esper.Processor):
-    def __init__(self, map_container, turn_system):
-        self.map_container = map_container
+class ActionSystem(esper.Processor, MapAwareSystem):
+    def __init__(self, turn_system):
+        esper.Processor.__init__(self)
+        MapAwareSystem.__init__(self)
         self.turn_system = turn_system
 
     @staticmethod
@@ -31,9 +33,6 @@ class ActionSystem(esper.Processor):
             parts.append(f"Weight: {portable_comp.weight}kg")
             
         return "\n".join(parts)
-
-    def set_map(self, map_container):
-        self.map_container = map_container
 
     def process(self, *args, **kwargs):
         # This could handle animations or time-based action logic
@@ -128,7 +127,7 @@ class ActionSystem(esper.Processor):
 
             # Check if in visibility
             is_visible = False
-            for layer in self.map_container.layers:
+            for layer in self._map_container.layers:
                 if 0 <= pos.y < len(layer.tiles) and 0 <= pos.x < len(layer.tiles[pos.y]):
                     if layer.tiles[pos.y][pos.x].visibility_state == VisibilityState.VISIBLE:
                         is_visible = True
@@ -166,7 +165,7 @@ class ActionSystem(esper.Processor):
 
             # 2. Check tile accessibility (any previously-seen tile is reachable)
             is_accessible = False
-            for layer in self.map_container.layers:
+            for layer in self._map_container.layers:
                 if 0 <= new_y < len(layer.tiles) and 0 <= new_x < len(layer.tiles[new_y]):
                     if layer.tiles[new_y][new_x].visibility_state != VisibilityState.UNEXPLORED:
                         is_accessible = True
@@ -185,7 +184,7 @@ class ActionSystem(esper.Processor):
             # Check visibility of target tile — mode-aware gate
             tile_visibility = VisibilityState.UNEXPLORED
             target_tile = None
-            for layer in self.map_container.layers:
+            for layer in self._map_container.layers:
                 if 0 <= targeting.target_y < len(layer.tiles) and 0 <= targeting.target_x < len(layer.tiles[targeting.target_y]):
                     t = layer.tiles[targeting.target_y][targeting.target_x]
                     if t.visibility_state != VisibilityState.UNEXPLORED:

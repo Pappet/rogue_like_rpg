@@ -3,16 +3,14 @@ from ecs.components import Position, Stats, LightSource, EffectiveStats
 from services.visibility_service import VisibilityService
 from map.tile import VisibilityState
 from config import SpriteLayer
+from ecs.systems.map_aware_system import MapAwareSystem
 
-class VisibilitySystem(esper.Processor):
-    def __init__(self, map_container, turn_system):
-        super().__init__()
-        self.map_container = map_container
+class VisibilitySystem(esper.Processor, MapAwareSystem):
+    def __init__(self, turn_system):
+        esper.Processor.__init__(self)
+        MapAwareSystem.__init__(self)
         self.turn_system = turn_system
         self.last_round = turn_system.round_counter
-
-    def set_map(self, map_container):
-        self.map_container = map_container
 
     def process(self, *args, **kwargs):
         # 0. Check if a new round has started for aging memory
@@ -36,7 +34,7 @@ class VisibilitySystem(esper.Processor):
         memory_threshold = max_intel * 5
 
         # 1. Update rounds_since_seen and transition SHROUDED -> FORGOTTEN
-        for layer in self.map_container.layers:
+        for layer in self._map_container.layers:
             for row in layer.tiles:
                 for tile in row:
                     if tile.visibility_state == VisibilityState.VISIBLE:
@@ -55,8 +53,8 @@ class VisibilitySystem(esper.Processor):
         
         def get_is_transparent(layer_index):
             def is_transparent(x, y):
-                if 0 <= layer_index < len(self.map_container.layers):
-                    layer = self.map_container.layers[layer_index]
+                if 0 <= layer_index < len(self._map_container.layers):
+                    layer = self._map_container.layers[layer_index]
                     if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
                         tile = layer.tiles[y][x]
                         # Custom logic for transparency:
@@ -91,6 +89,6 @@ class VisibilitySystem(esper.Processor):
 
         # 3. Mark newly visible tiles
         for x, y in visible_coords:
-            for layer in self.map_container.layers:
+            for layer in self._map_container.layers:
                 if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
                     layer.tiles[y][x].visibility_state = VisibilityState.VISIBLE

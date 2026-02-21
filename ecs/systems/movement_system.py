@@ -2,14 +2,13 @@ import esper
 from ecs.components import Position, MovementRequest, Blocker, Stats, AttackIntent
 from map.map_container import MapContainer
 from services.interaction_resolver import InteractionResolver, InteractionType
+from ecs.systems.map_aware_system import MapAwareSystem
 
-class MovementSystem(esper.Processor):
-    def __init__(self, map_container: MapContainer, action_system=None):
-        self.map_container = map_container
+class MovementSystem(esper.Processor, MapAwareSystem):
+    def __init__(self, action_system=None):
+        esper.Processor.__init__(self)
+        MapAwareSystem.__init__(self)
         self.action_system = action_system
-
-    def set_map(self, map_container: MapContainer):
-        self.map_container = map_container
 
     def process(self, *args, **kwargs):
         # We use a list to avoid issues with modifying components during iteration
@@ -37,7 +36,9 @@ class MovementSystem(esper.Processor):
             esper.remove_component(ent, MovementRequest)
 
     def _is_walkable(self, x, y, layer_idx):
-        tile = self.map_container.get_tile(x, y, layer_idx)
+        if not self._map_container:
+            return False
+        tile = self._map_container.get_tile(x, y, layer_idx)
         return tile.walkable if tile else False
 
     def _get_blocker_at(self, x, y, layer_idx):

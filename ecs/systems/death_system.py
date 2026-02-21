@@ -4,17 +4,14 @@ from ecs.components import Name, Renderable, Blocker, AI, Corpse, Stats, AIBehav
 from config import SpriteLayer, LogCategory
 from entities.item_factory import ItemFactory
 from ecs.world import get_world
+from ecs.systems.map_aware_system import MapAwareSystem
 
-class DeathSystem(esper.Processor):
+class DeathSystem(esper.Processor, MapAwareSystem):
     def __init__(self):
-        super().__init__()
-        self.map_container = None
+        esper.Processor.__init__(self)
+        MapAwareSystem.__init__(self)
         # Register the event handler for entity death
         esper.set_handler("entity_died", self.on_entity_died)
-
-    def set_map(self, map_container):
-        """Set the map container reference for loot scattering checks."""
-        self.map_container = map_container
 
     def on_entity_died(self, entity):
         try:
@@ -71,7 +68,7 @@ class DeathSystem(esper.Processor):
 
     def _find_drop_position(self, x, y):
         """Return (x, y) if walkable, else search 8 neighbors."""
-        if self.map_container and self.map_container.is_walkable(x, y):
+        if self._map_container and self._map_container.is_walkable(x, y):
             return x, y
         
         # Search neighbors if center is blocked
@@ -83,7 +80,7 @@ class DeathSystem(esper.Processor):
         random.shuffle(neighbors)
         
         for nx, ny in neighbors:
-            if self.map_container and self.map_container.is_walkable(nx, ny):
+            if self._map_container and self._map_container.is_walkable(nx, ny):
                 return nx, ny
                 
         # Fallback to original position if all neighbors are blocked

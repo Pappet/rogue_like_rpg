@@ -4,17 +4,17 @@ import math
 from ecs.components import Position, Renderable, Targeting, AIBehaviorState, AIState, FCT
 from config import TILE_SIZE
 from map.tile import VisibilityState
+from ecs.systems.map_aware_system import MapAwareSystem
 
-class RenderSystem(esper.Processor):
-    def __init__(self, camera, map_container):
+class RenderSystem(esper.Processor, MapAwareSystem):
+    def __init__(self, camera):
+        esper.Processor.__init__(self)
+        MapAwareSystem.__init__(self)
         self.camera = camera
-        self.map_container = map_container
         pygame.font.init()
         self.font = pygame.font.SysFont('monospace', TILE_SIZE)
         self.fct_font = pygame.font.SysFont('monospace', 20, bold=True)
 
-    def set_map(self, map_container):
-        self.map_container = map_container
 
     def process(self, surface, player_layer=0):
         # 1. Draw range highlight and targeting cursor
@@ -33,7 +33,7 @@ class RenderSystem(esper.Processor):
             occluded = False
             if pos.layer < player_layer:
                 for i in range(player_layer, pos.layer, -1):
-                    tile = self.map_container.get_tile(pos.x, pos.y, i)
+                    tile = self._map_container.get_tile(pos.x, pos.y, i)
                     if tile and tile.sprites.get(SpriteLayer.GROUND):
                         occluded = True
                         break
@@ -44,8 +44,8 @@ class RenderSystem(esper.Processor):
             # Check if entity's position is visible
             is_visible = False
             # Check the visibility on the entity's own layer
-            if 0 <= pos.layer < len(self.map_container.layers):
-                layer = self.map_container.layers[pos.layer]
+            if 0 <= pos.layer < len(self._map_container.layers):
+                layer = self._map_container.layers[pos.layer]
                 if 0 <= pos.y < len(layer.tiles) and 0 <= pos.x < len(layer.tiles[pos.y]):
                     if layer.tiles[pos.y][pos.x].visibility_state == VisibilityState.VISIBLE:
                         is_visible = True
@@ -125,7 +125,7 @@ class RenderSystem(esper.Processor):
                 if dist <= targeting.range:
                     # Check visibility
                     is_visible = False
-                    for layer in self.map_container.layers:
+                    for layer in self._map_container.layers:
                         if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
                             if layer.tiles[y][x].visibility_state == VisibilityState.VISIBLE:
                                 is_visible = True

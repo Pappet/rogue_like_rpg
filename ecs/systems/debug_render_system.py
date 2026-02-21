@@ -4,24 +4,24 @@ from config import TILE_SIZE, DEBUG_FOV_COLOR, DEBUG_CHASE_COLOR, DEBUG_LABEL_CO
 from ecs.components import Position, AIBehaviorState, ChaseData, AIState, Stats
 from map.tile import VisibilityState
 from services.visibility_service import VisibilityService
+from ecs.systems.map_aware_system import MapAwareSystem
 
-class DebugRenderSystem:
-    def __init__(self, camera, map_container):
+class DebugRenderSystem(MapAwareSystem):
+    def __init__(self, camera):
+        MapAwareSystem.__init__(self)
         self.camera = camera
-        self.map_container = map_container
         if not pygame.font.get_init():
             pygame.font.init()
         self.font = pygame.font.SysFont("monospace", DEBUG_FONT_SIZE)
         # Create overlay surface with camera dimensions and transparency
         self.overlay = pygame.Surface((camera.width, camera.height), pygame.SRCALPHA)
 
-    def set_map(self, map_container):
-        """Update the internal map reference when switching levels."""
-        self.map_container = map_container
-
     def _is_transparent(self, x, y, layer):
         """Helper to determine if a tile is transparent, handling '#' wall fallback."""
-        tile = self.map_container.get_tile(x, y, layer)
+        if not self._map_container:
+            return False
+            
+        tile = self._map_container.get_tile(x, y, layer)
         if tile is None or not tile.transparent:
             return False
         
@@ -97,14 +97,14 @@ class DebugRenderSystem:
         start_col = max(0, self.camera.x // TILE_SIZE)
         start_row = max(0, self.camera.y // TILE_SIZE)
         # Calculate end column and row, ensuring we cover the full viewport
-        end_col = min(self.map_container.width, (self.camera.x + self.camera.width) // TILE_SIZE + 1)
-        end_row = min(self.map_container.height, (self.camera.y + self.camera.height) // TILE_SIZE + 1)
+        end_col = min(self._map_container.width, (self.camera.x + self.camera.width) // TILE_SIZE + 1)
+        end_row = min(self._map_container.height, (self.camera.y + self.camera.height) // TILE_SIZE + 1)
 
         # Iterate only visible tiles within the viewport
         for y in range(start_row, end_row):
             for x in range(start_col, end_col):
                 # Check visibility on the player's layer
-                tile = self.map_container.get_tile(x, y, player_layer)
+                tile = self._map_container.get_tile(x, y, player_layer)
                 if tile and tile.visibility_state == VisibilityState.VISIBLE:
                     # Calculate position on overlay surface relative to camera viewport
                     screen_x = x * TILE_SIZE - self.camera.x

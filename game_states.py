@@ -119,26 +119,25 @@ class Game(GameState):
 
         self.visibility_system = self.persist.get("visibility_system")
         if not self.visibility_system:
-            self.visibility_system = VisibilitySystem(self.map_container, self.turn_system)
+            self.visibility_system = VisibilitySystem(self.turn_system)
             self.persist["visibility_system"] = self.visibility_system
-        else:
-            self.visibility_system.set_map(self.map_container)
+        self.visibility_system.set_map(self.map_container)
 
         self.action_system = self.persist.get("action_system")
         if not self.action_system:
-            self.action_system = ActionSystem(self.map_container, self.turn_system)
+            self.action_system = ActionSystem(self.turn_system)
             self.persist["action_system"] = self.action_system
         else:
-            self.action_system.set_map(self.map_container)
             self.action_system.turn_system = self.turn_system
+        self.action_system.set_map(self.map_container)
 
         self.movement_system = self.persist.get("movement_system")
         if not self.movement_system:
-            self.movement_system = MovementSystem(self.map_container, self.action_system)
+            self.movement_system = MovementSystem(self.action_system)
             self.persist["movement_system"] = self.movement_system
         else:
-            self.movement_system.set_map(self.map_container)
             self.movement_system.action_system = self.action_system
+        self.movement_system.set_map(self.map_container)
 
         self.combat_system = self.persist.get("combat_system")
         if not self.combat_system:
@@ -207,7 +206,8 @@ class Game(GameState):
             self.player_entity = self.persist.get("player_entity")
 
         self.ui_system = UISystem(self.turn_system, self.player_entity, self.world_clock)
-        self.render_system = RenderSystem(self.camera, self.map_container)
+        self.render_system = RenderSystem(self.camera)
+        self.render_system.set_map(self.map_container)
         
         # Initialize Debug System (persistent flags)
         if "debug_flags" not in self.persist:
@@ -221,7 +221,8 @@ class Game(GameState):
                 "labels": True
             }
         
-        self.debug_render_system = DebugRenderSystem(self.camera, self.map_container)
+        self.debug_render_system = DebugRenderSystem(self.camera)
+        self.debug_render_system.set_map(self.map_container)
 
         # Register event handlers
         esper.set_handler("change_map", self.transition_map)
