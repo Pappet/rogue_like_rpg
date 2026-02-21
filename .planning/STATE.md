@@ -10,34 +10,36 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 34 of 36 (Input Handling & Control Scheme)
-Plan: 1 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-20 — Completed 34-01-PLAN.md.
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-20 — Completed 34-02-PLAN.md and 34-03-PLAN.md.
 
-Progress: [██████████] 100% (Phase 33) / 33% (Phase 34) / 30% (v1.6)
+Progress: [██████████] 100% (Phase 34) / 36% (v1.6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.6): 4
+- Total plans completed (v1.6): 6
 - Average duration: 10m
-- Total execution time: 40m
+- Total execution time: 60m
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 33 | 3 | 30m | 10m |
-| 34 | 1 | 10m | 10m |
+| 34 | 3 | 30m | 10m |
 | 35 | 0 | 0m | 0m |
 | 36 | 0 | 0m | 0m |
 
-**Recent Trend:** Completed initial `InputManager` and centralized command mapping for all game states.
+**Recent Trend:** Completed "Bump-to-Action" and Hotbar selection (1-9), finalizing Phase 34.
 
 ## Quick Tasks Completed
 
 | Task | Description | Date |
 |------|-------------|------|
+| 34-03 | Implement Hotbar Action Selection (1-9) | 2026-02-20 |
+| 34-02 | Implement Context-Sensitive "Bump" Interactions | 2026-02-20 |
 | 34-01 | Implement InputManager and centralized command mapping | 2026-02-20 |
 | 33-03 | Verify modular UI, add 'Needs' section, increase resolution | 2026-02-20 |
 | 33-02 | Refactor UI Rendering into Modular Functions | 2026-02-20 |
@@ -58,6 +60,8 @@ Progress: [██████████] 100% (Phase 33) / 33% (Phase 34) / 30
 - **Increased Resolution:** Decision to use 1280x720 as the base resolution for better visibility.
 - **Dynamic Header:** Header uses a horizontal cursor to prevent text overlaps.
 - **Centralized Input:** Input is now handled by a dedicated `InputManager` that maps keys to commands based on state.
+- **Hotbar Slots:** Player has a `HotbarSlots` component mapping keys 1-9 to specific `Action` objects for quick execution.
+- **Contextual Bump:** Collisions automatically resolve to Attack, Wake Up, or Talk based on target entity components and state.
 
 ### Pending Todos
 
@@ -70,5 +74,5 @@ Progress: [██████████] 100% (Phase 33) / 33% (Phase 34) / 30
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 34-01-PLAN.md.
-Resume file: .planning/phases/34-input-handling-control-scheme/34-02-PLAN.md
+Stopped at: Completed 34-03-PLAN.md (Phase 34 Complete).
+Resume file: .planning/phases/35-modal-ui-layering/35-01-PLAN.md
