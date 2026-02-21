@@ -1,5 +1,8 @@
 import esper
-from ecs.components import Position, Renderable, Stats, Name, Inventory, TurnOrder, ActionList, Action, Blocker, Equipment, EffectiveStats
+from ecs.components import (
+    Position, Renderable, Stats, Name, Inventory, TurnOrder, 
+    ActionList, Action, Blocker, Equipment, EffectiveStats, HotbarSlots
+)
 from config import SpriteLayer
 
 class PartyService:
@@ -7,6 +10,14 @@ class PartyService:
         pass
 
     def create_initial_party(self, x: int, y: int):
+        # Define some common actions
+        move_action = Action(name="Move")
+        wait_action = Action(name="Wait")
+        investigate_action = Action(name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect")
+        ranged_action = Action(name="Ranged", range=5, requires_targeting=True, targeting_mode="auto")
+        spells_action = Action(name="Spells", cost_mana=10, range=7, requires_targeting=True, targeting_mode="manual")
+        items_action = Action(name="Items")
+
         # Create player entity in ECS
         player_entity = esper.create_entity(
             Position(x, y),
@@ -24,13 +35,21 @@ class PartyService:
             Inventory(),
             TurnOrder(priority=0), # Player usually has high priority
             ActionList(actions=[
-                Action(name="Move"),
+                move_action,
                 Action(name="Enter Portal"),
-                Action(name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"),
-                Action(name="Ranged", range=5, requires_targeting=True, targeting_mode="auto"),
-                Action(name="Spells", cost_mana=10, range=7, requires_targeting=True, targeting_mode="manual"),
-                Action(name="Items")
-            ])
+                investigate_action,
+                ranged_action,
+                spells_action,
+                items_action
+            ]),
+            HotbarSlots(slots={
+                1: move_action,
+                2: wait_action,
+                3: investigate_action,
+                4: ranged_action,
+                5: spells_action,
+                6: items_action
+            })
         )
         
         # We could create more heroes as separate entities or keep them in player's party

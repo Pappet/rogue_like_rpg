@@ -155,6 +155,11 @@ class ActionList:
     selected_idx: int = 0
 
 @dataclass
+class HotbarSlots:
+    # Maps slots 1-9 to Action objects
+    slots: Dict[int, Optional[Action]] = field(default_factory=lambda: {i: None for i in range(1, 10)})
+
+@dataclass
 class Targeting:
     origin_x: int
     origin_y: int
