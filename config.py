@@ -108,6 +108,25 @@ class GameStates(Enum):
     MENU = 6
 
 
+class LogCategory(Enum):
+    DAMAGE_DEALT = 1
+    DAMAGE_RECEIVED = 2
+    HEALING = 3
+    LOOT = 4
+    SYSTEM = 5
+    ALERT = 6
+
+
+LOG_COLORS = {
+    LogCategory.DAMAGE_DEALT: (100, 255, 100),    # Light Green
+    LogCategory.DAMAGE_RECEIVED: (255, 100, 100), # Light Red
+    LogCategory.HEALING: (50, 200, 255),          # Light Blue
+    LogCategory.LOOT: (255, 215, 0),              # Gold
+    LogCategory.SYSTEM: (200, 200, 200),          # Light Gray
+    LogCategory.ALERT: (255, 255, 100),           # Yellow
+}
+
+
 
 
 

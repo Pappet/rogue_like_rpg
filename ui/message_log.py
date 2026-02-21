@@ -1,6 +1,7 @@
 import pygame
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Optional
+from config import LogCategory, LOG_COLORS
 
 # Colors
 WHITE = (255, 255, 255)
@@ -24,7 +25,7 @@ COLOR_MAP = {
     "grey": GREY
 }
 
-def parse_rich_text(text: str) -> List[Tuple[str, Tuple[int, int, int]]]:
+def parse_rich_text(text: str, default_color: Tuple[int, int, int] = WHITE) -> List[Tuple[str, Tuple[int, int, int]]]:
     """
     Parses text with [color=name]tags[/color] into a list of (text, color) tuples.
     """
@@ -41,10 +42,10 @@ def parse_rich_text(text: str) -> List[Tuple[str, Tuple[int, int, int]]]:
         if tag_match:
             color_name = tag_match.group(1).lower()
             inner_text = tag_match.group(2)
-            color = COLOR_MAP.get(color_name, WHITE)
+            color = COLOR_MAP.get(color_name, default_color)
             results.append((inner_text, color))
         else:
-            results.append((part, WHITE))
+            results.append((part, default_color))
             
     return results
 
@@ -56,11 +57,15 @@ class MessageLog:
         self.messages = []
         self.line_height = self.font.get_linesize()
 
-    def add_message(self, text: str, color: str = None):
+    def add_message(self, text: str, color: str = None, category: Optional[LogCategory] = None):
+        default_color = WHITE
+        if category and category in LOG_COLORS:
+            default_color = LOG_COLORS[category]
+        
         if color:
             text = f"[color={color}]{text}[/color]"
         
-        parsed_message = parse_rich_text(text)
+        parsed_message = parse_rich_text(text, default_color)
         self.messages.append(parsed_message)
         
         if len(self.messages) > self.max_messages:
