@@ -1,6 +1,6 @@
 import esper
 import math
-from config import GameStates, TILE_SIZE
+from config import GameStates, TILE_SIZE, LogCategory
 from ecs.components import Position, Renderable, Stats, EffectiveStats, Inventory, Targeting, Action, ActionList, Portal, Name, Description, ItemMaterial, Portable
 from map.tile import VisibilityState
 from map.tile_registry import TileRegistry
@@ -69,7 +69,7 @@ class ActionSystem(esper.Processor):
                     break
             
             if not portal_found:
-                esper.dispatch_event("log_message", "There is no portal here.")
+                esper.dispatch_event("log_message", "There is no portal here.", None, LogCategory.ALERT)
                 return False
             return True
         
@@ -277,8 +277,8 @@ class ActionSystem(esper.Processor):
                 behavior.state = AIState.IDLE
                 try:
                     name = esper.component_for_entity(target_entity, Name)
-                    esper.dispatch_event("log_message", f"The {name.name} wakes up!")
+                    esper.dispatch_event("log_message", f"The {name.name} wakes up!", None, LogCategory.ALERT)
                 except KeyError:
-                    esper.dispatch_event("log_message", "Something wakes up!")
+                    esper.dispatch_event("log_message", "Something wakes up!", None, LogCategory.ALERT)
         except KeyError:
             pass

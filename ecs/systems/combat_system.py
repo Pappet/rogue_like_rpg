@@ -1,6 +1,7 @@
 import esper
 import random
-from ecs.components import Stats, EffectiveStats, AttackIntent, Name, Position, FCT
+from ecs.components import Stats, EffectiveStats, AttackIntent, Name, Position, FCT, PlayerTag
+from config import LogCategory
 
 class CombatSystem(esper.Processor):
     def __init__(self, action_system=None):
@@ -38,12 +39,19 @@ class CombatSystem(esper.Processor):
                 attacker_name = self._get_name(attacker)
                 target_name = self._get_name(target)
                 
+                # Determine log category
+                category = LogCategory.SYSTEM
+                if esper.has_component(attacker, PlayerTag):
+                    category = LogCategory.DAMAGE_DEALT
+                elif esper.has_component(target, PlayerTag):
+                    category = LogCategory.DAMAGE_RECEIVED
+
                 # Dispatch log message
                 if damage > 0:
-                    esper.dispatch_event("log_message", f"{attacker_name} hits {target_name} for {damage} damage.")
+                    esper.dispatch_event("log_message", f"{attacker_name} hits {target_name} for {damage} damage.", None, category)
                     self._spawn_fct(target, str(damage), (255, 0, 0))
                 else:
-                    esper.dispatch_event("log_message", f"{attacker_name} attacks {target_name} but deals no damage.")
+                    esper.dispatch_event("log_message", f"{attacker_name} attacks {target_name} but deals no damage.", None, category)
                     self._spawn_fct(target, "0", (200, 200, 200))
                 
                 # Death Check

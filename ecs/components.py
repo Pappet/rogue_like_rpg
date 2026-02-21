@@ -30,6 +30,10 @@ class SlotType(str, Enum):
 
 
 @dataclass
+class PlayerTag:
+    pass
+
+@dataclass
 class Position:
     x: int
     y: int

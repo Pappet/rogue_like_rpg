@@ -1,7 +1,7 @@
 import esper
 import random
 from ecs.components import Name, Renderable, Blocker, AI, Corpse, Stats, AIBehaviorState, ChaseData, WanderData, LootTable, Position
-from config import SpriteLayer
+from config import SpriteLayer, LogCategory
 from entities.item_factory import ItemFactory
 from ecs.world import get_world
 
@@ -67,7 +67,7 @@ class DeathSystem(esper.Processor):
                 # Find a valid position for the loot
                 drop_x, drop_y = self._find_drop_position(pos.x, pos.y)
                 ItemFactory.create_on_ground(world, template_id, drop_x, drop_y, pos.layer)
-                esper.dispatch_event("log_message", f"The {template_id} drops to the ground.")
+                esper.dispatch_event("log_message", f"The {template_id} drops to the ground.", None, LogCategory.LOOT)
 
     def _find_drop_position(self, x, y):
         """Return (x, y) if walkable, else search 8 neighbors."""

@@ -1,7 +1,7 @@
 import pygame
 import esper
 from enum import Enum, auto
-from config import SpriteLayer, GameStates
+from config import SpriteLayer, GameStates, LogCategory
 from services.party_service import PartyService, get_entity_closure
 from services.map_service import MapService
 from ecs.world import get_world
@@ -390,7 +390,7 @@ class Game(GameState):
                 items_here.append(ent)
         
         if not items_here:
-            esper.dispatch_event("log_message", "There is nothing here to pick up.")
+            esper.dispatch_event("log_message", "There is nothing here to pick up.", None, LogCategory.ALERT)
             return
 
         # For now, pick up the first item found
@@ -408,7 +408,7 @@ class Game(GameState):
         
         # 3. Check capacity
         if current_weight + portable.weight > stats.max_carry_weight:
-            esper.dispatch_event("log_message", "Too heavy to carry.")
+            esper.dispatch_event("log_message", "Too heavy to carry.", None, LogCategory.ALERT)
             return
 
         # 4. Success: Move item to inventory
@@ -421,7 +421,7 @@ class Game(GameState):
         except KeyError:
             item_name = "item"
             
-        esper.dispatch_event("log_message", f"You pick up the {item_name}.")
+        esper.dispatch_event("log_message", f"You pick up the {item_name}.", None, LogCategory.LOOT)
         
         if self.turn_system:
             self.turn_system.end_player_turn()

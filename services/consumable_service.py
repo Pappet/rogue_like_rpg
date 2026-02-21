@@ -1,5 +1,6 @@
 import esper
-from ecs.components import Consumable, Stats, EffectiveStats, Inventory, Name
+from ecs.components import Consumable, Stats, EffectiveStats, Inventory, Name, PlayerTag
+from config import LogCategory
 
 class ConsumableService:
     @staticmethod
@@ -35,7 +36,8 @@ class ConsumableService:
             if eff:
                 eff.hp = stats.hp
                 
-            esper.dispatch_event("log_message", f"You drink the {item_name}. (+{heal_amt} HP)")
+            category = LogCategory.HEALING if esper.has_component(user_ent, PlayerTag) else LogCategory.SYSTEM
+            esper.dispatch_event("log_message", f"You drink the {item_name}. (+{heal_amt} HP)", None, category)
             
         # Add more effect types here as needed
         

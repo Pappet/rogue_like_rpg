@@ -1,7 +1,7 @@
 import esper
 from ecs.components import (
     Position, Renderable, Stats, Name, Inventory, TurnOrder, 
-    ActionList, Action, Blocker, Equipment, EffectiveStats, HotbarSlots
+    ActionList, Action, Blocker, Equipment, EffectiveStats, HotbarSlots, PlayerTag
 )
 from config import SpriteLayer
 
@@ -20,6 +20,7 @@ class PartyService:
 
         # Create player entity in ECS
         player_entity = esper.create_entity(
+            PlayerTag(),
             Position(x, y),
             Renderable("@", SpriteLayer.ENTITIES.value, (255, 255, 255)),
             Stats(

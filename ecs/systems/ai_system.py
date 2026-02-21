@@ -1,7 +1,7 @@
 import random
 
 import esper
-from config import GameStates, SpriteLayer
+from config import GameStates, SpriteLayer, LogCategory
 from ecs.components import AI, AIBehaviorState, Blocker, Corpse, Position, AIState, ChaseData, Name, Stats, Alignment, EffectiveStats, PathData
 from services.visibility_service import VisibilityService
 from services.pathfinding_service import PathfindingService
@@ -87,9 +87,9 @@ class AISystem(esper.Processor):
                     ))
                     try:
                         name = esper.component_for_entity(ent, Name)
-                        esper.dispatch_event("log_message", f"The {name.name} notices you!")
+                        esper.dispatch_event("log_message", f"The {name.name} notices you!", None, LogCategory.ALERT)
                     except KeyError:
-                        esper.dispatch_event("log_message", "Something notices you!")
+                        esper.dispatch_event("log_message", "Something notices you!", None, LogCategory.ALERT)
             except KeyError:
                 pass  # NPC has no Stats — cannot use perception for detection
 

@@ -60,6 +60,33 @@ class UISystem(esper.Processor):
     def process(self, surface):
         self.draw_header(surface)
         self.message_log.draw(surface)
+        self.draw_low_health_vignette(surface)
+
+    def draw_low_health_vignette(self, surface):
+        try:
+            stats = esper.try_component(self.player_entity, EffectiveStats) or esper.component_for_entity(self.player_entity, Stats)
+            if stats.max_hp > 0 and stats.hp / stats.max_hp < 0.25:
+                import math
+                ms = pygame.time.get_ticks()
+                # Pulse alpha between 0 and 80
+                alpha = int(40 + 40 * math.sin(ms / 250))
+                
+                viewport_rect = pygame.Rect(0, HEADER_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT)
+                
+                # Create a surface with alpha support
+                vignette = pygame.Surface((viewport_rect.width, viewport_rect.height), pygame.SRCALPHA)
+                
+                # Simple implementation: thin red border that pulses
+                # Or a full transparent overlay
+                # "subtle pulsing red vignette" usually means edges are darker/redder
+                # For simplicity and effectiveness, let's do a border or full fill.
+                # A full fill might be too distracting. Let's do a thick border.
+                border_width = 40
+                pygame.draw.rect(vignette, (255, 0, 0, alpha), (0, 0, viewport_rect.width, viewport_rect.height), border_width)
+                
+                surface.blit(vignette, (viewport_rect.x, viewport_rect.y))
+        except (KeyError, ZeroDivisionError):
+            pass
 
     def draw_header(self, surface):
         # Draw header background
@@ -119,160 +146,46 @@ class UISystem(esper.Processor):
         except KeyError:
             pass
 
-        def is_action_available(self, action):
-
-            try:
-
-                eff = esper.try_component(self.player_entity, EffectiveStats) or esper.component_for_entity(self.player_entity, Stats)
-
-                if action.cost_mana > eff.mana:
-
-                    return False
-
-                # Add other resource checks here
-
-            except KeyError:
-
+    def is_action_available(self, action):
+        try:
+            eff = esper.try_component(self.player_entity, EffectiveStats) or esper.component_for_entity(self.player_entity, Stats)
+            if action.cost_mana > eff.mana:
                 return False
-
-            return True
-
-    
-
-            def _draw_hotbar(self, surface, start_x):
-
-    
-
-                """Draws the 1-9 hotbar slots in the header."""
-
-    
-
-                try:
-
-    
-
-                    hotbar = esper.component_for_entity(self.player_entity, HotbarSlots)
-
-    
-
-                except KeyError:
-
-    
-
-                    return
-
-    
-
-        
-
-    
-
-                current_x = start_x
-
-    
-
-                for i in range(1, 10):
-
-    
-
-                    action = hotbar.slots.get(i)
-
-    
-
-                    if action:
-
-    
-
-                        # Slot background
-
-    
-
-                        slot_size = 32
-
-    
-
-                        slot_rect = pygame.Rect(current_x, (HEADER_HEIGHT - slot_size) // 2, slot_size, slot_size)
-
-    
-
-                        is_avail = self.is_action_available(action)
-
-    
-
-                        
-
-    
-
-                        bg_color = UI_COLOR_BAR_BG if is_avail else (60, 20, 20)
-
-    
-
-                        text_color = UI_COLOR_TEXT_BRIGHT if is_avail else UI_COLOR_TEXT_DIM
-
-    
-
-                        
-
-    
-
-                        pygame.draw.rect(surface, bg_color, slot_rect)
-
-    
-
-                        pygame.draw.rect(surface, UI_COLOR_BORDER, slot_rect, 1)
-
-    
-
-                        
-
-    
-
-                        # Action name/initial
-
-    
-
-                        label = action.name[:1].upper()
-
-    
-
-                        label_surf = self.small_font.render(label, True, text_color)
-
-    
-
-                        surface.blit(label_surf, (slot_rect.centerx - label_surf.get_width() // 2, 
-
-    
-
-                                                slot_rect.centery - label_surf.get_height() // 2))
-
-    
-
-                        
-
-    
-
-                        # Key number
-
-    
-
-                        num_surf = self.small_font.render(str(i), True, UI_COLOR_TEXT_DIM)
-
-    
-
-                        surface.blit(num_surf, (slot_rect.x + 2, slot_rect.y - 2))
-
-    
-
-                        
-
-    
-
-                        current_x += slot_size + UI_PADDING
-
-    
-
-        
-
-    
-
-    
+            # Add other resource checks here
+        except KeyError:
+            return False
+        return True
+
+    def _draw_hotbar(self, surface, start_x):
+        """Draws the 1-9 hotbar slots in the header."""
+        try:
+            hotbar = esper.component_for_entity(self.player_entity, HotbarSlots)
+        except KeyError:
+            return
+
+        current_x = start_x
+        for i in range(1, 10):
+            action = hotbar.slots.get(i)
+            if action:
+                # Slot background
+                slot_size = 32
+                slot_rect = pygame.Rect(current_x, (HEADER_HEIGHT - slot_size) // 2, slot_size, slot_size)
+                is_avail = self.is_action_available(action)
+                
+                bg_color = UI_COLOR_BAR_BG if is_avail else (60, 20, 20)
+                text_color = UI_COLOR_TEXT_BRIGHT if is_avail else UI_COLOR_TEXT_DIM
+                
+                pygame.draw.rect(surface, bg_color, slot_rect)
+                pygame.draw.rect(surface, UI_COLOR_BORDER, slot_rect, 1)
+                
+                # Action name/initial
+                label = action.name[:1].upper()
+                label_surf = self.small_font.render(label, True, text_color)
+                surface.blit(label_surf, (slot_rect.centerx - label_surf.get_width() // 2, 
+                                        slot_rect.centery - label_surf.get_height() // 2))
+                
+                # Key number
+                num_surf = self.small_font.render(str(i), True, UI_COLOR_TEXT_DIM)
+                surface.blit(num_surf, (slot_rect.x + 2, slot_rect.y - 2))
+                
+                current_x += slot_size + UI_PADDING
