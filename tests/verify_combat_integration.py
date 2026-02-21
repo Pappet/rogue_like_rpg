@@ -1,4 +1,5 @@
 import esper
+from unittest.mock import MagicMock
 from ecs.components import Stats, Equipment, EffectiveStats, StatModifiers, Equippable, SlotType, Name, AttackIntent
 from ecs.systems.equipment_system import EquipmentSystem
 from ecs.systems.combat_system import CombatSystem
@@ -8,7 +9,7 @@ def test_combat_with_equipment():
     # Setup world and systems
     esper.clear_database()
     # Order: Equipment before Combat
-    esper.add_processor(EquipmentSystem())
+    esper.add_processor(EquipmentSystem(MagicMock()))
     esper.add_processor(CombatSystem())
     
     # Create attacker (player)

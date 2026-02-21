@@ -79,7 +79,7 @@ def test_notices_message_fires_once():
 
     messages = []
 
-    def capture_message(msg):
+    def capture_message(msg, *args):
         messages.append(msg)
 
     esper.set_handler("log_message", capture_message)

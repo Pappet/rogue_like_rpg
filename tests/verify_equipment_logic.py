@@ -1,4 +1,5 @@
 import esper
+from unittest.mock import MagicMock
 from ecs.components import Stats, Equipment, EffectiveStats, StatModifiers, Equippable, SlotType, Name
 from ecs.systems.equipment_system import EquipmentSystem
 from services.equipment_service import equip_item
@@ -7,7 +8,7 @@ def test_equipment_calculation():
     # Setup world and systems
     esper.clear_database()
     # In esper 3.x, processors are added to the global state
-    system = EquipmentSystem()
+    system = EquipmentSystem(MagicMock())
     esper.add_processor(system)
     
     # Create player

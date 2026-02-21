@@ -8,10 +8,10 @@ import esper
 from ecs.world import get_world, reset_world
 from ecs.systems.action_system import ActionSystem
 from ecs.systems.turn_system import TurnSystem
-from ecs.components import Position, Name, Description, ItemMaterial, Portable, Action, Targeting
+from ecs.components import Position, Name, Description, ItemMaterial, Portable, Action, Targeting, Stats
 from map.map_container import MapContainer
 from map.map_layer import MapLayer
-from map.tile import Tile
+from map.tile import Tile, VisibilityState
 
 def test_inspection_output_detailed():
     print("Testing detailed inspection output...")
@@ -38,12 +38,16 @@ def test_inspection_output_detailed():
     
     # Capture log messages
     messages = []
-    def capture_handler(msg):
+    def capture_handler(msg, *args):
         messages.append(msg)
     esper.set_handler("log_message", capture_handler)
     
     # Simulate inspection
-    player = world.create_entity(Position(0, 0))
+    player = world.create_entity(
+        Position(0, 0),
+        Stats(hp=10, max_hp=10, power=5, defense=2, mana=10, max_mana=10,
+              perception=5, intelligence=5),
+    )
     targeting_action = Action("Inspect", targeting_mode="inspect", range=5)
     
     # We need to set targeting component

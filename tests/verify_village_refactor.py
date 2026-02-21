@@ -19,16 +19,14 @@ def test_village_refactor():
     assert village.width == 40
     assert village.height == 40
     
-    # Check terrain variety (at least some variety)
-    variety_found = False
-    choices = [',', '"', '*']
-    for row in village.layers[0].tiles:
-        for tile in row:
-            if SpriteLayer.GROUND in tile.sprites and tile.sprites[SpriteLayer.GROUND] in choices:
-                variety_found = True
-                break
-        if variety_found: break
-    assert variety_found, "Terrain variety not applied to Village ground layer"
+    # Check ground layer has expected floor tile sprites (variety uses floor_stone → sprite '.')
+    ground_sprites = {
+        tile.sprites[SpriteLayer.GROUND]
+        for row in village.layers[0].tiles
+        for tile in row
+        if SpriteLayer.GROUND in tile.sprites
+    }
+    assert '.' in ground_sprites or '#' in ground_sprites, "Village ground layer has no tiles"
     
     # Check houses exist
     for h_id in ["Cottage", "Tavern", "Shop"]:

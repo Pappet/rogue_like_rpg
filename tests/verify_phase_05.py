@@ -28,13 +28,13 @@ class TestNestedWorlds(unittest.TestCase):
         # 1. Create Map "City" (20x20, 3 layers)
         city_layers = []
         for _ in range(3):
-            tiles = [[Tile(True, False, {0: "."}) for _ in range(20)] for _ in range(20)]
+            tiles = [[Tile(transparent=True, sprites={0: "."}) for _ in range(20)] for _ in range(20)]
             city_layers.append(MapLayer(tiles))
         self.city_map = MapContainer(city_layers)
         self.map_service.register_map("City", self.city_map)
         
         # 2. Create Map "House" (10x10, 1 layer)
-        house_layers = [MapLayer([[Tile(True, False, {0: "."}) for _ in range(10)] for _ in range(10)])]
+        house_layers = [MapLayer([[Tile(transparent=True, sprites={0: "."}) for _ in range(10)] for _ in range(10)])]
         self.house_map = MapContainer(house_layers)
         self.map_service.register_map("House", self.house_map)
         
@@ -64,11 +64,14 @@ class TestNestedWorlds(unittest.TestCase):
         self.game.map_service = self.map_service
         self.game.persist = {"map_container": self.city_map}
         
+        self.game.world_clock = None
         self.game.camera = MagicMock()
         self.game.render_system = MagicMock()
+        self.game.debug_render_system = MagicMock()
         self.game.movement_system = MagicMock()
         self.game.visibility_system = MagicMock()
         self.game.action_system = MagicMock()
+        self.game.death_system = MagicMock()
         self.game.turn_system = MagicMock()
         self.game.turn_system.round_counter = 0
         
