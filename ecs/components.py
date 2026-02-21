@@ -235,3 +235,15 @@ class Consumable:
 @dataclass
 class Schedule:
     schedule_id: str
+
+
+@dataclass
+class FCT:
+    text: str
+    color: Tuple[int, int, int]
+    vx: float
+    vy: float
+    ttl: float
+    max_ttl: float
+    offset_x: float = 0.0
+    offset_y: float = 0.0
