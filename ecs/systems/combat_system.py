@@ -1,6 +1,6 @@
 import esper
 import random
-from ecs.components import Stats, EffectiveStats, AttackIntent, Name, Position, FCT, PlayerTag
+from ecs.components import Stats, EffectiveStats, AttackIntent, Name, Position, FCT, PlayerTag, MapBound
 from config import LogCategory
 
 class CombatSystem(esper.Processor):
@@ -71,6 +71,7 @@ class CombatSystem(esper.Processor):
             pos = esper.component_for_entity(target_entity, Position)
             # Create a new entity for FCT with the same position but separate lifecycle
             esper.create_entity(
+                MapBound(),
                 Position(pos.x, pos.y, pos.layer),
                 FCT(
                     text=text,

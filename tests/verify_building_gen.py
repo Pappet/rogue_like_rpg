@@ -6,6 +6,7 @@ import esper
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from services.map_service import MapService
+from services.map_generator import MapGenerator
 from services.resource_loader import ResourceLoader
 from map.map_container import MapContainer
 from map.map_layer import MapLayer
@@ -33,7 +34,7 @@ def test_add_house_to_map():
     map_service.register_map("TestMap", container)
 
     # Add a house: start=(5,5), size=(6,6), 2 floors
-    map_service.add_house_to_map(world, container, 5, 5, 6, 6, 2)
+    MapGenerator(map_service).add_house_to_map(world, container, 5, 5, 6, 6, 2)
 
     # Verify layers (second layer auto-created by add_house_to_map)
     assert len(container.layers) == 2

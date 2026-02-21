@@ -7,8 +7,9 @@ from unittest.mock import MagicMock
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from ecs.components import Position, Portal, Name, Renderable, ActionList, Action
+from ecs.components import Position, Portal, Name, Renderable, ActionList, Action, MapBound
 from services.map_service import MapService
+from services.map_transition_service import MapTransitionService
 from map.map_container import MapContainer
 from map.map_layer import MapLayer
 from map.tile import Tile
@@ -41,12 +42,14 @@ class TestNestedWorlds(unittest.TestCase):
         # 3. Add Portal and NPC to City
         self.city_portal_ent = self.world.create_entity(
             Position(5, 5, 0),
-            Portal(target_map_id="House", target_x=2, target_y=2, target_layer=0, name="House Entrance")
+            Portal(target_map_id="House", target_x=2, target_y=2, target_layer=0, name="House Entrance"),
+            MapBound()
         )
         self.city_npc = self.world.create_entity(
             Position(10, 10, 0),
             Name("City NPC"),
-            Renderable("@", 0)
+            Renderable("@", 0),
+            MapBound()
         )
         
         # 4. Setup Player
@@ -75,6 +78,11 @@ class TestNestedWorlds(unittest.TestCase):
         self.game.turn_system = MagicMock()
         self.game.turn_system.round_counter = 0
         
+        self.game.map_transition_service = MapTransitionService(self.map_service, None, self.game.camera)
+        self.game.map_transition_service.initialize_context(
+            self.game.persist, self.world, self.player, {}
+        )
+        
         # Register handlers
         try:
             esper.set_handler("log_message", lambda msg: None)
@@ -96,7 +104,8 @@ class TestNestedWorlds(unittest.TestCase):
             "target_layer": 0
         }
         
-        self.game.transition_map(event_data)
+        self.game.map_transition_service.transition(event_data)
+        self.game.map_container = self.game.persist["map_container"]
         
         # Verify Player moved
         pos = self.world.component_for_entity(self.player, Position)
@@ -129,7 +138,8 @@ class TestNestedWorlds(unittest.TestCase):
             "target_y": 5,
             "target_layer": 2
         }
-        self.game.transition_map(event_data)
+        self.game.map_transition_service.transition(event_data)
+        self.game.map_container = self.game.persist["map_container"]
         
         # Verify Player moved
         pos = self.world.component_for_entity(self.player, Position)

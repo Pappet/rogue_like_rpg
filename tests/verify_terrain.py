@@ -1,6 +1,7 @@
 
 import unittest
 from services.map_service import MapService
+from services.map_generator import MapGenerator
 from services.resource_loader import ResourceLoader
 from map.map_layer import MapLayer
 from map.tile import Tile
@@ -26,11 +27,12 @@ class TestTerrainVariety(unittest.TestCase):
         layer = MapLayer(tiles)
 
         service = MapService()
+        generator = MapGenerator(service)
         # apply_terrain_variety expects registry type_ids, not sprite chars
         choices = ["floor_stone"]
 
         # Apply with 100% chance — all walkable tiles become floor_stone (sprite '.')
-        service.apply_terrain_variety(layer, 1.0, choices)
+        generator.apply_terrain_variety(layer, 1.0, choices)
 
         # Check that all tiles are now floor_stone
         for y in range(height):
@@ -53,10 +55,11 @@ class TestTerrainVariety(unittest.TestCase):
         layer = MapLayer(tiles)
 
         service = MapService()
+        generator = MapGenerator(service)
         choices = ["floor_stone"]
 
         # Apply with 100% chance
-        service.apply_terrain_variety(layer, 1.0, choices)
+        generator.apply_terrain_variety(layer, 1.0, choices)
 
         # Center (non-walkable legacy wall) must not be changed
         self.assertEqual(layer.tiles[1][1].sprites[SpriteLayer.GROUND], "#")

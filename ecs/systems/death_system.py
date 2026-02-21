@@ -6,10 +6,9 @@ from entities.item_factory import ItemFactory
 from ecs.world import get_world
 from ecs.systems.map_aware_system import MapAwareSystem
 
-class DeathSystem(esper.Processor, MapAwareSystem):
+class DeathSystem(MapAwareSystem):
     def __init__(self):
-        esper.Processor.__init__(self)
-        MapAwareSystem.__init__(self)
+        super().__init__()
         # Register the event handler for entity death
         esper.set_handler("entity_died", self.on_entity_died)
 
@@ -86,6 +85,3 @@ class DeathSystem(esper.Processor, MapAwareSystem):
         # Fallback to original position if all neighbors are blocked
         return x, y
 
-    def process(self, *args, **kwargs):
-        # This processor reacts to events, so it doesn't need to do anything per frame
-        pass

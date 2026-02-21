@@ -69,17 +69,18 @@ esper.set_handler("entity_died", handler_func)
 - **Service Layer**: Stateless or singleton services (`VisibilityService`, `PathfindingService`, `RenderService`, `WorldClockService`, etc.)
 - **State Machine**: `GameController` → `GameState` subclasses (`TitleScreen`, `Game`, `WorldMapState`)
 
-### Processing Order (ECS Processors)
+### System Categories
 
-```
-TurnSystem → EquipmentSystem → VisibilitySystem → MovementSystem → CombatSystem → DeathSystem → FCTSystem
-```
+The ECS logic is separated into four distinct categories:
 
-Additionally called manually per frame (not registered as processors):
-- `ScheduleSystem.process()` — before AI, during enemy turn
-- `AISystem.process()` — during enemy turn
-- `RenderSystem.process()` — during draw
-- `UISystem.process()` — during draw
+1. **FRAME-PROCESSORS**: Registered manually with `esper.add_processor()` (via `SystemInitializer`) and run continuously every frame in `Game.update()` by `esper.process()`.
+   - `TurnSystem`, `EquipmentSystem`, `VisibilitySystem`, `MovementSystem`, `CombatSystem`, `FCTSystem`
+2. **PHASE-SYSTEMS**: Called manually during specific game phases (like enemy turn).
+   - `AISystem` (`ENEMY_TURN`), `ScheduleSystem` (`ENEMY_TURN`)
+3. **RENDER-SYSTEMS**: Called manually during the `draw()` cycle. Configured during startup.
+   - `RenderSystem`, `UISystem`, `DebugRenderSystem`
+4. **EVENT-SYSTEMS**: React exclusively to events (callbacks set up in `__init__` via `esper.set_handler()`), without a `process()` loop and therefore *not* added as an `esper.Processor`.
+   - `DeathSystem` (`entity_died` event)
 
 ### Turn Flow
 

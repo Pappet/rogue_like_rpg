@@ -26,6 +26,7 @@ from map.map_layer import MapLayer
 from entities.entity_registry import EntityRegistry
 from entities.entity_factory import EntityFactory
 from services.map_service import MapService
+from services.map_generator import MapGenerator
 from services.resource_loader import ResourceLoader
 from ecs.world import get_world, reset_world
 from ecs.components import Position, Name
@@ -62,7 +63,7 @@ def test_load_prefab_stamps_tiles():
     map_service = MapService()
 
     # Stamp at offset (1, 1)
-    map_service.load_prefab(world, layer, PREFAB_FILE, ox=1, oy=1)
+    MapGenerator(map_service).load_prefab(world, layer, PREFAB_FILE, ox=1, oy=1)
 
     # Top-left corner of prefab is wall_stone -> not walkable
     assert not layer.tiles[1][1].walkable, "Tile at prefab offset (0,0) should be wall_stone (not walkable)"
@@ -89,7 +90,7 @@ def test_load_prefab_preserves_visibility():
 
     map_service = MapService()
     # Stamp at offset (0,0): prefab row 2, col 2 (interior floor_stone) covers (2,2)
-    map_service.load_prefab(world, layer, PREFAB_FILE, ox=0, oy=0)
+    MapGenerator(map_service).load_prefab(world, layer, PREFAB_FILE, ox=0, oy=0)
 
     # Visibility state should survive the set_type() call
     assert layer.tiles[2][2].visibility_state == VisibilityState.VISIBLE, (
@@ -107,7 +108,7 @@ def test_load_prefab_spawns_entities():
     map_service = MapService()
 
     # Cottage prefab has an orc spawn at x=3, y=3 with offset (0, 0)
-    map_service.load_prefab(world, layer, PREFAB_FILE, ox=0, oy=0)
+    MapGenerator(map_service).load_prefab(world, layer, PREFAB_FILE, ox=0, oy=0)
 
     # Find entities with Position and Name
     found = False
@@ -130,7 +131,7 @@ def test_load_prefab_with_offset():
     map_service = MapService()
 
     ox, oy = 5, 5
-    map_service.load_prefab(world, layer, PREFAB_FILE, ox=ox, oy=oy)
+    MapGenerator(map_service).load_prefab(world, layer, PREFAB_FILE, ox=ox, oy=oy)
 
     # Top-left corner of prefab (0,0) maps to (5,5) -> wall_stone
     assert not layer.tiles[5][5].walkable, (
@@ -157,4 +158,4 @@ def test_load_prefab_file_not_found():
     map_service = MapService()
 
     with pytest.raises(FileNotFoundError):
-        map_service.load_prefab(world, layer, "nonexistent.json")
+        MapGenerator(map_service).load_prefab(world, layer, "nonexistent.json")

@@ -4,6 +4,7 @@ from enum import Enum, auto
 from config import SpriteLayer, GameStates, LogCategory
 from services.party_service import PartyService, get_entity_closure
 from services.map_service import MapService
+from services.spawn_service import SpawnService
 from ecs.world import get_world
 from ecs.systems.render_system import RenderSystem
 from ecs.systems.movement_system import MovementSystem
@@ -23,6 +24,10 @@ from ecs.components import (
     Inventory, Name, Portable, Equipment, Equippable, SlotType, HotbarSlots,
     Targeting, Portal
 )
+from ui.windows.tooltip import TooltipWindow
+from services.system_initializer import SystemInitializer
+from services.map_transition_service import MapTransitionService
+from services.game_input_handler import GameInputHandler
 import services.equipment_service as equipment_service
 import services.consumable_service as consumable_service
 from services.input_manager import InputCommand
@@ -95,6 +100,12 @@ class Game(GameState):
         self.movement_system = None
         self.turn_system = None
         self.ui_system = None
+        
+        # Extracted Services
+        self.map_transition_service = None
+        self.game_input_handler = None
+        self.persist = {}
+        self.world = None
 
     def startup(self, persistent):
         super().startup(persistent)
@@ -109,87 +120,22 @@ class Game(GameState):
         self.world = get_world()
         
         # Retrieve or initialize Systems
-        self.turn_system = self.persist.get("turn_system")
-        if not self.turn_system:
-            self.turn_system = TurnSystem(self.world_clock)
-            self.persist["turn_system"] = self.turn_system
-        else:
-            # Ensure it has the clock reference if it was persisted without it or re-instantiated
-            self.turn_system.world_clock = self.world_clock
-
-        self.visibility_system = self.persist.get("visibility_system")
-        if not self.visibility_system:
-            self.visibility_system = VisibilitySystem(self.turn_system)
-            self.persist["visibility_system"] = self.visibility_system
-        self.visibility_system.set_map(self.map_container)
-
-        self.action_system = self.persist.get("action_system")
-        if not self.action_system:
-            self.action_system = ActionSystem(self.turn_system)
-            self.persist["action_system"] = self.action_system
-        else:
-            self.action_system.turn_system = self.turn_system
-        self.action_system.set_map(self.map_container)
-
-        self.movement_system = self.persist.get("movement_system")
-        if not self.movement_system:
-            self.movement_system = MovementSystem(self.action_system)
-            self.persist["movement_system"] = self.movement_system
-        else:
-            self.movement_system.action_system = self.action_system
-        self.movement_system.set_map(self.map_container)
-
-        self.combat_system = self.persist.get("combat_system")
-        if not self.combat_system:
-            self.combat_system = CombatSystem(self.action_system)
-            self.persist["combat_system"] = self.combat_system
-        else:
-            self.combat_system.action_system = self.action_system
-
-        self.death_system = self.persist.get("death_system")
-        if not self.death_system:
-            self.death_system = DeathSystem()
-            self.persist["death_system"] = self.death_system
-        self.death_system.set_map(self.map_container)
-
-        self.ai_system = self.persist.get("ai_system")
-        if not self.ai_system:
-            self.ai_system = AISystem()
-            self.persist["ai_system"] = self.ai_system
-
-        self.schedule_system = self.persist.get("schedule_system")
-        if not self.schedule_system:
-            self.schedule_system = ScheduleSystem()
-            self.persist["schedule_system"] = self.schedule_system
-
-        self.fct_system = self.persist.get("fct_system")
-        if not self.fct_system:
-            self.fct_system = FCTSystem()
-            self.persist["fct_system"] = self.fct_system
-
-        self.equipment_system = self.persist.get("equipment_system")
-        if not self.equipment_system:
-            self.equipment_system = EquipmentSystem(self.world_clock)
-            self.persist["equipment_system"] = self.equipment_system
-        else:
-            self.equipment_system.world_clock = self.world_clock
-
-        # Clear existing processors to avoid duplicates when re-entering state
-        for processor_type in [TurnSystem, EquipmentSystem, VisibilitySystem, MovementSystem, CombatSystem, DeathSystem, FCTSystem]:
-            try:
-                esper.remove_processor(processor_type)
-            except KeyError:
-                pass
+        systems = SystemInitializer.initialize(self.persist, self.world_clock, self.map_container)
         
-        # Re-add processors to esper in correct order:
-        # Turn -> Equipment -> Visibility -> Movement -> Combat -> Death -> FCT
-        esper.add_processor(self.turn_system)
-        esper.add_processor(self.equipment_system)
-        esper.add_processor(self.visibility_system)
-        esper.add_processor(self.movement_system)
-        esper.add_processor(self.combat_system)
-        esper.add_processor(self.death_system)
-        esper.add_processor(self.fct_system)
+        # Store individual references for Game class usage
+        self.turn_system = systems["turn_system"]
+        self.visibility_system = systems["visibility_system"]
+        self.action_system = systems["action_system"]
+        self.movement_system = systems["movement_system"]
+        self.combat_system = systems["combat_system"]
+        self.death_system = systems["death_system"]
+        self.ai_system = systems["ai_system"]
+        self.schedule_system = systems["schedule_system"]
+        self.fct_system = systems["fct_system"]
+        self.equipment_system = systems["equipment_system"]
+
+        # Register processors to esper
+        SystemInitializer.register_processors(systems)
         
         if not self.persist.get("player_entity"):
             party_service = PartyService()
@@ -198,7 +144,7 @@ class Game(GameState):
             self.persist["player_entity"] = self.player_entity
             
             # Spawn monsters
-            self.map_service.spawn_monsters(self.world, self.map_container)
+            SpawnService.spawn_monsters(self.world, self.map_container)
             
             # Welcome message
             esper.dispatch_event("log_message", "Welcome [color=green]Traveler[/color] to the dungeon!")
@@ -224,8 +170,19 @@ class Game(GameState):
         self.debug_render_system = DebugRenderSystem(self.camera)
         self.debug_render_system.set_map(self.map_container)
 
+        # Initialize Map Transition Service
+        self.map_transition_service = MapTransitionService(self.map_service, self.world_clock, self.camera)
+        self.map_transition_service.initialize_context(
+            self.persist, self.world, self.player_entity, systems
+        )
+
+        # Initialize Input Handler
+        self.game_input_handler = GameInputHandler(
+            self.action_system, self.turn_system, self.ui_stack, self.player_entity, self.persist
+        )
+
         # Register event handlers
-        esper.set_handler("change_map", self.transition_map)
+        esper.set_handler("change_map", self.map_transition_service.transition)
 
     def get_event(self, event):
         if not self.turn_system or not self.input_manager:
@@ -508,77 +465,12 @@ class Game(GameState):
             
         esper.dispatch_event("log_message", f"You pick up the {item_name}.", None, LogCategory.LOOT)
         
-        if self.turn_system:
-            self.turn_system.end_player_turn()
 
-    def transition_map(self, event_data):
-        target_map_id = event_data["target_map_id"]
-        target_x = event_data["target_x"]
-        target_y = event_data["target_y"]
-        target_layer = event_data["target_layer"]
-        travel_ticks = event_data.get("travel_ticks", 1)
-        
-        # Advance world clock
-        if self.world_clock:
-            self.world_clock.advance(travel_ticks)
-            if self.turn_system:
-                self.turn_system.round_counter = self.world_clock.total_ticks + 1
-
-        # 1. Calculate memory threshold from player stats
-        memory_threshold = 10
-        try:
-            stats = esper.component_for_entity(self.player_entity, Stats)
-            memory_threshold = stats.intelligence * 5
-        except KeyError:
-            pass
-
-        # 2. Freeze current map
-        self.map_container.on_exit(self.turn_system.round_counter)
-        self.map_container.freeze(self.world, exclude_entities=get_entity_closure(self.world, self.player_entity))
-        
-        # 3. Get new map
-        new_map = self.map_service.get_map(target_map_id)
-        if not new_map:
-            # Fallback: create a new map if it doesn't exist? 
-            # Or just fail. For now, let's create a sample map for robustness if it's "level_2"
-            if target_map_id == "level_2":
-                new_map = self.map_service.create_sample_map(30, 25, map_id="level_2")
-            else:
-                print(f"Error: Map {target_map_id} not found!")
-                return
-        
-        # 4. Map Aging on Enter
-        new_map.on_enter(self.turn_system.round_counter, memory_threshold)
-            
-        # 5. Switch active map
-        self.map_service.set_active_map(target_map_id)
-        self.map_container = new_map
-        self.persist["map_container"] = self.map_container
-        
-        # 6. Thaw new map
-        new_map.thaw(self.world)
-        
-        # 7. Update Player Position
-        player_pos = esper.component_for_entity(self.player_entity, Position)
-        player_pos.x = target_x
-        player_pos.y = target_y
-        player_pos.layer = target_layer
-        
-        # 8. Update Systems
-        self.movement_system.set_map(new_map)
-        self.visibility_system.set_map(new_map)
-        self.action_system.set_map(new_map)
-        self.render_system.set_map(new_map)
-        self.debug_render_system.set_map(new_map)
-        self.death_system.set_map(new_map)
-        
-        # 9. Update Camera
-        self.camera.update(target_x, target_y)
-        
-        esper.dispatch_event("log_message", f"Transitioned to {target_map_id}.")
 
     def update(self, dt):
-        self.update_examine_tooltip()
+        TooltipWindow.update_tooltip_logic(
+            self.ui_stack, self.turn_system, self.player_entity, self.camera, self.map_container
+        )
 
         if self.ui_stack and self.ui_stack.is_active():
             # Check if top window wants to close
@@ -611,79 +503,7 @@ class Game(GameState):
             self.schedule_system.process(self.world_clock, self.map_container)
             self.ai_system.process(self.turn_system, self.map_container, player_layer, self.player_entity)
 
-    def update_examine_tooltip(self):
-        from ui.windows.tooltip import TooltipWindow
-        
-        # If not in EXAMINE state, ensure no tooltip exists and return
-        if not self.turn_system or self.turn_system.current_state != GameStates.EXAMINE:
-            if self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow):
-                self.ui_stack.pop()
-            return
 
-        try:
-            targeting = esper.component_for_entity(self.player_entity, Targeting)
-            tx, ty = targeting.target_x, targeting.target_y
-            
-            # Use player layer as base for looking up entities
-            try:
-                player_pos = esper.component_for_entity(self.player_entity, Position)
-                current_layer = player_pos.layer
-            except KeyError:
-                current_layer = 0
-
-            # Find entities at tx, ty on the same layer
-            entities = []
-            for ent, (pos,) in esper.get_components(Position):
-                if pos.x == tx and pos.y == ty and pos.layer == current_layer:
-                    # Only show visible entities
-                    is_visible = False
-                    if 0 <= current_layer < len(self.map_container.layers):
-                        layer = self.map_container.layers[current_layer]
-                        if 0 <= ty < len(layer.tiles) and 0 <= tx < len(layer.tiles[ty]):
-                            if layer.tiles[ty][tx].visibility_state == VisibilityState.VISIBLE:
-                                is_visible = True
-                    
-                    if is_visible:
-                        entities.append(ent)
-            
-            from ui.windows.tooltip import TooltipWindow
-            
-            if entities:
-                # Calculate tooltip position
-                pixel_x = tx * TILE_SIZE
-                pixel_y = ty * TILE_SIZE
-                screen_x, screen_y = self.camera.apply_to_pos(pixel_x, pixel_y)
-                
-                # Tooltip size
-                tw, th = 300, 250
-                tx_tip = screen_x + TILE_SIZE + 10
-                ty_tip = screen_y
-                
-                # Flip to left if too far right
-                if tx_tip + tw > SCREEN_WIDTH:
-                    tx_tip = screen_x - tw - 10
-                
-                # Adjust Y if too far down
-                if ty_tip + th > SCREEN_HEIGHT - LOG_HEIGHT:
-                    ty_tip = SCREEN_HEIGHT - LOG_HEIGHT - th - 10
-
-                rect = pygame.Rect(tx_tip, ty_tip, tw, th)
-                
-                if self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow):
-                    self.ui_stack.stack[-1].rect = rect
-                    self.ui_stack.stack[-1].entities = entities
-                else:
-                    self.ui_stack.push(TooltipWindow(rect, entities))
-            else:
-                # No entities, remove tooltip if it's on top
-                if self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow):
-                    self.ui_stack.pop()
-                    
-        except KeyError:
-            # If no targeting component, ensure no tooltip
-            from ui.windows.tooltip import TooltipWindow
-            if self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow):
-                self.ui_stack.pop()
 
     def draw(self, surface):
         surface.fill((0, 0, 0))

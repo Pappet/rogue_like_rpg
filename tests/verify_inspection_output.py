@@ -156,7 +156,8 @@ def test_visible_tile_shows_name_and_description(fresh_world_and_capture):
         make_stats(),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
     action_system.start_targeting(player, make_inspect_action())
 
     result = action_system.confirm_action(player)
@@ -199,7 +200,8 @@ def test_shrouded_tile_shows_name_only(fresh_world_and_capture):
         Description(base="A menacing orc."),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
     action_system.start_targeting(player, make_inspect_action())
 
     # Move cursor to (3,2) — the SHROUDED tile
@@ -246,7 +248,8 @@ def test_entity_listed_at_visible_tile(fresh_world_and_capture):
         make_stats(),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
     action_system.start_targeting(player, make_inspect_action())
 
     result = action_system.confirm_action(player)
@@ -294,7 +297,8 @@ def test_wounded_entity_shows_wounded_text(fresh_world_and_capture):
         wounded_orc_stats,
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
     action_system.start_targeting(player, make_inspect_action())
 
     result = action_system.confirm_action(player)
@@ -338,7 +342,8 @@ def test_multiple_entities_all_listed(fresh_world_and_capture):
         make_stats(),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
     action_system.start_targeting(player, make_inspect_action())
 
     result = action_system.confirm_action(player)
@@ -376,7 +381,8 @@ def test_entity_without_stats_no_crash(fresh_world_and_capture):
         Description(base="A shimmering gateway."),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
     action_system.start_targeting(player, make_inspect_action())
 
     # Must not raise any exception
@@ -410,7 +416,8 @@ def test_player_excluded_from_own_inspection(fresh_world_and_capture):
         Description(base="A brave adventurer."),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
     action_system.start_targeting(player, make_inspect_action())
 
     # Player inspects their own tile (target == origin == (2,2))

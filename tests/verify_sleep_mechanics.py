@@ -91,8 +91,10 @@ def test_bump_wakes_npc():
     map_container = MagicMock()
     map_container.get_tile.return_value = MagicMock(walkable=True)
     
-    action_sys = ActionSystem(map_container, turn)
-    move_sys = MovementSystem(map_container, action_sys)
+    action_sys = ActionSystem(turn)
+    action_sys.set_map(map_container)
+    move_sys = MovementSystem(action_sys)
+    move_sys.set_map(map_container)
     
     # Sleeping NPC
     npc = esper.create_entity()
@@ -121,7 +123,7 @@ def test_attack_wakes_npc():
     reset_world()
     
     turn = TurnSystem()
-    action_sys = ActionSystem(None, turn)
+    action_sys = ActionSystem(turn)
     combat_sys = CombatSystem(action_sys)
     
     # Sleeping NPC

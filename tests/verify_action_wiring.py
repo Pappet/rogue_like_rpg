@@ -182,7 +182,8 @@ def test_confirm_action_skips_end_turn_for_inspect():
         ])
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
 
     investigate = Action(
         name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"
@@ -216,7 +217,8 @@ def test_confirm_action_calls_end_turn_for_combat():
         ])
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
 
     ranged = Action(name="Ranged", range=5, requires_targeting=True, targeting_mode="auto")
     started = action_system.start_targeting(player, ranged)

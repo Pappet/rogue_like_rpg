@@ -251,3 +251,15 @@ class FCT:
     max_ttl: float
     offset_x: float = 0.0
     offset_y: float = 0.0
+
+@dataclass
+class MapBound:
+    """Marker component. Indicates entity belongs to the current map and should be frozen along with it."""
+    pass
+
+import inspect
+import sys
+KNOWN_COMPONENT_TYPES = []
+for name, obj in inspect.getmembers(sys.modules[__name__]):
+    if inspect.isclass(obj) and obj.__module__ == __name__:
+        KNOWN_COMPONENT_TYPES.append(obj)

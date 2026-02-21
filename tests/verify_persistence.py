@@ -1,16 +1,16 @@
 import esper
 from map.map_container import MapContainer
-from ecs.components import Position, Name
+from ecs.components import Position, Name, MapBound
 
 def test_persistence():
     # Reset esper world
     esper.clear_database()
     
     # Create an entity to be frozen
-    ent1 = esper.create_entity(Position(1, 2), Name("Frozen One"))
+    ent1 = esper.create_entity(Position(1, 2), Name("Frozen One"), MapBound())
     
     # Create an entity to be excluded (e.g. Player)
-    player = esper.create_entity(Position(0, 0), Name("Player"))
+    player = esper.create_entity(Position(0, 0), Name("Player"), MapBound())
     
     # Create MapContainer (with empty layers for this test)
     container = MapContainer(layers=[])

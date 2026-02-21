@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from map.tile_registry import TileRegistry
 from services.resource_loader import ResourceLoader
 from services.map_service import MapService
+from services.map_generator import MapGenerator
 from map.map_container import MapContainer
 
 TILE_FILE = "assets/data/tile_types.json"
@@ -19,8 +20,8 @@ def test_map_service():
     service = MapService()
 
     # Create and register two maps
-    map1 = service.create_sample_map(10, 10, map_id="level_1")
-    map2 = service.create_sample_map(10, 10, map_id="level_2")
+    map1 = MapGenerator(service).create_sample_map(10, 10, map_id="level_1")
+    map2 = MapGenerator(service).create_sample_map(10, 10, map_id="level_2")
 
     assert len(service.maps) == 2
     assert service.get_map("level_1") == map1

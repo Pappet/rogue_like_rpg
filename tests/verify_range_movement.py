@@ -96,7 +96,8 @@ def test_inspect_targeting_range_equals_perception():
         make_stats(perception=3),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
 
     # Investigate action with static range=10 — perception should override it.
     investigate = Action(
@@ -127,7 +128,8 @@ def test_combat_targeting_range_unchanged():
         make_stats(perception=3),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
 
     combat_action = Action(
         name="Ranged", range=5, requires_targeting=True, targeting_mode="auto"
@@ -160,7 +162,8 @@ def test_cursor_moves_to_shrouded_tile():
         make_stats(perception=10),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
 
     investigate = Action(
         name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"
@@ -198,7 +201,8 @@ def test_cursor_moves_to_forgotten_tile():
         make_stats(perception=10),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
 
     investigate = Action(
         name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"
@@ -236,7 +240,8 @@ def test_cursor_blocked_on_unexplored_tile():
         make_stats(perception=10),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
 
     investigate = Action(
         name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"
@@ -272,7 +277,8 @@ def test_cursor_blocked_beyond_perception_range():
         make_stats(perception=2),
     )
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
 
     investigate = Action(
         name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"
@@ -324,7 +330,8 @@ def test_existing_phase12_tests_unbroken():
     )
     assert investigate is not None, "Investigate action not found in ActionList"
 
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
     started = action_system.start_targeting(player, investigate)
     assert started is True, (
         f"start_targeting() returned {started} for Investigate — should return True"

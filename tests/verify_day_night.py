@@ -26,7 +26,8 @@ def setup_test_world():
     
     turn_system = TurnSystem(world_clock)
     equipment_system = EquipmentSystem(world_clock)
-    visibility_system = VisibilitySystem(map_container, turn_system)
+    visibility_system = VisibilitySystem(turn_system)
+    visibility_system.set_map(map_container)
     
     esper.add_processor(turn_system)
     esper.add_processor(equipment_system)

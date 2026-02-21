@@ -3,6 +3,7 @@ import sys
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, HEADER_HEIGHT, SIDEBAR_WIDTH, LOG_HEIGHT
 from game_states import TitleScreen, Game, WorldMapState
 from services.map_service import MapService
+from services.map_generator import MapGenerator
 from services.render_service import RenderService
 from services.resource_loader import ResourceLoader
 from services.world_clock_service import WorldClockService
@@ -32,7 +33,8 @@ class GameController:
         ResourceLoader.load_entities("assets/data/entities.json")
         ResourceLoader.load_items("assets/data/items.json")
         world = get_world()
-        self.map_service.create_village_scenario(world)
+        self.map_generator = MapGenerator(self.map_service)
+        self.map_generator.create_village_scenario(world)
         self.map_container = self.map_service.get_active_map()
         
         self.persist = {

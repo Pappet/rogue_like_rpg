@@ -73,13 +73,19 @@ class MapContainer:
         
         self.frozen_entities = []
         
-        # Accessing private _entities in esper to get all components for an entity
-        actual_world = world._world if hasattr(world, "_world") else world
+        from ecs.components import MapBound, KNOWN_COMPONENT_TYPES
         
         entities_to_freeze = []
-        for ent, components_dict in list(actual_world._entities.items()):
+        for ent, _ in list(world.get_component(MapBound)):
             if ent not in exclude_entities:
-                self.frozen_entities.append(list(components_dict.values()))
+                entity_components = []
+                for comp_type in KNOWN_COMPONENT_TYPES:
+                    try:
+                        comp = world.component_for_entity(ent, comp_type)
+                        entity_components.append(comp)
+                    except KeyError:
+                        pass
+                self.frozen_entities.append(entity_components)
                 entities_to_freeze.append(ent)
         
         for ent in entities_to_freeze:

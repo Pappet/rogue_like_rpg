@@ -1,0 +1,121 @@
+{
+    "id": "Village",
+    "dimensions": {
+        "width": 40,
+        "height": 40
+    },
+    "base_layer": "floor_stone",
+    "terrain_variety": {
+        "chance": 0.1,
+        "choices": [
+            "floor_stone"
+        ]
+    },
+    "structures": [
+        {
+            "id": "Cottage",
+            "v_pos": [
+                5,
+                5
+            ],
+            "v_size": [
+                6,
+                6
+            ],
+            "h_size": [
+                10,
+                10
+            ],
+            "floors": 2,
+            "npcs": [
+                {
+                    "type": "villager",
+                    "pos": [
+                        4,
+                        4
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "Tavern",
+            "v_pos": [
+                20,
+                5
+            ],
+            "v_size": [
+                10,
+                8
+            ],
+            "h_size": [
+                15,
+                12
+            ],
+            "floors": 3,
+            "npcs": [
+                {
+                    "type": "shopkeeper",
+                    "pos": [
+                        7,
+                        7
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "Shop",
+            "v_pos": [
+                15,
+                25
+            ],
+            "v_size": [
+                8,
+                6
+            ],
+            "h_size": [
+                12,
+                10
+            ],
+            "floors": 1,
+            "npcs": [
+                {
+                    "type": "shopkeeper",
+                    "pos": [
+                        5,
+                        5
+                    ]
+                }
+            ]
+        }
+    ],
+    "village_npcs": [
+        {
+            "type": "guard",
+            "pos": [
+                35,
+                35
+            ]
+        },
+        {
+            "type": "guard",
+            "pos": [
+                5,
+                35
+            ]
+        },
+        {
+            "type": "villager",
+            "pos": [
+                10,
+                10
+            ]
+        },
+        {
+            "type": "villager",
+            "pos": [
+                12,
+                12
+            ]
+        }
+    ]
+}

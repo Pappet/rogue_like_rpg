@@ -65,7 +65,8 @@ def test_debug_render_system():
     map_container.tiles[5][5].visibility_state = VisibilityState.VISIBLE
     map_container.tiles[8][8].visibility_state = VisibilityState.VISIBLE
 
-    system = DebugRenderSystem(camera, map_container)
+    system = DebugRenderSystem(camera)
+    system.set_map(map_container)
     
     # Run process
     surface = pygame.Surface((800, 600))

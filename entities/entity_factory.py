@@ -5,7 +5,7 @@ This mirrors the data-driven approach used for tiles in Phase 9.
 """
 
 from config import SpriteLayer
-from ecs.components import Position, Renderable, Stats, Name, Blocker, AI, Description, AIBehaviorState, AIState, Alignment, LootTable, Schedule, Activity
+from ecs.components import MapBound, Position, Renderable, Stats, Name, Blocker, AI, Description, AIBehaviorState, AIState, Alignment, LootTable, Schedule, Activity
 from entities.entity_registry import EntityRegistry
 
 
@@ -40,6 +40,7 @@ class EntityFactory:
         layer_value = SpriteLayer[template.sprite_layer].value
 
         components = [
+            MapBound(),
             Position(x, y),
             Renderable(template.sprite, layer_value, template.color),
             Stats(

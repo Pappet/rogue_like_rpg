@@ -31,6 +31,7 @@ from entities.item_registry import ItemRegistry
 from entities.schedule_registry import schedule_registry
 from services.resource_loader import ResourceLoader
 from services.map_service import MapService
+from services.map_generator import MapGenerator
 from services.party_service import PartyService, get_entity_closure
 from ecs.systems.turn_system import TurnSystem
 from services.world_clock_service import WorldClockService
@@ -72,7 +73,8 @@ def _create_village_world():
     _load_all_registries()
     world = get_world()
     map_service = MapService()
-    map_service.create_village_scenario(world)
+    map_generator = MapGenerator(map_service)
+    map_generator.create_village_scenario(world)
     return map_service, world
 
 
@@ -152,7 +154,9 @@ class TestPlayerEntity:
         """Player entity carries every component PartyService assigns."""
         _load_all_registries()
         world = get_world()
-        MapService().create_village_scenario(world)
+        map_service = MapService()
+        map_generator = MapGenerator(map_service)
+        map_generator.create_village_scenario(world)
 
         party = PartyService()
         player = party.create_initial_party(1, 1)
@@ -171,7 +175,9 @@ class TestPlayerEntity:
         """Player stats have sensible initial values."""
         _load_all_registries()
         world = get_world()
-        MapService().create_village_scenario(world)
+        map_service = MapService()
+        map_generator = MapGenerator(map_service)
+        map_generator.create_village_scenario(world)
 
         party = PartyService()
         player = party.create_initial_party(1, 1)
@@ -186,7 +192,9 @@ class TestPlayerEntity:
         """Player has an ActionList with at least one action."""
         _load_all_registries()
         world = get_world()
-        MapService().create_village_scenario(world)
+        map_service = MapService()
+        map_generator = MapGenerator(map_service)
+        map_generator.create_village_scenario(world)
 
         party = PartyService()
         player = party.create_initial_party(1, 1)
@@ -198,7 +206,9 @@ class TestPlayerEntity:
         """Player hotbar has at least one slot filled."""
         _load_all_registries()
         world = get_world()
-        MapService().create_village_scenario(world)
+        map_service = MapService()
+        map_generator = MapGenerator(map_service)
+        map_generator.create_village_scenario(world)
 
         party = PartyService()
         player = party.create_initial_party(1, 1)
@@ -259,7 +269,9 @@ class TestPlayerActions:
         """Adding a MovementRequest component doesn't crash."""
         _load_all_registries()
         world = get_world()
-        MapService().create_village_scenario(world)
+        map_service = MapService()
+        map_generator = MapGenerator(map_service)
+        map_generator.create_village_scenario(world)
 
         party = PartyService()
         player = party.create_initial_party(5, 5)
@@ -274,7 +286,9 @@ class TestPlayerActions:
         """Every action name in the ActionList is a non-empty string."""
         _load_all_registries()
         world = get_world()
-        MapService().create_village_scenario(world)
+        map_service = MapService()
+        map_generator = MapGenerator(map_service)
+        map_generator.create_village_scenario(world)
 
         party = PartyService()
         player = party.create_initial_party(1, 1)
@@ -287,7 +301,9 @@ class TestPlayerActions:
         """Every non-None hotbar action has a valid name."""
         _load_all_registries()
         world = get_world()
-        MapService().create_village_scenario(world)
+        map_service = MapService()
+        map_generator = MapGenerator(map_service)
+        map_generator.create_village_scenario(world)
 
         party = PartyService()
         player = party.create_initial_party(1, 1)
@@ -310,7 +326,8 @@ class TestFreezeThaw:
         _load_all_registries()
         world = get_world()
         map_service = MapService()
-        map_service.create_village_scenario(world)
+        map_generator = MapGenerator(map_service)
+        map_generator.create_village_scenario(world)
 
         # Create player so we can exclude it
         party = PartyService()
@@ -360,7 +377,8 @@ class TestFreezeThaw:
         _load_all_registries()
         world = get_world()
         map_service = MapService()
-        map_service.create_village_scenario(world)
+        map_generator = MapGenerator(map_service)
+        map_generator.create_village_scenario(world)
 
         party = PartyService()
         player = party.create_initial_party(1, 1)
@@ -394,7 +412,9 @@ class TestFreezeThaw:
         _load_all_registries()
         world = get_world()
 
-        mc = MapService().create_sample_map(10, 10)
+        map_service = MapService()
+        map_generator = MapGenerator(map_service)
+        mc = map_generator.create_sample_map(10, 10)
         mc.freeze(world)
         assert mc.frozen_entities == []
         mc.thaw(world)

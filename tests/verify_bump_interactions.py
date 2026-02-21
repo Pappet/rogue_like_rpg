@@ -33,7 +33,8 @@ def test_bump_attack():
     m = MapContainer([layer])
             
     action_system = MockActionSystem()
-    movement_system = MovementSystem(m, action_system)
+    movement_system = MovementSystem(action_system)
+    movement_system.set_map(m)
     
     # Player
     player = esper.create_entity(Position(1, 1), MovementRequest(1, 0))
@@ -68,7 +69,8 @@ def test_bump_wake_up():
     m = MapContainer([layer])
             
     action_system = MockActionSystem()
-    movement_system = MovementSystem(m, action_system)
+    movement_system = MovementSystem(action_system)
+    movement_system.set_map(m)
     
     # Player
     player = esper.create_entity(Position(1, 1), MovementRequest(1, 0))

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from services.map_service import MapService
+from services.map_generator import MapGenerator
 from services.resource_loader import ResourceLoader
 from ecs.world import reset_world
 from ecs.components import Position, AIBehaviorState, Alignment, Schedule, Activity, AIState, Name
@@ -29,7 +30,8 @@ def test_village_population():
     ResourceLoader.load_schedules("assets/data/schedules.json")
     
     # Create village scenario
-    map_service.create_village_scenario(world)
+    map_generator = MapGenerator(map_service)
+    map_generator.create_village_scenario(world)
     
     # 1. Verify entities in Village map
     village_map = map_service.get_map("Village")

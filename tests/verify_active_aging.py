@@ -30,7 +30,8 @@ def test_active_aging():
     
     # Setup systems
     turn_system = TurnSystem()
-    visibility_system = VisibilitySystem(container, turn_system)
+    visibility_system = VisibilitySystem(turn_system)
+    visibility_system.set_map(container)
     esper.add_processor(visibility_system)
     
     # Setup player

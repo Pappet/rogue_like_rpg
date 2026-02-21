@@ -1,5 +1,5 @@
 from entities.item_registry import ItemRegistry
-from ecs.components import Name, Renderable, Portable, ItemMaterial, StatModifiers, Position, Equippable, SlotType, Consumable, Description
+from ecs.components import MapBound, Name, Renderable, Portable, ItemMaterial, StatModifiers, Position, Equippable, SlotType, Consumable, Description
 from config import SpriteLayer
 
 class ItemFactory:
@@ -20,6 +20,7 @@ class ItemFactory:
 
         entity = world.create_entity()
         
+        world.add_component(entity, MapBound())
         world.add_component(entity, Name(name=template.name))
         
         # Convert sprite_layer string to SpriteLayer enum value

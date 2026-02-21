@@ -25,7 +25,8 @@ def test_inspection_output_detailed():
     map_container = MapContainer([layer])
     
     turn_system = TurnSystem()
-    action_system = ActionSystem(map_container, turn_system)
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
     
     # Create an item
     item = world.create_entity(

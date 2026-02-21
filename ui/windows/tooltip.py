@@ -5,8 +5,10 @@ from ecs.components import Name, Stats, Description, Portable, EffectiveStats
 from config import (
     UI_COLOR_BG_SIDEBAR, UI_COLOR_BORDER, UI_COLOR_TEXT_BRIGHT, 
     UI_COLOR_TEXT_DIM, UI_COLOR_HP, UI_COLOR_BAR_BG, UI_BAR_HEIGHT,
-    UI_PADDING
+    UI_PADDING, SCREEN_WIDTH, SCREEN_HEIGHT, LOG_HEIGHT, TILE_SIZE, GameStates
 )
+from ecs.components import Targeting, Position
+from map.tile import VisibilityState
 
 class TooltipWindow(UIWindow):
     def __init__(self, rect, entities):
@@ -85,10 +87,80 @@ class TooltipWindow(UIWindow):
                 for line in lines:
                     line_surf = self.font_desc.render(line.strip(), True, UI_COLOR_TEXT_DIM)
                     surface.blit(line_surf, (self.rect.x + UI_PADDING, curr_y))
-                    curr_y += 18
+                    curr_y = curr_y + 18
             
             curr_y += 10 # Spacing between entities
             
             # Stop if we exceed rect height
             if curr_y > self.rect.bottom - 20:
                 break
+
+    @staticmethod
+    def update_tooltip_logic(ui_stack, turn_system, player_entity, camera, map_container):
+        # If not in EXAMINE state, ensure no tooltip exists and return
+        if not turn_system or turn_system.current_state != GameStates.EXAMINE:
+            if ui_stack.stack and isinstance(ui_stack.stack[-1], TooltipWindow):
+                ui_stack.pop()
+            return
+
+        try:
+            targeting = esper.component_for_entity(player_entity, Targeting)
+            tx, ty = targeting.target_x, targeting.target_y
+            
+            # Use player layer as base for looking up entities
+            try:
+                player_pos = esper.component_for_entity(player_entity, Position)
+                current_layer = player_pos.layer
+            except KeyError:
+                current_layer = 0
+
+            # Find entities at tx, ty on the same layer
+            entities = []
+            for ent, (pos,) in esper.get_components(Position):
+                if pos.x == tx and pos.y == ty and pos.layer == current_layer:
+                    # Only show visible entities
+                    is_visible = False
+                    if 0 <= current_layer < len(map_container.layers):
+                        layer = map_container.layers[current_layer]
+                        if 0 <= ty < len(layer.tiles) and 0 <= tx < len(layer.tiles[ty]):
+                            if layer.tiles[ty][tx].visibility_state == VisibilityState.VISIBLE:
+                                is_visible = True
+                    
+                    if is_visible:
+                        entities.append(ent)
+            
+            if entities:
+                # Calculate tooltip position
+                pixel_x = tx * TILE_SIZE
+                pixel_y = ty * TILE_SIZE
+                screen_x, screen_y = camera.apply_to_pos(pixel_x, pixel_y)
+                
+                # Tooltip size
+                tw, th = 300, 250
+                tx_tip = screen_x + TILE_SIZE + 10
+                ty_tip = screen_y
+                
+                # Flip to left if too far right
+                if tx_tip + tw > SCREEN_WIDTH:
+                    tx_tip = screen_x - tw - 10
+                
+                # Adjust Y if too far down
+                if ty_tip + th > SCREEN_HEIGHT - LOG_HEIGHT:
+                    ty_tip = SCREEN_HEIGHT - LOG_HEIGHT - th - 10
+
+                rect = pygame.Rect(tx_tip, ty_tip, tw, th)
+                
+                if ui_stack.stack and isinstance(ui_stack.stack[-1], TooltipWindow):
+                    ui_stack.stack[-1].rect = rect
+                    ui_stack.stack[-1].entities = entities
+                else:
+                    ui_stack.push(TooltipWindow(rect, entities))
+            else:
+                # No entities, remove tooltip if it's on top
+                if ui_stack.stack and isinstance(ui_stack.stack[-1], TooltipWindow):
+                    ui_stack.pop()
+                    
+        except KeyError:
+            # If no targeting component, ensure no tooltip
+            if ui_stack.stack and isinstance(ui_stack.stack[-1], TooltipWindow):
+                ui_stack.pop()

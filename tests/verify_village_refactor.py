@@ -1,6 +1,7 @@
 
 import esper
 from services.map_service import MapService
+from services.map_generator import MapGenerator
 from ecs.components import Position, Portal, Name
 from config import SpriteLayer
 
@@ -9,9 +10,10 @@ def test_village_refactor():
     world = esper
     esper.clear_database()
     service = MapService()
+    generator = MapGenerator(service)
     
     # Create scenario
-    service.create_village_scenario(world)
+    generator.create_village_scenario(world)
     
     # Check Village exists
     village = service.get_map("Village")
