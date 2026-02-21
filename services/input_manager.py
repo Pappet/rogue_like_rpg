@@ -16,6 +16,7 @@ class InputCommand(Enum):
     
     # UI / Menus
     OPEN_INVENTORY = auto() # I
+    OPEN_CHARACTER = auto() # C
     OPEN_WORLD_MAP = auto() # M
     NEXT_ACTION = auto() # S
     PREVIOUS_ACTION = auto() # W
@@ -57,6 +58,7 @@ class InputManager:
                 pygame.K_s: InputCommand.NEXT_ACTION,
                 pygame.K_g: InputCommand.INTERACT,
                 pygame.K_i: InputCommand.OPEN_INVENTORY,
+                pygame.K_c: InputCommand.OPEN_CHARACTER,
                 pygame.K_m: InputCommand.OPEN_WORLD_MAP,
                 pygame.K_RETURN: InputCommand.CONFIRM,
                 pygame.K_F3: InputCommand.DEBUG_TOGGLE_MASTER,
@@ -94,6 +96,7 @@ class InputManager:
                 pygame.K_s: InputCommand.MOVE_DOWN,
                 pygame.K_ESCAPE: InputCommand.CANCEL,
                 pygame.K_i: InputCommand.CANCEL,
+                pygame.K_c: InputCommand.CANCEL,
                 pygame.K_d: InputCommand.DROP_ITEM,
                 pygame.K_u: InputCommand.USE_ITEM,
                 pygame.K_e: InputCommand.EQUIP_ITEM,
