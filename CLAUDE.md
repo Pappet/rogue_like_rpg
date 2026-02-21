@@ -187,6 +187,9 @@ World clock advances 1 tick per player turn. 1 hour = 60 ticks.
 
 ## Conventions & Rules
 
+### AI Assistant Rules
+- **Committing:** ALWAYS create a git commit after every completed Task in the `.planning/` phases or in the `task.md` checklist. Do not wait until the entire phase is complete to commit.
+
 ### Code Style
 - Dataclass components, no inheritance on components
 - Type hints on function signatures
