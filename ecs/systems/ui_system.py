@@ -1,7 +1,7 @@
 import esper
 import pygame
 from config import (
-    HEADER_HEIGHT, SIDEBAR_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT, LOG_HEIGHT, GameStates,
+    HEADER_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT, LOG_HEIGHT, GameStates,
     UI_PADDING, UI_MARGIN, UI_LINE_SPACING, UI_SECTION_SPACING,
     UI_COLOR_BG_HEADER, UI_COLOR_BG_SIDEBAR, UI_COLOR_BORDER,
     UI_COLOR_TEXT_DIM, UI_COLOR_TEXT_BRIGHT, UI_COLOR_SECTION_TITLE, UI_BAR_HEIGHT,
@@ -10,7 +10,7 @@ from config import (
     UI_COLOR_BAR_BG, UI_COLOR_MANA_COST, UI_SPACING_X,
     UI_COLOR_PLAYER_TURN, UI_COLOR_TARGETING, UI_COLOR_ENV_TURN
 )
-from ecs.components import ActionList, Stats, Targeting, Equipment, EffectiveStats, Name, SlotType
+from ecs.components import ActionList, Stats, Targeting, Equipment, EffectiveStats, Name, SlotType, HotbarSlots
 from ui.message_log import MessageLog
 
 class LayoutCursor:
@@ -47,12 +47,10 @@ class UISystem(esper.Processor):
         
         # UI Areas
         self.header_rect = pygame.Rect(0, 0, SCREEN_WIDTH, HEADER_HEIGHT)
-        self.sidebar_rect = pygame.Rect(SCREEN_WIDTH - SIDEBAR_WIDTH, HEADER_HEIGHT, SIDEBAR_WIDTH, SCREEN_HEIGHT - HEADER_HEIGHT)
-        self.log_rect = pygame.Rect(0, SCREEN_HEIGHT - LOG_HEIGHT, SCREEN_WIDTH - SIDEBAR_WIDTH, LOG_HEIGHT)
+        self.log_rect = pygame.Rect(0, SCREEN_HEIGHT - LOG_HEIGHT, SCREEN_WIDTH, LOG_HEIGHT)
         
         # Layout Cursors
         self.header_cursor = LayoutCursor(UI_PADDING, UI_PADDING, SCREEN_WIDTH - 2 * UI_PADDING)
-        self.sidebar_cursor = LayoutCursor(self.sidebar_rect.x + UI_PADDING, self.sidebar_rect.y + UI_PADDING, SIDEBAR_WIDTH - 2 * UI_PADDING)
 
         self.message_log = MessageLog(self.log_rect, self.small_font)
         
@@ -61,7 +59,6 @@ class UISystem(esper.Processor):
 
     def process(self, surface):
         self.draw_header(surface)
-        self.draw_sidebar(surface)
         self.message_log.draw(surface)
 
     def draw_header(self, surface):
@@ -83,8 +80,7 @@ class UISystem(esper.Processor):
             time_str = f"Day {self.world_clock.day} - {self.world_clock.hour:02d}:{self.world_clock.minute:02d} ({self.world_clock.phase.upper()})"
             time_surf = self.font.render(time_str, True, UI_COLOR_TIME)
             surface.blit(time_surf, (self.header_cursor.x, (HEADER_HEIGHT - time_surf.get_height()) // 2))
-            # Don't strictly need to advance X here as turn info is centered, 
-            # but it's good practice.
+            self.header_cursor.advance_x(time_surf.get_width() + UI_SPACING_X)
 
         # Turn info (Centered)
         if self.turn_system.current_state == GameStates.PLAYER_TURN:
@@ -105,7 +101,11 @@ class UISystem(esper.Processor):
             turn_color = UI_COLOR_ENV_TURN
             
         turn_surf = self.font.render(turn_str, True, turn_color)
-        surface.blit(turn_surf, (self.header_rect.centerx - turn_surf.get_width() // 2, (HEADER_HEIGHT - turn_surf.get_height()) // 2))
+        turn_x = self.header_rect.centerx - turn_surf.get_width() // 2
+        surface.blit(turn_surf, (turn_x, (HEADER_HEIGHT - turn_surf.get_height()) // 2))
+
+        # Hotbar (Right of Turn Info)
+        self._draw_hotbar(surface, turn_x + turn_surf.get_width() + UI_SPACING_X)
         
         # Player Stats (HP/Mana) - Right Aligned
         try:
@@ -119,163 +119,160 @@ class UISystem(esper.Processor):
         except KeyError:
             pass
 
-    def draw_sidebar(self, surface):
-        # Draw sidebar background
-        pygame.draw.rect(surface, UI_COLOR_BG_SIDEBAR, self.sidebar_rect)
-        pygame.draw.line(surface, UI_COLOR_BORDER, (self.sidebar_rect.left, self.sidebar_rect.top), (self.sidebar_rect.left, self.sidebar_rect.bottom), 2)
-        
-        self.sidebar_cursor.reset()
-        
-        self._draw_sidebar_resource_bars(surface, self.sidebar_cursor)
-        self._draw_sidebar_actions(surface, self.sidebar_cursor)
-        self._draw_sidebar_equipment(surface, self.sidebar_cursor)
-        self._draw_sidebar_combat_stats(surface, self.sidebar_cursor)
-        self._draw_sidebar_needs(surface, self.sidebar_cursor)
+        def is_action_available(self, action):
 
-    def _draw_section_title(self, surface, cursor, title):
-        title_surf = self.font.render(title, True, UI_COLOR_SECTION_TITLE)
-        surface.blit(title_surf, (cursor.x, cursor.y))
-        cursor.advance(UI_LINE_SPACING + 5)
+            try:
 
-    def _draw_sidebar_resource_bars(self, surface, cursor):
-        try:
-            eff = esper.try_component(self.player_entity, EffectiveStats)
-            stats = esper.component_for_entity(self.player_entity, Stats)
-            
-            hp = eff.hp if eff else stats.hp
-            max_hp = eff.max_hp if eff else stats.max_hp
-            mana = eff.mana if eff else stats.mana
-            max_mana = eff.max_mana if eff else stats.max_mana
-            
-            # HP Bar
-            self._draw_bar(surface, cursor.x, cursor.y, cursor.width, UI_BAR_HEIGHT, hp, max_hp, UI_COLOR_HP, "HP")
-            cursor.advance(UI_LINE_SPACING)
-            # Mana Bar
-            self._draw_bar(surface, cursor.x, cursor.y, cursor.width, UI_BAR_HEIGHT, mana, max_mana, UI_COLOR_MANA, "MP")
-            cursor.advance(UI_SECTION_SPACING)
-        except KeyError:
-            pass
+                eff = esper.try_component(self.player_entity, EffectiveStats) or esper.component_for_entity(self.player_entity, Stats)
 
-    def _draw_sidebar_actions(self, surface, cursor):
-        self._draw_section_title(surface, cursor, "Actions")
-        
-        try:
-            action_list = esper.component_for_entity(self.player_entity, ActionList)
-        except (KeyError, AttributeError):
-            return
+                if action.cost_mana > eff.mana:
 
-        for i, action in enumerate(action_list.actions):
-            available = self.is_action_available(action)
-            
-            if i == action_list.selected_idx:
-                # Draw selection highlight
-                bg_rect = pygame.Rect(cursor.x - 5, cursor.y, cursor.width + 10, UI_ACTION_HIGHLIGHT_HEIGHT)
-                color = UI_COLOR_SELECTION if available else UI_COLOR_SELECTION_DIM
-                pygame.draw.rect(surface, color, bg_rect)
-            
-            if available:
-                color = UI_COLOR_TEXT_BRIGHT if i == action_list.selected_idx else UI_COLOR_TEXT_DIM
-            else:
-                color = UI_COLOR_TEXT_DIM
-                
-            action_surf = self.small_font.render(action.name, True, color)
-            surface.blit(action_surf, (cursor.x + 5, cursor.y + 3))
-            
-            if action.cost_mana > 0:
-                cost_surf = self.small_font.render(f"{action.cost_mana} MP", True, UI_COLOR_MANA_COST)
-                surface.blit(cost_surf, (cursor.x + cursor.width - cost_surf.get_width(), cursor.y + 3))
-            
-            cursor.advance(UI_ACTION_HEIGHT)
-        
-        cursor.advance(UI_SECTION_SPACING)
+                    return False
 
-    def _draw_sidebar_equipment(self, surface, cursor):
-        self._draw_section_title(surface, cursor, "Equipment")
-        
-        try:
-            equipment = esper.component_for_entity(self.player_entity, Equipment)
-            for slot in SlotType:
-                item_id = equipment.slots.get(slot)
-                item_name = "—"
-                if item_id is not None:
-                    try:
-                        item_name = esper.component_for_entity(item_id, Name).name
-                    except KeyError:
-                        item_name = "Unknown"
-                
-                slot_name = slot.value.replace('_', ' ').title()
-                slot_surf = self.small_font.render(f"{slot_name}:", True, UI_COLOR_TEXT_DIM)
-                item_surf = self.small_font.render(item_name, True, UI_COLOR_TEXT_BRIGHT)
-                
-                surface.blit(slot_surf, (cursor.x + 5, cursor.y))
-                surface.blit(item_surf, (cursor.x + UI_COLUMN_OFFSET, cursor.y))
-                cursor.advance(UI_LINE_SPACING)
-        except KeyError:
-            pass
-            
-        cursor.advance(UI_SECTION_SPACING)
+                # Add other resource checks here
 
-    def _draw_sidebar_combat_stats(self, surface, cursor):
-        self._draw_section_title(surface, cursor, "Combat Stats")
-        
-        try:
-            if esper.has_component(self.player_entity, EffectiveStats):
-                combat_stats = esper.component_for_entity(self.player_entity, EffectiveStats)
-            else:
-                combat_stats = esper.component_for_entity(self.player_entity, Stats)
-            
-            power_surf = self.small_font.render(f"Power: {combat_stats.power}", True, UI_COLOR_TEXT_BRIGHT)
-            defense_surf = self.small_font.render(f"Defense: {combat_stats.defense}", True, UI_COLOR_TEXT_BRIGHT)
-            
-            surface.blit(power_surf, (cursor.x + 5, cursor.y))
-            cursor.advance(UI_LINE_SPACING)
-            surface.blit(defense_surf, (cursor.x + 5, cursor.y))
-            cursor.advance(UI_LINE_SPACING)
-        except KeyError:
-            pass
-            
-        cursor.advance(UI_SECTION_SPACING)
+            except KeyError:
 
-    def _draw_sidebar_needs(self, surface, cursor):
-        self._draw_section_title(surface, cursor, "Needs")
-        
-        hunger_surf = self.small_font.render("Hunger: 0%", True, UI_COLOR_TEXT_BRIGHT)
-        fatigue_surf = self.small_font.render("Fatigue: 0%", True, UI_COLOR_TEXT_BRIGHT)
-        
-        surface.blit(hunger_surf, (cursor.x + 5, cursor.y))
-        cursor.advance(UI_LINE_SPACING)
-        surface.blit(fatigue_surf, (cursor.x + 5, cursor.y))
-        cursor.advance(UI_LINE_SPACING)
-        
-        cursor.advance(UI_SECTION_SPACING)
-
-    def _draw_bar(self, surface, x, y, width, height, val, max_val, color, label):
-        # Background
-        pygame.draw.rect(surface, UI_COLOR_BAR_BG, (x, y, width, height))
-        if max_val > 0:
-            fill_width = int((val / max_val) * width)
-            fill_width = max(0, min(width, fill_width))
-            if fill_width > 0:
-                pygame.draw.rect(surface, color, (x, y, fill_width, height))
-        # Border
-        pygame.draw.rect(surface, UI_COLOR_BORDER, (x, y, width, height), 1)
-        
-        # Label and values
-        text = f"{label}: {val}/{max_val}"
-        text_surf = self.small_font.render(text, True, (255, 255, 255))
-        # Center text in bar
-        text_x = x + (width - text_surf.get_width()) // 2
-        text_y = y + (height - text_surf.get_height()) // 2
-        surface.blit(text_surf, (text_x, text_y))
-
-    def is_action_available(self, action):
-        try:
-            eff = esper.try_component(self.player_entity, EffectiveStats) or esper.component_for_entity(self.player_entity, Stats)
-            if action.cost_mana > eff.mana:
                 return False
-            # Add other resource checks here
-        except KeyError:
-            return False
-        return True
+
+            return True
+
+    
+
+            def _draw_hotbar(self, surface, start_x):
+
+    
+
+                """Draws the 1-9 hotbar slots in the header."""
+
+    
+
+                try:
+
+    
+
+                    hotbar = esper.component_for_entity(self.player_entity, HotbarSlots)
+
+    
+
+                except KeyError:
+
+    
+
+                    return
+
+    
+
+        
+
+    
+
+                current_x = start_x
+
+    
+
+                for i in range(1, 10):
+
+    
+
+                    action = hotbar.slots.get(i)
+
+    
+
+                    if action:
+
+    
+
+                        # Slot background
+
+    
+
+                        slot_size = 32
+
+    
+
+                        slot_rect = pygame.Rect(current_x, (HEADER_HEIGHT - slot_size) // 2, slot_size, slot_size)
+
+    
+
+                        is_avail = self.is_action_available(action)
+
+    
+
+                        
+
+    
+
+                        bg_color = UI_COLOR_BAR_BG if is_avail else (60, 20, 20)
+
+    
+
+                        text_color = UI_COLOR_TEXT_BRIGHT if is_avail else UI_COLOR_TEXT_DIM
+
+    
+
+                        
+
+    
+
+                        pygame.draw.rect(surface, bg_color, slot_rect)
+
+    
+
+                        pygame.draw.rect(surface, UI_COLOR_BORDER, slot_rect, 1)
+
+    
+
+                        
+
+    
+
+                        # Action name/initial
+
+    
+
+                        label = action.name[:1].upper()
+
+    
+
+                        label_surf = self.small_font.render(label, True, text_color)
+
+    
+
+                        surface.blit(label_surf, (slot_rect.centerx - label_surf.get_width() // 2, 
+
+    
+
+                                                slot_rect.centery - label_surf.get_height() // 2))
+
+    
+
+                        
+
+    
+
+                        # Key number
+
+    
+
+                        num_surf = self.small_font.render(str(i), True, UI_COLOR_TEXT_DIM)
+
+    
+
+                        surface.blit(num_surf, (slot_rect.x + 2, slot_rect.y - 2))
+
+    
+
+                        
+
+    
+
+                        current_x += slot_size + UI_PADDING
+
+    
+
+        
+
+    
 
     
