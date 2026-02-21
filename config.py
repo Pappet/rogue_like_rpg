@@ -48,6 +48,34 @@ UI_COLOR_TARGETING = (100, 255, 255)
 UI_COLOR_EXAMINE = (255, 255, 100)
 UI_COLOR_ENV_TURN = (255, 100, 100)
 
+# Generic Colors
+COLOR_WHITE = (255, 255, 255)
+COLOR_BLACK = (0, 0, 0)
+COLOR_RED = (255, 50, 50)
+COLOR_GREEN = (50, 255, 50)
+COLOR_BLUE = (50, 150, 255)
+COLOR_YELLOW = (255, 255, 50)
+COLOR_ORANGE = (255, 165, 0)
+COLOR_PURPLE = (128, 0, 128)
+COLOR_GREY = (128, 128, 128)
+COLOR_GOLD = (255, 215, 0)
+
+# Window Colors
+UI_COLOR_WINDOW_BG = (50, 50, 50)
+UI_COLOR_WINDOW_BORDER = (200, 200, 200)
+UI_COLOR_WINDOW_SEPARATOR = (100, 100, 100)
+UI_COLOR_WINDOW_TITLE = COLOR_WHITE
+UI_COLOR_WINDOW_TEXT = COLOR_WHITE
+UI_COLOR_WINDOW_TEXT_DIM = (150, 150, 150)
+UI_COLOR_WINDOW_SELECTED = COLOR_YELLOW
+UI_COLOR_WINDOW_HIGHLIGHT = (100, 100, 100)
+UI_COLOR_WINDOW_HINT = (150, 150, 255)
+UI_COLOR_WINDOW_ERROR = (255, 100, 100)
+
+# Message Log Colors
+UI_COLOR_LOG_BG = (15, 15, 15)
+UI_COLOR_LOG_BORDER = (100, 100, 100)
+
 # World Clock configuration
 TICKS_PER_HOUR = 60
 DAWN_START = 5
@@ -124,9 +152,9 @@ LOG_COLORS = {
     LogCategory.DAMAGE_DEALT: (100, 255, 100),    # Light Green
     LogCategory.DAMAGE_RECEIVED: (255, 100, 100), # Light Red
     LogCategory.HEALING: (50, 200, 255),          # Light Blue
-    LogCategory.LOOT: (255, 215, 0),              # Gold
+    LogCategory.LOOT: COLOR_GOLD,                 # Gold
     LogCategory.SYSTEM: (200, 200, 200),          # Light Gray
-    LogCategory.ALERT: (255, 255, 100),           # Yellow
+    LogCategory.ALERT: COLOR_YELLOW,              # Yellow
 }
 
 
