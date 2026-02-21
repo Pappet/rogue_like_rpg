@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 34 of 36 (Input Handling & Control Scheme)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-20 — Completed 34-02-PLAN.md and 34-03-PLAN.md.
+Phase: 35 of 36 (Stateful Menus & Viewport Expansion)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-20 — Completed 35-01-PLAN.md.
 
-Progress: [██████████] 100% (Phase 34) / 36% (v1.6)
+Progress: [█░░░░░░░░░] 50% (Phase 35) / 38% (v1.6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed (v1.6): 6
+- Total plans completed (v1.6): 7
 - Average duration: 10m
-- Total execution time: 60m
+- Total execution time: 70m
 
 **By Phase:**
 
@@ -29,15 +29,16 @@ Progress: [██████████] 100% (Phase 34) / 36% (v1.6)
 |-------|-------|-------|----------|
 | 33 | 3 | 30m | 10m |
 | 34 | 3 | 30m | 10m |
-| 35 | 0 | 0m | 0m |
+| 35 | 1 | 10m | 10m |
 | 36 | 0 | 0m | 0m |
 
-**Recent Trend:** Completed "Bump-to-Action" and Hotbar selection (1-9), finalizing Phase 34.
+**Recent Trend:** Established Modal Infrastructure (UIStack) for layered menus.
 
 ## Quick Tasks Completed
 
 | Task | Description | Date |
 |------|-------------|------|
+| 35-01 | Implement UIStack and UIWindow infrastructure | 2026-02-20 |
 | 34-03 | Implement Hotbar Action Selection (1-9) | 2026-02-20 |
 | 34-02 | Implement Context-Sensitive "Bump" Interactions | 2026-02-20 |
 | 34-01 | Implement InputManager and centralized command mapping | 2026-02-20 |
@@ -62,10 +63,11 @@ Progress: [██████████] 100% (Phase 34) / 36% (v1.6)
 - **Centralized Input:** Input is now handled by a dedicated `InputManager` that maps keys to commands based on state.
 - **Hotbar Slots:** Player has a `HotbarSlots` component mapping keys 1-9 to specific `Action` objects for quick execution.
 - **Contextual Bump:** Collisions automatically resolve to Attack, Wake Up, or Talk based on target entity components and state.
+- **UI Stack:** Implemented a LIFO stack for modal windows with input delegation and game pausing.
 
 ### Pending Todos
 
-- [ ] Create Modal system (Phase 35).
+- [ ] Implement Modal windows (Phase 35).
 
 ### Blockers/Concerns
 
@@ -74,5 +76,5 @@ Progress: [██████████] 100% (Phase 34) / 36% (v1.6)
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 34-03-PLAN.md (Phase 34 Complete).
-Resume file: .planning/phases/35-modal-ui-layering/35-01-PLAN.md
+Stopped at: Completed 35-01-PLAN.md.
+Resume file: .planning/phases/35-stateful-menus-viewport-expansion/35-02-PLAN.md
