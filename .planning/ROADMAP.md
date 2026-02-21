@@ -44,9 +44,9 @@
 **Goal:** Centralize input and implement context-sensitive interactions.
 
 **Plans:** 3 plans
-- [ ] 34-01-PLAN.md — InputManager and Command Mapping (Wave 1)
-- [ ] 34-02-PLAN.md — Context-Sensitive "Bump" Interactions (Wave 2)
-- [ ] 34-03-PLAN.md — Hotbar Action Selection (1-9) (Wave 2)
+- [x] 34-01-PLAN.md — InputManager and Command Mapping (Wave 1)
+- [x] 34-02-PLAN.md — Context-Sensitive "Bump" Interactions (Wave 2)
+- [x] 34-03-PLAN.md — Hotbar Action Selection (1-9) (Wave 2)
 
 **Requirements:** INP-01, INP-02, INP-03, INP-04
 
@@ -63,14 +63,14 @@
 **Goal:** Transition to stateful modal overlays and reclaim screen real estate.
 
 **Plans:** 3 plans
-- [ ] 35-01-PLAN.md — Window/Modal Base System
-- [ ] 35-02-PLAN.md — Inventory and Character Overlays
-- [ ] 35-03-PLAN.md — Viewport Resizing & HUD Cleanup
+- [ ] 35-01-PLAN.md — Window/Modal Base System (INFRASTRUCTURE)
+- [ ] 35-02-PLAN.md — Inventory and Character Overlays (FEATURES)
+- [ ] 35-03-PLAN.md — Viewport Resizing & HUD Cleanup (POLISH)
 
 **Requirements:** MENU-01, MENU-02, MENU-03, MENU-04
 
 **Success Criteria:**
-1. `InventoryScreen` and `CharacterScreen` are modal overlays that pause the game.
+1. InventoryScreen and CharacterScreen are modal overlays that pause the game.
 2. The HUD is stripped of low-priority info, expanding the main map viewport.
 3. Input is correctly captured by the top-most modal in a stack.
 4. Modals can be opened and closed without losing game state.
@@ -101,6 +101,6 @@
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 33 | v1.6 | 3/3 | Done | 2026-02-20 |
-| 34 | v1.6 | 0/3 | Pending | - |
+| 34 | v1.6 | 3/3 | Done | 2026-02-20 |
 | 35 | v1.6 | 0/3 | Pending | - |
 | 36 | v1.6 | 0/3 | Pending | - |
