@@ -11,7 +11,8 @@ from config import (
     SpriteLayer, GameStates,
     UI_COLOR_WINDOW_BG, UI_COLOR_WINDOW_BORDER, UI_COLOR_WINDOW_SEPARATOR,
     UI_COLOR_WINDOW_TITLE, UI_COLOR_WINDOW_TEXT, UI_COLOR_WINDOW_TEXT_DIM,
-    UI_COLOR_WINDOW_SELECTED, UI_COLOR_WINDOW_HIGHLIGHT, UI_COLOR_WINDOW_HINT
+    UI_COLOR_WINDOW_SELECTED, UI_COLOR_WINDOW_HIGHLIGHT, UI_COLOR_WINDOW_HINT,
+    UI_PADDING, UI_SPACING_X, UI_SECTION_SPACING
 )
 
 class InventoryWindow(UIWindow):
@@ -137,15 +138,15 @@ class InventoryWindow(UIWindow):
         
         # Vertical separator
         separator_x = box_x + box_width // 2
-        pygame.draw.line(surface, UI_COLOR_WINDOW_SEPARATOR, (separator_x, box_y + 20), (separator_x, box_y + box_height - 20), 1)
+        pygame.draw.line(surface, UI_COLOR_WINDOW_SEPARATOR, (separator_x, box_y + UI_SPACING_X), (separator_x, box_y + box_height - UI_SPACING_X), 1)
 
         # Draw title
         title_text = self.title_font.render("Inventory", True, UI_COLOR_WINDOW_TITLE)
-        surface.blit(title_text, (box_x + 20, box_y + 20))
+        surface.blit(title_text, (box_x + UI_SPACING_X, box_y + UI_SPACING_X))
         
         # Draw Details label
         details_label = self.title_font.render("Details", True, UI_COLOR_WINDOW_TITLE)
-        surface.blit(details_label, (separator_x + 20, box_y + 20))
+        surface.blit(details_label, (separator_x + UI_SPACING_X, box_y + UI_SPACING_X))
 
         # Draw items
         try:
@@ -153,7 +154,7 @@ class InventoryWindow(UIWindow):
             
             if not inventory.items:
                 empty_text = self.font.render("Your inventory is empty.", True, UI_COLOR_WINDOW_TEXT_DIM)
-                surface.blit(empty_text, (box_x + 20, box_y + 80))
+                surface.blit(empty_text, (box_x + UI_SPACING_X, box_y + 80))
             else:
                 for i, item_id in enumerate(inventory.items):
                     try:
@@ -179,11 +180,11 @@ class InventoryWindow(UIWindow):
                     if i == self.selected_idx:
                         color = UI_COLOR_WINDOW_SELECTED
                         # Draw selection highlight
-                        highlight_rect = pygame.Rect(box_x + 10, box_y + 80 + i * 35, (box_width // 2) - 20, 30)
+                        highlight_rect = pygame.Rect(box_x + UI_PADDING, box_y + 80 + i * UI_SECTION_SPACING, (box_width // 2) - UI_SPACING_X, 30)
                         pygame.draw.rect(surface, UI_COLOR_WINDOW_HIGHLIGHT, highlight_rect)
 
                     item_text = self.font.render(item_name, True, color)
-                    surface.blit(item_text, (box_x + 20, box_y + 85 + i * 35))
+                    surface.blit(item_text, (box_x + UI_SPACING_X, box_y + 85 + i * UI_SECTION_SPACING))
                 
                 # Draw selected item details
                 if self.selected_idx < len(inventory.items):
@@ -192,14 +193,14 @@ class InventoryWindow(UIWindow):
                     lines = detailed_desc.split('\n')
                     for j, line in enumerate(lines):
                         detail_text = self.font.render(line, True, UI_COLOR_WINDOW_BORDER) # Using BORDER color as it matches (200,200,200)
-                        surface.blit(detail_text, (separator_x + 20, box_y + 80 + j * 30))
+                        surface.blit(detail_text, (separator_x + UI_SPACING_X, box_y + 80 + j * 30))
                     
                     # Also show usage hints
                     hint_y = box_y + box_height - 60
                     hints = ["[U] Use  [E] Equip  [D] Drop"]
                     for k, hint in enumerate(hints):
                         hint_text = self.font.render(hint, True, UI_COLOR_WINDOW_HINT)
-                        surface.blit(hint_text, (separator_x + 20, hint_y + k * 30))
+                        surface.blit(hint_text, (separator_x + UI_SPACING_X, hint_y + k * 30))
                         
         except KeyError:
             empty_text = self.font.render("No inventory found.", True, UI_COLOR_WINDOW_TEXT_DIM)

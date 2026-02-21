@@ -9,7 +9,7 @@ from config import (
     UI_COLOR_WINDOW_BG, UI_COLOR_WINDOW_BORDER, UI_COLOR_WINDOW_SEPARATOR,
     UI_COLOR_WINDOW_TITLE, UI_COLOR_WINDOW_TEXT, UI_COLOR_WINDOW_TEXT_DIM,
     UI_COLOR_WINDOW_SELECTED, UI_COLOR_WINDOW_HIGHLIGHT, UI_COLOR_WINDOW_HINT,
-    UI_COLOR_WINDOW_ERROR
+    UI_COLOR_WINDOW_ERROR, UI_PADDING, UI_SPACING_X, UI_SECTION_SPACING
 )
 
 class CharacterWindow(UIWindow):
@@ -51,15 +51,15 @@ class CharacterWindow(UIWindow):
         
         # Vertical separator
         separator_x = box_x + box_width // 2
-        pygame.draw.line(surface, UI_COLOR_WINDOW_SEPARATOR, (separator_x, box_y + 20), (separator_x, box_y + box_height - 20), 1)
+        pygame.draw.line(surface, UI_COLOR_WINDOW_SEPARATOR, (separator_x, box_y + UI_SPACING_X), (separator_x, box_y + box_height - UI_SPACING_X), 1)
 
         # Draw title
         title_text = self.title_font.render("Character Sheet", True, UI_COLOR_WINDOW_TITLE)
-        surface.blit(title_text, (box_x + 20, box_y + 20))
+        surface.blit(title_text, (box_x + UI_SPACING_X, box_y + UI_SPACING_X))
         
         # Draw Equipment label
         equip_label = self.title_font.render("Equipment", True, UI_COLOR_WINDOW_TITLE)
-        surface.blit(equip_label, (separator_x + 20, box_y + 20))
+        surface.blit(equip_label, (separator_x + UI_SPACING_X, box_y + UI_SPACING_X))
 
         # 1. Draw Stats
         try:
@@ -80,7 +80,7 @@ class CharacterWindow(UIWindow):
             for i, line in enumerate(stat_lines):
                 if not line: continue
                 stat_text = self.font.render(line, True, UI_COLOR_WINDOW_TEXT)
-                surface.blit(stat_text, (box_x + 30, box_y + 100 + i * 35))
+                surface.blit(stat_text, (box_x + 30, box_y + 100 + i * UI_SECTION_SPACING))
                 
         except KeyError:
             error_text = self.font.render("Stats not found.", True, UI_COLOR_WINDOW_ERROR)
@@ -104,13 +104,13 @@ class CharacterWindow(UIWindow):
                 slot_text = self.font.render(f"{slot_label}:", True, UI_COLOR_WINDOW_TEXT_DIM)
                 item_text = self.font.render(item_name, True, UI_COLOR_WINDOW_SELECTED if item_id else UI_COLOR_WINDOW_HIGHLIGHT)
                 
-                surface.blit(slot_text, (separator_x + 20, box_y + 100 + i * 40))
+                surface.blit(slot_text, (separator_x + UI_SPACING_X, box_y + 100 + i * 40))
                 surface.blit(item_text, (separator_x + 160, box_y + 100 + i * 40))
                 
         except KeyError:
             error_text = self.font.render("Equipment not found.", True, UI_COLOR_WINDOW_ERROR)
-            surface.blit(error_text, (separator_x + 20, box_y + 100))
+            surface.blit(error_text, (separator_x + UI_SPACING_X, box_y + 100))
 
         # Footer hint
         hint_text = self.font.render("[ESC/C] Close", True, UI_COLOR_WINDOW_HINT)
-        surface.blit(hint_text, (box_x + 20, box_y + box_height - 40))
+        surface.blit(hint_text, (box_x + UI_SPACING_X, box_y + box_height - 40))
