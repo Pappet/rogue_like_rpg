@@ -21,6 +21,17 @@ class InputCommand(Enum):
     PREVIOUS_ACTION = auto() # W
     NEXT_TARGET = auto() # TAB
     
+    # Hotbar
+    HOTBAR_1 = auto()
+    HOTBAR_2 = auto()
+    HOTBAR_3 = auto()
+    HOTBAR_4 = auto()
+    HOTBAR_5 = auto()
+    HOTBAR_6 = auto()
+    HOTBAR_7 = auto()
+    HOTBAR_8 = auto()
+    HOTBAR_9 = auto()
+    
     # Inventory Actions
     DROP_ITEM = auto() # D
     USE_ITEM = auto() # U
@@ -53,19 +64,34 @@ class InputManager:
                 pygame.K_F5: InputCommand.DEBUG_TOGGLE_NPC_FOV,
                 pygame.K_F6: InputCommand.DEBUG_TOGGLE_CHASE,
                 pygame.K_F7: InputCommand.DEBUG_TOGGLE_LABELS,
+                pygame.K_1: InputCommand.HOTBAR_1,
+                pygame.K_2: InputCommand.HOTBAR_2,
+                pygame.K_3: InputCommand.HOTBAR_3,
+                pygame.K_4: InputCommand.HOTBAR_4,
+                pygame.K_5: InputCommand.HOTBAR_5,
+                pygame.K_6: InputCommand.HOTBAR_6,
+                pygame.K_7: InputCommand.HOTBAR_7,
+                pygame.K_8: InputCommand.HOTBAR_8,
+                pygame.K_9: InputCommand.HOTBAR_9,
             },
             GameStates.TARGETING: {
                 pygame.K_UP: InputCommand.MOVE_UP,
+                pygame.K_w: InputCommand.MOVE_UP,
                 pygame.K_DOWN: InputCommand.MOVE_DOWN,
+                pygame.K_s: InputCommand.MOVE_DOWN,
                 pygame.K_LEFT: InputCommand.MOVE_LEFT,
+                pygame.K_a: InputCommand.MOVE_LEFT,
                 pygame.K_RIGHT: InputCommand.MOVE_RIGHT,
+                pygame.K_d: InputCommand.MOVE_RIGHT,
                 pygame.K_RETURN: InputCommand.CONFIRM,
                 pygame.K_ESCAPE: InputCommand.CANCEL,
                 pygame.K_TAB: InputCommand.NEXT_TARGET,
             },
             GameStates.INVENTORY: {
                 pygame.K_UP: InputCommand.MOVE_UP,
+                pygame.K_w: InputCommand.MOVE_UP,
                 pygame.K_DOWN: InputCommand.MOVE_DOWN,
+                pygame.K_s: InputCommand.MOVE_DOWN,
                 pygame.K_ESCAPE: InputCommand.CANCEL,
                 pygame.K_i: InputCommand.CANCEL,
                 pygame.K_d: InputCommand.DROP_ITEM,

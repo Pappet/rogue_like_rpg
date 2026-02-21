@@ -41,6 +41,12 @@ class ActionSystem(esper.Processor):
 
     def perform_action(self, entity, action):
         """Executes a non-targeting action."""
+        if action.name == "Wait":
+            esper.dispatch_event("log_message", "You wait...")
+            if self.turn_system:
+                self.turn_system.end_player_turn()
+            return True
+
         if action.name == "Enter Portal":
             pos = esper.component_for_entity(entity, Position)
             

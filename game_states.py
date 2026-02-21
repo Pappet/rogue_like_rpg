@@ -17,7 +17,10 @@ from ecs.systems.ai_system import AISystem
 from ecs.systems.schedule_system import ScheduleSystem
 from ecs.systems.equipment_system import EquipmentSystem
 from ecs.systems.debug_render_system import DebugRenderSystem
-from ecs.components import Position, MovementRequest, Renderable, ActionList, Action, Stats, Inventory, Name, Portable, Equipment, Equippable, SlotType
+from ecs.components import (
+    Position, MovementRequest, Renderable, ActionList, Action, Stats, 
+    Inventory, Name, Portable, Equipment, Equippable, SlotType, HotbarSlots
+)
 import services.equipment_service as equipment_service
 import services.consumable_service as consumable_service
 from services.input_manager import InputCommand
@@ -266,6 +269,26 @@ class Game(GameState):
         if command == InputCommand.INTERACT:
             self.pickup_item()
             return
+
+        # Hotbar Selection
+        hotbar_commands = {
+            InputCommand.HOTBAR_1: 1, InputCommand.HOTBAR_2: 2, InputCommand.HOTBAR_3: 3,
+            InputCommand.HOTBAR_4: 4, InputCommand.HOTBAR_5: 5, InputCommand.HOTBAR_6: 6,
+            InputCommand.HOTBAR_7: 7, InputCommand.HOTBAR_8: 8, InputCommand.HOTBAR_9: 9
+        }
+        if command in hotbar_commands:
+            slot_idx = hotbar_commands[command]
+            try:
+                hotbar = esper.component_for_entity(self.player_entity, HotbarSlots)
+                action = hotbar.slots.get(slot_idx)
+                if action:
+                    if action.requires_targeting:
+                        self.action_system.start_targeting(self.player_entity, action)
+                    else:
+                        self.action_system.perform_action(self.player_entity, action)
+                return
+            except KeyError:
+                pass
 
         # Action Selection
         try:
