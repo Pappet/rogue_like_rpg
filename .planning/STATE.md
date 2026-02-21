@@ -76,6 +76,8 @@ Progress: [██████████] 100% (Phase 36) / 100% (v1.6)
 - **Log Categorization:** Messages are now color-coded by category (Damage, Healing, Loot, Alerts).
 - **Examine Mode:** Dedicated inspection mode with a cursor and detailed modal tooltips.
 - **Quick Transitions:** Reduced house entry/exit time to 1 tick for smoother exploration.
+- **Portal Interaction Priority:** Pressing 'Enter' or 'g' while standing on a portal takes priority over other actions, improving UX for transitions.
+- **Hotbar 6 Mapping:** Explicitly mapped Hotbar 6 to open the Inventory modal for consistent quick-access.
 - **Input Consumption:** Modal UI windows (Inventory, Character) consume all KEYDOWN events to prevent background leakage.
 - **Centralized UI Colors:** Magic numbers for UI colors and basic spacing centralized in `config.py`.
 

@@ -21,7 +21,7 @@ from ecs.systems.debug_render_system import DebugRenderSystem
 from ecs.components import (
     Position, MovementRequest, Renderable, ActionList, Action, Stats, 
     Inventory, Name, Portable, Equipment, Equippable, SlotType, HotbarSlots,
-    Targeting
+    Targeting, Portal
 )
 import services.equipment_service as equipment_service
 import services.consumable_service as consumable_service

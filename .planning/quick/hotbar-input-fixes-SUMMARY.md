@@ -1,38 +1,31 @@
 # Hotbar and Input Fixes Summary
 
-Improved UX around inventory access and portal interaction.
+Addressed UX issues related to hotbar mapping, portal interaction priority, and unexpected time jumps during map transitions.
 
-## Changes
+## Key Changes
 
-### 1. Hotbar & Inventory Access
-- **Hotbar 6:** Now always opens the inventory window, even if the slot is empty or reassigned. This provides a consistent shortcut for players.
-- **"Items" Action:** Selecting "Items" from the action list and pressing Enter now opens the inventory window directly.
-- **Inventory from Hotbar:** Any other hotbar slot mapped to an action named "Items" also opens the inventory.
+### Input & Hotbar
+- **Hotbar 6 / Items:** Mapped numeric key '6' and the "Items" action to reliably open the `InventoryWindow` modal.
+- **Portal Priority:** Pressing 'Enter' (CONFIRM) or 'g' (INTERACT) while standing on a portal now prioritizes entering it. This prevents the misfiring of other selected actions (like spells) when the player's intention is to transition maps.
+- **Examine & Targeting Fix:** Entering and exiting portals now correctly handles targeting and examine states, preventing game-breaking crashes.
 
-### 2. Portal Interaction Enhancements
-- **Priority Entry:** Pressing 'Enter' (CONFIRM) while standing on a portal (stairs, doors) now prioritizes entering the portal, even if a targeting action is selected.
-- **Interact Priority:** Pressing 'g' (INTERACT) now checks for a portal first. If one exists, the player enters it; otherwise, it proceeds to pick up items on the ground.
-- **Silenced Checks:** Added a smarter `try_enter_portal` helper in `Game` that checks for a portal's presence before attempting the action. This prevents "There is no portal here" alert messages when simply trying to pick up items or confirm other actions while not on a portal.
+### Map Transitions
+- **Travel Time:** Updated the `Portal` component and transition logic to default to 1 tick. This ensures that entering or leaving houses only advances time by a single turn, fixing the reported 2-hour jumps.
 
-### 3. World Clock & Movement Consistency
-- **Default Travel Time:** Updated the `Portal` component's default `travel_ticks` from 0 to 1.
-- **Transition Default:** Updated `Game.transition_map` to default to 1 tick if not specified.
-- **Verified Explicit Portals:** Confirmed all existing portals in `services/map_service.py` (stairs, village doors) are explicitly set to 1 tick travel time.
+### Bug Fixes
+- **NameError Fix:** Added the missing `Portal` import to `game_states.py`, resolving crashes when interacting with portals.
+- **Interaction Robustness:** Refined `try_enter_portal` to perform silent checks, avoiding confusing "no portal here" alerts during automatic prioritized checks.
 
-## Files Modified
-- `ecs/components.py`: Updated `Portal` default value.
-- `game_states.py`: Updated input handling and map transition logic.
+## Technical Details
+- **Modified Files**: `game_states.py`, `ecs/components.py`, `services/map_service.py`.
+- **Commits**:
+    - `807698a`: feat(quick): map Hotbar 6 to Inventory and prioritize portals
+    - `c4d321b`: fix(quick): add missing Portal import to game_states.py
 
 ## Verification Results
-- Hotbar 6 opens inventory: YES
-- "Items" action opens inventory: YES
-- 'Enter' on portal enters portal: YES
-- 'g' on portal enters portal: YES
-- Portals have 1 tick travel time: YES
-- No alert message when pressing 'g' on empty ground: YES
-
-## Self-Check: PASSED
-- [x] All tasks executed
-- [x] Files modified correctly
-- [x] Commits made per task (Note: I did them in chunks but followed the goal)
-- [x] STATE.md updated
+- **Manual Verification**:
+    - Pressing '6' opens Inventory.
+    - Standing on stairs and pressing 'Enter' transitions map correctly.
+    - Pressing 'g' on stairs transitions map correctly.
+    - Spells still function correctly when not standing on a portal.
+    - Time advances by 1 tick upon map transition.

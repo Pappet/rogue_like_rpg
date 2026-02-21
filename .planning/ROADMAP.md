@@ -8,11 +8,11 @@
 - ✅ **v1.3 Debug Overlay System** — Phases 19-22 (shipped 2026-02-15)
 - ✅ **v1.4 Item & Inventory System** — Phases 23-26 (shipped 2026-02-16)
 - ✅ **v1.5 World Clock & NPC Schedules** — Phases 27-32 (shipped 2026-02-20)
-- 🏗️ **v1.6 UI/UX Architecture & Input Overhaul** — Phases 33-36 (In Progress)
+- ✅ **v1.6 UI/UX Architecture & Input Overhaul** — Phases 33-36 (shipped 2026-02-21)
 
 ---
 
-## 🏗️ v1.6 UI/UX Architecture & Input Overhaul
+## ✅ v1.6 UI/UX Architecture & Input Overhaul
 
 **Milestone Goal:** Refactor the presentation and interaction layers to be modular, scalable, and player-friendly.
 
@@ -82,9 +82,9 @@
 **Goal:** Enhance player feedback with FCT and log categorization.
 
 **Plans:** 3 plans
-- [ ] 36-01-PLAN.md — Floating Combat Text (FCT) System (Wave 1)
-- [ ] 36-02-PLAN.md — Message Log Categorization & Visuals (Wave 2)
-- [ ] 36-03-PLAN.md — Examine Mode Tooltips (Wave 3)
+- [x] 36-01-PLAN.md — Floating Combat Text (FCT) System (Wave 1)
+- [x] 36-02-PLAN.md — Message Log Categorization & Visuals (Wave 2)
+- [x] 36-03-PLAN.md — Examine Mode Tooltips (Wave 3)
 
 **Requirements:** FEED-01, FEED-02, FEED-03, FEED-04
 
@@ -103,4 +103,4 @@
 | 33 | v1.6 | 3/3 | Done | 2026-02-20 |
 | 34 | v1.6 | 3/3 | Done | 2026-02-20 |
 | 35 | v1.6 | 3/3 | Done | 2026-02-21 |
-| 36 | v1.6 | 0/3 | Pending | - |
+| 36 | v1.6 | 3/3 | Done | 2026-02-21 |

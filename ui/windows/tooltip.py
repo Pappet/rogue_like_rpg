@@ -52,7 +52,7 @@ class TooltipWindow(UIWindow):
                 
                 # Other stats
                 if eff:
-                    stats_text = f"STR: {eff.strength}  DEX: {eff.dexterity}  INT: {eff.intelligence}"
+                    stats_text = f"POW: {eff.power}  DEF: {eff.defense}  PER: {eff.perception}  INT: {eff.intelligence}"
                     stats_surf = self.font_stats.render(stats_text, True, UI_COLOR_TEXT_DIM)
                     surface.blit(stats_surf, (self.rect.x + UI_PADDING, curr_y))
                     curr_y += 20
