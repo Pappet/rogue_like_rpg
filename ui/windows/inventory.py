@@ -7,7 +7,12 @@ from ecs.systems.action_system import ActionSystem
 from services.input_manager import InputCommand
 import services.equipment_service as equipment_service
 import services.consumable_service as consumable_service
-from config import SpriteLayer, GameStates
+from config import (
+    SpriteLayer, GameStates,
+    UI_COLOR_WINDOW_BG, UI_COLOR_WINDOW_BORDER, UI_COLOR_WINDOW_SEPARATOR,
+    UI_COLOR_WINDOW_TITLE, UI_COLOR_WINDOW_TEXT, UI_COLOR_WINDOW_TEXT_DIM,
+    UI_COLOR_WINDOW_SELECTED, UI_COLOR_WINDOW_HIGHLIGHT, UI_COLOR_WINDOW_HINT
+)
 
 class InventoryWindow(UIWindow):
     def __init__(self, rect, player_entity, input_manager, turn_system=None):
@@ -117,19 +122,19 @@ class InventoryWindow(UIWindow):
         # or assume the stack/game handles the dimming.
         # The plan says "centered surface". 
         
-        pygame.draw.rect(surface, (50, 50, 50), self.rect)
-        pygame.draw.rect(surface, (200, 200, 200), self.rect, 2)
+        pygame.draw.rect(surface, UI_COLOR_WINDOW_BG, self.rect)
+        pygame.draw.rect(surface, UI_COLOR_WINDOW_BORDER, self.rect, 2)
         
         # Vertical separator
         separator_x = box_x + box_width // 2
-        pygame.draw.line(surface, (100, 100, 100), (separator_x, box_y + 20), (separator_x, box_y + box_height - 20), 1)
+        pygame.draw.line(surface, UI_COLOR_WINDOW_SEPARATOR, (separator_x, box_y + 20), (separator_x, box_y + box_height - 20), 1)
 
         # Draw title
-        title_text = self.title_font.render("Inventory", True, (255, 255, 255))
+        title_text = self.title_font.render("Inventory", True, UI_COLOR_WINDOW_TITLE)
         surface.blit(title_text, (box_x + 20, box_y + 20))
         
         # Draw Details label
-        details_label = self.title_font.render("Details", True, (255, 255, 255))
+        details_label = self.title_font.render("Details", True, UI_COLOR_WINDOW_TITLE)
         surface.blit(details_label, (separator_x + 20, box_y + 20))
 
         # Draw items
@@ -137,7 +142,7 @@ class InventoryWindow(UIWindow):
             inventory = self.world.component_for_entity(self.player_entity, Inventory)
             
             if not inventory.items:
-                empty_text = self.font.render("Your inventory is empty.", True, (150, 150, 150))
+                empty_text = self.font.render("Your inventory is empty.", True, UI_COLOR_WINDOW_TEXT_DIM)
                 surface.blit(empty_text, (box_x + 20, box_y + 80))
             else:
                 for i, item_id in enumerate(inventory.items):
@@ -160,12 +165,12 @@ class InventoryWindow(UIWindow):
                     except KeyError:
                         pass
 
-                    color = (255, 255, 255)
+                    color = UI_COLOR_WINDOW_TEXT
                     if i == self.selected_idx:
-                        color = (255, 255, 0)
+                        color = UI_COLOR_WINDOW_SELECTED
                         # Draw selection highlight
                         highlight_rect = pygame.Rect(box_x + 10, box_y + 80 + i * 35, (box_width // 2) - 20, 30)
-                        pygame.draw.rect(surface, (100, 100, 100), highlight_rect)
+                        pygame.draw.rect(surface, UI_COLOR_WINDOW_HIGHLIGHT, highlight_rect)
 
                     item_text = self.font.render(item_name, True, color)
                     surface.blit(item_text, (box_x + 20, box_y + 85 + i * 35))
@@ -176,16 +181,16 @@ class InventoryWindow(UIWindow):
                     detailed_desc = ActionSystem.get_detailed_description(self.world, item_id)
                     lines = detailed_desc.split('\n')
                     for j, line in enumerate(lines):
-                        detail_text = self.font.render(line, True, (200, 200, 200))
+                        detail_text = self.font.render(line, True, UI_COLOR_WINDOW_BORDER) # Using BORDER color as it matches (200,200,200)
                         surface.blit(detail_text, (separator_x + 20, box_y + 80 + j * 30))
                     
                     # Also show usage hints
                     hint_y = box_y + box_height - 60
                     hints = ["[U] Use  [E] Equip  [D] Drop"]
                     for k, hint in enumerate(hints):
-                        hint_text = self.font.render(hint, True, (150, 150, 255))
+                        hint_text = self.font.render(hint, True, UI_COLOR_WINDOW_HINT)
                         surface.blit(hint_text, (separator_x + 20, hint_y + k * 30))
                         
         except KeyError:
-            empty_text = self.font.render("No inventory found.", True, (150, 150, 150))
+            empty_text = self.font.render("No inventory found.", True, UI_COLOR_WINDOW_TEXT_DIM)
             surface.blit(empty_text, (box_x + 20, box_y + 80))

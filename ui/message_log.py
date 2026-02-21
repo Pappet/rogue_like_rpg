@@ -1,31 +1,25 @@
 import pygame
 import re
 from typing import List, Tuple, Optional
-from config import LogCategory, LOG_COLORS
-
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 50, 50)
-GREEN = (50, 255, 50)
-BLUE = (50, 150, 255)
-YELLOW = (255, 255, 50)
-ORANGE = (255, 165, 0)
-PURPLE = (128, 0, 128)
-GREY = (128, 128, 128)
+from config import (
+    LogCategory, LOG_COLORS,
+    COLOR_WHITE, COLOR_BLACK, COLOR_RED, COLOR_GREEN, 
+    COLOR_BLUE, COLOR_YELLOW, COLOR_ORANGE, COLOR_PURPLE, COLOR_GREY,
+    UI_COLOR_LOG_BG, UI_COLOR_LOG_BORDER
+)
 
 COLOR_MAP = {
-    "white": WHITE,
-    "red": RED,
-    "green": GREEN,
-    "blue": BLUE,
-    "yellow": YELLOW,
-    "orange": ORANGE,
-    "purple": PURPLE,
-    "grey": GREY
+    "white": COLOR_WHITE,
+    "red": COLOR_RED,
+    "green": COLOR_GREEN,
+    "blue": COLOR_BLUE,
+    "yellow": COLOR_YELLOW,
+    "orange": COLOR_ORANGE,
+    "purple": COLOR_PURPLE,
+    "grey": COLOR_GREY
 }
 
-def parse_rich_text(text: str, default_color: Tuple[int, int, int] = WHITE) -> List[Tuple[str, Tuple[int, int, int]]]:
+def parse_rich_text(text: str, default_color: Tuple[int, int, int] = COLOR_WHITE) -> List[Tuple[str, Tuple[int, int, int]]]:
     """
     Parses text with [color=name]tags[/color] into a list of (text, color) tuples.
     """
@@ -58,7 +52,7 @@ class MessageLog:
         self.line_height = self.font.get_linesize()
 
     def add_message(self, text: str, color: str = None, category: Optional[LogCategory] = None):
-        default_color = WHITE
+        default_color = COLOR_WHITE
         if category and category in LOG_COLORS:
             default_color = LOG_COLORS[category]
         
@@ -73,8 +67,8 @@ class MessageLog:
 
     def draw(self, surface: pygame.Surface):
         # Draw background
-        pygame.draw.rect(surface, (15, 15, 15), self.rect)
-        pygame.draw.line(surface, (100, 100, 100), (self.rect.x, self.rect.y), (self.rect.right, self.rect.y), 2)
+        pygame.draw.rect(surface, UI_COLOR_LOG_BG, self.rect)
+        pygame.draw.line(surface, UI_COLOR_LOG_BORDER, (self.rect.x, self.rect.y), (self.rect.right, self.rect.y), 2)
         
         # Draw messages from bottom to top
         x_start = self.rect.x + 10
