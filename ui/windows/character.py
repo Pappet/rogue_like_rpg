@@ -24,18 +24,18 @@ class CharacterWindow(UIWindow):
 
     def handle_event(self, event):
         # We can use INVENTORY state mapping for ESC/Character key to close
-        # Or define a CHARACTER state mapping if needed. 
-        # For now, let's just use the default mapping or INVENTORY.
         command = self.input_manager.handle_event(event, GameStates.INVENTORY)
         
-        # Also check for 'C' specifically if not mapped yet
-        if not command and event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_c:
-                self.wants_to_close = True
-                return True
-
+        # Check for close conditions
         if command == InputCommand.CANCEL or command == InputCommand.OPEN_INVENTORY:
             self.wants_to_close = True
+            return True
+            
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_c:
+                self.wants_to_close = True
+            
+            # Consume all key events when this window is open to prevent background movement
             return True
         
         return False
