@@ -7,7 +7,7 @@ class EquipmentSystem(esper.Processor):
         super().__init__()
         self.world_clock = world_clock
 
-    def process(self):
+    def process(self, *args, **kwargs):
         # Fetch current phase and perception multiplier
         phase = self.world_clock.phase
         multiplier = DN_SETTINGS.get(phase, {}).get("perception", 1.0)

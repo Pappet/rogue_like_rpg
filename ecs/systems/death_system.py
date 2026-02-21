@@ -89,6 +89,6 @@ class DeathSystem(esper.Processor):
         # Fallback to original position if all neighbors are blocked
         return x, y
 
-    def process(self):
+    def process(self, *args, **kwargs):
         # This processor reacts to events, so it doesn't need to do anything per frame
         pass

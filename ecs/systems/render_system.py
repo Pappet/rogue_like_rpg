@@ -1,7 +1,7 @@
 import esper
 import pygame
 import math
-from ecs.components import Position, Renderable, Targeting, AIBehaviorState, AIState
+from ecs.components import Position, Renderable, Targeting, AIBehaviorState, AIState, FCT
 from config import TILE_SIZE
 from map.tile import VisibilityState
 
@@ -11,6 +11,7 @@ class RenderSystem(esper.Processor):
         self.map_container = map_container
         pygame.font.init()
         self.font = pygame.font.SysFont('monospace', TILE_SIZE)
+        self.fct_font = pygame.font.SysFont('monospace', 20, bold=True)
 
     def set_map(self, map_container):
         self.map_container = map_container
@@ -86,6 +87,27 @@ class RenderSystem(esper.Processor):
                 # Render the sprite (character)
                 text_surface = self.font.render(rend.sprite, True, color)
                 surface.blit(text_surface, (screen_x, screen_y))
+
+        # 3. Render FCT
+        for ent, (pos, fct) in esper.get_components(Position, FCT):
+            # Calculate pixel position in the world
+            pixel_x = pos.x * TILE_SIZE + fct.offset_x
+            pixel_y = pos.y * TILE_SIZE + fct.offset_y
+            
+            # Apply camera to get screen position
+            screen_x, screen_y = self.camera.apply_to_pos(pixel_x, pixel_y)
+            
+            # Basic screen culling
+            if (self.camera.offset_x - 100 <= screen_x <= self.camera.offset_x + self.camera.width + 100 and 
+                self.camera.offset_y - 100 <= screen_y <= self.camera.offset_y + self.camera.height + 100):
+                
+                # Alpha calculation
+                alpha = int(255 * max(0, fct.ttl / fct.max_ttl))
+                
+                # Render FCT
+                fct_surface = self.fct_font.render(fct.text, True, fct.color)
+                fct_surface.set_alpha(alpha)
+                surface.blit(fct_surface, (screen_x, screen_y))
 
     def draw_targeting_ui(self, surface, targeting):
         # Select colors based on targeting mode

@@ -1,12 +1,13 @@
 import esper
-from ecs.components import Stats, EffectiveStats, AttackIntent, Name
+import random
+from ecs.components import Stats, EffectiveStats, AttackIntent, Name, Position, FCT
 
 class CombatSystem(esper.Processor):
     def __init__(self, action_system=None):
         super().__init__()
         self.action_system = action_system
 
-    def process(self):
+    def process(self, *args, **kwargs):
         for attacker, intent in list(esper.get_component(AttackIntent)):
             target = intent.target_entity
             
@@ -40,8 +41,10 @@ class CombatSystem(esper.Processor):
                 # Dispatch log message
                 if damage > 0:
                     esper.dispatch_event("log_message", f"{attacker_name} hits {target_name} for {damage} damage.")
+                    self._spawn_fct(target, str(damage), (255, 0, 0))
                 else:
                     esper.dispatch_event("log_message", f"{attacker_name} attacks {target_name} but deals no damage.")
+                    self._spawn_fct(target, "0", (200, 200, 200))
                 
                 # Death Check
                 # Use effective HP for death check to account for bonuses
@@ -54,6 +57,24 @@ class CombatSystem(esper.Processor):
             
             # Remove AttackIntent
             esper.remove_component(attacker, AttackIntent)
+
+    def _spawn_fct(self, target_entity, text, color):
+        try:
+            pos = esper.component_for_entity(target_entity, Position)
+            # Create a new entity for FCT with the same position but separate lifecycle
+            esper.create_entity(
+                Position(pos.x, pos.y, pos.layer),
+                FCT(
+                    text=text,
+                    color=color,
+                    vx=random.uniform(-0.5, 0.5),
+                    vy=-1.5,
+                    ttl=1.0,
+                    max_ttl=1.0
+                )
+            )
+        except KeyError:
+            pass
 
     def _get_name(self, entity):
         try:

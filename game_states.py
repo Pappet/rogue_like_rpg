@@ -15,6 +15,7 @@ from ecs.systems.combat_system import CombatSystem
 from ecs.systems.death_system import DeathSystem
 from ecs.systems.ai_system import AISystem
 from ecs.systems.schedule_system import ScheduleSystem
+from ecs.systems.fct_system import FCTSystem
 from ecs.systems.equipment_system import EquipmentSystem
 from ecs.systems.debug_render_system import DebugRenderSystem
 from ecs.components import (
@@ -161,6 +162,11 @@ class Game(GameState):
             self.schedule_system = ScheduleSystem()
             self.persist["schedule_system"] = self.schedule_system
 
+        self.fct_system = self.persist.get("fct_system")
+        if not self.fct_system:
+            self.fct_system = FCTSystem()
+            self.persist["fct_system"] = self.fct_system
+
         self.equipment_system = self.persist.get("equipment_system")
         if not self.equipment_system:
             self.equipment_system = EquipmentSystem(self.world_clock)
@@ -169,20 +175,21 @@ class Game(GameState):
             self.equipment_system.world_clock = self.world_clock
 
         # Clear existing processors to avoid duplicates when re-entering state
-        for processor_type in [TurnSystem, EquipmentSystem, VisibilitySystem, MovementSystem, CombatSystem, DeathSystem]:
+        for processor_type in [TurnSystem, EquipmentSystem, VisibilitySystem, MovementSystem, CombatSystem, DeathSystem, FCTSystem]:
             try:
                 esper.remove_processor(processor_type)
             except KeyError:
                 pass
         
         # Re-add processors to esper in correct order:
-        # Turn -> Equipment -> Visibility -> Movement -> Combat -> Death
+        # Turn -> Equipment -> Visibility -> Movement -> Combat -> Death -> FCT
         esper.add_processor(self.turn_system)
         esper.add_processor(self.equipment_system)
         esper.add_processor(self.visibility_system)
         esper.add_processor(self.movement_system)
         esper.add_processor(self.combat_system)
         esper.add_processor(self.death_system)
+        esper.add_processor(self.fct_system)
         
         if not self.persist.get("player_entity"):
             party_service = PartyService()
@@ -495,7 +502,7 @@ class Game(GameState):
             return
 
         # Run ECS processing
-        esper.process()
+        esper.process(dt)
         
         # Update camera based on player position
         if self.camera and self.player_entity:

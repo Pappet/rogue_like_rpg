@@ -11,7 +11,7 @@ class MovementSystem(esper.Processor):
     def set_map(self, map_container: MapContainer):
         self.map_container = map_container
 
-    def process(self):
+    def process(self, *args, **kwargs):
         # We use a list to avoid issues with modifying components during iteration
         for ent, (pos, req) in list(esper.get_components(Position, MovementRequest)):
             new_x = pos.x + req.dx
