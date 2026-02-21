@@ -28,9 +28,7 @@ class InventoryWindow(UIWindow):
 
     def handle_event(self, event):
         command = self.input_manager.handle_event(event, GameStates.INVENTORY)
-        if not command:
-            return False
-
+        
         if command == InputCommand.CANCEL or command == InputCommand.OPEN_INVENTORY:
             self.wants_to_close = True
             return True
@@ -38,27 +36,39 @@ class InventoryWindow(UIWindow):
         # Navigate list
         try:
             inventory = self.world.component_for_entity(self.player_entity, Inventory)
-            if not inventory.items:
-                return True
-
+            
             if command == InputCommand.MOVE_UP:
-                self.selected_idx = (self.selected_idx - 1) % len(inventory.items)
+                if inventory.items:
+                    self.selected_idx = (self.selected_idx - 1) % len(inventory.items)
+                return True
             elif command == InputCommand.MOVE_DOWN:
-                self.selected_idx = (self.selected_idx + 1) % len(inventory.items)
+                if inventory.items:
+                    self.selected_idx = (self.selected_idx + 1) % len(inventory.items)
+                return True
             elif command == InputCommand.DROP_ITEM:
                 self.drop_item()
+                return True
             elif command == InputCommand.EQUIP_ITEM or command == InputCommand.CONFIRM:
-                selected_item_id = inventory.items[self.selected_idx]
-                equipment_service.equip_item(self.world, self.player_entity, selected_item_id)
+                if inventory.items and self.selected_idx < len(inventory.items):
+                    selected_item_id = inventory.items[self.selected_idx]
+                    equipment_service.equip_item(self.world, self.player_entity, selected_item_id)
+                return True
             elif command == InputCommand.USE_ITEM:
-                selected_item_id = inventory.items[self.selected_idx]
-                if consumable_service.ConsumableService.use_item(self.world, self.player_entity, selected_item_id):
-                    if self.turn_system:
-                        self.turn_system.end_player_turn()
-                    self.wants_to_close = True
-            return True
+                if inventory.items and self.selected_idx < len(inventory.items):
+                    selected_item_id = inventory.items[self.selected_idx]
+                    if consumable_service.ConsumableService.use_item(self.world, self.player_entity, selected_item_id):
+                        if self.turn_system:
+                            self.turn_system.end_player_turn()
+                        self.wants_to_close = True
+                return True
         except KeyError:
+            pass
+
+        # Consume all KEYDOWN events when window is open
+        if event.type == pygame.KEYDOWN:
             return True
+            
+        return False
 
     def drop_item(self):
         try:
