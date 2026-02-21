@@ -18,6 +18,7 @@ class InputCommand(Enum):
     OPEN_INVENTORY = auto() # I
     OPEN_CHARACTER = auto() # C
     OPEN_WORLD_MAP = auto() # M
+    EXAMINE_ITEM = auto() # X
     NEXT_ACTION = auto() # S
     PREVIOUS_ACTION = auto() # W
     NEXT_TARGET = auto() # TAB
@@ -60,6 +61,7 @@ class InputManager:
                 pygame.K_i: InputCommand.OPEN_INVENTORY,
                 pygame.K_c: InputCommand.OPEN_CHARACTER,
                 pygame.K_m: InputCommand.OPEN_WORLD_MAP,
+                pygame.K_x: InputCommand.EXAMINE_ITEM,
                 pygame.K_RETURN: InputCommand.CONFIRM,
                 pygame.K_F3: InputCommand.DEBUG_TOGGLE_MASTER,
                 pygame.K_F4: InputCommand.DEBUG_TOGGLE_PLAYER_FOV,
@@ -105,6 +107,19 @@ class InputManager:
             GameStates.WORLD_MAP: {
                 pygame.K_ESCAPE: InputCommand.CANCEL,
                 pygame.K_m: InputCommand.CANCEL,
+            },
+            GameStates.EXAMINE: {
+                pygame.K_UP: InputCommand.MOVE_UP,
+                pygame.K_w: InputCommand.MOVE_UP,
+                pygame.K_DOWN: InputCommand.MOVE_DOWN,
+                pygame.K_s: InputCommand.MOVE_DOWN,
+                pygame.K_LEFT: InputCommand.MOVE_LEFT,
+                pygame.K_a: InputCommand.MOVE_LEFT,
+                pygame.K_RIGHT: InputCommand.MOVE_RIGHT,
+                pygame.K_d: InputCommand.MOVE_RIGHT,
+                pygame.K_RETURN: InputCommand.CONFIRM,
+                pygame.K_ESCAPE: InputCommand.CANCEL,
+                pygame.K_x: InputCommand.CANCEL,
             }
         }
         

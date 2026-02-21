@@ -45,6 +45,7 @@ UI_COLOR_BAR_BG = (20, 20, 20)
 UI_COLOR_MANA_COST = (100, 100, 255)
 UI_COLOR_PLAYER_TURN = (100, 255, 100)
 UI_COLOR_TARGETING = (100, 255, 255)
+UI_COLOR_EXAMINE = (255, 255, 100)
 UI_COLOR_ENV_TURN = (255, 100, 100)
 
 # World Clock configuration
@@ -106,6 +107,8 @@ class GameStates(Enum):
     INVENTORY = 5
 
     MENU = 6
+
+    EXAMINE = 7
 
 
 class LogCategory(Enum):

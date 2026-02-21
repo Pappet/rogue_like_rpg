@@ -239,6 +239,8 @@ class Game(GameState):
 
         if self.turn_system.current_state == GameStates.TARGETING:
             self.handle_targeting_input(command)
+        elif self.turn_system.current_state == GameStates.EXAMINE:
+            self.handle_examine_input(command)
         elif self.turn_system.is_player_turn():
             self.handle_player_input(command)
 
@@ -277,6 +279,14 @@ class Game(GameState):
         if command == InputCommand.OPEN_INVENTORY:
             rect = pygame.Rect(140, 100, 1000, 500)
             self.ui_stack.push(InventoryWindow(rect, self.player_entity, self.input_manager, self.turn_system))
+            return
+
+        # Examine Toggle
+        if command == InputCommand.EXAMINE_ITEM:
+            from ecs.components import Action
+            inspect_action = Action("Inspect", range=10, targeting_mode="inspect")
+            if self.action_system.start_targeting(self.player_entity, inspect_action):
+                self.turn_system.current_state = GameStates.EXAMINE
             return
 
         # Character Toggle
@@ -350,6 +360,27 @@ class Game(GameState):
         elif command == InputCommand.NEXT_TARGET:
             # Cycle targets in auto mode
             self.action_system.cycle_targets(self.player_entity)
+        else:
+            # Manual movement of cursor
+            dx, dy = 0, 0
+            if command == InputCommand.MOVE_UP:
+                dy = -1
+            elif command == InputCommand.MOVE_DOWN:
+                dy = 1
+            elif command == InputCommand.MOVE_LEFT:
+                dx = -1
+            elif command == InputCommand.MOVE_RIGHT:
+                dx = 1
+            
+            if dx != 0 or dy != 0:
+                self.action_system.move_cursor(self.player_entity, dx, dy)
+
+    def handle_examine_input(self, command):
+        if command == InputCommand.CANCEL:
+            self.action_system.cancel_targeting(self.player_entity)
+            self.turn_system.current_state = GameStates.PLAYER_TURN
+        elif command == InputCommand.CONFIRM:
+            self.action_system.confirm_action(self.player_entity)
         else:
             # Manual movement of cursor
             dx, dy = 0, 0
