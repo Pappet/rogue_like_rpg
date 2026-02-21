@@ -20,13 +20,14 @@ from ecs.systems.equipment_system import EquipmentSystem
 from ecs.systems.debug_render_system import DebugRenderSystem
 from ecs.components import (
     Position, MovementRequest, Renderable, ActionList, Action, Stats, 
-    Inventory, Name, Portable, Equipment, Equippable, SlotType, HotbarSlots
+    Inventory, Name, Portable, Equipment, Equippable, SlotType, HotbarSlots,
+    Targeting
 )
 import services.equipment_service as equipment_service
 import services.consumable_service as consumable_service
 from services.input_manager import InputCommand
 from map.tile import VisibilityState
-from config import SCREEN_WIDTH, SCREEN_HEIGHT, DN_SETTINGS
+from config import SCREEN_WIDTH, SCREEN_HEIGHT, DN_SETTINGS, TILE_SIZE, LOG_HEIGHT
 from ui.windows.inventory import InventoryWindow
 from ui.windows.character import CharacterWindow
 
@@ -532,6 +533,11 @@ class Game(GameState):
                 self.ui_stack.update(dt)
             return
 
+        from ui.windows.tooltip import TooltipWindow
+        if (self.turn_system and self.turn_system.current_state == GameStates.EXAMINE) or \
+           (self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow)):
+            self.update_examine_tooltip()
+
         # Run ECS processing
         esper.process(dt)
         
@@ -554,6 +560,72 @@ class Game(GameState):
             # Update schedules before AI processing
             self.schedule_system.process(self.world_clock, self.map_container)
             self.ai_system.process(self.turn_system, self.map_container, player_layer, self.player_entity)
+
+    def update_examine_tooltip(self):
+        try:
+            targeting = esper.component_for_entity(self.player_entity, Targeting)
+            tx, ty = targeting.target_x, targeting.target_y
+            
+            # Use player layer as base for looking up entities
+            try:
+                player_pos = esper.component_for_entity(self.player_entity, Position)
+                current_layer = player_pos.layer
+            except KeyError:
+                current_layer = 0
+
+            # Find entities at tx, ty on the same layer
+            entities = []
+            for ent, (pos,) in esper.get_components(Position):
+                if pos.x == tx and pos.y == ty and pos.layer == current_layer:
+                    # Only show visible entities
+                    is_visible = False
+                    if 0 <= current_layer < len(self.map_container.layers):
+                        layer = self.map_container.layers[current_layer]
+                        if 0 <= ty < len(layer.tiles) and 0 <= tx < len(layer.tiles[ty]):
+                            if layer.tiles[ty][tx].visibility_state == VisibilityState.VISIBLE:
+                                is_visible = True
+                    
+                    if is_visible:
+                        entities.append(ent)
+            
+            from ui.windows.tooltip import TooltipWindow
+            
+            if entities:
+                # Calculate tooltip position
+                pixel_x = tx * TILE_SIZE
+                pixel_y = ty * TILE_SIZE
+                screen_x, screen_y = self.camera.apply_to_pos(pixel_x, pixel_y)
+                
+                # Tooltip size
+                tw, th = 300, 250
+                tx_tip = screen_x + TILE_SIZE + 10
+                ty_tip = screen_y
+                
+                # Flip to left if too far right
+                if tx_tip + tw > SCREEN_WIDTH:
+                    tx_tip = screen_x - tw - 10
+                
+                # Adjust Y if too far down
+                if ty_tip + th > SCREEN_HEIGHT - LOG_HEIGHT:
+                    ty_tip = SCREEN_HEIGHT - LOG_HEIGHT - th - 10
+
+                rect = pygame.Rect(tx_tip, ty_tip, tw, th)
+                
+                if self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow):
+                    self.ui_stack.stack[-1].rect = rect
+                    self.ui_stack.stack[-1].entities = entities
+                else:
+                    self.ui_stack.push(TooltipWindow(rect, entities))
+            else:
+                # No entities, remove tooltip if it's on top
+                if self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow):
+                    self.ui_stack.pop()
+                    
+        except KeyError:
+            # If no targeting component, ensure no tooltip
+            from ui.windows.tooltip import TooltipWindow
+            if self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow):
+                self.ui_stack.pop()
 
     def draw(self, surface):
         surface.fill((0, 0, 0))
