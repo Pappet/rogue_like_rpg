@@ -54,11 +54,11 @@ class TitleScreen(GameState):
         super().__init__()
         self.font = pygame.font.Font(None, 74)
         self.title_text = self.font.render("Rogue Like RPG", True, (255, 255, 255))
-        self.title_rect = self.title_text.get_rect(center=(400, 200))
+        self.title_rect = self.title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3))
 
         self.button_font = pygame.font.Font(None, 50)
         self.button_text = self.button_font.render("New Game", True, (255, 255, 255))
-        self.button_rect = pygame.Rect(300, 300, 200, 50)
+        self.button_rect = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2, 200, 50)
 
     def get_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -595,8 +595,8 @@ class WorldMapState(GameState):
         map_h = self.map_container.height
         
         # Center the map
-        start_x = (800 - map_w * self.tile_size) // 2
-        start_y = (600 - map_h * self.tile_size) // 2
+        start_x = (SCREEN_WIDTH - map_w * self.tile_size) // 2
+        start_y = (SCREEN_HEIGHT - map_h * self.tile_size) // 2
         
         # Draw all layers (simplified: top-most visibility wins)
         

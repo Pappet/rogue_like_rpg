@@ -22,7 +22,7 @@ class GameController:
         self.world_clock = WorldClockService()
         self.input_manager = InputManager()
         self.ui_stack = UIStack()
-        # Viewport is the area not covered by UI Header, Sidebar and Log
+        # Viewport is the area not covered by UI Header and Log
         viewport_width = SCREEN_WIDTH - SIDEBAR_WIDTH
         viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT
         self.camera = Camera(viewport_width, viewport_height, 0, HEADER_HEIGHT)
