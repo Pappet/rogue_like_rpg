@@ -46,7 +46,7 @@ class Portal:
     target_y: int
     target_layer: int = 0
     name: str = "Portal"
-    travel_ticks: int = 0
+    travel_ticks: int = 1
 
 @dataclass
 class Renderable:

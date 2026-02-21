@@ -230,11 +230,20 @@ class Game(GameState):
         if not self.turn_system or not self.input_manager:
             return
 
+        stack_consumed = False
         if self.ui_stack and self.ui_stack.is_active():
             if self.ui_stack.handle_event(event):
-                return
+                stack_consumed = True
 
         command = self.input_manager.handle_event(event, self.turn_system.current_state)
+        
+        # If stack consumed event, don't process further unless it's a TooltipWindow 
+        # (which shouldn't block game commands like movement or exit)
+        if stack_consumed:
+            from ui.windows.tooltip import TooltipWindow
+            if not (self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow)):
+                return
+
         if not command:
             return
 
@@ -244,6 +253,10 @@ class Game(GameState):
             self.handle_examine_input(command)
         elif self.turn_system.is_player_turn():
             self.handle_player_input(command)
+
+    def try_enter_portal(self):
+        enter_action = Action(name="Enter Portal")
+        return self.action_system.perform_action(self.player_entity, enter_action)
 
     def handle_player_input(self, command):
         # Debug Toggles
@@ -298,6 +311,8 @@ class Game(GameState):
 
         # Pickup Item
         if command == InputCommand.INTERACT:
+            if self.try_enter_portal():
+                return
             self.pickup_item()
             return
 
@@ -313,6 +328,10 @@ class Game(GameState):
                 hotbar = esper.component_for_entity(self.player_entity, HotbarSlots)
                 action = hotbar.slots.get(slot_idx)
                 if action:
+                    if slot_idx == 6 or action.name == "Items":
+                        rect = pygame.Rect(140, 100, 1000, 500)
+                        self.ui_stack.push(InventoryWindow(rect, self.player_entity, self.input_manager, self.turn_system))
+                        return
                     if action.requires_targeting:
                         self.action_system.start_targeting(self.player_entity, action)
                     else:
@@ -329,7 +348,13 @@ class Game(GameState):
             elif command == InputCommand.NEXT_ACTION:
                 action_list.selected_idx = (action_list.selected_idx + 1) % len(action_list.actions)
             elif command == InputCommand.CONFIRM:
+                if self.try_enter_portal():
+                    return
                 selected_action = action_list.actions[action_list.selected_idx]
+                if selected_action.name == "Items":
+                    rect = pygame.Rect(140, 100, 1000, 500)
+                    self.ui_stack.push(InventoryWindow(rect, self.player_entity, self.input_manager, self.turn_system))
+                    return
                 if selected_action.requires_targeting:
                     self.action_system.start_targeting(self.player_entity, selected_action)
                 else:
@@ -357,6 +382,9 @@ class Game(GameState):
         if command == InputCommand.CANCEL:
             self.action_system.cancel_targeting(self.player_entity)
         elif command == InputCommand.CONFIRM:
+            if self.try_enter_portal():
+                self.action_system.cancel_targeting(self.player_entity)
+                return
             self.action_system.confirm_action(self.player_entity)
         elif command == InputCommand.NEXT_TARGET:
             # Cycle targets in auto mode
@@ -381,6 +409,9 @@ class Game(GameState):
             self.action_system.cancel_targeting(self.player_entity)
             self.turn_system.current_state = GameStates.PLAYER_TURN
         elif command == InputCommand.CONFIRM:
+            if self.try_enter_portal():
+                self.action_system.cancel_targeting(self.player_entity)
+                return
             self.action_system.confirm_action(self.player_entity)
         else:
             # Manual movement of cursor
@@ -525,6 +556,8 @@ class Game(GameState):
         esper.dispatch_event("log_message", f"Transitioned to {target_map_id}.")
 
     def update(self, dt):
+        self.update_examine_tooltip()
+
         if self.ui_stack and self.ui_stack.is_active():
             # Check if top window wants to close
             if getattr(self.ui_stack.stack[-1], 'wants_to_close', False):
@@ -532,11 +565,6 @@ class Game(GameState):
             else:
                 self.ui_stack.update(dt)
             return
-
-        from ui.windows.tooltip import TooltipWindow
-        if (self.turn_system and self.turn_system.current_state == GameStates.EXAMINE) or \
-           (self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow)):
-            self.update_examine_tooltip()
 
         # Run ECS processing
         esper.process(dt)
@@ -562,6 +590,14 @@ class Game(GameState):
             self.ai_system.process(self.turn_system, self.map_container, player_layer, self.player_entity)
 
     def update_examine_tooltip(self):
+        from ui.windows.tooltip import TooltipWindow
+        
+        # If not in EXAMINE state, ensure no tooltip exists and return
+        if not self.turn_system or self.turn_system.current_state != GameStates.EXAMINE:
+            if self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow):
+                self.ui_stack.pop()
+            return
+
         try:
             targeting = esper.component_for_entity(self.player_entity, Targeting)
             tx, ty = targeting.target_x, targeting.target_y

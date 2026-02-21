@@ -102,7 +102,7 @@ class MapService:
                 # Stairs Up
                 world.create_entity(
                     Position(pos_up[0], pos_up[1], z),
-                    Portal(map_id, pos_up[0], pos_up[1], z + 1, "Stairs Up"),
+                    Portal(map_id, pos_up[0], pos_up[1], z + 1, "Stairs Up", travel_ticks=1),
                     Renderable("^", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                     Name("Stairs Up")
                 )
@@ -110,7 +110,7 @@ class MapService:
                 # Stairs Down
                 world.create_entity(
                     Position(pos_down[0], pos_down[1], z),
-                    Portal(map_id, pos_down[0], pos_down[1], z - 1, "Stairs Down"),
+                    Portal(map_id, pos_down[0], pos_down[1], z - 1, "Stairs Down", travel_ticks=1),
                     Renderable("v", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                     Name("Stairs Down")
                 )
@@ -164,7 +164,7 @@ class MapService:
             # Portal to house (placed one tile south of the wall)
             world.create_entity(
                 Position(door_vx, door_vy + 1, 0),
-                Portal(h["id"], h["h_size"][0] // 2, h["h_size"][1] - 2, 0, f"Enter {h['id']}", travel_ticks=120),
+                Portal(h["id"], h["h_size"][0] // 2, h["h_size"][1] - 2, 0, f"Enter {h['id']}", travel_ticks=1),
                 Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                 Name(f"Portal to {h['id']}")
             )
@@ -201,7 +201,7 @@ class MapService:
 
             world.create_entity(
                 Position(hi // 2, hj - 2, 0),  # Placed one tile north of the south wall
-                Portal("Village", door_vx, door_vy + 1, 0, "Leave House"),
+                Portal("Village", door_vx, door_vy + 1, 0, "Leave House", travel_ticks=1),
                 Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                 Name(f"Portal to Village")
             )
