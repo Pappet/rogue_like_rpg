@@ -63,9 +63,9 @@
 **Goal:** Transition to stateful modal overlays and reclaim screen real estate.
 
 **Plans:** 3 plans
-- [ ] 35-01-PLAN.md — Window/Modal Base System (INFRASTRUCTURE)
-- [ ] 35-02-PLAN.md — Inventory and Character Overlays (FEATURES)
-- [ ] 35-03-PLAN.md — Viewport Resizing & HUD Cleanup (POLISH)
+- [x] 35-01-PLAN.md — Window/Modal Base System (INFRASTRUCTURE)
+- [x] 35-02-PLAN.md — Inventory and Character Overlays (FEATURES)
+- [x] 35-03-PLAN.md — Viewport Resizing & HUD Cleanup (POLISH)
 
 **Requirements:** MENU-01, MENU-02, MENU-03, MENU-04
 
@@ -82,9 +82,9 @@
 **Goal:** Enhance player feedback with FCT and log categorization.
 
 **Plans:** 3 plans
-- [ ] 36-01-PLAN.md — Floating Combat Text (FCT) System
-- [ ] 36-02-PLAN.md — Message Log Categorization & Visuals
-- [ ] 36-03-PLAN.md — Examine Mode Tooltips
+- [ ] 36-01-PLAN.md — Floating Combat Text (FCT) System (Wave 1)
+- [ ] 36-02-PLAN.md — Message Log Categorization & Visuals (Wave 2)
+- [ ] 36-03-PLAN.md — Examine Mode Tooltips (Wave 3)
 
 **Requirements:** FEED-01, FEED-02, FEED-03, FEED-04
 
@@ -102,5 +102,5 @@
 |-------|-----------|----------------|--------|-----------|
 | 33 | v1.6 | 3/3 | Done | 2026-02-20 |
 | 34 | v1.6 | 3/3 | Done | 2026-02-20 |
-| 35 | v1.6 | 0/3 | Pending | - |
+| 35 | v1.6 | 3/3 | Done | 2026-02-21 |
 | 36 | v1.6 | 0/3 | Pending | - |
