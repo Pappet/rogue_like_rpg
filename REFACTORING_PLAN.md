@@ -56,6 +56,7 @@ Erstelle tests/test_smoke.py:
 - Test: Village-Szenario wird erstellt, alle Registries gefüllt
 - Test: Player-Entity hat alle erwarteten Components
 - Test: Ein Turn-Zyklus (PLAYER_TURN → ENEMY_TURN → PLAYER_TURN) läuft durch
+- Test: Alle Player-Aktionen können problemlos ausgeführt werden
 - Test: Map freeze/thaw roundtrip verliert keine Entities (zählt Entities vor/nach)
 ```
 **Akzeptanz:** `python -m pytest tests/test_smoke.py -v` läuft grün.
