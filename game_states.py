@@ -255,6 +255,20 @@ class Game(GameState):
             self.handle_player_input(command)
 
     def try_enter_portal(self):
+        # Check if a portal exists at player's position before attempting action
+        # to avoid "no portal here" log messages during automatic checks
+        try:
+            pos = esper.component_for_entity(self.player_entity, Position)
+            portal_exists = False
+            for _, (p_pos, _) in esper.get_components(Position, Portal):
+                if p_pos.x == pos.x and p_pos.y == pos.y and p_pos.layer == pos.layer:
+                    portal_exists = True
+                    break
+            if not portal_exists:
+                return False
+        except KeyError:
+            return False
+
         enter_action = Action(name="Enter Portal")
         return self.action_system.perform_action(self.player_entity, enter_action)
 
@@ -324,11 +338,18 @@ class Game(GameState):
         }
         if command in hotbar_commands:
             slot_idx = hotbar_commands[command]
+            
+            # Hotbar 6 always opens inventory regardless of assigned action
+            if slot_idx == 6:
+                rect = pygame.Rect(140, 100, 1000, 500)
+                self.ui_stack.push(InventoryWindow(rect, self.player_entity, self.input_manager, self.turn_system))
+                return
+
             try:
                 hotbar = esper.component_for_entity(self.player_entity, HotbarSlots)
                 action = hotbar.slots.get(slot_idx)
                 if action:
-                    if slot_idx == 6 or action.name == "Items":
+                    if action.name == "Items":
                         rect = pygame.Rect(140, 100, 1000, 500)
                         self.ui_stack.push(InventoryWindow(rect, self.player_entity, self.input_manager, self.turn_system))
                         return
@@ -494,7 +515,7 @@ class Game(GameState):
         target_x = event_data["target_x"]
         target_y = event_data["target_y"]
         target_layer = event_data["target_layer"]
-        travel_ticks = event_data.get("travel_ticks", 0)
+        travel_ticks = event_data.get("travel_ticks", 1)
         
         # Advance world clock
         if self.world_clock:
