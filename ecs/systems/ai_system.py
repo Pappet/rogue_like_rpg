@@ -39,10 +39,7 @@ class AISystem(esper.Processor):
 
         player_pos = None
         if player_entity is not None:
-            try:
-                player_pos = esper.component_for_entity(player_entity, Position)
-            except KeyError:
-                pass
+            player_pos = esper.try_component(player_entity, Position)
 
         claimed_tiles = set()  # Per-turn tile reservation (WNDR-04)
 
@@ -77,21 +74,18 @@ class AISystem(esper.Processor):
             and player_pos is not None
             and behavior.state in (AIState.WANDER, AIState.IDLE)
         ):
-            try:
-                stats = esper.component_for_entity(ent, Stats)
-                if self._can_see_player(pos, stats, player_pos, map_container, ent):
-                    behavior.state = AIState.CHASE
-                    esper.add_component(ent, ChaseData(
-                        last_known_x=player_pos.x,
-                        last_known_y=player_pos.y,
-                    ))
-                    try:
-                        name = esper.component_for_entity(ent, Name)
-                        esper.dispatch_event("log_message", f"The {name.name} notices you!", None, LogCategory.ALERT)
-                    except KeyError:
-                        esper.dispatch_event("log_message", "Something notices you!", None, LogCategory.ALERT)
-            except KeyError:
-                pass  # NPC has no Stats — cannot use perception for detection
+            stats = esper.try_component(ent, Stats)
+            if stats and self._can_see_player(pos, stats, player_pos, map_container, ent):
+                behavior.state = AIState.CHASE
+                esper.add_component(ent, ChaseData(
+                    last_known_x=player_pos.x,
+                    last_known_y=player_pos.y,
+                ))
+                name_comp = esper.try_component(ent, Name)
+                if name_comp:
+                    esper.dispatch_event("log_message", f"The {name_comp.name} notices you!", None, LogCategory.ALERT)
+                else:
+                    esper.dispatch_event("log_message", "Something notices you!", None, LogCategory.ALERT)
 
         # PathData Priority (Task 1)
         # Note: CHASE state manages its own PathData to handle moving targets.
@@ -143,18 +137,13 @@ class AISystem(esper.Processor):
         CHAS-02: Pathfinding step per turn toward target.
         CHAS-05: After LOSE_SIGHT_TURNS without LOS, revert to WANDER.
         """
-        try:
-            chase_data = esper.component_for_entity(ent, ChaseData)
-        except KeyError:
+        chase_data = esper.try_component(ent, ChaseData)
+        if not chase_data:
             # ChaseData missing — malformed state; revert to WANDER
             behavior.state = AIState.WANDER
             return
 
-        try:
-            stats = esper.component_for_entity(ent, Stats)
-        except KeyError:
-            stats = None
-
+        stats = esper.try_component(ent, Stats)
         # Sight check: update last_known position or increment lose-sight counter
         if player_pos is not None and stats is not None:
             if self._can_see_player(pos, stats, player_pos, map_container, ent):

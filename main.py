@@ -1,7 +1,14 @@
 import pygame
 import sys
+import logging
+
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, HEADER_HEIGHT, SIDEBAR_WIDTH, LOG_HEIGHT
 from game_states import TitleScreen, Game, WorldMapState
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+)
 from services.map_service import MapService
 from services.map_generator import MapGenerator
 from services.render_service import RenderService

@@ -1,6 +1,9 @@
 import esper
+import logging
 from config import GameStates
 from ecs.components import TurnOrder
+
+logger = logging.getLogger(__name__)
 
 class TurnSystem(esper.Processor):
     def __init__(self, world_clock=None):
@@ -34,10 +37,10 @@ class TurnSystem(esper.Processor):
         self.current_state = GameStates.ENEMY_TURN
         if self.world_clock:
             self.world_clock.advance(1)
-        # print(f"Round {self.round_counter}: End Player Turn -> Enemy Turn")
+        logger.debug(f"Round {self.round_counter}: End Player Turn -> Enemy Turn")
 
     def end_enemy_turn(self):
         self.current_state = GameStates.PLAYER_TURN
         if not self.world_clock:
             self._round_counter += 1
-        # print(f"Round {self.round_counter}: End Enemy Turn -> Player Turn")
+        logger.debug(f"Round {self.round_counter}: End Enemy Turn -> Player Turn")

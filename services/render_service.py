@@ -1,6 +1,7 @@
 import pygame
 from config import TILE_SIZE, SpriteLayer
 from map.map_container import MapContainer
+from map.tile import VisibilityState
 from components.camera import Camera
 
 class RenderService:
@@ -36,9 +37,6 @@ class RenderService:
         end_x = min(width, (camera.x + camera.width) // TILE_SIZE + 1)
         start_y = max(0, camera.y // TILE_SIZE)
         end_y = min(height, (camera.y + camera.height) // TILE_SIZE + 1)
-
-        from map.tile import VisibilityState
-
         for y in range(start_y, end_y):
             for x in range(start_x, end_x):
                 # 1. Determine base layer (occlusion)

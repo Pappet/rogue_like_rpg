@@ -7,8 +7,11 @@ game startup before any map or entity creation.
 
 import json
 import os
+import logging
 
 from config import SpriteLayer
+
+logger = logging.getLogger(__name__)
 from ecs.components import AIState, Alignment
 from map.tile_registry import TileRegistry, TileType
 from entities.entity_registry import EntityRegistry, EntityTemplate
@@ -126,8 +129,8 @@ class ResourceLoader:
                     layer = SpriteLayer[layer_name]
                     sprites[layer] = char
                 except KeyError:
-                    print(
-                        f"Warning: Unknown sprite layer '{layer_name}' in tile "
+                    logger.warning(
+                        f"Unknown sprite layer '{layer_name}' in tile "
                         f"'{item['id']}' — skipping that sprite entry."
                     )
 

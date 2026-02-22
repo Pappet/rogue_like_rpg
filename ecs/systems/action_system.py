@@ -1,7 +1,11 @@
 import esper
 import math
+import logging
+
 from config import GameStates, TILE_SIZE, LogCategory
-from ecs.components import Position, Renderable, Stats, EffectiveStats, Inventory, Targeting, Action, ActionList, Portal, Name, Description, ItemMaterial, Portable
+from ecs.components import Position, Renderable, Stats, EffectiveStats, Inventory, Targeting, Action, ActionList, Portal, Name, Description, ItemMaterial, Portable, AIBehaviorState, AIState
+
+logger = logging.getLogger(__name__)
 from map.tile import VisibilityState
 from map.tile_registry import TileRegistry
 from ecs.systems.map_aware_system import MapAwareSystem
@@ -139,127 +143,124 @@ class ActionSystem(esper.Processor, MapAwareSystem):
         return targets
 
     def cycle_targets(self, entity, direction=1):
-        try:
-            targeting = esper.component_for_entity(entity, Targeting)
-            if not targeting.potential_targets:
-                return
-            
-            targeting.target_idx = (targeting.target_idx + direction) % len(targeting.potential_targets)
-            target_ent = targeting.potential_targets[targeting.target_idx]
-            target_pos = esper.component_for_entity(target_ent, Position)
+        targeting = esper.try_component(entity, Targeting)
+        if not targeting or not targeting.potential_targets:
+            return
+        
+        targeting.target_idx = (targeting.target_idx + direction) % len(targeting.potential_targets)
+        target_ent = targeting.potential_targets[targeting.target_idx]
+        target_pos = esper.try_component(target_ent, Position)
+        if target_pos:
             targeting.target_x = target_pos.x
             targeting.target_y = target_pos.y
-        except KeyError:
-            pass
 
     def move_cursor(self, entity, dx, dy):
-        try:
-            targeting = esper.component_for_entity(entity, Targeting)
-            new_x = targeting.target_x + dx
-            new_y = targeting.target_y + dy
+        targeting = esper.try_component(entity, Targeting)
+        if not targeting:
+            return
             
-            # 1. Check range from origin
-            dist = math.sqrt((new_x - targeting.origin_x)**2 + (new_y - targeting.origin_y)**2)
-            if dist > targeting.range:
-                return
+        new_x = targeting.target_x + dx
+        new_y = targeting.target_y + dy
+        
+        # 1. Check range from origin
+        dist = math.sqrt((new_x - targeting.origin_x)**2 + (new_y - targeting.origin_y)**2)
+        if dist > targeting.range:
+            return
 
-            # 2. Check tile accessibility (any previously-seen tile is reachable)
-            is_accessible = False
-            for layer in self._map_container.layers:
-                if 0 <= new_y < len(layer.tiles) and 0 <= new_x < len(layer.tiles[new_y]):
-                    if layer.tiles[new_y][new_x].visibility_state != VisibilityState.UNEXPLORED:
-                        is_accessible = True
-                        break
+        # 2. Check tile accessibility (any previously-seen tile is reachable)
+        is_accessible = False
+        for layer in self._map_container.layers:
+            if 0 <= new_y < len(layer.tiles) and 0 <= new_x < len(layer.tiles[new_y]):
+                if layer.tiles[new_y][new_x].visibility_state != VisibilityState.UNEXPLORED:
+                    is_accessible = True
+                    break
 
-            if is_accessible:
-                targeting.target_x = new_x
-                targeting.target_y = new_y
-        except KeyError:
-            pass
+        if is_accessible:
+            targeting.target_x = new_x
+            targeting.target_y = new_y
 
     def confirm_action(self, entity):
-        try:
-            targeting = esper.component_for_entity(entity, Targeting)
+        targeting = esper.try_component(entity, Targeting)
+        if not targeting:
+            return False
 
-            # Check visibility of target tile — mode-aware gate
-            tile_visibility = VisibilityState.UNEXPLORED
-            target_tile = None
-            for layer in self._map_container.layers:
-                if 0 <= targeting.target_y < len(layer.tiles) and 0 <= targeting.target_x < len(layer.tiles[targeting.target_y]):
-                    t = layer.tiles[targeting.target_y][targeting.target_x]
-                    if t.visibility_state != VisibilityState.UNEXPLORED:
-                        target_tile = t
-                        tile_visibility = t.visibility_state
-                        break
+        # Check visibility of target tile — mode-aware gate
+        tile_visibility = VisibilityState.UNEXPLORED
+        target_tile = None
+        for layer in self._map_container.layers:
+            if 0 <= targeting.target_y < len(layer.tiles) and 0 <= targeting.target_x < len(layer.tiles[targeting.target_y]):
+                t = layer.tiles[targeting.target_y][targeting.target_x]
+                if t.visibility_state != VisibilityState.UNEXPLORED:
+                    target_tile = t
+                    tile_visibility = t.visibility_state
+                    break
 
-            if targeting.action.targeting_mode == "inspect":
-                if tile_visibility == VisibilityState.UNEXPLORED:
-                    return False
-            else:
-                if tile_visibility != VisibilityState.VISIBLE:
-                    return False
-
-            # Final resource check using effective stats
-            eff = esper.try_component(entity, EffectiveStats) or esper.component_for_entity(entity, Stats)
-            if targeting.action.cost_mana > eff.mana:
-                self.cancel_targeting(entity)
+        if targeting.action.targeting_mode == "inspect":
+            if tile_visibility == VisibilityState.UNEXPLORED:
+                return False
+        else:
+            if tile_visibility != VisibilityState.VISIBLE:
                 return False
 
-            # Consume resources from base stats
-            stats = esper.component_for_entity(entity, Stats)
-            stats.mana -= targeting.action.cost_mana
+        # Final resource check using effective stats
+        eff = esper.try_component(entity, EffectiveStats) or esper.component_for_entity(entity, Stats)
+        if targeting.action.cost_mana > eff.mana:
+            self.cancel_targeting(entity)
+            return False
 
-            # Dispatch inspection output for inspect mode
-            if targeting.action.targeting_mode == "inspect":
-                # Look up tile type from registry
-                if target_tile is not None and target_tile._type_id is not None:
-                    tile_type = TileRegistry.get(target_tile._type_id)
-                    if tile_type is not None:
-                        tile_name = tile_type.name
-                        tile_desc = tile_type.base_description
-                    else:
-                        tile_name = "Unknown tile"
-                        tile_desc = ""
+        # Consume resources from base stats
+        stats = esper.component_for_entity(entity, Stats)
+        stats.mana -= targeting.action.cost_mana
+
+        # Dispatch inspection output for inspect mode
+        if targeting.action.targeting_mode == "inspect":
+            # Look up tile type from registry
+            if target_tile is not None and target_tile._type_id is not None:
+                tile_type = TileRegistry.get(target_tile._type_id)
+                if tile_type is not None:
+                    tile_name = tile_type.name
+                    tile_desc = tile_type.base_description
                 else:
                     tile_name = "Unknown tile"
                     tile_desc = ""
-
-                # Always dispatch tile name in yellow
-                esper.dispatch_event("log_message", f"[color=yellow]{tile_name}[/color]")
-
-                # For VISIBLE tiles: dispatch description and entity info
-                if tile_visibility == VisibilityState.VISIBLE:
-                    if tile_desc:
-                        esper.dispatch_event("log_message", tile_desc)
-
-                    # List all entities at the target position
-                    for ent, (pos,) in esper.get_components(Position):
-                        if ent == entity:
-                            continue
-                        if pos.x != targeting.target_x or pos.y != targeting.target_y:
-                            continue
-
-                        name_comp = esper.try_component(ent, Name)
-                        if name_comp is None:
-                            continue
-
-                        detailed_desc = ActionSystem.get_detailed_description(esper, ent)
-                        
-                        # Show name in yellow
-                        esper.dispatch_event("log_message", f"[color=yellow]{name_comp.name}[/color]")
-                        if detailed_desc:
-                            esper.dispatch_event("log_message", detailed_desc)
             else:
-                # Execute action logic (for now just print and end turn)
-                print(f"Executed {targeting.action.name} at ({targeting.target_x}, {targeting.target_y})")
+                tile_name = "Unknown tile"
+                tile_desc = ""
 
-            mode = targeting.action.targeting_mode
-            self.cancel_targeting(entity)
-            if mode != "inspect":
-                self.turn_system.end_player_turn()
-            return True
-        except KeyError:
-            return False
+            # Always dispatch tile name in yellow
+            esper.dispatch_event("log_message", f"[color=yellow]{tile_name}[/color]")
+
+            # For VISIBLE tiles: dispatch description and entity info
+            if tile_visibility == VisibilityState.VISIBLE:
+                if tile_desc:
+                    esper.dispatch_event("log_message", tile_desc)
+
+                # List all entities at the target position
+                for ent, (pos,) in esper.get_components(Position):
+                    if ent == entity:
+                        continue
+                    if pos.x != targeting.target_x or pos.y != targeting.target_y:
+                        continue
+
+                    name_comp = esper.try_component(ent, Name)
+                    if name_comp is None:
+                        continue
+
+                    detailed_desc = ActionSystem.get_detailed_description(esper, ent)
+                    
+                    # Show name in yellow
+                    esper.dispatch_event("log_message", f"[color=yellow]{name_comp.name}[/color]")
+                    if detailed_desc:
+                        esper.dispatch_event("log_message", detailed_desc)
+        else:
+            # Execute action logic (for now just print and end turn)
+            logger.debug(f"Executed {targeting.action.name} at ({targeting.target_x}, {targeting.target_y})")
+
+        mode = targeting.action.targeting_mode
+        self.cancel_targeting(entity)
+        if mode != "inspect":
+            self.turn_system.end_player_turn()
+        return True
 
     def cancel_targeting(self, entity):
         if esper.has_component(entity, Targeting):
@@ -268,16 +269,11 @@ class ActionSystem(esper.Processor, MapAwareSystem):
 
     def wake_up(self, target_entity):
         """Centralized logic to wake up a sleeping entity."""
-        from ecs.components import AIBehaviorState, AIState, Name
-        
-        try:
-            behavior = esper.component_for_entity(target_entity, AIBehaviorState)
-            if behavior.state == AIState.SLEEP:
-                behavior.state = AIState.IDLE
-                try:
-                    name = esper.component_for_entity(target_entity, Name)
-                    esper.dispatch_event("log_message", f"The {name.name} wakes up!", None, LogCategory.ALERT)
-                except KeyError:
-                    esper.dispatch_event("log_message", "Something wakes up!", None, LogCategory.ALERT)
-        except KeyError:
-            pass
+        behavior = esper.try_component(target_entity, AIBehaviorState)
+        if behavior and behavior.state == AIState.SLEEP:
+            behavior.state = AIState.IDLE
+            name_comp = esper.try_component(target_entity, Name)
+            if name_comp:
+                esper.dispatch_event("log_message", f"The {name_comp.name} wakes up!", None, LogCategory.ALERT)
+            else:
+                esper.dispatch_event("log_message", "Something wakes up!", None, LogCategory.ALERT)

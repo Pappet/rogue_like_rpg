@@ -13,8 +13,8 @@ class DeathSystem(MapAwareSystem):
         esper.set_handler("entity_died", self.on_entity_died)
 
     def on_entity_died(self, entity):
-        try:
-            name_comp = esper.component_for_entity(entity, Name)
+        name_comp = esper.try_component(entity, Name)
+        if name_comp:
             entity_name = name_comp.name
             
             # Log message
@@ -22,18 +22,15 @@ class DeathSystem(MapAwareSystem):
             
             # Update Name
             name_comp.name = f"Remains of {entity_name}"
-        except KeyError:
-            entity_name = "Unknown"
+        else:
             esper.dispatch_event("log_message", "[color=orange]Something[/color] dies!")
 
         # --- Handle Loot Drops ---
         if esper.has_component(entity, LootTable):
             loot_table = esper.component_for_entity(entity, LootTable)
-            try:
-                pos = esper.component_for_entity(entity, Position)
+            pos = esper.try_component(entity, Position)
+            if pos:
                 self._handle_loot_drops(loot_table, pos)
-            except KeyError:
-                pass # No position, no loot drops
 
         # Remove components that a corpse shouldn't have
         # Blocker: Corpses don't block movement
@@ -44,13 +41,11 @@ class DeathSystem(MapAwareSystem):
                 esper.remove_component(entity, component_type)
 
         # Update Renderable to look like a corpse
-        try:
-            renderable = esper.component_for_entity(entity, Renderable)
+        renderable = esper.try_component(entity, Renderable)
+        if renderable:
             renderable.sprite = "%"
             renderable.color = (139, 0, 0) # Dark Red
             renderable.layer = SpriteLayer.CORPSES.value
-        except KeyError:
-            pass
 
         # Add Corpse tag component
         esper.add_component(entity, Corpse())

@@ -1,7 +1,11 @@
 from typing import Dict, Any
 import esper
+import logging
+
 from ecs.components import Position, Stats
 from services.map_service import MapService
+
+logger = logging.getLogger(__name__)
 from services.map_generator import MapGenerator
 from services.party_service import get_entity_closure
 
@@ -65,7 +69,7 @@ class MapTransitionService:
             if target_map_id == "level_2":
                 new_map = MapGenerator(self.map_service).create_sample_map(30, 25, map_id="level_2")
             else:
-                print(f"Error: Map {target_map_id} not found!")
+                logger.error(f"Error: Map {target_map_id} not found!")
                 return
         
         # Map Aging on Enter

@@ -40,7 +40,6 @@ class WorldClockService:
 
     def get_interpolated_tint(self):
         """Calculates an interpolated RGBA tint color based on the current time."""
-        from config import DN_SETTINGS
         h = self.hour
         m = self.minute
         t = h + m / TICKS_PER_HOUR

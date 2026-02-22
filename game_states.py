@@ -1,7 +1,11 @@
 import pygame
 import esper
+import logging
+
 from enum import Enum, auto
 from config import SpriteLayer, GameStates, LogCategory
+
+logger = logging.getLogger(__name__)
 from services.party_service import PartyService, get_entity_closure
 from services.map_service import MapService
 from services.spawn_service import SpawnService
@@ -234,25 +238,25 @@ class Game(GameState):
         # Debug Toggles
         if command == InputCommand.DEBUG_TOGGLE_MASTER:
             self.persist["debug_flags"]["master"] = not self.persist["debug_flags"]["master"]
-            print(f"Debug master: {self.persist['debug_flags']['master']}")
+            logger.debug(f"Debug master: {self.persist['debug_flags']['master']}")
             return
         
         if self.persist["debug_flags"].get("master"):
             if command == InputCommand.DEBUG_TOGGLE_PLAYER_FOV:
                 self.persist["debug_flags"]["player_fov"] = not self.persist["debug_flags"]["player_fov"]
-                print(f"Debug player_fov: {self.persist['debug_flags']['player_fov']}")
+                logger.debug(f"Debug player_fov: {self.persist['debug_flags']['player_fov']}")
                 return
             elif command == InputCommand.DEBUG_TOGGLE_NPC_FOV:
                 self.persist["debug_flags"]["npc_fov"] = not self.persist["debug_flags"]["npc_fov"]
-                print(f"Debug npc_fov: {self.persist['debug_flags']['npc_fov']}")
+                logger.debug(f"Debug npc_fov: {self.persist['debug_flags']['npc_fov']}")
                 return
             elif command == InputCommand.DEBUG_TOGGLE_CHASE:
                 self.persist["debug_flags"]["chase"] = not self.persist["debug_flags"]["chase"]
-                print(f"Debug chase: {self.persist['debug_flags']['chase']}")
+                logger.debug(f"Debug chase: {self.persist['debug_flags']['chase']}")
                 return
             elif command == InputCommand.DEBUG_TOGGLE_LABELS:
                 self.persist["debug_flags"]["labels"] = not self.persist["debug_flags"]["labels"]
-                print(f"Debug labels: {self.persist['debug_flags']['labels']}")
+                logger.debug(f"Debug labels: {self.persist['debug_flags']['labels']}")
                 return
 
         # World Map Toggle

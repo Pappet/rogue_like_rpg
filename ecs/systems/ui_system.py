@@ -66,7 +66,6 @@ class UISystem(esper.Processor):
         try:
             stats = esper.try_component(self.player_entity, EffectiveStats) or esper.component_for_entity(self.player_entity, Stats)
             if stats.max_hp > 0 and stats.hp / stats.max_hp < 0.25:
-                import math
                 ms = pygame.time.get_ticks()
                 # Pulse alpha between 0 and 80
                 alpha = int(40 + 40 * math.sin(ms / 250))
@@ -114,13 +113,10 @@ class UISystem(esper.Processor):
             turn_str = "Player Turn"
             turn_color = UI_COLOR_PLAYER_TURN
         elif self.turn_system.current_state == GameStates.TARGETING:
-            try:
-                targeting = esper.component_for_entity(self.player_entity, Targeting)
-                if targeting.mode == "inspect":
-                    turn_str = "Investigating..."
-                else:
-                    turn_str = "Targeting..."
-            except KeyError:
+            targeting = esper.try_component(self.player_entity, Targeting)
+            if targeting and targeting.mode == "inspect":
+                turn_str = "Investigating..."
+            else:
                 turn_str = "Targeting..."
             turn_color = UI_COLOR_TARGETING
         else:
@@ -135,32 +131,25 @@ class UISystem(esper.Processor):
         self._draw_hotbar(surface, turn_x + turn_surf.get_width() + UI_SPACING_X)
         
         # Player Stats (HP/Mana) - Right Aligned
-        try:
-            if esper.has_component(self.player_entity, EffectiveStats):
-                stats = esper.component_for_entity(self.player_entity, EffectiveStats)
-            else:
-                stats = esper.component_for_entity(self.player_entity, Stats)
+        stats = esper.try_component(self.player_entity, EffectiveStats) or esper.try_component(self.player_entity, Stats)
+        if stats:
             stats_text = f"HP: {stats.hp}/{stats.max_hp}  MP: {stats.mana}/{stats.max_mana}"
             stats_surf = self.small_font.render(stats_text, True, UI_COLOR_TEXT_BRIGHT)
             surface.blit(stats_surf, (self.header_rect.right - stats_surf.get_width() - UI_PADDING, (HEADER_HEIGHT - stats_surf.get_height()) // 2))
-        except KeyError:
-            pass
 
     def is_action_available(self, action):
-        try:
-            eff = esper.try_component(self.player_entity, EffectiveStats) or esper.component_for_entity(self.player_entity, Stats)
-            if action.cost_mana > eff.mana:
-                return False
-            # Add other resource checks here
-        except KeyError:
+        eff = esper.try_component(self.player_entity, EffectiveStats) or esper.try_component(self.player_entity, Stats)
+        if not eff:
             return False
+        if action.cost_mana > eff.mana:
+            return False
+        # Add other resource checks here
         return True
 
     def _draw_hotbar(self, surface, start_x):
         """Draws the 1-9 hotbar slots in the header."""
-        try:
-            hotbar = esper.component_for_entity(self.player_entity, HotbarSlots)
-        except KeyError:
+        hotbar = esper.try_component(self.player_entity, HotbarSlots)
+        if not hotbar:
             return
 
         current_x = start_x

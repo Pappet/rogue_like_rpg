@@ -1,3 +1,6 @@
+import random
+import json
+import os
 from typing import Optional
 from map.tile import Tile
 from map.map_layer import MapLayer
@@ -21,7 +24,6 @@ class MapGenerator:
             chance:           Probability (0-1) of replacing each floor tile.
             type_id_choices:  List of registry type_ids to randomly choose from.
         """
-        import random
         for y in range(layer.height):
             for x in range(layer.width):
                 tile = layer.tiles[y][x]
@@ -97,7 +99,6 @@ class MapGenerator:
 
     def create_village_scenario(self, world):
         """Creates a village scenario with procedural houses and terrain variety based on a JSON config."""
-        import json
         with open("assets/data/scenarios/village.json", "r") as f:
             config = json.load(f)
 
@@ -239,9 +240,6 @@ class MapGenerator:
         Raises:
             FileNotFoundError: If filepath does not exist.
         """
-        import json
-        import os
-
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Prefab file not found: '{filepath}'")
 

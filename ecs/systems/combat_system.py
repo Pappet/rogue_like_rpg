@@ -1,6 +1,6 @@
 import esper
 import random
-from ecs.components import Stats, EffectiveStats, AttackIntent, Name, Position, FCT, PlayerTag, MapBound
+from ecs.components import Stats, EffectiveStats, AttackIntent, Name, Position, FCT, PlayerTag, MapBound, AIBehaviorState, AIState
 from config import LogCategory
 
 class CombatSystem(esper.Processor):
@@ -12,13 +12,13 @@ class CombatSystem(esper.Processor):
         for attacker, intent in list(esper.get_component(AttackIntent)):
             target = intent.target_entity
             
-            try:
+            attacker_stats = esper.try_component(attacker, Stats)
+            target_stats = esper.try_component(target, Stats)
+            
+            if attacker_stats and target_stats:
                 # Use EffectiveStats for calculations if available, fall back to base Stats
-                attacker_eff = esper.try_component(attacker, EffectiveStats) or esper.component_for_entity(attacker, Stats)
-                target_eff = esper.try_component(target, EffectiveStats) or esper.component_for_entity(target, Stats)
-                
-                # Base Stats component is still needed for persistent HP modification
-                target_stats = esper.component_for_entity(target, Stats)
+                attacker_eff = esper.try_component(attacker, EffectiveStats) or attacker_stats
+                target_eff = esper.try_component(target, EffectiveStats) or target_stats
                 
                 # Calculate damage using effective values
                 damage = max(0, attacker_eff.power - target_eff.defense)
@@ -31,7 +31,6 @@ class CombatSystem(esper.Processor):
                     target_eff.hp -= damage
                 
                 # Wake up target if sleeping
-                from ecs.components import AIBehaviorState, AIState
                 if self.action_system and esper.has_component(target, AIBehaviorState):
                     self.action_system.wake_up(target)
                 
@@ -58,17 +57,13 @@ class CombatSystem(esper.Processor):
                 # Use effective HP for death check to account for bonuses
                 if target_eff.hp <= 0:
                     esper.dispatch_event("entity_died", target)
-                
-            except KeyError:
-                # One of the entities might not have stats
-                pass
             
             # Remove AttackIntent
             esper.remove_component(attacker, AttackIntent)
 
     def _spawn_fct(self, target_entity, text, color):
-        try:
-            pos = esper.component_for_entity(target_entity, Position)
+        pos = esper.try_component(target_entity, Position)
+        if pos:
             # Create a new entity for FCT with the same position but separate lifecycle
             esper.create_entity(
                 MapBound(),
@@ -82,8 +77,6 @@ class CombatSystem(esper.Processor):
                     max_ttl=1.0
                 )
             )
-        except KeyError:
-            pass
 
     def _get_name(self, entity):
         try:

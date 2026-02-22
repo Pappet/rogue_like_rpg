@@ -2,7 +2,7 @@ import esper
 import pygame
 import math
 from ecs.components import Position, Renderable, Targeting, AIBehaviorState, AIState, FCT
-from config import TILE_SIZE
+from config import TILE_SIZE, SpriteLayer
 from map.tile import VisibilityState
 from ecs.systems.map_aware_system import MapAwareSystem
 
@@ -23,7 +23,6 @@ class RenderSystem(esper.Processor, MapAwareSystem):
 
         # 2. Get all entities with Position and Renderable components
         renderables = []
-        from config import SpriteLayer
         for ent, (pos, rend) in esper.get_components(Position, Renderable):
             # Only render if entity is at or below player layer
             if pos.layer > player_layer:
