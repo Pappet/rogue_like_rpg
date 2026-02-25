@@ -174,6 +174,10 @@ class Game(GameState):
         self.debug_render_system = DebugRenderSystem(self.camera)
         self.debug_render_system.set_map(self.map_container)
 
+        # Add render systems to context so MapTransitionService can update their map
+        systems["render_system"] = self.render_system
+        systems["debug_render_system"] = self.debug_render_system
+
         # Initialize Map Transition Service
         self.map_transition_service = MapTransitionService(self.map_service, self.world_clock, self.camera)
         self.map_transition_service.initialize_context(
@@ -472,6 +476,10 @@ class Game(GameState):
 
 
     def update(self, dt):
+        # Always make sure we have the latest map from transition service
+        if "map_container" in self.persist:
+            self.map_container = self.persist["map_container"]
+            
         TooltipWindow.update_tooltip_logic(
             self.ui_stack, self.turn_system, self.player_entity, self.camera, self.map_container
         )
