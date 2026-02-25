@@ -67,7 +67,7 @@ esper.set_handler("entity_died", handler_func)
 - **Factory Pattern**: `EntityFactory`, `ItemFactory` create ECS entities from registry templates
 - **Data-Driven Design**: All game content (tiles, entities, items, schedules, prefabs) defined in `assets/data/*.json`
 - **Service Layer**: Stateless or singleton services (`VisibilityService`, `PathfindingService`, `RenderService`, `WorldClockService`, etc.)
-- **State Machine**: `GameController` → `GameState` subclasses (`TitleScreen`, `Game`, `WorldMapState`)
+- **State Machine**: `GameController` → `GameState` subclasses (`TitleScreen`, `Game`, `WorldMapState`, `GameOver`)
 
 ### System Categories
 
@@ -96,38 +96,89 @@ World clock advances 1 tick per player turn. 1 hour = 60 ticks.
 ```
 .
 ├── main.py                          # Entry point, GameController
-├── config.py                        # Constants, enums (SpriteLayer, GameStates, colors)
-├── game_states.py                   # State machine (TitleScreen, Game, WorldMapState)
+├── game_states.py                   # State machine (TitleScreen, Game, WorldMapState, GameOver)
+│
+├── config/                          # Constants & enums (split from single config.py)
+│   ├── __init__.py                  # Re-exports everything for backwards compat
+│   ├── game.py                      # SCREEN_*, TILE_SIZE, TICKS_PER_HOUR, DN_SETTINGS
+│   ├── ui.py                        # UI_*, HEADER_HEIGHT, LOG_HEIGHT, SIDEBAR_WIDTH
+│   ├── colors.py                    # COLOR_*, UI_COLOR_*
+│   ├── debug.py                     # DEBUG_*
+│   └── enums.py                     # SpriteLayer, GameStates, LogCategory, LOG_COLORS
 │
 ├── assets/data/
 │   ├── tile_types.json              # Tile definitions
 │   ├── entities.json                # NPC/monster templates
 │   ├── items.json                   # Item templates
+│   ├── player.json                  # Player base stats & actions
 │   ├── schedules.json               # NPC daily routines
-│   └── prefabs/                     # Prefab room layouts
+│   ├── dialogues.json               # NPC dialogue lines by template_id
+│   ├── prefabs/                     # Prefab room layouts
+│   └── scenarios/                   # Data-driven map scenarios (e.g. village.json)
 │
 ├── ecs/
 │   ├── world.py                     # get_world() / reset_world() shims
 │   ├── components.py                # All dataclass components
-│   └── systems/                     # One file per system (see Processing Order above)
+│   └── systems/                     # One file per system
+│       ├── map_aware_system.py      # MapAwareSystem mixin (see below)
+│       ├── turn_system.py           # TurnSystem (frame processor)
+│       ├── visibility_system.py     # VisibilitySystem (frame processor)
+│       ├── movement_system.py       # MovementSystem (frame processor)
+│       ├── combat_system.py         # CombatSystem (frame processor)
+│       ├── equipment_system.py      # EquipmentSystem (frame processor)
+│       ├── fct_system.py            # FCTSystem (frame processor)
+│       ├── action_system.py         # ActionSystem (action dispatch)
+│       ├── ai_system.py             # AISystem (phase system)
+│       ├── schedule_system.py       # ScheduleSystem (phase system)
+│       ├── death_system.py          # DeathSystem (event system)
+│       ├── render_system.py         # RenderSystem (render system)
+│       ├── ui_system.py             # UISystem (render system)
+│       └── debug_render_system.py   # DebugRenderSystem (render system)
 │
 ├── entities/
-│   ├── entity_factory.py / entity_registry.py
-│   ├── item_factory.py / item_registry.py
-│   └── schedule_registry.py
+│   ├── entity_factory.py            # Creates ECS entities from registry templates
+│   ├── entity_registry.py           # NPC/monster template registry
+│   ├── item_factory.py              # Creates item entities from registry templates
+│   ├── item_registry.py             # Item template registry
+│   └── schedule_registry.py         # NPC schedule registry
 │
 ├── map/
-│   ├── tile.py / tile_registry.py   # Tile class, TileType flyweight
+│   ├── tile.py                      # Tile class, TileType flyweight, VisibilityState
+│   ├── tile_registry.py             # TileType registry loaded from JSON
 │   ├── map_layer.py                 # MapLayer (2D tile grid)
-│   └── map_container.py            # MapContainer (layers + freeze/thaw)
+│   ├── map_container.py             # MapContainer (layers + freeze/thaw)
+│   └── map_generator_utils.py       # Shared map generation utilities
 │
-├── services/                        # Stateless services + InputManager
+├── services/
+│   ├── input_manager.py             # InputManager + InputCommand enum
+│   ├── system_initializer.py        # SystemInitializer (creates/persists ECS systems)
+│   ├── game_input_handler.py        # GameInputHandler (extracted from Game)
+│   ├── map_service.py               # Map registry + active map management
+│   ├── map_generator.py             # Village scenario, terrain, prefab loading
+│   ├── map_transition_service.py    # Map transition logic (extracted from Game)
+│   ├── spawn_service.py             # Monster/NPC spawning
+│   ├── party_service.py             # Player party creation
+│   ├── render_service.py            # Map rendering + viewport tint
+│   ├── visibility_service.py        # Shadowcasting FOV
+│   ├── pathfinding_service.py       # A* pathfinding wrapper
+│   ├── world_clock_service.py       # Day/night cycle, time tracking
+│   ├── dialogue_service.py          # NPC dialogue loading & lookup
+│   ├── interaction_resolver.py      # Bump interaction resolution
+│   ├── consumable_service.py        # Item consumption logic
+│   ├── equipment_service.py         # Equipment slot logic
+│   └── resource_loader.py           # JSON data loading orchestration
+│
 ├── components/
 │   └── camera.py                    # Camera with tile ↔ screen coordinate conversion
+│
 └── ui/
     ├── message_log.py               # Rich text [color=x] message log
     ├── stack_manager.py             # UIStack for modal windows
-    └── windows/                     # inventory.py, character.py, tooltip.py
+    └── windows/
+        ├── base.py                  # Base window class
+        ├── inventory.py             # Inventory window
+        ├── character.py             # Character sheet window
+        └── tooltip.py              # Examine/tooltip window
 ```
 
 ## Key Components Reference
@@ -169,9 +220,9 @@ World clock advances 1 tick per player turn. 1 hour = 60 ticks.
 
 ### Enums
 
-**`config.py`:**
+**`config/enums.py`:**
 - **`SpriteLayer`**: GROUND(0) → DECOR_BOTTOM(1) → TRAPS(2) → ITEMS(3) → CORPSES(4) → ENTITIES(5) → DECOR_TOP(6) → EFFECTS(7)
-- **`GameStates`**: PLAYER_TURN, ENEMY_TURN, TARGETING, WORLD_MAP, INVENTORY, MENU, EXAMINE
+- **`GameStates`**: PLAYER_TURN, ENEMY_TURN, TARGETING, WORLD_MAP, INVENTORY, MENU, EXAMINE, GAME_OVER
 - **`LogCategory`**: DAMAGE_DEALT, DAMAGE_RECEIVED, HEALING, LOOT, SYSTEM, ALERT
 
 **`ecs/components.py`:**
@@ -185,6 +236,23 @@ World clock advances 1 tick per player turn. 1 hour = 60 ticks.
 **`services/input_manager.py`:**
 - **`InputCommand`**: Full enum of 40+ mapped player actions (movement, interact, UI, debug, etc.)
 
+### MapAwareSystem Mixin
+
+Systems that need a reference to the current `MapContainer` inherit from `MapAwareSystem` (`ecs/systems/map_aware_system.py`):
+
+```python
+class MapAwareSystem:
+    def __init__(self):
+        self._map_container = None
+
+    def set_map(self, map_container):
+        self._map_container = map_container
+```
+
+**Systems using this mixin:** `VisibilitySystem`, `ActionSystem`, `MovementSystem`, `DeathSystem`, `RenderSystem`, `DebugRenderSystem`
+
+**Rule:** Constructors do NOT take `map_container`. Instead, `SystemInitializer.initialize()` calls `set_map()` after creation and on every map transition.
+
 ## Conventions & Rules
 
 ### AI Assistant Rules
@@ -194,8 +262,9 @@ World clock advances 1 tick per player turn. 1 hour = 60 ticks.
 - Dataclass components, no inheritance on components
 - Type hints on function signatures
 - Docstrings on public methods (Google style or descriptive)
-- Constants in `config.py`, prefixed with `UI_`, `DEBUG_`, `DN_`, `COLOR_`
+- Constants in `config/` submodules, prefixed with `UI_`, `DEBUG_`, `DN_`, `COLOR_`
 - Comment tags for traceability: `AISYS-01`, `WNDR-04`, `CHAS-03`, etc.
+- **Logging:** Use Python `logging` module — `logging.getLogger(__name__)` per module. `main.py` configures `logging.basicConfig()`. No `print()` in production code.
 
 ### ECS Rules
 - **Never store `World` instances** — use `esper` module directly or `get_world()`
@@ -217,6 +286,9 @@ World clock advances 1 tick per player turn. 1 hour = 60 ticks.
 - **Add new entities**: `assets/data/entities.json` → spawn with `EntityFactory.create(world, "id", x, y)`
 - **Add new items**: `assets/data/items.json` → create with `ItemFactory.create(world, "id")`
 - **Add new schedules**: `assets/data/schedules.json` → assign via `schedule_id` in entity template
+- **Player stats**: `assets/data/player.json` → base stats, actions, hotbar config loaded by `PartyService`
+- **Dialogues**: `assets/data/dialogues.json` → NPC dialogue lines keyed by template_id, loaded by `DialogueService`
+- **Map scenarios**: `assets/data/scenarios/*.json` → data-driven map layouts loaded by `MapGenerator`
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)
 
 ### AI Behavior
