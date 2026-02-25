@@ -3,14 +3,82 @@
   "width": 8,
   "height": 6,
   "tiles": [
-    ["wall_stone", "wall_stone", "wall_stone", "wall_stone", "wall_stone", "wall_stone", "wall_stone", "wall_stone"],
-    ["wall_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "wall_stone"],
-    ["wall_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "wall_stone"],
-    ["wall_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "wall_stone"],
-    ["wall_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "floor_stone", "wall_stone"],
-    ["wall_stone", "wall_stone", "wall_stone", "door_stone", "wall_stone", "wall_stone", "wall_stone", "wall_stone"]
+    [
+      "wall_stone",
+      "wall_stone",
+      "wall_stone",
+      "wall_stone",
+      "wall_stone",
+      "wall_stone",
+      "wall_stone",
+      "wall_stone"
+    ],
+    [
+      "wall_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "wall_stone"
+    ],
+    [
+      "wall_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "wall_stone"
+    ],
+    [
+      "wall_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "wall_stone"
+    ],
+    [
+      "wall_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "floor_stone",
+      "wall_stone"
+    ],
+    [
+      "wall_stone",
+      "wall_stone",
+      "wall_stone",
+      "door_stone",
+      "wall_stone",
+      "wall_stone",
+      "wall_stone",
+      "wall_stone"
+    ]
   ],
   "entities": [
-    {"template_id": "orc", "x": 3, "y": 3}
+    {
+      "template_id": "orc",
+      "x": 3,
+      "y": 3
+    },
+    {
+      "template_id": "goblin",
+      "x": 4,
+      "y": 3
+    },
+    {
+      "template_id": "troll",
+      "x": 2,
+      "y": 4
+    }
   ]
 }
