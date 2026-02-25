@@ -1,7 +1,11 @@
 {
   "name": "Player",
   "sprite": "@",
-  "color": [255, 255, 255],
+  "color": [
+    255,
+    255,
+    255
+  ],
   "sprite_layer": "ENTITIES",
   "hp": 100,
   "max_hp": 100,
@@ -13,19 +17,26 @@
   "intelligence": 10,
   "max_carry_weight": 20.0,
   "actions": [
-    {"name": "Move"},
-    {"name": "Enter Portal"},
-    {"name": "Investigate", "range": 10, "requires_targeting": true, "targeting_mode": "inspect"},
-    {"name": "Ranged", "range": 5, "requires_targeting": true, "targeting_mode": "auto"},
-    {"name": "Spells", "cost_mana": 10, "range": 7, "requires_targeting": true, "targeting_mode": "manual"},
-    {"name": "Items"}
+    {
+      "name": "Move"
+    },
+    {
+      "name": "Enter Portal"
+    },
+    {
+      "name": "Investigate",
+      "range": 10,
+      "requires_targeting": true,
+      "targeting_mode": "inspect"
+    },
+    {
+      "name": "Items"
+    }
   ],
   "hotbar": {
     "1": "Move",
     "2": "Wait",
     "3": "Investigate",
-    "4": "Ranged",
-    "5": "Spells",
-    "6": "Items"
+    "4": "Items"
   }
 }
