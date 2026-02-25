@@ -3,30 +3,198 @@
     "id": "villager_routine",
     "name": "Standard Villager Day",
     "entries": [
-      { "start": 0, "end": 6, "activity": "SLEEP", "target_meta": "home" },
-      { "start": 6, "end": 18, "activity": "WORK", "target_pos": [15, 15] },
-      { "start": 18, "end": 22, "activity": "SOCIALIZE", "target_pos": [20, 10] },
-      { "start": 22, "end": 24, "activity": "SLEEP", "target_meta": "home" }
+      {
+        "start": 0,
+        "end": 6,
+        "activity": "SLEEP",
+        "target_meta": "home"
+      },
+      {
+        "start": 6,
+        "end": 18,
+        "activity": "WORK",
+        "target_pos": [
+          15,
+          15
+        ]
+      },
+      {
+        "start": 18,
+        "end": 22,
+        "activity": "SOCIALIZE",
+        "target_pos": [
+          20,
+          10
+        ]
+      },
+      {
+        "start": 22,
+        "end": 24,
+        "activity": "SLEEP",
+        "target_meta": "home"
+      }
     ]
   },
   {
     "id": "guard_routine",
     "name": "Guard Routine",
     "entries": [
-      { "start": 0, "end": 6, "activity": "SLEEP", "target_meta": "home" },
-      { "start": 6, "end": 18, "activity": "WORK", "target_pos": [10, 10] },
-      { "start": 18, "end": 22, "activity": "SOCIALIZE", "target_pos": [20, 10] },
-      { "start": 22, "end": 24, "activity": "SLEEP", "target_meta": "home" }
+      {
+        "start": 0,
+        "end": 6,
+        "activity": "SLEEP",
+        "target_meta": "home"
+      },
+      {
+        "start": 6,
+        "end": 18,
+        "activity": "WORK",
+        "target_pos": [
+          10,
+          10
+        ]
+      },
+      {
+        "start": 18,
+        "end": 22,
+        "activity": "SOCIALIZE",
+        "target_pos": [
+          20,
+          10
+        ]
+      },
+      {
+        "start": 22,
+        "end": 24,
+        "activity": "SLEEP",
+        "target_meta": "home"
+      }
     ]
   },
   {
     "id": "shopkeeper_routine",
     "name": "Shopkeeper Routine",
     "entries": [
-      { "start": 0, "end": 7, "activity": "SLEEP", "target_meta": "home" },
-      { "start": 7, "end": 19, "activity": "WORK", "target_pos": [5, 5] },
-      { "start": 19, "end": 22, "activity": "SOCIALIZE", "target_pos": [20, 10] },
-      { "start": 22, "end": 24, "activity": "SLEEP", "target_meta": "home" }
+      {
+        "start": 0,
+        "end": 7,
+        "activity": "SLEEP",
+        "target_meta": "home"
+      },
+      {
+        "start": 7,
+        "end": 19,
+        "activity": "WORK",
+        "target_pos": [
+          5,
+          5
+        ]
+      },
+      {
+        "start": 19,
+        "end": 22,
+        "activity": "SOCIALIZE",
+        "target_pos": [
+          20,
+          10
+        ]
+      },
+      {
+        "start": 22,
+        "end": 24,
+        "activity": "SLEEP",
+        "target_meta": "home"
+      }
+    ]
+  },
+  {
+    "id": "mayor_routine",
+    "name": "Mayor Routine",
+    "entries": [
+      {
+        "start": 0,
+        "end": 8,
+        "activity": "SLEEP",
+        "target_meta": "home"
+      },
+      {
+        "start": 8,
+        "end": 12,
+        "activity": "WORK",
+        "target_pos": [
+          20,
+          20
+        ]
+      },
+      {
+        "start": 12,
+        "end": 14,
+        "activity": "SOCIALIZE",
+        "target_pos": [
+          15,
+          15
+        ]
+      },
+      {
+        "start": 14,
+        "end": 18,
+        "activity": "WORK",
+        "target_pos": [
+          20,
+          20
+        ]
+      },
+      {
+        "start": 18,
+        "end": 22,
+        "activity": "SOCIALIZE",
+        "target_pos": [
+          20,
+          10
+        ]
+      },
+      {
+        "start": 22,
+        "end": 24,
+        "activity": "SLEEP",
+        "target_meta": "home"
+      }
+    ]
+  },
+  {
+    "id": "blacksmith_routine",
+    "name": "Blacksmith Routine",
+    "entries": [
+      {
+        "start": 0,
+        "end": 5,
+        "activity": "SLEEP",
+        "target_meta": "home"
+      },
+      {
+        "start": 5,
+        "end": 17,
+        "activity": "WORK",
+        "target_pos": [
+          8,
+          8
+        ]
+      },
+      {
+        "start": 17,
+        "end": 21,
+        "activity": "SOCIALIZE",
+        "target_pos": [
+          20,
+          10
+        ]
+      },
+      {
+        "start": 21,
+        "end": 24,
+        "activity": "SLEEP",
+        "target_meta": "home"
+      }
     ]
   }
 ]

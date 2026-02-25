@@ -3,7 +3,11 @@
     "id": "orc",
     "name": "Orc",
     "sprite": "O",
-    "color": [0, 255, 0],
+    "color": [
+      0,
+      255,
+      0
+    ],
     "sprite_layer": "ENTITIES",
     "hp": 10,
     "max_hp": 10,
@@ -21,16 +25,29 @@
     "wounded_text": "A wounded orc",
     "wounded_threshold": 0.5,
     "loot_table": [
-      ["iron_sword", 1.0],
-      ["wooden_club", 1.0],
-      ["health_potion", 1.0]
+      [
+        "iron_sword",
+        1.0
+      ],
+      [
+        "wooden_club",
+        1.0
+      ],
+      [
+        "health_potion",
+        1.0
+      ]
     ]
   },
   {
     "id": "villager",
     "name": "Villager",
     "sprite": "v",
-    "color": [255, 200, 150],
+    "color": [
+      255,
+      200,
+      150
+    ],
     "sprite_layer": "ENTITIES",
     "hp": 5,
     "max_hp": 5,
@@ -46,13 +63,20 @@
     "blocker": true,
     "description": "A common villager",
     "schedule_id": "villager_routine",
-    "home_pos": [10, 10]
+    "home_pos": [
+      10,
+      10
+    ]
   },
   {
     "id": "guard",
     "name": "Guard",
     "sprite": "G",
-    "color": [100, 100, 255],
+    "color": [
+      100,
+      100,
+      255
+    ],
     "sprite_layer": "ENTITIES",
     "hp": 20,
     "max_hp": 20,
@@ -68,13 +92,20 @@
     "blocker": true,
     "description": "A village guard",
     "schedule_id": "guard_routine",
-    "home_pos": [35, 35]
+    "home_pos": [
+      35,
+      35
+    ]
   },
   {
     "id": "shopkeeper",
     "name": "Shopkeeper",
     "sprite": "S",
-    "color": [255, 255, 100],
+    "color": [
+      255,
+      255,
+      100
+    ],
     "sprite_layer": "ENTITIES",
     "hp": 10,
     "max_hp": 10,
@@ -90,6 +121,135 @@
     "blocker": true,
     "description": "A merchant or innkeeper",
     "schedule_id": "shopkeeper_routine",
-    "home_pos": [2, 2]
+    "home_pos": [
+      2,
+      2
+    ]
+  },
+  {
+    "id": "goblin",
+    "name": "Goblin",
+    "sprite": "g",
+    "color": [
+      50,
+      200,
+      50
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 5,
+    "max_hp": 5,
+    "power": 2,
+    "defense": 0,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 6,
+    "intelligence": 3,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "hostile",
+    "blocker": true,
+    "description": "A small, nasty goblin",
+    "wounded_text": "A crippled goblin",
+    "wounded_threshold": 0.5,
+    "loot_table": [
+      [
+        "dagger",
+        1.0
+      ],
+      [
+        "health_potion",
+        0.5
+      ]
+    ]
+  },
+  {
+    "id": "troll",
+    "name": "Cave Troll",
+    "sprite": "T",
+    "color": [
+      100,
+      150,
+      100
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 30,
+    "max_hp": 30,
+    "power": 8,
+    "defense": 3,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 3,
+    "intelligence": 2,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "hostile",
+    "blocker": true,
+    "description": "A massive, hulking troll",
+    "wounded_text": "An enraged troll",
+    "wounded_threshold": 0.3,
+    "loot_table": [
+      [
+        "wooden_club",
+        1.0
+      ]
+    ]
+  },
+  {
+    "id": "mayor",
+    "name": "Mayor",
+    "sprite": "M",
+    "color": [
+      255,
+      100,
+      255
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 8,
+    "max_hp": 8,
+    "power": 1,
+    "defense": 0,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 6,
+    "intelligence": 8,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "The leader of the village",
+    "schedule_id": "mayor_routine",
+    "home_pos": [
+      20,
+      20
+    ]
+  },
+  {
+    "id": "blacksmith",
+    "name": "Blacksmith",
+    "sprite": "B",
+    "color": [
+      150,
+      150,
+      150
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 15,
+    "max_hp": 15,
+    "power": 4,
+    "defense": 2,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 5,
+    "intelligence": 6,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A burly blacksmith",
+    "schedule_id": "blacksmith_routine",
+    "home_pos": [
+      8,
+      8
+    ]
   }
 ]

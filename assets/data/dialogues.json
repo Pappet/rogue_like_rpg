@@ -20,6 +20,20 @@
         "Come back anytime!",
         "Trade keeps the village alive."
     ],
+    "mayor": [
+        "Welcome to our humble village.",
+        "I try my best to keep the peace around here.",
+        "Please, cause no trouble during your stay.",
+        "The recent monster attacks have been concerning.",
+        "If you can help defend us, you'll be well rewarded."
+    ],
+    "blacksmith": [
+        "Need some steel forged?",
+        "My blades never dull.",
+        "Strike while the iron is hot!",
+        "Armor or weapons, you name it, I can craft it.",
+        "Keep your gear in good condition out there."
+    ],
     "_default": [
         "...",
         "They nod at you.",

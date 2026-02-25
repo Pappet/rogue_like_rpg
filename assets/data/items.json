@@ -3,7 +3,11 @@
     "id": "iron_sword",
     "name": "Iron Sword",
     "sprite": "/",
-    "color": [200, 200, 200],
+    "color": [
+      200,
+      200,
+      200
+    ],
     "sprite_layer": "ITEMS",
     "weight": 2.5,
     "material": "iron",
@@ -17,7 +21,11 @@
     "id": "leather_armor",
     "name": "Leather Armor",
     "sprite": "[",
-    "color": [139, 69, 19],
+    "color": [
+      139,
+      69,
+      19
+    ],
     "sprite_layer": "ITEMS",
     "weight": 5.0,
     "material": "leather",
@@ -31,7 +39,11 @@
     "id": "circlet",
     "name": "Circlet",
     "sprite": "o",
-    "color": [255, 215, 0],
+    "color": [
+      255,
+      215,
+      0
+    ],
     "sprite_layer": "ITEMS",
     "weight": 0.2,
     "material": "gold",
@@ -45,7 +57,11 @@
     "id": "wooden_club",
     "name": "Wooden Club",
     "sprite": "\\",
-    "color": [139, 69, 19],
+    "color": [
+      139,
+      69,
+      19
+    ],
     "sprite_layer": "ITEMS",
     "weight": 1.5,
     "material": "wood",
@@ -59,7 +75,11 @@
     "id": "health_potion",
     "name": "Health Potion",
     "sprite": "!",
-    "color": [255, 0, 0],
+    "color": [
+      255,
+      0,
+      0
+    ],
     "sprite_layer": "ITEMS",
     "weight": 0.5,
     "material": "glass",
@@ -67,6 +87,79 @@
     "stats": {},
     "consumable": {
       "effect_type": "heal_hp",
+      "amount": 10
+    }
+  },
+  {
+    "id": "steel_sword",
+    "name": "Steel Sword",
+    "sprite": "/",
+    "color": [
+      150,
+      150,
+      150
+    ],
+    "sprite_layer": "ITEMS",
+    "weight": 3.0,
+    "material": "steel",
+    "description": "A finely crafted steel sword, sharper and more durable than iron.",
+    "slot": "main_hand",
+    "stats": {
+      "power": 8
+    }
+  },
+  {
+    "id": "dagger",
+    "name": "Iron Dagger",
+    "sprite": "-",
+    "color": [
+      200,
+      200,
+      200
+    ],
+    "sprite_layer": "ITEMS",
+    "weight": 1.0,
+    "material": "iron",
+    "description": "A short, lightweight blade.",
+    "slot": "main_hand",
+    "stats": {
+      "power": 3
+    }
+  },
+  {
+    "id": "chainmail",
+    "name": "Chainmail Armor",
+    "sprite": "[",
+    "color": [
+      180,
+      180,
+      180
+    ],
+    "sprite_layer": "ITEMS",
+    "weight": 12.0,
+    "material": "iron",
+    "description": "Interlocking iron rings providing flexible, solid defense.",
+    "slot": "body",
+    "stats": {
+      "defense": 6
+    }
+  },
+  {
+    "id": "mana_potion",
+    "name": "Mana Potion",
+    "sprite": "!",
+    "color": [
+      0,
+      0,
+      255
+    ],
+    "sprite_layer": "ITEMS",
+    "weight": 0.5,
+    "material": "glass",
+    "description": "A blue liquid that restores mana.",
+    "stats": {},
+    "consumable": {
+      "effect_type": "heal_mana",
       "amount": 10
     }
   }
