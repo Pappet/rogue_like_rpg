@@ -3,7 +3,7 @@ import sys
 import logging
 
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, HEADER_HEIGHT, SIDEBAR_WIDTH, LOG_HEIGHT
-from game_states import TitleScreen, Game, WorldMapState
+from game_states import TitleScreen, Game, WorldMapState, GameOver
 
 logging.basicConfig(
     level=logging.INFO,
@@ -60,6 +60,7 @@ class GameController:
             "TITLE": TitleScreen(),
             "GAME": Game(),
             "WORLD_MAP": WorldMapState(),
+            "GAME_OVER": GameOver(),
         }
         self.state_name = "TITLE"
         self.state = self.states[self.state_name]

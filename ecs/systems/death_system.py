@@ -1,10 +1,13 @@
 import esper
 import random
-from ecs.components import Name, Renderable, Blocker, AI, Corpse, Stats, AIBehaviorState, ChaseData, WanderData, LootTable, Position
+import logging
+from ecs.components import Name, Renderable, Blocker, AI, Corpse, Stats, AIBehaviorState, ChaseData, WanderData, LootTable, Position, PlayerTag
 from config import SpriteLayer, LogCategory
 from entities.item_factory import ItemFactory
 from ecs.world import get_world
 from ecs.systems.map_aware_system import MapAwareSystem
+
+logger = logging.getLogger(__name__)
 
 class DeathSystem(MapAwareSystem):
     def __init__(self):
@@ -13,6 +16,13 @@ class DeathSystem(MapAwareSystem):
         esper.set_handler("entity_died", self.on_entity_died)
 
     def on_entity_died(self, entity):
+        # --- Player death: dispatch event and return early ---
+        if esper.has_component(entity, PlayerTag):
+            logger.info("Player has died!")
+            esper.dispatch_event("log_message", "[color=red]You have been slain![/color]")
+            esper.dispatch_event("player_died")
+            return
+
         name_comp = esper.try_component(entity, Name)
         if name_comp:
             entity_name = name_comp.name

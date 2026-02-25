@@ -37,6 +37,8 @@ class GameStates(Enum):
 
     EXAMINE = 7
 
+    GAME_OVER = 8
+
 
 class LogCategory(Enum):
     DAMAGE_DEALT = 1
