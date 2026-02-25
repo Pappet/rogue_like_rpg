@@ -1,0 +1,37 @@
+[project]
+name = "rogue-like-rpg"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # isort
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "SIM",   # flake8-simplify
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "E741",  # ambiguous variable name (common in game code: l, O, I)
+    "B007",  # loop variable not used (common in ECS iteration)
+    "SIM108", # ternary operator (readability preference)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E", "W", "F841"]  # relaxed rules for test files
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "verify_*.py"]
