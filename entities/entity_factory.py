@@ -5,7 +5,7 @@ This mirrors the data-driven approach used for tiles in Phase 9.
 """
 
 from config import SpriteLayer
-from ecs.components import MapBound, Position, Renderable, Stats, Name, Blocker, AI, Description, AIBehaviorState, AIState, Alignment, LootTable, Schedule, Activity
+from ecs.components import MapBound, Position, Renderable, Stats, Name, Blocker, AI, Description, AIBehaviorState, AIState, Alignment, LootTable, Schedule, Activity, TemplateId
 from entities.entity_registry import EntityRegistry
 
 
@@ -62,6 +62,7 @@ class EntityFactory:
                 base_intelligence=template.intelligence,
             ),
             Name(template.name),
+            TemplateId(template_id),
         ]
 
         if template.blocker:

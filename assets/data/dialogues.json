@@ -1,0 +1,28 @@
+{
+    "villager": [
+        "Good day, traveler!",
+        "The harvest was good this year.",
+        "Have you seen the guards today?",
+        "I heard strange noises from the woods last night...",
+        "Welcome to our village!"
+    ],
+    "guard": [
+        "Move along, citizen.",
+        "Stay out of trouble.",
+        "The roads aren't safe at night.",
+        "I'm keeping watch. No need to worry.",
+        "Report anything suspicious to me."
+    ],
+    "shopkeeper": [
+        "Looking to buy something?",
+        "I just got a new shipment in!",
+        "Best prices in the village, I guarantee it.",
+        "Come back anytime!",
+        "Trade keeps the village alive."
+    ],
+    "_default": [
+        "...",
+        "They nod at you.",
+        "They don't seem interested in talking."
+    ]
+}

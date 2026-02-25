@@ -34,6 +34,11 @@ class PlayerTag:
     pass
 
 @dataclass
+class TemplateId:
+    """Stores the registry template ID the entity was created from."""
+    id: str = ""
+
+@dataclass
 class Position:
     x: int
     y: int

@@ -15,6 +15,7 @@ from services.render_service import RenderService
 from services.resource_loader import ResourceLoader
 from services.world_clock_service import WorldClockService
 from services.input_manager import InputManager
+from services.dialogue_service import DialogueService
 from ui.stack_manager import UIStack
 from components.camera import Camera
 from ecs.world import get_world
@@ -39,6 +40,7 @@ class GameController:
         ResourceLoader.load_tiles("assets/data/tile_types.json")
         ResourceLoader.load_entities("assets/data/entities.json")
         ResourceLoader.load_items("assets/data/items.json")
+        DialogueService.load("assets/data/dialogues.json")
         world = get_world()
         self.map_generator = MapGenerator(self.map_service)
         self.map_generator.create_village_scenario(world)
