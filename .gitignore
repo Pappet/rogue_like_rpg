@@ -1,5 +1,8 @@
 .axon/
 
+.ruff/
+.ruff_cache/    
+
 # GeminiCLI
 .gemini/
 
