@@ -1,5 +1,5 @@
 import esper
-from config import TICKS_PER_HOUR, DAWN_START, DAY_START, DUSK_START, NIGHT_START
+from config import TICKS_PER_HOUR, DAWN_START, DAY_START, DUSK_START, NIGHT_START, DN_SETTINGS
 
 class WorldClockService:
     """
