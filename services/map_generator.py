@@ -30,10 +30,9 @@ class MapGenerator:
             for x in range(layer.width):
                 tile = layer.tiles[y][x]
                 # Only apply to walkable ground tiles (floor_stone equivalent).
-                if tile.walkable:
-                    if random.random() < chance:
-                        type_id = random.choice(type_id_choices)
-                        tile.set_type(type_id)
+                if tile.walkable and random.random() < chance:
+                    type_id = random.choice(type_id_choices)
+                    tile.set_type(type_id)
 
     def add_house_to_map(self, world, map_container: MapContainer, start_x: int, start_y: int, w: int, h: int, num_layers: int):
         """
@@ -139,8 +138,8 @@ class MapGenerator:
         for h in config.get("structures", []):
             vx, vy = h["v_pos"]
             vw, vh = h["v_size"]
-            # Draw shell on village
-            draw_rectangle(village_layers[0], vx, vy, vw, vh, "wall_stone", filled=False)
+            # Draw shell on village (filled completely to prevent spawns inside)
+            draw_rectangle(village_layers[0], vx, vy, vw, vh, "wall_stone", filled=True)
 
             # Door position on village (reference for portal, but wall stays intact)
             door_vx, door_vy = vx + vw // 2, vy + vh - 1
