@@ -6,9 +6,11 @@
     },
     "base_layer": "floor_stone",
     "terrain_variety": {
-        "chance": 0.1,
+        "chance": 0.4,
         "choices": [
-            "floor_stone"
+            "floor_grass",
+            "floor_dirt",
+            "floor_sand"
         ]
     },
     "structures": [

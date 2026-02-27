@@ -8,7 +8,11 @@
     "sprites": {
       "GROUND": "."
     },
-    "color": [200, 200, 200],
+    "color": [
+      200,
+      200,
+      200
+    ],
     "occludes_below": false
   },
   {
@@ -20,7 +24,11 @@
     "sprites": {
       "GROUND": "#"
     },
-    "color": [100, 100, 100],
+    "color": [
+      100,
+      100,
+      100
+    ],
     "occludes_below": false
   },
   {
@@ -32,7 +40,11 @@
     "sprites": {
       "GROUND": "."
     },
-    "color": [140, 120, 80],
+    "color": [
+      140,
+      120,
+      80
+    ],
     "occludes_below": false
   },
   {
@@ -44,7 +56,59 @@
     "sprites": {
       "GROUND": "#"
     },
-    "color": [150, 110, 50],
+    "color": [
+      150,
+      110,
+      50
+    ],
     "occludes_below": true
+  },
+  {
+    "id": "floor_grass",
+    "name": "Grass",
+    "base_description": "Soft green grass.",
+    "walkable": true,
+    "transparent": true,
+    "sprites": {
+      "GROUND": ","
+    },
+    "color": [
+      34,
+      139,
+      34
+    ],
+    "occludes_below": false
+  },
+  {
+    "id": "floor_dirt",
+    "name": "Dirt Path",
+    "base_description": "Packed brown dirt.",
+    "walkable": true,
+    "transparent": true,
+    "sprites": {
+      "GROUND": "."
+    },
+    "color": [
+      139,
+      69,
+      19
+    ],
+    "occludes_below": false
+  },
+  {
+    "id": "floor_sand",
+    "name": "Sand",
+    "base_description": "Loose yellowish sand.",
+    "walkable": true,
+    "transparent": true,
+    "sprites": {
+      "GROUND": "~"
+    },
+    "color": [
+      237,
+      201,
+      175
+    ],
+    "occludes_below": false
   }
 ]
