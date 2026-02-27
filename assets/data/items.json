@@ -162,5 +162,97 @@
       "effect_type": "heal_mana",
       "amount": 10
     }
+  },
+  {
+    "id": "wooden_shield",
+    "name": "Wooden Shield",
+    "sprite": ")",
+    "color": [
+      139,
+      90,
+      43
+    ],
+    "sprite_layer": "ITEMS",
+    "weight": 3.0,
+    "material": "wood",
+    "description": "A sturdy round shield made of oak planks.",
+    "slot": "off_hand",
+    "stats": {
+      "defense": 2
+    }
+  },
+  {
+    "id": "iron_buckler",
+    "name": "Iron Buckler",
+    "sprite": ")",
+    "color": [
+      180,
+      180,
+      180
+    ],
+    "sprite_layer": "ITEMS",
+    "weight": 2.0,
+    "material": "iron",
+    "description": "A small iron buckler strapped to the forearm.",
+    "slot": "off_hand",
+    "stats": {
+      "defense": 3
+    }
+  },
+  {
+    "id": "leather_boots",
+    "name": "Leather Boots",
+    "sprite": "\"",
+    "color": [
+      139,
+      69,
+      19
+    ],
+    "sprite_layer": "ITEMS",
+    "weight": 1.5,
+    "material": "leather",
+    "description": "Comfortable leather boots offering basic foot protection.",
+    "slot": "feet",
+    "stats": {
+      "defense": 1
+    }
+  },
+  {
+    "id": "iron_shod_boots",
+    "name": "Iron-shod Boots",
+    "sprite": "\"",
+    "color": [
+      160,
+      160,
+      160
+    ],
+    "sprite_layer": "ITEMS",
+    "weight": 3.5,
+    "material": "iron",
+    "description": "Heavy boots reinforced with iron plates.",
+    "slot": "feet",
+    "stats": {
+      "defense": 2,
+      "power": 1
+    }
+  },
+  {
+    "id": "iron_ring",
+    "name": "Ring of Fortitude",
+    "sprite": "=",
+    "color": [
+      200,
+      200,
+      200
+    ],
+    "sprite_layer": "ITEMS",
+    "weight": 0.1,
+    "material": "iron",
+    "description": "A plain iron ring that bolsters the wearer's resilience.",
+    "slot": "accessory",
+    "stats": {
+      "defense": 1,
+      "hp": 5
+    }
   }
 ]
