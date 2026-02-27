@@ -2,7 +2,7 @@ import random
 
 import esper
 from config import GameStates, SpriteLayer, LogCategory
-from ecs.components import AI, AIBehaviorState, Blocker, Corpse, Position, AIState, ChaseData, Name, Stats, Alignment, EffectiveStats, PathData
+from ecs.components import AI, AIBehaviorState, Blocker, Corpse, Position, AIState, ChaseData, Name, Stats, Alignment, EffectiveStats, PathData, AttackIntent, PlayerTag
 from services.visibility_service import VisibilityService
 from services.pathfinding_service import PathfindingService
 
@@ -193,15 +193,15 @@ class AISystem(esper.Processor):
                     esper.add_component(ent, path_data)
             else:
                 # Fallback to greedy Manhattan if A* fails
-                self._greedy_step(pos, target_pos, map_container, claimed_tiles)
+                self._greedy_step(ent, pos, target_pos, map_container, claimed_tiles)
                 return
 
         # Try to follow the path (Task 1)
         if not self._try_follow_path(ent, path_data, pos, claimed_tiles):
             # If path failed (blocked), attempt greedy fallback
-            self._greedy_step(pos, target_pos, map_container, claimed_tiles)
+            self._greedy_step(ent, pos, target_pos, map_container, claimed_tiles)
 
-    def _greedy_step(self, pos, target_pos, map_container, claimed_tiles):
+    def _greedy_step(self, ent, pos, target_pos, map_container, claimed_tiles):
         """Move entity one step toward target using greedy Manhattan distance.
         
         Used as a fallback when pathfinding fails or path is blocked.
@@ -230,7 +230,11 @@ class AISystem(esper.Processor):
                 continue
             if not self._is_walkable(nx, ny, pos.layer, map_container):
                 continue
-            if self._get_blocker_at(nx, ny, pos.layer):
+            blocker_ent = self._get_blocker_at(nx, ny, pos.layer)
+            if blocker_ent:
+                if esper.has_component(blocker_ent, PlayerTag):
+                    esper.add_component(ent, AttackIntent(target_entity=blocker_ent))
+                    return True  # Turn consumed by attack
                 continue
             # Valid step found — claim and move
             claimed_tiles.add((nx, ny))
@@ -253,9 +257,14 @@ class AISystem(esper.Processor):
         if (nx, ny) in claimed_tiles:
             return False
             
-        if self._get_blocker_at(nx, ny, pos.layer):
-            # Blocked by entity (could be the player)
-            path_data.path = [] # Invalidate
+        blocker_ent = self._get_blocker_at(nx, ny, pos.layer)
+        if blocker_ent:
+            if esper.has_component(blocker_ent, PlayerTag):
+                esper.add_component(ent, AttackIntent(target_entity=blocker_ent))
+                path_data.path = []  # Invalidate after attack
+                return True  # Turn consumed by attack
+            # Blocked by non-player entity — invalidate path
+            path_data.path = []
             return False
             
         # Move
