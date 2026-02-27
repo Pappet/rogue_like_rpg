@@ -1,20 +1,19 @@
-import esper
-import sys
 import os
+import sys
 from unittest.mock import MagicMock
+
+import esper
 
 # Ensure we can import from the project root
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from services.map_service import MapService
-from services.map_generator import MapGenerator
-from services.resource_loader import ResourceLoader
-from ecs.world import reset_world
-from ecs.components import Position, AIBehaviorState, Alignment, Schedule, Activity, AIState, Name
+from ecs.components import Activity, AIBehaviorState, AIState, Alignment, Name, Position, Schedule
 from ecs.systems.schedule_system import ScheduleSystem
-from entities.entity_registry import EntityRegistry
-from map.tile_registry import TileRegistry
-from entities.schedule_registry import schedule_registry
+from ecs.world import reset_world
+from services.map_generator import MapGenerator
+from services.map_service import MapService
+from services.resource_loader import ResourceLoader
+
 
 def test_village_population():
     print("Testing Village Population...")
@@ -42,10 +41,8 @@ def test_village_population():
     # village_map.thaw(world) should have been called in create_village_scenario
     npcs = []
     for ent, (pos, name) in world.get_components(Position, Name):
-        if pos.layer == 0:
-             # Check if it's one of our NPCs
-             if "Guard" in name.name or "Villager" in name.name:
-                 npcs.append(ent)
+        if pos.layer == 0 and ("Guard" in name.name or "Villager" in name.name):
+            npcs.append(ent)
     
     print(f"Found {len(npcs)} NPCs in Village map")
     assert len(npcs) == 4, f"Expected 4 NPCs in Village, found {len(npcs)}"
@@ -84,13 +81,13 @@ def test_village_population():
     activity = world.component_for_entity(guard_ent, Activity)
     ai_state = world.component_for_entity(guard_ent, AIBehaviorState)
     
-    # Test 10:00 (WORK)
+    # Test 10:00 (PATROL)
     clock_mock.hour = 10
     schedule_system.process(clock_mock, village_map)
     
     print(f"Guard activity at 10:00: {activity.current_activity}")
-    assert activity.current_activity == "WORK"
-    assert ai_state.state == AIState.WORK
+    assert activity.current_activity == "PATROL"
+    assert ai_state.state == AIState.PATROL
     
     # Test 20:00 (SOCIALIZE)
     clock_mock.hour = 20

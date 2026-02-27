@@ -47,11 +47,20 @@
       },
       {
         "start": 6,
-        "end": 18,
-        "activity": "WORK",
+        "end": 12,
+        "activity": "PATROL",
         "target_pos": [
-          10,
-          10
+          5,
+          35
+        ]
+      },
+      {
+        "start": 12,
+        "end": 18,
+        "activity": "PATROL",
+        "target_pos": [
+          35,
+          5
         ]
       },
       {
