@@ -6,7 +6,7 @@ from config import SpriteLayer
 from ecs.components import MapBound, Name, Portal, Position, Renderable
 from entities.entity_factory import EntityFactory
 from map.map_container import MapContainer
-from map.map_generator_utils import draw_rectangle
+from map.map_generator_utils import draw_rectangle, get_nearest_walkable_tile
 from map.map_layer import MapLayer
 from map.tile import Tile
 from services.map_service import MapService
@@ -155,7 +155,8 @@ class MapGenerator:
 
         # --- SPAWN VILLAGE NPCS ---
         for npc in config.get("village_npcs", []):
-            EntityFactory.create(world, npc["type"], npc["pos"][0], npc["pos"][1])
+            nx, ny = get_nearest_walkable_tile(village_layers[0], npc["pos"][0], npc["pos"][1])
+            EntityFactory.create(world, npc["type"], nx, ny)
 
         # Generate generic monsters for the village map
         SpawnService.spawn_monsters(world, village_container, density=0.005)
@@ -174,7 +175,8 @@ class MapGenerator:
 
             # --- SPAWN HOUSE NPCS ---
             for npc in h.get("npcs", []):
-                EntityFactory.create(world, npc["type"], npc["pos"][0], npc["pos"][1])
+                nx, ny = get_nearest_walkable_tile(h_container.layers[0], npc["pos"][0], npc["pos"][1])
+                EntityFactory.create(world, npc["type"], nx, ny)
 
             # Portal back to Village
             vx, vy = h["v_pos"]
@@ -262,4 +264,5 @@ class MapGenerator:
                     layer.tiles[ty][tx].set_type(type_id)
 
         for spawn in data.get("entities", []):
-            EntityFactory.create(world, spawn["template_id"], ox + spawn["x"], oy + spawn["y"])
+            nx, ny = get_nearest_walkable_tile(layer, ox + spawn["x"], oy + spawn["y"])
+            EntityFactory.create(world, spawn["template_id"], nx, ny)
