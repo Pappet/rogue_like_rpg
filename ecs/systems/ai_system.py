@@ -1,10 +1,26 @@
 import random
 
 import esper
-from config import GameStates, SpriteLayer, LogCategory
-from ecs.components import AI, AIBehaviorState, Blocker, Corpse, Position, AIState, ChaseData, Name, Stats, Alignment, EffectiveStats, PathData, AttackIntent, PlayerTag
-from services.visibility_service import VisibilityService
+
+from config import GameStates, LogCategory, SpriteLayer
+from ecs.components import (
+    AI,
+    AIBehaviorState,
+    AIState,
+    Alignment,
+    AttackIntent,
+    Blocker,
+    ChaseData,
+    Corpse,
+    EffectiveStats,
+    Name,
+    PathData,
+    PlayerTag,
+    Position,
+    Stats,
+)
 from services.pathfinding_service import PathfindingService
+from services.visibility_service import VisibilityService
 
 CARDINAL_DIRS = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # N S W E
 LOSE_SIGHT_TURNS = 3
@@ -77,10 +93,13 @@ class AISystem(esper.Processor):
             stats = esper.try_component(ent, Stats)
             if stats and self._can_see_player(pos, stats, player_pos, map_container, ent):
                 behavior.state = AIState.CHASE
-                esper.add_component(ent, ChaseData(
-                    last_known_x=player_pos.x,
-                    last_known_y=player_pos.y,
-                ))
+                esper.add_component(
+                    ent,
+                    ChaseData(
+                        last_known_x=player_pos.x,
+                        last_known_y=player_pos.y,
+                    ),
+                )
                 name_comp = esper.try_component(ent, Name)
                 if name_comp:
                     esper.dispatch_event("log_message", f"The {name_comp.name} notices you!", None, LogCategory.ALERT)
@@ -170,20 +189,14 @@ class AISystem(esper.Processor):
 
         # Pathfinding logic (Task 1 & 2)
         target_pos = (chase_data.last_known_x, chase_data.last_known_y)
-        
+
         path_data = None
         if esper.has_component(ent, PathData):
             path_data = esper.component_for_entity(ent, PathData)
 
         # Destination Invalidation: Recompute if destination changed or no path exists
         if path_data is None or path_data.destination != target_pos or not path_data.path:
-            path = PathfindingService.get_path(
-                esper,
-                map_container,
-                (pos.x, pos.y),
-                target_pos,
-                pos.layer
-            )
+            path = PathfindingService.get_path(esper, map_container, (pos.x, pos.y), target_pos, pos.layer)
             if path:
                 if path_data:
                     path_data.path = path
@@ -203,7 +216,7 @@ class AISystem(esper.Processor):
 
     def _greedy_step(self, ent, pos, target_pos, map_container, claimed_tiles):
         """Move entity one step toward target using greedy Manhattan distance.
-        
+
         Used as a fallback when pathfinding fails or path is blocked.
         """
         tx, ty = target_pos
@@ -245,18 +258,18 @@ class AISystem(esper.Processor):
 
     def _try_follow_path(self, ent, path_data, pos, claimed_tiles):
         """Attempts to take the next step in the precomputed path.
-        
+
         Returns True if a step was taken, False if blocked or empty.
         Invalidates (clears) the path if it's blocked by an entity.
         """
         if not path_data.path:
             return False
-            
+
         nx, ny = path_data.path[0]
-        
+
         if (nx, ny) in claimed_tiles:
             return False
-            
+
         blocker_ent = self._get_blocker_at(nx, ny, pos.layer)
         if blocker_ent:
             if esper.has_component(blocker_ent, PlayerTag):
@@ -266,7 +279,7 @@ class AISystem(esper.Processor):
             # Blocked by non-player entity — invalidate path
             path_data.path = []
             return False
-            
+
         # Move
         path_data.path.pop(0)
         claimed_tiles.add((nx, ny))
@@ -277,18 +290,17 @@ class AISystem(esper.Processor):
     def _can_see_player(self, pos, stats, player_pos, map_container, ent=None):
         """Returns True if NPC at pos can see player_pos using FOV computation."""
         is_transparent = self._make_transparency_func(pos.layer, map_container)
-        
+
         radius = stats.perception
         if ent is not None and esper.has_component(ent, EffectiveStats):
             radius = esper.component_for_entity(ent, EffectiveStats).perception
-            
-        visible = VisibilityService.compute_visibility(
-            (pos.x, pos.y), radius, is_transparent
-        )
+
+        visible = VisibilityService.compute_visibility((pos.x, pos.y), radius, is_transparent)
         return (player_pos.x, player_pos.y) in visible
 
     def _make_transparency_func(self, layer_idx, map_container):
         """Build transparency function for VisibilityService — mirrors visibility_system.py pattern."""
+
         def is_transparent(x, y):
             if 0 <= layer_idx < len(map_container.layers):
                 layer = map_container.layers[layer_idx]
@@ -296,10 +308,9 @@ class AISystem(esper.Processor):
                     tile = layer.tiles[y][x]
                     if not tile.transparent:
                         return False
-                    if tile.sprites.get(SpriteLayer.GROUND) == "#":
-                        return False
-                    return True
+                    return tile.sprites.get(SpriteLayer.GROUND) != "#"
             return False
+
         return is_transparent
 
     def _is_walkable(self, x, y, layer_idx, map_container):
