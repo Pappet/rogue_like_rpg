@@ -1,15 +1,17 @@
-import random
 import json
 import os
-from typing import Optional
-from map.tile import Tile
-from map.map_layer import MapLayer
-from map.map_container import MapContainer
+import random
+
 from config import SpriteLayer
+from ecs.components import MapBound, Name, Portal, Position, Renderable
 from entities.entity_factory import EntityFactory
-from ecs.components import MapBound, Position, Renderable, Name, Portal
-from map.map_generator_utils import draw_rectangle, place_door
+from map.map_container import MapContainer
+from map.map_generator_utils import draw_rectangle
+from map.map_layer import MapLayer
+from map.tile import Tile
 from services.map_service import MapService
+from services.spawn_service import SpawnService
+
 
 class MapGenerator:
     def __init__(self, map_service: MapService):
@@ -99,10 +101,10 @@ class MapGenerator:
 
     def create_village_scenario(self, world):
         """Creates a village scenario with procedural houses and terrain variety based on a JSON config."""
-        with open("assets/data/scenarios/village.json", "r") as f:
+        with open("assets/data/scenarios/village.json") as f:
             config = json.load(f)
 
-        def create_empty_layer(width, height, fill_type_id: Optional[str] = None):
+        def create_empty_layer(width, height, fill_type_id: str | None = None):
             tiles = []
             for y in range(height):
                 row = []
@@ -156,6 +158,9 @@ class MapGenerator:
         for npc in config.get("village_npcs", []):
             EntityFactory.create(world, npc["type"], npc["pos"][0], npc["pos"][1])
 
+        # Generate generic monsters for the village map
+        SpawnService.spawn_monsters(world, village_container, density=0.005)
+
         village_container.freeze(world)
 
         # 2. Create House interiors
@@ -185,13 +190,16 @@ class MapGenerator:
                 Name(f"Portal to {config['id']}")
             )
 
+            # Generate generic monsters for the house map (higher density for interiors)
+            SpawnService.spawn_monsters(world, h_container, density=0.03)
+
             h_container.freeze(world)
 
         # Set active and thaw
         self.map_service.set_active_map(config["id"])
         village_container.thaw(world)
 
-    def create_sample_map(self, width: int, height: int, map_id: Optional[str] = None) -> MapContainer:
+    def create_sample_map(self, width: int, height: int, map_id: str | None = None) -> MapContainer:
         """Creates a sample map for testing and optionally registers it."""
         tiles = []
         for y in range(height):
@@ -243,7 +251,7 @@ class MapGenerator:
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Prefab file not found: '{filepath}'")
 
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             data = json.load(f)
 
         tiles_grid = data["tiles"]

@@ -1,44 +1,38 @@
-import pygame
-import esper
 import logging
 
-from enum import Enum, auto
-from config import SpriteLayer, GameStates, LogCategory
+import esper
+import pygame
+
+from config import GameStates, LogCategory
 
 logger = logging.getLogger(__name__)
-from services.party_service import PartyService, get_entity_closure
-from services.map_service import MapService
-from services.spawn_service import SpawnService
-from ecs.world import get_world
-from ecs.systems.render_system import RenderSystem
-from ecs.systems.movement_system import MovementSystem
-from ecs.systems.turn_system import TurnSystem
-from ecs.systems.visibility_system import VisibilitySystem
-from ecs.systems.ui_system import UISystem
-from ecs.systems.action_system import ActionSystem
-from ecs.systems.combat_system import CombatSystem
-from ecs.systems.death_system import DeathSystem
-from ecs.systems.ai_system import AISystem
-from ecs.systems.schedule_system import ScheduleSystem
-from ecs.systems.fct_system import FCTSystem
-from ecs.systems.equipment_system import EquipmentSystem
-from ecs.systems.debug_render_system import DebugRenderSystem
+from config import SCREEN_HEIGHT, SCREEN_WIDTH
 from ecs.components import (
-    Position, MovementRequest, Renderable, ActionList, Action, Stats, 
-    Inventory, Name, Portable, Equipment, Equippable, SlotType, HotbarSlots,
-    Targeting, Portal
+    Action,
+    ActionList,
+    HotbarSlots,
+    Inventory,
+    MovementRequest,
+    Name,
+    Portable,
+    Portal,
+    Position,
+    Stats,
 )
-from ui.windows.tooltip import TooltipWindow
-from services.system_initializer import SystemInitializer
-from services.map_transition_service import MapTransitionService
-from services.game_input_handler import GameInputHandler
-import services.equipment_service as equipment_service
-import services.consumable_service as consumable_service
-from services.input_manager import InputCommand
+from ecs.systems.debug_render_system import DebugRenderSystem
+from ecs.systems.render_system import RenderSystem
+from ecs.systems.ui_system import UISystem
+from ecs.world import get_world
 from map.tile import VisibilityState
-from config import SCREEN_WIDTH, SCREEN_HEIGHT, DN_SETTINGS, TILE_SIZE, LOG_HEIGHT
-from ui.windows.inventory import InventoryWindow
+from services.game_input_handler import GameInputHandler
+from services.input_manager import InputCommand
+from services.map_transition_service import MapTransitionService
+from services.party_service import PartyService
+from services.system_initializer import SystemInitializer
 from ui.windows.character import CharacterWindow
+from ui.windows.inventory import InventoryWindow
+from ui.windows.tooltip import TooltipWindow
+
 
 class GameState:
     def __init__(self):
@@ -98,13 +92,13 @@ class Game(GameState):
         self.render_service = None
         self.camera = None
         self.player_entity = None
-        
+
         # ECS Systems
         self.render_system = None
         self.movement_system = None
         self.turn_system = None
         self.ui_system = None
-        
+
         # Extracted Services
         self.map_transition_service = None
         self.game_input_handler = None
@@ -119,13 +113,13 @@ class Game(GameState):
         self.map_service = self.persist.get("map_service")
         self.world_clock = self.persist.get("world_clock")
         self.ui_stack = self.persist.get("ui_stack")
-        
+
         # Initialize ECS
         self.world = get_world()
-        
+
         # Retrieve or initialize Systems
         systems = SystemInitializer.initialize(self.persist, self.world_clock, self.map_container)
-        
+
         # Store individual references for Game class usage
         self.turn_system = systems["turn_system"]
         self.visibility_system = systems["visibility_system"]
@@ -140,16 +134,13 @@ class Game(GameState):
 
         # Register processors to esper
         SystemInitializer.register_processors(systems)
-        
+
         if not self.persist.get("player_entity"):
             party_service = PartyService()
             # Start at 1,1 to avoid the wall at 0,0
             self.player_entity = party_service.create_initial_party(1, 1)
             self.persist["player_entity"] = self.player_entity
-            
-            # Spawn monsters
-            SpawnService.spawn_monsters(self.world, self.map_container)
-            
+
             # Welcome message
             esper.dispatch_event("log_message", "Welcome [color=green]Traveler[/color] to the dungeon!")
         else:
@@ -158,7 +149,7 @@ class Game(GameState):
         self.ui_system = UISystem(self.turn_system, self.player_entity, self.world_clock)
         self.render_system = RenderSystem(self.camera)
         self.render_system.set_map(self.map_container)
-        
+
         # Initialize Debug System (persistent flags)
         if "debug_flags" not in self.persist:
             # Migrate old setting if it exists
@@ -170,7 +161,7 @@ class Game(GameState):
                 "chase": True,
                 "labels": True
             }
-        
+
         self.debug_render_system = DebugRenderSystem(self.camera)
         self.debug_render_system.set_map(self.map_container)
 
@@ -208,8 +199,8 @@ class Game(GameState):
                 stack_consumed = True
 
         command = self.input_manager.handle_event(event, self.turn_system.current_state)
-        
-        # If stack consumed event, don't process further unless it's a TooltipWindow 
+
+        # If stack consumed event, don't process further unless it's a TooltipWindow
         # (which shouldn't block game commands like movement or exit)
         if stack_consumed:
             from ui.windows.tooltip import TooltipWindow
@@ -250,7 +241,7 @@ class Game(GameState):
             self.persist["debug_flags"]["master"] = not self.persist["debug_flags"]["master"]
             logger.debug(f"Debug master: {self.persist['debug_flags']['master']}")
             return
-        
+
         if self.persist["debug_flags"].get("master"):
             if command == InputCommand.DEBUG_TOGGLE_PLAYER_FOV:
                 self.persist["debug_flags"]["player_fov"] = not self.persist["debug_flags"]["player_fov"]
@@ -310,7 +301,7 @@ class Game(GameState):
         }
         if command in hotbar_commands:
             slot_idx = hotbar_commands[command]
-            
+
             # Hotbar 6 always opens inventory regardless of assigned action
             if slot_idx == 6:
                 rect = pygame.Rect(140, 100, 1000, 500)
@@ -367,7 +358,7 @@ class Game(GameState):
             dx = -1
         elif command == InputCommand.MOVE_RIGHT:
             dx = 1
-        
+
         if dx != 0 or dy != 0:
             self.move_player(dx, dy)
 
@@ -393,7 +384,7 @@ class Game(GameState):
                 dx = -1
             elif command == InputCommand.MOVE_RIGHT:
                 dx = 1
-            
+
             if dx != 0 or dy != 0:
                 self.action_system.move_cursor(self.player_entity, dx, dy)
 
@@ -417,7 +408,7 @@ class Game(GameState):
                 dx = -1
             elif command == InputCommand.MOVE_RIGHT:
                 dx = 1
-            
+
             if dx != 0 or dy != 0:
                 self.action_system.move_cursor(self.player_entity, dx, dy)
 
@@ -425,7 +416,7 @@ class Game(GameState):
     def move_player(self, dx, dy):
         # Add movement request to player entity
         esper.add_component(self.player_entity, MovementRequest(dx, dy))
-        
+
         # For now, we end player turn immediately after requesting movement
         # In the future, we might wait for movement to complete
         if self.turn_system:
@@ -444,7 +435,7 @@ class Game(GameState):
         for ent, (pos, portable) in esper.get_components(Position, Portable):
             if pos.x == player_pos.x and pos.y == player_pos.y and pos.layer == player_pos.layer:
                 items_here.append(ent)
-        
+
         if not items_here:
             esper.dispatch_event("log_message", "There is nothing here to pick up.", None, LogCategory.ALERT)
             return
@@ -452,7 +443,7 @@ class Game(GameState):
         # For now, pick up the first item found
         item_ent = items_here[0]
         portable = esper.component_for_entity(item_ent, Portable)
-        
+
         # 2. Calculate current weight
         current_weight = 0
         for inv_item_id in inventory.items:
@@ -461,7 +452,7 @@ class Game(GameState):
                 current_weight += inv_portable.weight
             except KeyError:
                 pass
-        
+
         # 3. Check capacity
         if current_weight + portable.weight > stats.max_carry_weight:
             esper.dispatch_event("log_message", "Too heavy to carry.", None, LogCategory.ALERT)
@@ -470,22 +461,22 @@ class Game(GameState):
         # 4. Success: Move item to inventory
         esper.remove_component(item_ent, Position)
         inventory.items.append(item_ent)
-        
+
         try:
             name_comp = esper.component_for_entity(item_ent, Name)
             item_name = name_comp.name
         except KeyError:
             item_name = "item"
-            
+
         esper.dispatch_event("log_message", f"You pick up the {item_name}.", None, LogCategory.LOOT)
-        
+
 
 
     def update(self, dt):
         # Always make sure we have the latest map from transition service
         if "map_container" in self.persist:
             self.map_container = self.persist["map_container"]
-            
+
         TooltipWindow.update_tooltip_logic(
             self.ui_stack, self.turn_system, self.player_entity, self.camera, self.map_container
         )
@@ -500,7 +491,7 @@ class Game(GameState):
 
         # Run ECS processing
         esper.process(dt)
-        
+
         # Update camera based on player position
         if self.camera and self.player_entity:
             try:
@@ -508,7 +499,7 @@ class Game(GameState):
                 self.camera.update(pos.x, pos.y)
             except KeyError:
                 pass
-        
+
         # Handle enemy turn via AISystem
         if self.turn_system and self.turn_system.current_state == GameStates.ENEMY_TURN:
             try:
@@ -516,7 +507,7 @@ class Game(GameState):
                 player_layer = pos.layer
             except KeyError:
                 player_layer = 0
-            
+
             # Update schedules before AI processing
             self.schedule_system.process(self.world_clock, self.map_container)
             self.ai_system.process(self.turn_system, self.map_container, player_layer, self.player_entity)
@@ -592,34 +583,34 @@ class WorldMapState(GameState):
     def draw(self, surface):
         surface.fill((20, 20, 20))
         surface.blit(self.title_text, (20, 20))
-        
+
         if not self.map_container or not self.map_container.layers:
             return
 
         # Use the first layer for dimensions
         map_w = self.map_container.width
         map_h = self.map_container.height
-        
+
         # Center the map
         start_x = (SCREEN_WIDTH - map_w * self.tile_size) // 2
         start_y = (SCREEN_HEIGHT - map_h * self.tile_size) // 2
-        
+
         # Draw all layers (simplified: top-most visibility wins)
-        
+
         for y in range(map_h):
             for x in range(map_w):
                 # Check ground layer visibility primarily
                 tile = self.map_container.get_tile(x, y, 0)
                 if not tile:
                     continue
-                
+
                 rect = pygame.Rect(
                     start_x + x * self.tile_size,
                     start_y + y * self.tile_size,
                     self.tile_size,
                     self.tile_size
                 )
-                
+
                 color = (0, 0, 0)
                 if tile.visibility_state == VisibilityState.VISIBLE:
                     color = (200, 200, 200) # Light grey
@@ -633,7 +624,7 @@ class WorldMapState(GameState):
                     color = (20, 20, 40) # Very dark blue-grey
                     if not tile.walkable:
                         color = (15, 15, 30)
-                
+
                 if color != (0, 0, 0):
                     pygame.draw.rect(surface, color, rect)
 

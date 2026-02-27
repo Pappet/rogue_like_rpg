@@ -5,7 +5,23 @@ This mirrors the data-driven approach used for tiles in Phase 9.
 """
 
 from config import SpriteLayer
-from ecs.components import MapBound, Position, Renderable, Stats, Name, Blocker, AI, Description, AIBehaviorState, AIState, Alignment, LootTable, Schedule, Activity, TemplateId
+from ecs.components import (
+    AI,
+    Activity,
+    AIBehaviorState,
+    AIState,
+    Alignment,
+    Blocker,
+    Description,
+    LootTable,
+    MapBound,
+    Name,
+    Position,
+    Renderable,
+    Schedule,
+    Stats,
+    TemplateId,
+)
 from entities.entity_registry import EntityRegistry
 
 
@@ -13,7 +29,7 @@ class EntityFactory:
     """Factory that creates ECS entities from registry templates."""
 
     @staticmethod
-    def create(world, template_id: str, x: int, y: int) -> int:
+    def create(world, template_id: str, x: int, y: int, layer: int = 0) -> int:
         """Create an ECS entity from a registered template.
 
         Args:
@@ -21,6 +37,7 @@ class EntityFactory:
             template_id: The entity template ID to look up in EntityRegistry.
             x: The x-coordinate for the entity's Position.
             y: The y-coordinate for the entity's Position.
+            layer: The layer index for the entity's Position (default 0).
 
         Returns:
             The integer entity ID created in the world.
@@ -41,7 +58,7 @@ class EntityFactory:
 
         components = [
             MapBound(),
-            Position(x, y),
+            Position(x, y, layer),
             Renderable(template.sprite, layer_value, template.color),
             Stats(
                 hp=template.hp,
