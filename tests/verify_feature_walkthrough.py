@@ -177,10 +177,16 @@ def test_bump_hostile_npc_fights_to_death_with_loot():
 
 def test_portal_roundtrip():
     h = _Harness()
-    portals = list(esper.get_components(Position, Portal))
-    assert portals, "Village should contain portals"
+    # Outbound: any portal leading away from the Village (a structure door,
+    # not stairs — stairs target the same map).
+    portals = [
+        (ent, pos)
+        for ent, (pos, portal) in esper.get_components(Position, Portal)
+        if portal.target_map_id != "Village"
+    ]
+    assert portals, "Village should contain portals into structures"
 
-    _, (p_pos, _) = portals[0]
+    _, p_pos = portals[0]
     pos = h.player_pos()
     pos.x, pos.y = p_pos.x, p_pos.y
     h.frames(2)
@@ -188,9 +194,14 @@ def test_portal_roundtrip():
     h.frames()
     assert h.ctx.map_service.active_map_id != "Village", "portal should switch the active map"
 
-    back = list(esper.get_components(Position, Portal))
-    assert back, "interior map should contain a return portal"
-    _, (b_pos, _) = back[0]
+    # Return: explicitly the portal that targets the Village (not the stairs).
+    back = [
+        (ent, pos)
+        for ent, (pos, portal) in esper.get_components(Position, Portal)
+        if portal.target_map_id == "Village"
+    ]
+    assert back, "interior map should contain a return portal to the Village"
+    _, b_pos = back[0]
     pos = h.player_pos()
     pos.x, pos.y = b_pos.x, b_pos.y
     h.frames(2)

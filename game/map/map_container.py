@@ -4,10 +4,12 @@ from game.map.tile import VisibilityState
 
 
 class MapContainer:
-    def __init__(self, layers: list[MapLayer]):
+    def __init__(self, layers: list[MapLayer], arrival_pos: tuple[int, int] | None = None):
         self.layers = layers
         self.frozen_entities: list[list] = []
         self.last_visited_turn: int = 0
+        # Where the player appears when arriving via world travel (Phase A).
+        self.arrival_pos = arrival_pos
 
     @property
     def width(self) -> int:

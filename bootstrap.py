@@ -35,7 +35,7 @@ def build_game_context() -> GameContext:
     viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT
     camera = Camera(viewport_width, viewport_height, 0, HEADER_HEIGHT)
 
-    MapGenerator(map_service).create_village_scenario(esper)
+    MapGenerator(map_service).create_world(esper, world_graph)
 
     systems = build_systems(world_clock, map_service.get_active_map())
     register_processors(systems)
