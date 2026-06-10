@@ -2,16 +2,19 @@
 import esper
 from services.map_service import MapService
 from services.map_generator import MapGenerator
+from services.resource_loader import ResourceLoader
 from ecs.components import Position, Portal, Name
 from config import SpriteLayer
 
 def test_village_refactor():
-    import esper
     world = esper
-    esper.clear_database()
+    ResourceLoader.load_schedules("assets/data/schedules.json")
+    ResourceLoader.load_tiles("assets/data/tile_types.json")
+    ResourceLoader.load_entities("assets/data/entities.json")
+    ResourceLoader.load_items("assets/data/items.json")
     service = MapService()
     generator = MapGenerator(service)
-    
+
     # Create scenario
     generator.create_village_scenario(world)
     

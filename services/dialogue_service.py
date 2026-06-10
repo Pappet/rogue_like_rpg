@@ -48,6 +48,11 @@ class DialogueService:
         logger.info(f"Loaded dialogues for {len(data)} template IDs.")
 
     @classmethod
+    def clear(cls) -> None:
+        """Remove all loaded dialogues (used by tests)."""
+        cls._dialogues = {}
+
+    @classmethod
     def get_line(cls, template_id: str) -> str:
         """Return a random dialogue line for the given template ID.
 
