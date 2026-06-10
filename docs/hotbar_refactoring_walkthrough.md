@@ -25,14 +25,17 @@ Remove the complex, non-functional numeric action hotbar (`1`–`9` keys mapping
   - Added a direct `wait` method that logs the message `"You wait..."` and calls `self._turn_system.end_player_turn()`.
 - **`assets/data/player.json`**: Removed the unused `"hotbar"` JSON block.
 
-### 3. UI System
+### 3. UI System & Split Bottom Panel
 - **`game/systems/ui_system.py`**:
-  - Rewrote `_draw_hotbar` to render an inline legend of active keyboard shortcuts: `G:Interact  X:Examine  I:Items  C:Char  Space:Wait`.
+  - Split the bottom panel (`LOG_HEIGHT = 180`) into a left Actions List column (width 280px) and a right Message Log column (width 1000px).
+  - Implemented `_draw_actions_list` to render active actions (`ActionList`) with selection indicators (`>`) and resource costs (e.g., `(10 MP)`).
+  - Removed the keyboard shortcuts legend from the header (top bar) to declutter the interface, leaving the header focused on game phase states and stats.
   - Fixed a bug where `GameStates.EXAMINE` header title fallback fell to `"Environment Turn"` instead of `"Investigating..."`.
 
 ### 4. Tests
 - **`tests/verify_hotbar.py`**: Repurposed to verify that `HotbarSlots` is removed from components and that `Space` maps to `WAIT`.
 - **`tests/verify_player_action_service.py`**: Removed hotbar slot/trigger tests and added a test for `wait` ending player turn.
+- **`tests/verify_viewport_expansion.py`**: Updated assertion on `ui.log_rect.width` to expect the narrower width of the right log column.
 - **`tests/test_smoke.py`**: Removed all references, imports, and assertions on player hotbar slots.
 
 ## Verification
@@ -41,3 +44,4 @@ All 147 test cases run successfully:
 python -m pytest tests/ -q
 ```
 All passed without errors.
+

@@ -11,7 +11,11 @@ from config import (
     UI_COLOR_BG_HEADER,
     UI_COLOR_BORDER,
     UI_COLOR_ENV_TURN,
+    UI_COLOR_LOG_BG,
+    UI_COLOR_LOG_BORDER,
+    UI_COLOR_MANA_COST,
     UI_COLOR_PLAYER_TURN,
+    UI_COLOR_SELECTION,
     UI_COLOR_TARGETING,
     UI_COLOR_TEXT_BRIGHT,
     UI_COLOR_TEXT_DIM,
@@ -21,7 +25,7 @@ from config import (
     GameStates,
 )
 from core.ui.message_log import MessageLog
-from game.components import EffectiveStats, Stats, Targeting
+from game.components import ActionList, EffectiveStats, Stats, Targeting
 
 
 class LayoutCursor:
@@ -59,7 +63,11 @@ class UISystem(esper.Processor):
 
         # UI Areas
         self.header_rect = pygame.Rect(0, 0, SCREEN_WIDTH, HEADER_HEIGHT)
-        self.log_rect = pygame.Rect(0, SCREEN_HEIGHT - LOG_HEIGHT, SCREEN_WIDTH, LOG_HEIGHT)
+        self.actions_width = 280
+        self.actions_rect = pygame.Rect(0, SCREEN_HEIGHT - LOG_HEIGHT, self.actions_width, LOG_HEIGHT)
+        self.log_rect = pygame.Rect(
+            self.actions_width, SCREEN_HEIGHT - LOG_HEIGHT, SCREEN_WIDTH - self.actions_width, LOG_HEIGHT
+        )
 
         # Layout Cursors
         self.header_cursor = LayoutCursor(UI_PADDING, UI_PADDING, SCREEN_WIDTH - 2 * UI_PADDING)
@@ -71,6 +79,7 @@ class UISystem(esper.Processor):
 
     def process(self, surface):
         self.draw_header(surface)
+        self._draw_actions_list(surface)
         self.message_log.draw(surface)
         self.draw_low_health_vignette(surface)
 
@@ -146,9 +155,6 @@ class UISystem(esper.Processor):
         turn_x = self.header_rect.centerx - turn_surf.get_width() // 2
         surface.blit(turn_surf, (turn_x, (HEADER_HEIGHT - turn_surf.get_height()) // 2))
 
-        # Hotbar (Right of Turn Info)
-        self._draw_hotbar(surface, turn_x + turn_surf.get_width() + UI_SPACING_X)
-
         # Player Stats (HP/Mana) - Right Aligned
         stats = esper.try_component(self.player_entity, EffectiveStats) or esper.try_component(
             self.player_entity, Stats
@@ -164,27 +170,83 @@ class UISystem(esper.Processor):
                 ),
             )
 
-    def _draw_hotbar(self, surface, start_x):
-        """Draws the keyboard shortcuts legend in the header."""
-        shortcuts = [
-            ("G", "Interact"),
-            ("X", "Examine"),
-            ("I", "Items"),
-            ("C", "Char"),
-            ("Space", "Wait"),
-        ]
+    def _draw_actions_list(self, surface):
+        """Draws the actions list panel on the bottom-left of the screen."""
+        # Draw background
+        pygame.draw.rect(surface, UI_COLOR_LOG_BG, self.actions_rect)
+        pygame.draw.line(
+            surface,
+            UI_COLOR_LOG_BORDER,
+            (self.actions_rect.x, self.actions_rect.y),
+            (self.actions_rect.right, self.actions_rect.y),
+            2,
+        )
+        pygame.draw.line(
+            surface,
+            UI_COLOR_LOG_BORDER,
+            (self.actions_rect.right, self.actions_rect.y),
+            (self.actions_rect.right, self.actions_rect.bottom),
+            2,
+        )
 
-        current_x = start_x
-        y_pos = (HEADER_HEIGHT - self.small_font.get_height()) // 2
+        # Draw panel title
+        title_surf = self.small_font.render("ACTIONS (W/S cycle, Enter confirm)", True, UI_COLOR_TEXT_DIM)
+        surface.blit(title_surf, (self.actions_rect.x + UI_PADDING, self.actions_rect.y + 8))
 
-        for key, label in shortcuts:
-            # Render key in bright color
-            key_surf = self.small_font.render(key, True, UI_COLOR_TEXT_BRIGHT)
-            surface.blit(key_surf, (current_x, y_pos))
-            current_x += key_surf.get_width()
+        # Divider line under title
+        title_bottom = self.actions_rect.y + 8 + title_surf.get_height() + 4
+        pygame.draw.line(
+            surface,
+            (50, 50, 50),
+            (self.actions_rect.x + UI_PADDING, title_bottom),
+            (self.actions_rect.right - UI_PADDING, title_bottom),
+            1,
+        )
 
-            # Render colon and label in dim color
-            colon_label = f":{label}"
-            label_surf = self.small_font.render(colon_label, True, UI_COLOR_TEXT_DIM)
-            surface.blit(label_surf, (current_x, y_pos))
-            current_x += label_surf.get_width() + UI_PADDING + 4
+        # Get actions list
+        action_list = esper.try_component(self.player_entity, ActionList)
+        if not action_list or not action_list.actions:
+            return
+
+        # Draw each action
+        start_y = title_bottom + 8
+        line_height = self.small_font.get_linesize() + 4
+
+        for i, action in enumerate(action_list.actions):
+            item_y = start_y + i * line_height
+            if item_y + line_height > self.actions_rect.bottom - 4:
+                break
+
+            is_selected = i == action_list.selected_idx
+
+            # Highlight box for selected action
+            if is_selected:
+                highlight_rect = pygame.Rect(
+                    self.actions_rect.x + 4, item_y - 2, self.actions_rect.width - 8, line_height - 2
+                )
+                pygame.draw.rect(surface, UI_COLOR_SELECTION, highlight_rect)
+
+                # Render prefix cursor
+                prefix = "> "
+                prefix_surf = self.small_font.render(prefix, True, UI_COLOR_TEXT_BRIGHT)
+                surface.blit(prefix_surf, (self.actions_rect.x + UI_PADDING, item_y))
+                x_offset = prefix_surf.get_width()
+            else:
+                x_offset = 0
+
+            # Action name
+            name_color = UI_COLOR_TEXT_BRIGHT if is_selected else UI_COLOR_TEXT_DIM
+            name_surf = self.small_font.render(action.name, True, name_color)
+            surface.blit(name_surf, (self.actions_rect.x + UI_PADDING + x_offset, item_y))
+
+            # Action costs (e.g. Mana or Arrows)
+            cost_str = ""
+            if action.cost_mana > 0:
+                cost_str = f" ({action.cost_mana} MP)"
+            elif action.cost_arrows > 0:
+                cost_str = f" ({action.cost_arrows} Arr)"
+
+            if cost_str:
+                cost_color = UI_COLOR_MANA_COST if is_selected else (80, 80, 150)
+                cost_surf = self.small_font.render(cost_str, True, cost_color)
+                surface.blit(cost_surf, (self.actions_rect.x + UI_PADDING + x_offset + name_surf.get_width(), item_y))

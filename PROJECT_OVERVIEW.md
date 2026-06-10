@@ -13,7 +13,7 @@ This project is a grid-based, turn-based roguelike RPG. It features exploration 
 
 ## Architectural Decisions
 1. **Entity Component System (ECS)**: We separate data (Components) from logic (Systems) using the `esper` framework. This allows clean, decoupled extensions of game mechanics.
-2. **No Hotbar Slots (Refactored)**: Instead of a numerical 1-9 action slot hotbar that maps keys to actions, we display a clear inline legend of player keyboard shortcuts (`G: Interact`, `X: Examine`, etc.) and provide direct keyboard support for actions like `Wait` (mapped to `Space`).
+2. **Split Bottom Panel & Action List**: The bottom screen panel is split into two regions: a left column (`Actions Panel`, 280px wide) displaying the list of active player actions and highlighting the currently cycled selection, and a right column (`Message Log`) showing game events. The top header is cleaned of keyboard shortcut legends, leaving the center focused on game phase states.
 3. **Pure Input Controllers**: Input controller acts as a pure translation layer routing `InputCommands` to state/action services without importing `esper` directly.
 
 ## Detailed Architecture
