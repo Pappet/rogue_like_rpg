@@ -39,7 +39,9 @@ State cleanup between tests is automatic: the autouse fixture in `tests/conftest
 
 ## Planning
 
-Development plans live in `.planning/`. Phase-based roadmap is in `.planning/phases/` (numbered `01-` through `35+`). Quick-fix and tech-debt docs live in `.planning/quick/`. These are the source of truth for roadmap items and feature specs.
+The project direction and phase plan live in `ROADMAP.md` (source of truth
+for upcoming features). The development history through v1.6 is preserved in
+`DEV_JOURNAL.md`. The former `.planning/` directory has been retired.
 
 ## Architecture
 
@@ -414,7 +416,7 @@ class MapAwareSystem:
 ## Conventions & Rules
 
 ### AI Assistant Rules
-- **Committing:** ALWAYS create a git commit after every completed Task in the `.planning/` phases or in the `task.md` checklist. Do not wait until the entire phase is complete to commit.
+- **Committing:** ALWAYS create a git commit after every completed task (e.g. a `ROADMAP.md` phase task or a `task.md` checklist item). Do not wait until the entire phase is complete to commit.
 
 ### Code Style
 - Dataclass components, no inheritance on components
