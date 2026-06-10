@@ -227,6 +227,119 @@ there is no string-keyed `persist` dict anymore:
 `bootstrap.build_game_context()` is the only place that constructs services
 and systems. States receive the context via `startup(ctx)`.
 
+## Implementing New Features
+
+This is the playbook for ALL new features. Follow the placement rules and
+the matching recipe — do not invent new wiring patterns.
+
+### Step 0: Where does the code go?
+
+Answer these questions in order; the first "yes" decides:
+
+1. **Is it pure data** (a new monster, item, tile, schedule, dialogue,
+   map layout)? → JSON in `assets/data/` only. No Python change needed.
+2. **Is it a game rule or behavior** (combat formula, AI state, new player
+   action, item effect)? → `game/` (see recipes below).
+3. **Is it a generic mechanism** that would work in any tile-based game
+   (a new FOV algorithm, input device support, UI primitive)? → `core/`.
+   `core/` must never import from `game/`, `game_context`, `bootstrap` or
+   `main` — `tests/verify_layering.py` will fail otherwise.
+4. **Is it a constant** (color, size, timing)? → the matching `config/`
+   submodule. Never hardcode magic numbers at the use site.
+
+### Step 1: Pick the recipe
+
+#### Recipe A — New content (no code)
+
+Add an entry to the matching JSON file (`entities.json`, `items.json`,
+`tile_types.json`, `schedules.json`, `dialogues.json`, `scenarios/*.json`,
+`prefabs/`). Sprite layers use enum NAME strings (e.g. `"ENTITIES"`).
+Verify with the relevant registry/factory test, e.g.
+`python -m pytest tests/verify_entity_factory.py`.
+
+#### Recipe B — New component
+
+1. Add a plain `@dataclass` to `game/components.py` — no methods with side
+   effects, no esper calls inside components.
+2. If entities holding it can die: add it to the cleanup list in
+   `game/systems/death_system.py`.
+3. If it must survive map switches: it is serialized automatically by
+   freeze/thaw as long as the entity has `MapBound`.
+
+#### Recipe C — New ECS system
+
+1. Decide the category first (see System Categories): frame processor,
+   phase system, render system, or event system.
+2. Create `game/systems/<name>_system.py`. Query via
+   `esper.get_components()` each call — never store entity references.
+3. If it needs the current map: inherit `MapAwareSystem`, do NOT take
+   `map_container` in the constructor, and add the system to
+   `Systems.map_aware()` in `game_context.py`.
+4. Wire it: add a named field to the `Systems` dataclass
+   (`game_context.py`) and construct it in `build_systems()`
+   (`game/services/system_initializer.py`). Frame processors additionally
+   go into the ordered list in `register_processors()`. Phase systems are
+   called from `TurnOrchestrator`; render systems from `RenderPipeline`;
+   event systems register handlers in their `__init__`.
+5. Write `tests/verify_<name>_system.py`.
+
+#### Recipe D — New player action (keypress does something)
+
+The chain is always: key → `InputCommand` → `InputController` →
+`PlayerActionService` → ECS. Never skip a link.
+
+1. Add an `InputCommand` member + key mapping in `core/input_manager.py`.
+2. Add the rule method to `game/services/player_action_service.py`
+   (this is where esper access lives; end the turn here if the action
+   costs one).
+3. Route the command in `game/controllers/input_controller.py` — pure
+   translation, ZERO esper imports (this is asserted in review).
+4. Add unit tests in `tests/verify_player_action_service.py` (mock the
+   systems via the `Systems` dataclass, see existing tests).
+
+#### Recipe E — New service
+
+1. Create it in `game/services/` (stateless where possible). It receives
+   what it needs via constructor — usually the `GameContext` (`ctx`).
+2. Construct it exactly once: in `bootstrap.build_game_context()` if
+   session-wide, or in `GameplayState.startup()` if it needs the player.
+   Nothing outside bootstrap/startup constructs services.
+3. Use `logging.getLogger(__name__)`, never `print()`.
+4. Add `tests/verify_<service_name>.py`.
+
+#### Recipe F — New UI window
+
+1. Subclass `UIWindow` (`core/ui/window_base.py`) in `game/ui/windows/`.
+2. Open it via a push in `InputController` using `UI_MODAL_RECT` from
+   `config/ui.py` (add a new rect constant there if the size differs).
+3. The window consumes events through `UIStack` — no game logic inside
+   the window; call services for rules.
+
+#### Recipe G — New game state (screen)
+
+1. Subclass `GameState` in `game/states/`, keep it a thin coordinator
+   (target < 150 lines; delegate real work to controllers/services).
+2. Register it in the `states` dict in `main.py`.
+3. Transition via `self.next_state = "NAME"; self.done = True`.
+
+#### Recipe H — Cross-system communication
+
+Follow the Event Policy (above). Default to a direct call. Dispatch an
+event only for facts (`*_died`, `log_message`) or sanctioned requests
+(`*_requested`). New event names must be past tense or `*_requested`.
+
+### Step 2: Verify and commit
+
+1. `python -m pytest tests/ -q` must be green — including
+   `verify_layering.py` (core/game rule) and `verify_game_loop_smoke.py`
+   (the game still boots and plays a full turn headless).
+2. New logic gets tests in the same change: unit tests for services,
+   `verify_<name>.py` for systems.
+3. `ruff check <changed files>` introduces no new findings.
+4. One commit per completed task (existing project rule). If the change
+   alters architecture or conventions, update CLAUDE.md in the same commit
+   — documentation drift is how the last God-class happened.
+
 ## Key Components Reference
 
 ### Components (`game/components.py`)
