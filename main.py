@@ -3,24 +3,15 @@ import sys
 
 import pygame
 
-from config import HEADER_HEIGHT, LOG_HEIGHT, SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH, SIDEBAR_WIDTH
-from game_states import Game, GameOver, TitleScreen, WorldMapState
+from config import SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 )
-import esper
 
-from components.camera import Camera
-from services.dialogue_service import DialogueService
-from services.input_manager import InputManager
-from services.map_generator import MapGenerator
-from services.map_service import MapService
-from services.render_service import RenderService
-from services.resource_loader import ResourceLoader
-from services.world_clock_service import WorldClockService
-from ui.stack_manager import UIStack
+from bootstrap import build_game_context
+from game_states import Game, GameOver, TitleScreen, WorldMapState
 
 
 class GameController:
@@ -29,35 +20,7 @@ class GameController:
         pygame.display.set_caption(SCREEN_TITLE)
         self.clock = pygame.time.Clock()
 
-        self.map_service = MapService()
-        self.render_service = RenderService()
-        self.world_clock = WorldClockService()
-        self.input_manager = InputManager()
-        self.ui_stack = UIStack()
-        # Viewport is the area not covered by UI Header and Log
-        viewport_width = SCREEN_WIDTH - SIDEBAR_WIDTH
-        viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT
-        self.camera = Camera(viewport_width, viewport_height, 0, HEADER_HEIGHT)
-
-        ResourceLoader.load_schedules("assets/data/schedules.json")
-        ResourceLoader.load_tiles("assets/data/tile_types.json")
-        ResourceLoader.load_entities("assets/data/entities.json")
-        ResourceLoader.load_items("assets/data/items.json")
-        DialogueService.load("assets/data/dialogues.json")
-        world = esper
-        self.map_generator = MapGenerator(self.map_service)
-        self.map_generator.create_village_scenario(world)
-        self.map_container = self.map_service.get_active_map()
-
-        self.persist = {
-            "map_container": self.map_container,
-            "render_service": self.render_service,
-            "camera": self.camera,
-            "map_service": self.map_service,
-            "world_clock": self.world_clock,
-            "input_manager": self.input_manager,
-            "ui_stack": self.ui_stack
-        }
+        self.ctx = build_game_context()
 
         self.states = {
             "TITLE": TitleScreen(),
@@ -67,7 +30,7 @@ class GameController:
         }
         self.state_name = "TITLE"
         self.state = self.states[self.state_name]
-        self.state.startup(self.persist)
+        self.state.startup(self.ctx)
 
     def run(self):
         while True:
@@ -87,11 +50,10 @@ class GameController:
 
     def flip_state(self):
         next_state = self.state.next_state
-        persist = self.state.persist
         self.state.done = False
         self.state_name = next_state
         self.state = self.states[self.state_name]
-        self.state.startup(persist)
+        self.state.startup(self.ctx)
 
 
 def main():

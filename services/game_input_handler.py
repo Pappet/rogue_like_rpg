@@ -26,12 +26,27 @@ from ui.windows.inventory import InventoryWindow
 class GameInputHandler:
     """Handles parsing and delegating input commands during the game state."""
 
-    def __init__(self, action_system, turn_system, ui_stack, player_entity, persist):
-        self.action_system = action_system
-        self.turn_system = turn_system
-        self.ui_stack = ui_stack
-        self.player_entity = player_entity
-        self.persist = persist
+    def __init__(self, ctx):
+        """Args:
+            ctx: The shared GameContext.
+        """
+        self.ctx = ctx
+
+    @property
+    def action_system(self):
+        return self.ctx.systems.action_system
+
+    @property
+    def turn_system(self):
+        return self.ctx.systems.turn_system
+
+    @property
+    def ui_stack(self):
+        return self.ctx.ui_stack
+
+    @property
+    def player_entity(self):
+        return self.ctx.player_entity
 
     def _open_inventory(self, game_instance):
         rect = pygame.Rect(*UI_MODAL_RECT)
@@ -54,27 +69,28 @@ class GameInputHandler:
 
     def handle_player_input(self, command, game_instance):
         # Debug Toggles
+        flags = self.ctx.debug_flags
         if command == InputCommand.DEBUG_TOGGLE_MASTER:
-            self.persist["debug_flags"]["master"] = not self.persist["debug_flags"]["master"]
-            logger.debug(f"Debug master: {self.persist['debug_flags']['master']}")
+            flags.master = not flags.master
+            logger.debug(f"Debug master: {flags.master}")
             return
 
-        if self.persist["debug_flags"].get("master"):
+        if flags.master:
             if command == InputCommand.DEBUG_TOGGLE_PLAYER_FOV:
-                self.persist["debug_flags"]["player_fov"] = not self.persist["debug_flags"]["player_fov"]
-                logger.debug(f"Debug player_fov: {self.persist['debug_flags']['player_fov']}")
+                flags.player_fov = not flags.player_fov
+                logger.debug(f"Debug player_fov: {flags.player_fov}")
                 return
             elif command == InputCommand.DEBUG_TOGGLE_NPC_FOV:
-                self.persist["debug_flags"]["npc_fov"] = not self.persist["debug_flags"]["npc_fov"]
-                logger.debug(f"Debug npc_fov: {self.persist['debug_flags']['npc_fov']}")
+                flags.npc_fov = not flags.npc_fov
+                logger.debug(f"Debug npc_fov: {flags.npc_fov}")
                 return
             elif command == InputCommand.DEBUG_TOGGLE_CHASE:
-                self.persist["debug_flags"]["chase"] = not self.persist["debug_flags"]["chase"]
-                logger.debug(f"Debug chase: {self.persist['debug_flags']['chase']}")
+                flags.chase = not flags.chase
+                logger.debug(f"Debug chase: {flags.chase}")
                 return
             elif command == InputCommand.DEBUG_TOGGLE_LABELS:
-                self.persist["debug_flags"]["labels"] = not self.persist["debug_flags"]["labels"]
-                logger.debug(f"Debug labels: {self.persist['debug_flags']['labels']}")
+                flags.labels = not flags.labels
+                logger.debug(f"Debug labels: {flags.labels}")
                 return
 
         # World Map Toggle

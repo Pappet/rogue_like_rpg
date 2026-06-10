@@ -32,17 +32,22 @@ class DebugRenderSystem(MapAwareSystem):
         return True
 
     def process(self, surface, flags, player_layer):
+        """Render the enabled debug overlays.
+
+        Args:
+            flags: A DebugFlags instance from the GameContext.
+        """
         # 1. Clear the overlay
         self.overlay.fill((0, 0, 0, 0))
 
         # 2. Render Layers
-        if flags.get("player_fov", True):
+        if flags.player_fov:
             self._render_fov_overlay(player_layer)
-        if flags.get("npc_fov", False):
+        if flags.npc_fov:
             self._render_npc_fov(player_layer)
-        if flags.get("chase", True):
+        if flags.chase:
             self._render_chase_targets(player_layer)
-        if flags.get("labels", True):
+        if flags.labels:
             self._render_ai_labels(player_layer)
 
         # 3. Blit overlay to the main surface at the camera's viewport position

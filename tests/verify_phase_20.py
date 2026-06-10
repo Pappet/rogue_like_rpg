@@ -11,6 +11,7 @@ from ecs.components import Position, AIBehaviorState, AIState, Alignment, ChaseD
 from ecs.systems.debug_render_system import DebugRenderSystem
 from map.tile import Tile, VisibilityState
 from config import TILE_SIZE, SpriteLayer
+from game_context import DebugFlags
 
 # Mock Camera
 class MockCamera:
@@ -71,7 +72,7 @@ def test_debug_render_system():
     # Run process
     surface = pygame.Surface((800, 600))
     try:
-        system.process(surface, flags={"player_fov": True}, player_layer=0)
+        system.process(surface, flags=DebugFlags(player_fov=True, npc_fov=False, chase=False, labels=False), player_layer=0)
         print("DebugRenderSystem.process() executed successfully.")
     except Exception as e:
         print(f"DebugRenderSystem.process() failed: {e}")

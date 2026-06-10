@@ -4,8 +4,6 @@ import esper
 import pygame
 
 from config import SCREEN_HEIGHT, SCREEN_WIDTH, GameStates
-
-logger = logging.getLogger(__name__)
 from ecs.components import Position
 from ecs.systems.debug_render_system import DebugRenderSystem
 from ecs.systems.render_system import RenderSystem
@@ -15,19 +13,26 @@ from services.game_input_handler import GameInputHandler
 from services.input_manager import InputCommand
 from services.map_transition_service import MapTransitionService
 from services.party_service import PartyService
-from services.system_initializer import SystemInitializer
 from ui.windows.tooltip import TooltipWindow
+
+logger = logging.getLogger(__name__)
 
 
 class GameState:
+    """Base class for all game states. States receive the GameContext in
+    startup() and must not hold game logic themselves."""
+
     def __init__(self):
         self.done = False
         self.next_state = None
-        self.input_manager = None
+        self.ctx = None
 
-    def startup(self, persistent):
-        self.persist = persistent
-        self.input_manager = self.persist.get("input_manager")
+    def startup(self, ctx):
+        self.ctx = ctx
+
+    @property
+    def input_manager(self):
+        return self.ctx.input_manager if self.ctx else None
 
     def get_event(self, event):
         raise NotImplementedError
@@ -73,97 +78,51 @@ class TitleScreen(GameState):
 class Game(GameState):
     def __init__(self):
         super().__init__()
-        self.map_container = None
-        self.render_service = None
-        self.camera = None
-        self.player_entity = None
-
-        # ECS Systems
-        self.render_system = None
-        self.movement_system = None
-        self.turn_system = None
-        self.ui_system = None
-
-        # Extracted Services
         self.map_transition_service = None
         self.game_input_handler = None
-        self.persist = {}
-        self.world = None
 
-    def startup(self, persistent):
-        super().startup(persistent)
-        self.map_container = self.persist.get("map_container")
-        self.render_service = self.persist.get("render_service")
-        self.camera = self.persist.get("camera")
-        self.map_service = self.persist.get("map_service")
-        self.world_clock = self.persist.get("world_clock")
-        self.ui_stack = self.persist.get("ui_stack")
+    # --- Convenience accessors into the shared context -------------------
 
-        # Initialize ECS (esper 3.x: the module itself is the world)
-        self.world = esper
+    @property
+    def player_entity(self):
+        return self.ctx.player_entity
 
-        # Retrieve or initialize Systems
-        systems = SystemInitializer.initialize(self.persist, self.world_clock, self.map_container)
+    @property
+    def map_container(self):
+        return self.ctx.map_container
 
-        # Store individual references for Game class usage
-        self.turn_system = systems["turn_system"]
-        self.visibility_system = systems["visibility_system"]
-        self.action_system = systems["action_system"]
-        self.movement_system = systems["movement_system"]
-        self.combat_system = systems["combat_system"]
-        self.death_system = systems["death_system"]
-        self.ai_system = systems["ai_system"]
-        self.schedule_system = systems["schedule_system"]
-        self.fct_system = systems["fct_system"]
-        self.equipment_system = systems["equipment_system"]
+    @property
+    def ui_stack(self):
+        return self.ctx.ui_stack
 
-        # Register processors to esper
-        SystemInitializer.register_processors(systems)
+    @property
+    def camera(self):
+        return self.ctx.camera
 
-        if not self.persist.get("player_entity"):
-            party_service = PartyService()
+    @property
+    def turn_system(self):
+        return self.ctx.systems.turn_system
+
+    # ----------------------------------------------------------------------
+
+    def startup(self, ctx):
+        super().startup(ctx)
+        systems = ctx.systems
+
+        if ctx.player_entity is None:
             # Start at 1,1 to avoid the wall at 0,0
-            self.player_entity = party_service.create_initial_party(1, 1)
-            self.persist["player_entity"] = self.player_entity
-
-            # Welcome message
+            ctx.player_entity = PartyService().create_initial_party(1, 1)
             esper.dispatch_event("log_message", "Welcome [color=green]Traveler[/color] to the dungeon!")
-        else:
-            self.player_entity = self.persist.get("player_entity")
 
-        self.ui_system = UISystem(self.turn_system, self.player_entity, self.world_clock)
-        self.render_system = RenderSystem(self.camera)
-        self.render_system.set_map(self.map_container)
+        # Render-cycle systems need camera/player context, (re)built on entry
+        systems.ui_system = UISystem(systems.turn_system, ctx.player_entity, ctx.world_clock)
+        systems.render_system = RenderSystem(ctx.camera)
+        systems.render_system.set_map(ctx.map_container)
+        systems.debug_render_system = DebugRenderSystem(ctx.camera)
+        systems.debug_render_system.set_map(ctx.map_container)
 
-        # Initialize Debug System (persistent flags)
-        if "debug_flags" not in self.persist:
-            # Migrate old setting if it exists
-            old_debug = self.persist.pop("debug_enabled", False)
-            self.persist["debug_flags"] = {
-                "master": old_debug,
-                "player_fov": True,
-                "npc_fov": False,
-                "chase": True,
-                "labels": True
-            }
-
-        self.debug_render_system = DebugRenderSystem(self.camera)
-        self.debug_render_system.set_map(self.map_container)
-
-        # Add render systems to context so MapTransitionService can update their map
-        systems["render_system"] = self.render_system
-        systems["debug_render_system"] = self.debug_render_system
-
-        # Initialize Map Transition Service
-        self.map_transition_service = MapTransitionService(self.map_service, self.world_clock, self.camera)
-        self.map_transition_service.initialize_context(
-            self.persist, self.world, self.player_entity, systems
-        )
-
-        # Initialize Input Handler
-        self.game_input_handler = GameInputHandler(
-            self.action_system, self.turn_system, self.ui_stack, self.player_entity, self.persist
-        )
+        self.map_transition_service = MapTransitionService(ctx)
+        self.game_input_handler = GameInputHandler(ctx)
 
         # Register event handlers
         esper.set_handler("change_map", self.map_transition_service.transition)
@@ -175,11 +134,11 @@ class Game(GameState):
         self.next_state = "GAME_OVER"
 
     def get_event(self, event):
-        if not self.turn_system or not self.input_manager:
+        if not self.ctx:
             return
 
         stack_consumed = False
-        if self.ui_stack and self.ui_stack.is_active():
+        if self.ui_stack.is_active():
             if self.ui_stack.handle_event(event):
                 stack_consumed = True
 
@@ -194,15 +153,11 @@ class Game(GameState):
         self.game_input_handler.handle_event(command, self)
 
     def update(self, dt):
-        # Always make sure we have the latest map from transition service
-        if "map_container" in self.persist:
-            self.map_container = self.persist["map_container"]
-
         TooltipWindow.update_tooltip_logic(
             self.ui_stack, self.turn_system, self.player_entity, self.camera, self.map_container
         )
 
-        if self.ui_stack and self.ui_stack.is_active():
+        if self.ui_stack.is_active():
             # Check if top window wants to close
             if getattr(self.ui_stack.stack[-1], 'wants_to_close', False):
                 self.ui_stack.pop()
@@ -214,7 +169,7 @@ class Game(GameState):
         esper.process(dt)
 
         # Update camera based on player position
-        if self.camera and self.player_entity:
+        if self.player_entity is not None:
             try:
                 pos = esper.component_for_entity(self.player_entity, Position)
                 self.camera.update(pos.x, pos.y)
@@ -222,7 +177,7 @@ class Game(GameState):
                 pass
 
         # Handle enemy turn via AISystem
-        if self.turn_system and self.turn_system.current_state == GameStates.ENEMY_TURN:
+        if self.turn_system.current_state == GameStates.ENEMY_TURN:
             try:
                 pos = esper.component_for_entity(self.player_entity, Position)
                 player_layer = pos.layer
@@ -230,17 +185,16 @@ class Game(GameState):
                 player_layer = 0
 
             # Update schedules before AI processing
-            self.schedule_system.process(self.world_clock, self.map_container)
-            self.ai_system.process(self.turn_system, self.map_container, player_layer, self.player_entity)
-
-
+            self.ctx.systems.schedule_system.process(self.ctx.world_clock, self.map_container)
+            self.ctx.systems.ai_system.process(self.turn_system, self.map_container, player_layer, self.player_entity)
 
     def draw(self, surface):
         surface.fill((0, 0, 0))
+        systems = self.ctx.systems
 
         # Get player layer
         player_layer = 0
-        if self.player_entity:
+        if self.player_entity is not None:
             try:
                 pos = esper.component_for_entity(self.player_entity, Position)
                 player_layer = pos.layer
@@ -252,45 +206,38 @@ class Game(GameState):
 
         # 1. Render map (clipped to viewport)
         surface.set_clip(viewport_rect)
-        if self.render_service and self.map_container and self.camera:
-            self.render_service.render_map(surface, self.map_container, self.camera, player_layer)
+        if self.map_container:
+            self.ctx.render_service.render_map(surface, self.map_container, self.camera, player_layer)
 
         # 2. Render entities via ECS (clipped to viewport)
-        if self.render_system:
-            self.render_system.process(surface, player_layer)
+        if systems.render_system:
+            systems.render_system.process(surface, player_layer)
 
         # 3. Render Debug Overlay (clipped to viewport)
-        debug_flags = self.persist.get("debug_flags", {})
-        if debug_flags.get("master") and hasattr(self, 'debug_render_system'):
-            self.debug_render_system.process(surface, debug_flags, player_layer)
+        if self.ctx.debug_flags.master and systems.debug_render_system:
+            systems.debug_render_system.process(surface, self.ctx.debug_flags, player_layer)
 
         # 3.5. Apply Viewport Tint
-        if self.world_clock and self.render_service:
-            tint_color = self.world_clock.get_interpolated_tint()
-            if tint_color and tint_color[3] > 0: # Only apply if alpha > 0
-                self.render_service.apply_viewport_tint(surface, tint_color, viewport_rect)
+        tint_color = self.ctx.world_clock.get_interpolated_tint()
+        if tint_color and tint_color[3] > 0:  # Only apply if alpha > 0
+            self.ctx.render_service.apply_viewport_tint(surface, tint_color, viewport_rect)
 
         # Reset clip for UI
         surface.set_clip(None)
 
         # 4. Render UI
-        if self.ui_system:
-            self.ui_system.process(surface)
+        if systems.ui_system:
+            systems.ui_system.process(surface)
 
-        if self.ui_stack:
-            self.ui_stack.draw(surface)
+        self.ui_stack.draw(surface)
+
 
 class WorldMapState(GameState):
     def __init__(self):
         super().__init__()
-        self.map_container = None
         self.tile_size = 8
         self.font = pygame.font.Font(None, 36)
         self.title_text = self.font.render("World Map (M/ESC to return)", True, (255, 255, 255))
-
-    def startup(self, persistent):
-        super().startup(persistent)
-        self.map_container = self.persist.get("map_container")
 
     def get_event(self, event):
         command = self.input_manager.handle_event(event, GameStates.WORLD_MAP)
@@ -305,12 +252,13 @@ class WorldMapState(GameState):
         surface.fill((20, 20, 20))
         surface.blit(self.title_text, (20, 20))
 
-        if not self.map_container or not self.map_container.layers:
+        map_container = self.ctx.map_container
+        if not map_container or not map_container.layers:
             return
 
         # Use the first layer for dimensions
-        map_w = self.map_container.width
-        map_h = self.map_container.height
+        map_w = map_container.width
+        map_h = map_container.height
 
         # Center the map
         start_x = (SCREEN_WIDTH - map_w * self.tile_size) // 2
@@ -321,7 +269,7 @@ class WorldMapState(GameState):
         for y in range(map_h):
             for x in range(map_w):
                 # Check ground layer visibility primarily
-                tile = self.map_container.get_tile(x, y, 0)
+                tile = map_container.get_tile(x, y, 0)
                 if not tile:
                     continue
 
@@ -351,7 +299,7 @@ class WorldMapState(GameState):
 
         # Highlight player position
         try:
-            player_entity = self.persist.get("player_entity")
+            player_entity = self.ctx.player_entity
             if player_entity is not None:
                 pos = esper.component_for_entity(player_entity, Position)
                 p_rect = pygame.Rect(
@@ -361,7 +309,7 @@ class WorldMapState(GameState):
                     self.tile_size
                 )
                 pygame.draw.rect(surface, (255, 255, 0), p_rect) # Yellow player
-        except Exception:
+        except KeyError:
             pass
 
 
@@ -393,4 +341,3 @@ class GameOver(GameState):
         surface.blit(self.title_text, self.title_rect)
         surface.blit(self.subtitle_text, self.subtitle_rect)
         surface.blit(self.restart_text, self.restart_rect)
-
