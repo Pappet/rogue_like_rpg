@@ -3,7 +3,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from map.tile_registry import TileRegistry
+from map.tile_registry import tile_registry
 from services.resource_loader import ResourceLoader
 from services.map_service import MapService
 from services.map_generator import MapGenerator
@@ -14,7 +14,7 @@ TILE_FILE = "assets/data/tile_types.json"
 
 def test_map_service():
     # Load the tile registry before any map operations.
-    TileRegistry.clear()
+    tile_registry.clear()
     ResourceLoader.load_tiles(TILE_FILE)
 
     service = MapService()

@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
 from entities.item_factory import ItemFactory
-from entities.item_registry import ItemRegistry, ItemTemplate
+from entities.item_registry import ItemTemplate, item_registry
 from ecs.components import Inventory, Position, Name, Portable
 from services.party_service import get_entity_closure
 from map.map_container import MapContainer
@@ -22,7 +22,7 @@ def test_item_persistence():
     world = esper
     
     # Register a dummy item
-    ItemRegistry.register(ItemTemplate(
+    item_registry.register(ItemTemplate(
         id="test_sword",
         name="Test Sword",
         sprite="/",

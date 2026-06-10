@@ -13,17 +13,17 @@ from config import SpriteLayer
 
 logger = logging.getLogger(__name__)
 from ecs.components import AIState, Alignment
-from map.tile_registry import TileRegistry, TileType
-from entities.entity_registry import EntityRegistry, EntityTemplate
-from entities.item_registry import ItemRegistry, ItemTemplate
-from entities.schedule_registry import schedule_registry, ScheduleTemplate, ScheduleEntry
+from map.tile_registry import TileRegistry, TileType, tile_registry
+from entities.entity_registry import EntityRegistry, EntityTemplate, entity_registry
+from entities.item_registry import ItemRegistry, ItemTemplate, item_registry
+from entities.schedule_registry import ScheduleRegistry, ScheduleTemplate, ScheduleEntry, schedule_registry
 
 
 class ResourceLoader:
     """Service that parses JSON resource files and populates registries."""
 
     @staticmethod
-    def load_schedules(filepath: str) -> None:
+    def load_schedules(filepath: str, registry: ScheduleRegistry = schedule_registry) -> None:
         """Load schedule definitions from a JSON file into ScheduleRegistry.
 
         Args:
@@ -81,10 +81,10 @@ class ResourceLoader:
                 name=item["name"],
                 entries=entries
             )
-            schedule_registry.register(template)
+            registry.register(template)
 
     @staticmethod
-    def load_tiles(filepath: str) -> None:
+    def load_tiles(filepath: str, registry: TileRegistry = tile_registry) -> None:
         """Load tile definitions from a JSON file into TileRegistry.
 
         Args:
@@ -149,10 +149,10 @@ class ResourceLoader:
                 occludes_below=bool(item.get("occludes_below", False)),
             )
 
-            TileRegistry.register(tile_type)
+            registry.register(tile_type)
 
     @staticmethod
-    def load_entities(filepath: str) -> None:
+    def load_entities(filepath: str, registry: EntityRegistry = entity_registry) -> None:
         """Load entity definitions from a JSON file into EntityRegistry.
 
         Args:
@@ -259,10 +259,10 @@ class ResourceLoader:
                 home_pos=home_pos,
             )
 
-            EntityRegistry.register(template)
+            registry.register(template)
 
     @staticmethod
-    def load_items(filepath: str) -> None:
+    def load_items(filepath: str, registry: ItemRegistry = item_registry) -> None:
         """Load item definitions from a JSON file into ItemRegistry.
 
         Args:
@@ -320,4 +320,4 @@ class ResourceLoader:
                 consumable=item.get("consumable"),
             )
 
-            ItemRegistry.register(template)
+            registry.register(template)

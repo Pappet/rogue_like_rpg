@@ -21,8 +21,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 
-from map.tile_registry import TileRegistry
-from entities.entity_registry import EntityRegistry, EntityTemplate
+from map.tile_registry import tile_registry
+from entities.entity_registry import EntityTemplate, entity_registry
 from entities.entity_factory import EntityFactory
 from services.resource_loader import ResourceLoader
 import esper
@@ -35,8 +35,8 @@ ENTITY_FILE = "assets/data/entities.json"
 
 def setup_registries():
     """Helper to clear and reload both registries for test isolation."""
-    TileRegistry.clear()
-    EntityRegistry.clear()
+    tile_registry.clear()
+    entity_registry.clear()
     ResourceLoader.load_tiles(TILE_FILE)
     ResourceLoader.load_entities(ENTITY_FILE)
 
@@ -138,7 +138,7 @@ def test_description_not_attached_without_field():
         wounded_text="",
         wounded_threshold=0.5,
     )
-    EntityRegistry.register(minimal_template)
+    entity_registry.register(minimal_template)
 
     entity_id = EntityFactory.create(world, "test_rock", 1, 1)
 

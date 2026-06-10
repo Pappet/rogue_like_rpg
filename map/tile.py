@@ -30,10 +30,10 @@ class Tile:
         sprites: Optional[Dict] = None,
     ):
         # Import here to avoid circular imports at module level.
-        from map.tile_registry import TileRegistry
+        from map.tile_registry import tile_registry
 
         if type_id is not None:
-            tile_type = TileRegistry.get(type_id)
+            tile_type = tile_registry.get(type_id)
             if tile_type is None:
                 raise ValueError(
                     f"Tile type '{type_id}' not found in TileRegistry. "
@@ -61,9 +61,9 @@ class Tile:
 
     def set_type(self, type_id: str) -> None:
         """Replace this tile's type, re-initialising shared properties from the registry."""
-        from map.tile_registry import TileRegistry
+        from map.tile_registry import tile_registry
 
-        tile_type = TileRegistry.get(type_id)
+        tile_type = tile_registry.get(type_id)
         if tile_type is None:
             raise ValueError(
                 f"Tile type '{type_id}' not found in TileRegistry."

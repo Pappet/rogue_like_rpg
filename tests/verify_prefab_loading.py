@@ -21,9 +21,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 
 from map.tile import Tile, VisibilityState
-from map.tile_registry import TileRegistry
+from map.tile_registry import tile_registry
 from map.map_layer import MapLayer
-from entities.entity_registry import EntityRegistry
+from entities.entity_registry import entity_registry
 from entities.entity_factory import EntityFactory
 from services.map_service import MapService
 from services.map_generator import MapGenerator
@@ -39,8 +39,8 @@ PREFAB_FILE = "assets/data/prefabs/cottage_interior.json"
 
 def setup_registries():
     """Clear and reload both registries for test isolation."""
-    TileRegistry.clear()
-    EntityRegistry.clear()
+    tile_registry.clear()
+    entity_registry.clear()
     ResourceLoader.load_tiles(TILE_FILE)
     ResourceLoader.load_entities(ENTITY_FILE)
 

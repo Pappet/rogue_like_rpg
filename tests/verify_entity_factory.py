@@ -4,7 +4,7 @@ Tests that:
 1. ResourceLoader.load_entities() populates EntityRegistry correctly.
 2. EntityFactory.create() builds ECS entities with correct components.
 3. Unknown template IDs raise ValueError.
-4. EntityRegistry.clear() removes all templates.
+4. entity_registry.clear() removes all templates.
 
 Run from project root:
     python -m pytest tests/verify_entity_factory.py -v
@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 
-from map.tile_registry import TileRegistry
-from entities.entity_registry import EntityRegistry
+from map.tile_registry import tile_registry
+from entities.entity_registry import EntityRegistry, entity_registry
 from entities.entity_factory import EntityFactory
 from services.resource_loader import ResourceLoader
 import esper
@@ -32,21 +32,21 @@ ENTITY_FILE = "assets/data/entities.json"
 
 def setup_registries():
     """Helper to clear and reload both registries for test isolation."""
-    TileRegistry.clear()
-    EntityRegistry.clear()
+    tile_registry.clear()
+    entity_registry.clear()
     ResourceLoader.load_tiles(TILE_FILE)
     ResourceLoader.load_entities(ENTITY_FILE)
 
 
 def test_entity_registry_load():
     """EntityRegistry is populated with correct orc data from entities.json."""
-    EntityRegistry.clear()
-    TileRegistry.clear()
+    entity_registry.clear()
+    tile_registry.clear()
     ResourceLoader.load_tiles(TILE_FILE)
     ResourceLoader.load_entities(ENTITY_FILE)
 
-    orc = EntityRegistry.get("orc")
-    assert orc is not None, "EntityRegistry.get('orc') should return a template"
+    orc = entity_registry.get("orc")
+    assert orc is not None, "entity_registry.get('orc') should return a template"
     assert orc.name == "Orc"
     assert orc.hp == 10
     assert orc.power == 3
@@ -125,7 +125,7 @@ def test_invalid_state_raises():
         default_state="invalid_state",
         alignment="hostile",
     )
-    EntityRegistry.register(bad_template)
+    entity_registry.register(bad_template)
 
     with pytest.raises(ValueError):
         EntityFactory.create(world, "bad_entity", 0, 0)
@@ -142,14 +142,14 @@ def test_entity_factory_unknown_template():
 
 
 def test_entity_registry_clear():
-    """EntityRegistry.clear() removes all registered templates."""
+    """entity_registry.clear() removes all registered templates."""
     setup_registries()
 
     # Verify orc exists before clear
-    assert EntityRegistry.get("orc") is not None
+    assert entity_registry.get("orc") is not None
 
-    EntityRegistry.clear()
+    entity_registry.clear()
 
     # Verify orc is gone after clear
-    assert EntityRegistry.get("orc") is None
-    assert EntityRegistry.all_ids() == []
+    assert entity_registry.get("orc") is None
+    assert entity_registry.all_ids() == []

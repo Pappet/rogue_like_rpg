@@ -1,7 +1,7 @@
 import esper
 from ecs.components import AIBehaviorState, AIState, Alignment, Stats, AttackIntent, Name, TemplateId
 from enum import Enum, auto
-from services.dialogue_service import DialogueService
+from services.dialogue_service import dialogue_service
 
 class InteractionType(Enum):
     NONE = auto()
@@ -54,6 +54,6 @@ class InteractionResolver:
             name = world.component_for_entity(target_ent, Name).name if world.has_component(target_ent, Name) else "Someone"
             # Look up template-specific dialogue
             tid = world.try_component(target_ent, TemplateId)
-            line = DialogueService.get_line(tid.id if tid else "")
+            line = dialogue_service.get_line(tid.id if tid else "")
             world.dispatch_event("log_message", f"[color=yellow]{name}:[/color] {line}")
 

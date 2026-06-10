@@ -19,6 +19,7 @@ from ecs.systems.schedule_system import ScheduleSystem
 from ecs.systems.turn_system import TurnSystem
 from ecs.systems.visibility_system import VisibilitySystem
 from map.map_container import MapContainer
+from services.content_database import ContentDatabase
 from services.input_manager import InputManager
 from services.map_service import MapService
 from services.render_service import RenderService
@@ -85,6 +86,7 @@ class GameContext:
     systems: Systems
     debug_flags: DebugFlags = field(default_factory=DebugFlags)
     player_entity: int | None = None
+    content: ContentDatabase | None = None
 
     @property
     def map_container(self) -> MapContainer | None:

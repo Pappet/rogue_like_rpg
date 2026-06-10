@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 class DialogueService:
     """Read-only service for retrieving NPC dialogue lines."""
 
-    _dialogues: dict[str, list[str]] = {}
+    def __init__(self):
+        self._dialogues: dict[str, list[str]] = {}
 
-    @classmethod
-    def load(cls, filepath: str) -> None:
+    def load(self, filepath: str) -> None:
         """Load dialogue definitions from a JSON file.
 
         Args:
@@ -44,24 +44,26 @@ class DialogueService:
                 f"Dialogue file '{filepath}' must contain a JSON object."
             )
 
-        cls._dialogues = data
+        self._dialogues = data
         logger.info(f"Loaded dialogues for {len(data)} template IDs.")
 
-    @classmethod
-    def clear(cls) -> None:
+    def clear(self) -> None:
         """Remove all loaded dialogues (used by tests)."""
-        cls._dialogues = {}
+        self._dialogues = {}
 
-    @classmethod
-    def get_line(cls, template_id: str) -> str:
+    def get_line(self, template_id: str) -> str:
         """Return a random dialogue line for the given template ID.
 
         Falls back to ``_default`` lines if the template has no dedicated
         dialogue, and returns a generic fallback if nothing is loaded.
         """
-        lines = cls._dialogues.get(template_id)
+        lines = self._dialogues.get(template_id)
         if not lines:
-            lines = cls._dialogues.get("_default")
+            lines = self._dialogues.get("_default")
         if not lines:
             return "..."
         return random.choice(lines)
+
+
+# Default instance used by the game
+dialogue_service = DialogueService()

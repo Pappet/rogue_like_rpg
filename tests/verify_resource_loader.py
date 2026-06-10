@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import SpriteLayer
-from map.tile_registry import TileRegistry
+from map.tile_registry import TileRegistry, tile_registry
 from services.resource_loader import ResourceLoader
 
 TILE_FILE = "assets/data/tile_types.json"
@@ -28,7 +28,7 @@ def main():
     print("=== ResourceLoader / TileRegistry Verification ===\n")
 
     # --- clear registry to start fresh ---
-    TileRegistry.clear()
+    tile_registry.clear()
 
     # --- load tiles ---
     print(f"Loading: {TILE_FILE}")
@@ -37,7 +37,7 @@ def main():
 
     # --- floor_stone ---
     print("Checking floor_stone...")
-    floor = TileRegistry.get("floor_stone")
+    floor = tile_registry.get("floor_stone")
     check("floor_stone exists in registry", floor is not None)
     check("floor_stone.walkable is True", floor.walkable is True)
     check("floor_stone.transparent is True", floor.transparent is True)
@@ -50,7 +50,7 @@ def main():
 
     # --- wall_stone ---
     print("Checking wall_stone...")
-    wall = TileRegistry.get("wall_stone")
+    wall = tile_registry.get("wall_stone")
     check("wall_stone exists in registry", wall is not None)
     check("wall_stone.walkable is False", wall.walkable is False)
     check("wall_stone.transparent is False", wall.transparent is False)
@@ -61,7 +61,7 @@ def main():
 
     # --- door_stone ---
     print("Checking door_stone...")
-    door = TileRegistry.get("door_stone")
+    door = tile_registry.get("door_stone")
     check("door_stone exists in registry", door is not None)
     check("door_stone.walkable is True", door.walkable is True)
     check("door_stone.transparent is True", door.transparent is True)
@@ -69,7 +69,7 @@ def main():
 
     # --- roof_thatch ---
     print("Checking roof_thatch...")
-    roof = TileRegistry.get("roof_thatch")
+    roof = tile_registry.get("roof_thatch")
     check("roof_thatch exists in registry", roof is not None)
     check("roof_thatch.walkable is True", roof.walkable is True)
     check("roof_thatch.transparent is False", roof.transparent is False)
@@ -78,7 +78,7 @@ def main():
 
     # --- general registry checks ---
     print("Checking general registry state...")
-    all_ids = TileRegistry.all_ids()
+    all_ids = tile_registry.all_ids()
     check("Registry contains at least 4 tile types", len(all_ids) >= 4)
     print()
 

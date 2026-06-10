@@ -35,7 +35,7 @@ python -m pytest tests/ -v
 python -m pytest tests/verify_ai_system.py -v
 ```
 
-Between tests, always call `reset_world()` to clear ECS state, and `TileRegistry.clear()` / `EntityRegistry.clear()` / etc. to clear registries.
+State cleanup between tests is automatic: the autouse fixture in `tests/conftest.py` calls `reset_world()` and `default_content.clear_all()` before every test. Tests load the JSON content they need themselves.
 
 ## Planning
 

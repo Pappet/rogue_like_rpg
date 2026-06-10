@@ -25,9 +25,9 @@ from ecs.components import (
     EffectiveStats, ActionList, HotbarSlots, TurnOrder, PlayerTag,
     AI, AIBehaviorState, Portal, Schedule, Activity, MovementRequest,
 )
-from map.tile_registry import TileRegistry
-from entities.entity_registry import EntityRegistry
-from entities.item_registry import ItemRegistry
+from map.tile_registry import TileRegistry, tile_registry
+from entities.entity_registry import EntityRegistry, entity_registry
+from entities.item_registry import ItemRegistry, item_registry
 from entities.schedule_registry import schedule_registry
 from services.resource_loader import ResourceLoader
 from services.map_service import MapService
@@ -52,9 +52,9 @@ SCHEDULE_FILE = "assets/data/schedules.json"
 def clean_state():
     """Reset all global state before each test."""
     reset_world()
-    TileRegistry.clear()
-    EntityRegistry.clear()
-    ItemRegistry.clear()
+    tile_registry.clear()
+    entity_registry.clear()
+    item_registry.clear()
     schedule_registry.clear()
     yield
     reset_world()
@@ -87,9 +87,9 @@ class TestVillageScenario:
         """All four registries have at least one entry after loading."""
         _load_all_registries()
 
-        assert len(TileRegistry.all_ids()) > 0, "TileRegistry is empty"
-        assert len(EntityRegistry.all_ids()) > 0, "EntityRegistry is empty"
-        assert len(ItemRegistry.all_ids()) > 0, "ItemRegistry is empty"
+        assert len(tile_registry.all_ids()) > 0, "TileRegistry is empty"
+        assert len(entity_registry.all_ids()) > 0, "EntityRegistry is empty"
+        assert len(item_registry.all_ids()) > 0, "ItemRegistry is empty"
         assert len(schedule_registry.all_ids()) > 0, "ScheduleRegistry is empty"
 
     def test_expected_entity_templates(self):
@@ -97,7 +97,7 @@ class TestVillageScenario:
         _load_all_registries()
 
         for template_id in ("orc", "villager", "guard", "shopkeeper"):
-            assert EntityRegistry.get(template_id) is not None, (
+            assert entity_registry.get(template_id) is not None, (
                 f"EntityRegistry missing template '{template_id}'"
             )
 

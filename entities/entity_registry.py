@@ -6,7 +6,9 @@ EntityRegistry maps entity type IDs to EntityTemplate instances.
 """
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from typing import Optional, Tuple
+
+from core.registry import Registry
 
 
 @dataclass
@@ -38,27 +40,9 @@ class EntityTemplate:
     home_pos: Optional[Tuple[int, int]] = None
 
 
-class EntityRegistry:
-    """Singleton registry mapping entity type IDs to EntityTemplate flyweights."""
+class EntityRegistry(Registry[EntityTemplate]):
+    """Registry mapping entity type IDs to EntityTemplate flyweights."""
 
-    _registry: Dict[str, EntityTemplate] = {}
 
-    @classmethod
-    def register(cls, template: EntityTemplate) -> None:
-        """Add an EntityTemplate to the registry."""
-        cls._registry[template.id] = template
-
-    @classmethod
-    def get(cls, template_id: str) -> Optional[EntityTemplate]:
-        """Retrieve an EntityTemplate by its ID. Returns None if not found."""
-        return cls._registry.get(template_id)
-
-    @classmethod
-    def clear(cls) -> None:
-        """Remove all registered entity templates. Useful for testing."""
-        cls._registry.clear()
-
-    @classmethod
-    def all_ids(cls):
-        """Return all registered entity type IDs."""
-        return list(cls._registry.keys())
+# Default instance used by the game
+entity_registry = EntityRegistry()

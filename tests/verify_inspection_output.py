@@ -30,7 +30,7 @@ from ecs.systems.action_system import ActionSystem
 from map.map_container import MapContainer
 from map.map_layer import MapLayer
 from map.tile import Tile, VisibilityState
-from map.tile_registry import TileRegistry, TileType
+from map.tile_registry import TileType, tile_registry
 from config import SpriteLayer
 
 
@@ -52,7 +52,7 @@ STONE_FLOOR_TYPE = TileType(
 
 def setup_tile_registry():
     """Ensure the test tile type is registered (idempotent)."""
-    TileRegistry.register(STONE_FLOOR_TYPE)
+    tile_registry.register(STONE_FLOOR_TYPE)
 
 
 # ---------------------------------------------------------------------------

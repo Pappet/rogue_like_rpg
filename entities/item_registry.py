@@ -6,6 +6,8 @@ ItemRegistry maps item type IDs to ItemTemplate instances.
 """
 
 from dataclasses import dataclass, field
+
+from core.registry import Registry
 from typing import Dict, Optional, Tuple
 
 
@@ -26,27 +28,9 @@ class ItemTemplate:
     consumable: Optional[Dict] = None
 
 
-class ItemRegistry:
-    """Singleton registry mapping item type IDs to ItemTemplate flyweights."""
+class ItemRegistry(Registry[ItemTemplate]):
+    """Registry mapping item type IDs to ItemTemplate flyweights."""
 
-    _registry: Dict[str, ItemTemplate] = {}
 
-    @classmethod
-    def register(cls, template: ItemTemplate) -> None:
-        """Add an ItemTemplate to the registry."""
-        cls._registry[template.id] = template
-
-    @classmethod
-    def get(cls, template_id: str) -> Optional[ItemTemplate]:
-        """Retrieve an ItemTemplate by its ID. Returns None if not found."""
-        return cls._registry.get(template_id)
-
-    @classmethod
-    def clear(cls) -> None:
-        """Remove all registered item templates. Useful for testing."""
-        cls._registry.clear()
-
-    @classmethod
-    def all_ids(cls):
-        """Return all registered item type IDs."""
-        return list(cls._registry.keys())
+# Default instance used by the game
+item_registry = ItemRegistry()

@@ -7,7 +7,7 @@ from ecs.components import Position, Renderable, Stats, EffectiveStats, Inventor
 
 logger = logging.getLogger(__name__)
 from map.tile import VisibilityState
-from map.tile_registry import TileRegistry
+from map.tile_registry import tile_registry
 from ecs.systems.map_aware_system import MapAwareSystem
 
 class ActionSystem(esper.Processor, MapAwareSystem):
@@ -216,7 +216,7 @@ class ActionSystem(esper.Processor, MapAwareSystem):
         if targeting.action.targeting_mode == "inspect":
             # Look up tile type from registry
             if target_tile is not None and target_tile._type_id is not None:
-                tile_type = TileRegistry.get(target_tile._type_id)
+                tile_type = tile_registry.get(target_tile._type_id)
                 if tile_type is not None:
                     tile_name = tile_type.name
                     tile_desc = tile_type.base_description

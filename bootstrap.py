@@ -9,12 +9,11 @@ import esper
 from components.camera import Camera
 from config import HEADER_HEIGHT, LOG_HEIGHT, SCREEN_HEIGHT, SCREEN_WIDTH, SIDEBAR_WIDTH
 from game_context import GameContext
-from services.dialogue_service import DialogueService
+from services.content_database import default_content
 from services.input_manager import InputManager
 from services.map_generator import MapGenerator
 from services.map_service import MapService
 from services.render_service import RenderService
-from services.resource_loader import ResourceLoader
 from services.system_initializer import build_systems, register_processors
 from services.world_clock_service import WorldClockService
 from ui.stack_manager import UIStack
@@ -22,18 +21,9 @@ from ui.stack_manager import UIStack
 DATA_DIR = "assets/data"
 
 
-def load_content() -> None:
-    """Load all JSON game content into the registries."""
-    ResourceLoader.load_schedules(f"{DATA_DIR}/schedules.json")
-    ResourceLoader.load_tiles(f"{DATA_DIR}/tile_types.json")
-    ResourceLoader.load_entities(f"{DATA_DIR}/entities.json")
-    ResourceLoader.load_items(f"{DATA_DIR}/items.json")
-    DialogueService.load(f"{DATA_DIR}/dialogues.json")
-
-
 def build_game_context() -> GameContext:
     """Load content, create services and systems, generate the start map."""
-    load_content()
+    content = default_content.load(DATA_DIR)
 
     map_service = MapService()
     world_clock = WorldClockService()
@@ -56,4 +46,5 @@ def build_game_context() -> GameContext:
         ui_stack=UIStack(),
         camera=camera,
         systems=systems,
+        content=content,
     )

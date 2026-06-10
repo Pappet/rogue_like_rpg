@@ -22,7 +22,7 @@ from ecs.components import (
     Stats,
     TemplateId,
 )
-from entities.entity_registry import EntityRegistry
+from entities.entity_registry import entity_registry
 
 
 class EntityFactory:
@@ -45,12 +45,12 @@ class EntityFactory:
         Raises:
             ValueError: If template_id is not found in the EntityRegistry.
         """
-        template = EntityRegistry.get(template_id)
+        template = entity_registry.get(template_id)
         if template is None:
             raise ValueError(
                 f"Entity template '{template_id}' not found in EntityRegistry. "
                 f"Ensure ResourceLoader.load_entities() has been called and the "
-                f"template ID is correct. Available IDs: {EntityRegistry.all_ids()}"
+                f"template ID is correct. Available IDs: {entity_registry.all_ids()}"
             )
 
         # Convert sprite_layer string to SpriteLayer enum value

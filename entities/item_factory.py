@@ -1,4 +1,4 @@
-from entities.item_registry import ItemRegistry
+from entities.item_registry import item_registry
 from ecs.components import MapBound, Name, Renderable, Portable, ItemMaterial, StatModifiers, Position, Equippable, SlotType, Consumable, Description
 from config import SpriteLayer
 
@@ -14,7 +14,7 @@ class ItemFactory:
         Returns:
             The entity ID of the newly created item.
         """
-        template = ItemRegistry.get(template_id)
+        template = item_registry.get(template_id)
         if not template:
             raise ValueError(f"Item template '{template_id}' not found in ItemRegistry.")
 

@@ -10,7 +10,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import SpriteLayer
-from map.tile_registry import TileRegistry
+from map.tile_registry import tile_registry
 from map.tile import Tile, VisibilityState
 from services.resource_loader import ResourceLoader
 
@@ -27,7 +27,7 @@ def check(description: str, condition: bool) -> None:
 def main():
     print("=== Tile Refactor Verification ===\n")
 
-    TileRegistry.clear()
+    tile_registry.clear()
     ResourceLoader.load_tiles(TILE_FILE)
 
     # --- Task 1: Tile class uses registry ---

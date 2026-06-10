@@ -8,7 +8,7 @@ import esper
 from ecs.world import reset_world
 from ecs.systems.death_system import DeathSystem
 from ecs.components import Position, LootTable, Name, Blocker
-from entities.item_registry import ItemRegistry, ItemTemplate
+from entities.item_registry import ItemTemplate, item_registry
 from map.map_container import MapContainer
 from map.map_layer import MapLayer
 from map.tile import Tile
@@ -33,8 +33,8 @@ def test_loot_drop_guaranteed():
     world.add_processor(death_system)
     
     # Register test item
-    ItemRegistry.clear()
-    ItemRegistry.register(ItemTemplate(
+    item_registry.clear()
+    item_registry.register(ItemTemplate(
         id="test_item", name="Test Item", sprite="i", color=(255,255,255),
         sprite_layer="ITEMS", weight=1.0, material="gold"
     ))
@@ -72,8 +72,8 @@ def test_loot_scattering():
     world.add_processor(death_system)
     
     # Register test item
-    ItemRegistry.clear()
-    ItemRegistry.register(ItemTemplate(
+    item_registry.clear()
+    item_registry.register(ItemTemplate(
         id="test_item", name="Test Item", sprite="i", color=(255,255,255),
         sprite_layer="ITEMS", weight=1.0, material="gold"
     ))
