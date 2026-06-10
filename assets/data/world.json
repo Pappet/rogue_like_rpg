@@ -1,0 +1,40 @@
+{
+  "start_location": "Village",
+  "locations": [
+    {
+      "id": "Village",
+      "name": "Village",
+      "type": "settlement",
+      "scenario": "village",
+      "discovered": true
+    },
+    {
+      "id": "Eastmoor",
+      "name": "Eastmoor",
+      "type": "settlement",
+      "scenario": "eastmoor",
+      "discovered": true
+    },
+    {
+      "id": "Brackenfen",
+      "name": "Brackenfen",
+      "type": "settlement",
+      "scenario": "brackenfen",
+      "discovered": true
+    }
+  ],
+  "routes": [
+    {
+      "between": ["Village", "Eastmoor"],
+      "travel_ticks": 720
+    },
+    {
+      "between": ["Village", "Brackenfen"],
+      "travel_ticks": 360
+    },
+    {
+      "between": ["Brackenfen", "Eastmoor"],
+      "travel_ticks": 480
+    }
+  ]
+}
