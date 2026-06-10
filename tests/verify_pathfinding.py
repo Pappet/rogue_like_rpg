@@ -5,11 +5,11 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from services.pathfinding_service import PathfindingService
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile
-from ecs.components import Position, Blocker
+from game.services.pathfinding_service import PathfindingService
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile
+from game.components import Position, Blocker
 
 def create_mock_tile(walkable=True):
     tile = Tile(transparent=True)

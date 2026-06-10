@@ -5,12 +5,12 @@ import esper
 # Add the project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from ecs.systems.visibility_system import VisibilitySystem
-from ecs.systems.turn_system import TurnSystem
-from ecs.components import Position, Stats
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile, VisibilityState
+from game.systems.visibility_system import VisibilitySystem
+from game.systems.turn_system import TurnSystem
+from game.components import Position, Stats
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile, VisibilityState
 
 def test_active_aging():
     # Setup world

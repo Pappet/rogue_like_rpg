@@ -5,14 +5,14 @@ import esper
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from ecs.components import Position, Stats, EffectiveStats, TurnOrder
-from ecs.systems.equipment_system import EquipmentSystem
-from ecs.systems.visibility_system import VisibilitySystem
-from ecs.systems.turn_system import TurnSystem
-from services.world_clock_service import WorldClockService
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile, VisibilityState
+from game.components import Position, Stats, EffectiveStats, TurnOrder
+from game.systems.equipment_system import EquipmentSystem
+from game.systems.visibility_system import VisibilitySystem
+from game.systems.turn_system import TurnSystem
+from core.world_clock_service import WorldClockService
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile, VisibilityState
 from config import TICKS_PER_HOUR, DAY_START, NIGHT_START, SpriteLayer
 
 def setup_test_world():

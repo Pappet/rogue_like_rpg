@@ -20,16 +20,16 @@ import pytest
 import esper
 from unittest.mock import MagicMock
 
-from ecs.world import reset_world
-from ecs.components import (
+from core.ecs import reset_world
+from game.components import (
     AI, AIBehaviorState, AIState, Alignment, Position, 
     PathData, MovementRequest, Blocker, Stats, AttackIntent, Name
 )
-from ecs.systems.ai_system import AISystem
-from ecs.systems.turn_system import TurnSystem
-from ecs.systems.movement_system import MovementSystem
-from ecs.systems.combat_system import CombatSystem
-from ecs.systems.action_system import ActionSystem
+from game.systems.ai_system import AISystem
+from game.systems.turn_system import TurnSystem
+from game.systems.movement_system import MovementSystem
+from game.systems.combat_system import CombatSystem
+from game.systems.action_system import ActionSystem
 from config import GameStates
 
 def test_sleep_skips_turn():

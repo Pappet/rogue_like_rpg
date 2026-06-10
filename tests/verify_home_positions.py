@@ -1,12 +1,12 @@
 import pytest
 import esper
-from ecs.components import (
+from game.components import (
     Position, AIBehaviorState, Activity, AIState, 
     Alignment, Schedule, PathData, Stats, Name, AI
 )
-from ecs.systems.schedule_system import ScheduleSystem
-from entities.schedule_registry import schedule_registry, ScheduleTemplate, ScheduleEntry
-from services.world_clock_service import WorldClockService
+from game.systems.schedule_system import ScheduleSystem
+from game.content.schedule_registry import schedule_registry, ScheduleTemplate, ScheduleEntry
+from core.world_clock_service import WorldClockService
 from unittest.mock import MagicMock
 
 class MockMap:
@@ -93,10 +93,18 @@ def test_npc_wakes_up_and_moves_to_work(world):
     schedule_system = ScheduleSystem()
     clock = WorldClockService()
     mock_map = MockMap()
-    
+
     home_pos = (10, 10)
     work_pos = (15, 15)
-    
+
+    entries = [
+        ScheduleEntry(start=0, end=6, activity="SLEEP", target_meta="home"),
+        ScheduleEntry(start=6, end=22, activity="WORK", target_pos=work_pos),
+        ScheduleEntry(start=22, end=24, activity="SLEEP", target_meta="home")
+    ]
+    template = ScheduleTemplate(id="test_home_schedule", name="Test Home", entries=entries)
+    schedule_registry.register(template)
+
     # Create NPC at home, sleeping
     npc = esper.create_entity(
         Position(10, 10),

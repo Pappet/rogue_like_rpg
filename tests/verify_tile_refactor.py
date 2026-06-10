@@ -10,9 +10,9 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import SpriteLayer
-from map.tile_registry import TileRegistry
-from map.tile import Tile, VisibilityState
-from services.resource_loader import ResourceLoader
+from game.map.tile_registry import tile_registry
+from game.map.tile import Tile, VisibilityState
+from game.content.resource_loader import ResourceLoader
 
 TILE_FILE = "assets/data/tile_types.json"
 
@@ -27,7 +27,7 @@ def check(description: str, condition: bool) -> None:
 def main():
     print("=== Tile Refactor Verification ===\n")
 
-    TileRegistry.clear()
+    tile_registry.clear()
     ResourceLoader.load_tiles(TILE_FILE)
 
     # --- Task 1: Tile class uses registry ---
@@ -80,8 +80,8 @@ def main():
 
     # --- Task 2 & 3: Map generation uses type_ids ---
     print("Checking map generation with type_ids...")
-    from map.map_layer import MapLayer
-    from map.map_generator_utils import draw_rectangle, place_door
+    from game.map.map_layer import MapLayer
+    from game.map.map_generator_utils import draw_rectangle, place_door
 
     # Build a small blank layer with legacy tiles (no type_id yet).
     size = 10

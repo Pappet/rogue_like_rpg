@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.getcwd())
 
-from services.world_clock_service import WorldClockService
+from core.world_clock_service import WorldClockService
 import config
 
 def verify_clock():

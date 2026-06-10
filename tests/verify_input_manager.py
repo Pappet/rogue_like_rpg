@@ -6,7 +6,7 @@ import os
 os.environ['SDL_VIDEODRIVER'] = 'dummy'
 pygame.init()
 
-from services.input_manager import InputManager, InputCommand
+from core.input_manager import InputManager, InputCommand
 from config import GameStates
 
 def test_input_manager():

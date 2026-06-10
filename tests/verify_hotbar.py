@@ -5,9 +5,9 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from services.party_service import PartyService
-from ecs.components import HotbarSlots, Action
-from services.input_manager import InputManager, InputCommand, GameStates
+from game.services.party_service import PartyService
+from game.components import HotbarSlots, Action
+from core.input_manager import InputManager, InputCommand, GameStates
 
 def test_hotbar_infrastructure():
     esper.clear_database()

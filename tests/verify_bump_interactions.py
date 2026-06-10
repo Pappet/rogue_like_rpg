@@ -5,11 +5,11 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from ecs.components import Position, MovementRequest, AIBehaviorState, AIState, Alignment, Stats, Name, AttackIntent, Blocker
-from ecs.systems.movement_system import MovementSystem
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile
+from game.components import Position, MovementRequest, AIBehaviorState, AIState, Alignment, Stats, Name, AttackIntent, Blocker
+from game.systems.movement_system import MovementSystem
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile
 from config import SpriteLayer
 
 # Mock ActionSystem

@@ -5,8 +5,8 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from ecs.components import AIBehaviorState, AIState, Alignment, Stats, Name
-from services.interaction_resolver import InteractionResolver, InteractionType
+from game.components import AIBehaviorState, AIState, Alignment, Stats, Name
+from game.services.interaction_resolver import InteractionResolver, InteractionType
 
 def test_interaction_resolver():
     # In esper 3.x, we clear the global database

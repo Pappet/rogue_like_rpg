@@ -20,16 +20,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 
-from map.tile import Tile, VisibilityState
-from map.tile_registry import TileRegistry
-from map.map_layer import MapLayer
-from entities.entity_registry import EntityRegistry
-from entities.entity_factory import EntityFactory
-from services.map_service import MapService
-from services.map_generator import MapGenerator
-from services.resource_loader import ResourceLoader
-from ecs.world import get_world, reset_world
-from ecs.components import Position, Name
+from game.map.tile import Tile, VisibilityState
+from game.map.tile_registry import tile_registry
+from game.map.map_layer import MapLayer
+from game.content.entity_registry import entity_registry
+from game.content.entity_factory import EntityFactory
+from game.services.map_service import MapService
+from game.services.map_generator import MapGenerator
+from game.content.resource_loader import ResourceLoader
+import esper
+from core.ecs import reset_world
+from game.components import Position, Name
 
 TILE_FILE = "assets/data/tile_types.json"
 ENTITY_FILE = "assets/data/entities.json"
@@ -38,8 +39,8 @@ PREFAB_FILE = "assets/data/prefabs/cottage_interior.json"
 
 def setup_registries():
     """Clear and reload both registries for test isolation."""
-    TileRegistry.clear()
-    EntityRegistry.clear()
+    tile_registry.clear()
+    entity_registry.clear()
     ResourceLoader.load_tiles(TILE_FILE)
     ResourceLoader.load_entities(ENTITY_FILE)
 
@@ -57,7 +58,7 @@ def test_load_prefab_stamps_tiles():
     """Prefab tiles are correctly stamped onto the MapLayer at the given offset."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     layer = make_layer(10, 10, "floor_stone")
     map_service = MapService()
@@ -82,7 +83,7 @@ def test_load_prefab_preserves_visibility():
     """
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     layer = make_layer(10, 10, "floor_stone")
     # Mark tile (2,2) as VISIBLE before stamping
@@ -102,7 +103,7 @@ def test_load_prefab_spawns_entities():
     """Entity spawn points in the prefab are created via EntityFactory at the correct position."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     layer = make_layer(10, 10, "floor_stone")
     map_service = MapService()
@@ -124,7 +125,7 @@ def test_load_prefab_with_offset():
     """Offset is applied to both tile stamps and entity spawns."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     # Use a 20x20 layer so the prefab + offset fits
     layer = make_layer(20, 20, "floor_stone")
@@ -152,7 +153,7 @@ def test_load_prefab_file_not_found():
     """FileNotFoundError is raised when the prefab file does not exist."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     layer = make_layer(10, 10, "floor_stone")
     map_service = MapService()

@@ -5,13 +5,13 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from ecs.world import get_world, reset_world
-from ecs.systems.death_system import DeathSystem
-from ecs.components import Position, LootTable, Name, Blocker
-from entities.item_registry import ItemRegistry, ItemTemplate
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile
+from core.ecs import reset_world
+from game.systems.death_system import DeathSystem
+from game.components import Position, LootTable, Name, Blocker
+from game.content.item_registry import ItemTemplate, item_registry
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile
 
 class MockMap:
     def __init__(self, walkable_mask):
@@ -27,14 +27,14 @@ class MockMap:
 def test_loot_drop_guaranteed():
     print("Testing guaranteed loot drop...")
     reset_world()
-    world = get_world()
+    world = esper
     
     death_system = DeathSystem()
     world.add_processor(death_system)
     
     # Register test item
-    ItemRegistry.clear()
-    ItemRegistry.register(ItemTemplate(
+    item_registry.clear()
+    item_registry.register(ItemTemplate(
         id="test_item", name="Test Item", sprite="i", color=(255,255,255),
         sprite_layer="ITEMS", weight=1.0, material="gold"
     ))
@@ -66,14 +66,14 @@ def test_loot_drop_guaranteed():
 def test_loot_scattering():
     print("Testing loot scattering when center is blocked...")
     reset_world()
-    world = get_world()
+    world = esper
     
     death_system = DeathSystem()
     world.add_processor(death_system)
     
     # Register test item
-    ItemRegistry.clear()
-    ItemRegistry.register(ItemTemplate(
+    item_registry.clear()
+    item_registry.register(ItemTemplate(
         id="test_item", name="Test Item", sprite="i", color=(255,255,255),
         sprite_layer="ITEMS", weight=1.0, material="gold"
     ))

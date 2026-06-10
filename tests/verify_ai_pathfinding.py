@@ -3,14 +3,14 @@ import sys
 import os
 import esper
 import pytest
-from ecs.world import reset_world
-from ecs.components import AI, AIBehaviorState, AIState, Alignment, Position, Stats, Blocker, ChaseData, PathData
-from ecs.systems.ai_system import AISystem
-from ecs.systems.turn_system import TurnSystem
+from core.ecs import reset_world
+from game.components import AI, AIBehaviorState, AIState, Alignment, Position, Stats, Blocker, ChaseData, PathData
+from game.systems.ai_system import AISystem
+from game.systems.turn_system import TurnSystem
 from config import GameStates, SpriteLayer
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile
 
 # Ensure project root is on the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

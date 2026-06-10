@@ -1,6 +1,6 @@
 import esper
-from map.map_container import MapContainer
-from ecs.components import Position, Name, MapBound
+from game.map.map_container import MapContainer
+from game.components import Position, Name, MapBound
 
 def test_persistence():
     # Reset esper world

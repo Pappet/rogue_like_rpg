@@ -1,11 +1,12 @@
-from ecs.world import get_world, reset_world
-from ecs.components import Equippable, SlotType, Equipment, EffectiveStats, StatModifiers
-from entities.item_registry import ItemRegistry, ItemTemplate
-from entities.item_factory import ItemFactory
+import esper
+from core.ecs import reset_world
+from game.components import Equippable, SlotType, Equipment, EffectiveStats, StatModifiers
+from game.content.item_registry import ItemTemplate, item_registry
+from game.content.item_factory import ItemFactory
 
 def test_equipment_components():
     print("Testing equipment components...")
-    world = get_world()
+    world = esper
     
     # Test SlotType
     assert SlotType.HEAD == "head"
@@ -32,8 +33,8 @@ def test_equipment_components():
 def test_item_factory_with_slot():
     print("\nTesting ItemFactory with slots...")
     reset_world()
-    world = get_world()
-    ItemRegistry.clear()
+    world = esper
+    item_registry.clear()
     
     template = ItemTemplate(
         id="iron_helmet",
@@ -46,7 +47,7 @@ def test_item_factory_with_slot():
         slot="head",
         stats={"defense": 2}
     )
-    ItemRegistry.register(template)
+    item_registry.register(template)
     
     item_entity = ItemFactory.create(world, "iron_helmet")
     
@@ -73,7 +74,7 @@ def test_item_factory_with_slot():
         material="organic",
         stats={"hp": 5}
     )
-    ItemRegistry.register(template_no_slot)
+    item_registry.register(template_no_slot)
     apple_entity = ItemFactory.create(world, "apple")
     
     has_equippable = world.has_component(apple_entity, Equippable)

@@ -19,22 +19,22 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import esper
 
-from ecs.world import get_world, reset_world
-from ecs.components import (
+from core.ecs import reset_world
+from game.components import (
     Position, Renderable, Stats, Name, Blocker, Inventory, Equipment,
     EffectiveStats, ActionList, HotbarSlots, TurnOrder, PlayerTag,
     AI, AIBehaviorState, Portal, Schedule, Activity, MovementRequest,
 )
-from map.tile_registry import TileRegistry
-from entities.entity_registry import EntityRegistry
-from entities.item_registry import ItemRegistry
-from entities.schedule_registry import schedule_registry
-from services.resource_loader import ResourceLoader
-from services.map_service import MapService
-from services.map_generator import MapGenerator
-from services.party_service import PartyService, get_entity_closure
-from ecs.systems.turn_system import TurnSystem
-from services.world_clock_service import WorldClockService
+from game.map.tile_registry import TileRegistry, tile_registry
+from game.content.entity_registry import EntityRegistry, entity_registry
+from game.content.item_registry import ItemRegistry, item_registry
+from game.content.schedule_registry import schedule_registry
+from game.content.resource_loader import ResourceLoader
+from game.services.map_service import MapService
+from game.services.map_generator import MapGenerator
+from game.services.party_service import PartyService, get_entity_closure
+from game.systems.turn_system import TurnSystem
+from core.world_clock_service import WorldClockService
 from config import GameStates
 
 
@@ -52,9 +52,9 @@ SCHEDULE_FILE = "assets/data/schedules.json"
 def clean_state():
     """Reset all global state before each test."""
     reset_world()
-    TileRegistry.clear()
-    EntityRegistry.clear()
-    ItemRegistry.clear()
+    tile_registry.clear()
+    entity_registry.clear()
+    item_registry.clear()
     schedule_registry.clear()
     yield
     reset_world()
@@ -71,7 +71,7 @@ def _load_all_registries():
 def _create_village_world():
     """Helper: load registries, create village scenario, return (map_service, world)."""
     _load_all_registries()
-    world = get_world()
+    world = esper
     map_service = MapService()
     map_generator = MapGenerator(map_service)
     map_generator.create_village_scenario(world)
@@ -87,9 +87,9 @@ class TestVillageScenario:
         """All four registries have at least one entry after loading."""
         _load_all_registries()
 
-        assert len(TileRegistry.all_ids()) > 0, "TileRegistry is empty"
-        assert len(EntityRegistry.all_ids()) > 0, "EntityRegistry is empty"
-        assert len(ItemRegistry.all_ids()) > 0, "ItemRegistry is empty"
+        assert len(tile_registry.all_ids()) > 0, "TileRegistry is empty"
+        assert len(entity_registry.all_ids()) > 0, "EntityRegistry is empty"
+        assert len(item_registry.all_ids()) > 0, "ItemRegistry is empty"
         assert len(schedule_registry.all_ids()) > 0, "ScheduleRegistry is empty"
 
     def test_expected_entity_templates(self):
@@ -97,7 +97,7 @@ class TestVillageScenario:
         _load_all_registries()
 
         for template_id in ("orc", "villager", "guard", "shopkeeper"):
-            assert EntityRegistry.get(template_id) is not None, (
+            assert entity_registry.get(template_id) is not None, (
                 f"EntityRegistry missing template '{template_id}'"
             )
 
@@ -153,7 +153,7 @@ class TestPlayerEntity:
     def test_player_has_required_components(self):
         """Player entity carries every component PartyService assigns."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -174,7 +174,7 @@ class TestPlayerEntity:
     def test_player_stats_sane(self):
         """Player stats have sensible initial values."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -191,7 +191,7 @@ class TestPlayerEntity:
     def test_player_has_actions(self):
         """Player has an ActionList with at least one action."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -205,7 +205,7 @@ class TestPlayerEntity:
     def test_player_hotbar_populated(self):
         """Player hotbar has at least one slot filled."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -268,7 +268,7 @@ class TestPlayerActions:
     def test_movement_request_applied(self):
         """Adding a MovementRequest component doesn't crash."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -285,7 +285,7 @@ class TestPlayerActions:
     def test_all_action_names_present(self):
         """Every action name in the ActionList is a non-empty string."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -300,7 +300,7 @@ class TestPlayerActions:
     def test_hotbar_actions_match_action_list(self):
         """Every non-None hotbar action has a valid name."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -324,7 +324,7 @@ class TestFreezeThaw:
     def test_freeze_thaw_preserves_entity_count(self):
         """Freezing and thawing a map preserves the number of entities."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -375,7 +375,7 @@ class TestFreezeThaw:
     def test_freeze_thaw_preserves_components(self):
         """Entities thawed from a map retain their key components."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -410,7 +410,7 @@ class TestFreezeThaw:
     def test_empty_map_freeze_thaw(self):
         """Freeze/thaw on a map with no entities doesn't crash."""
         _load_all_registries()
-        world = get_world()
+        world = esper
 
         map_service = MapService()
         map_generator = MapGenerator(map_service)

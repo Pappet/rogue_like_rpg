@@ -1,15 +1,15 @@
-from ecs.world import get_world
-from services.resource_loader import ResourceLoader
-from entities.entity_factory import EntityFactory
-from entities.entity_registry import EntityRegistry
-from entities.schedule_registry import schedule_registry
-from ecs.components import Schedule
+import esper
+from game.content.resource_loader import ResourceLoader
+from game.content.entity_factory import EntityFactory
+from game.content.entity_registry import EntityRegistry, entity_registry
+from game.content.schedule_registry import schedule_registry
+from game.components import Schedule
 import os
 
 def test_pipeline():
     print("Initializing verification...")
     # Clear registries
-    EntityRegistry.clear()
+    entity_registry.clear()
     schedule_registry.clear()
     
     # Load schedules
@@ -21,14 +21,14 @@ def test_pipeline():
     # Load entities
     print("Loading entities from assets/data/entities.json...")
     ResourceLoader.load_entities("assets/data/entities.json")
-    v_template = EntityRegistry.get("villager")
+    v_template = entity_registry.get("villager")
     assert v_template is not None
     assert v_template.schedule_id == "villager_routine"
     print("✓ EntityRegistry 'villager' template has schedule_id='villager_routine'")
     
     # Create entity
     print("Creating 'villager' entity via EntityFactory...")
-    world = get_world()
+    world = esper
     v_id = EntityFactory.create(world, "villager", 5, 5)
     
     schedule_comp = world.component_for_entity(v_id, Schedule)

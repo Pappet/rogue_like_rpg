@@ -6,10 +6,10 @@ from unittest.mock import MagicMock
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from ecs.components import Schedule, AIBehaviorState, Activity, Position, AIState, Alignment, PathData
-from ecs.systems.schedule_system import ScheduleSystem
-from entities.schedule_registry import schedule_registry, ScheduleTemplate, ScheduleEntry
-from services.pathfinding_service import PathfindingService
+from game.components import Schedule, AIBehaviorState, Activity, Position, AIState, Alignment, PathData
+from game.systems.schedule_system import ScheduleSystem
+from game.content.schedule_registry import schedule_registry, ScheduleTemplate, ScheduleEntry
+from game.services.pathfinding_service import PathfindingService
 
 def test_full_schedule_lifecycle():
     # Setup

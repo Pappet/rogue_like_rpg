@@ -1,10 +1,10 @@
 
 import unittest
-from services.map_service import MapService
-from services.map_generator import MapGenerator
-from services.resource_loader import ResourceLoader
-from map.map_layer import MapLayer
-from map.tile import Tile
+from game.services.map_service import MapService
+from game.services.map_generator import MapGenerator
+from game.content.resource_loader import ResourceLoader
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile
 from config import SpriteLayer
 
 TILE_FILE = "assets/data/tile_types.json"

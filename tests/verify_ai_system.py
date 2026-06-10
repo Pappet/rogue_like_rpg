@@ -22,10 +22,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import esper
 
-from ecs.world import reset_world
-from ecs.components import AI, AIBehaviorState, AIState, Alignment, Corpse, Position
-from ecs.systems.ai_system import AISystem
-from ecs.systems.turn_system import TurnSystem
+from core.ecs import reset_world
+from game.components import AI, AIBehaviorState, AIState, Alignment, Corpse, Position
+from game.systems.ai_system import AISystem
+from game.systems.turn_system import TurnSystem
 from config import GameStates
 
 

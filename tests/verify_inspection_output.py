@@ -22,15 +22,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import esper
 
-from ecs.world import get_world, reset_world
-from ecs.components import (
+from core.ecs import reset_world
+from game.components import (
     Position, Stats, ActionList, Action, Targeting, Name, Description
 )
-from ecs.systems.action_system import ActionSystem
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile, VisibilityState
-from map.tile_registry import TileRegistry, TileType
+from game.systems.action_system import ActionSystem
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile, VisibilityState
+from game.map.tile_registry import TileType, tile_registry
 from config import SpriteLayer
 
 
@@ -52,7 +52,7 @@ STONE_FLOOR_TYPE = TileType(
 
 def setup_tile_registry():
     """Ensure the test tile type is registered (idempotent)."""
-    TileRegistry.register(STONE_FLOOR_TYPE)
+    tile_registry.register(STONE_FLOOR_TYPE)
 
 
 # ---------------------------------------------------------------------------

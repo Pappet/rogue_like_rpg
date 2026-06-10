@@ -5,24 +5,24 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from entities.item_factory import ItemFactory
-from entities.item_registry import ItemRegistry, ItemTemplate
-from ecs.components import Inventory, Position, Name, Portable
-from services.party_service import get_entity_closure
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile
+from game.content.item_factory import ItemFactory
+from game.content.item_registry import ItemTemplate, item_registry
+from game.components import Inventory, Position, Name, Portable
+from game.services.party_service import get_entity_closure
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile
 
-from ecs.world import get_world, reset_world
+from core.ecs import reset_world
 
 def test_item_persistence():
     print("Starting Item Persistence Test...")
     # 1. Setup
     reset_world()
-    world = get_world()
+    world = esper
     
     # Register a dummy item
-    ItemRegistry.register(ItemTemplate(
+    item_registry.register(ItemTemplate(
         id="test_sword",
         name="Test Sword",
         sprite="/",

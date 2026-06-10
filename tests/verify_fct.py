@@ -1,9 +1,9 @@
 import esper
 import pygame
 import time
-from ecs.components import Position, Stats, Name, FCT, AttackIntent
-from ecs.systems.combat_system import CombatSystem
-from ecs.systems.fct_system import FCTSystem
+from game.components import Position, Stats, Name, FCT, AttackIntent
+from game.systems.combat_system import CombatSystem
+from game.systems.fct_system import FCTSystem
 
 def test_fct():
     # Initialize esper world
