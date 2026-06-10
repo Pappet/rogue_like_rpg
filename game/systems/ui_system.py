@@ -8,7 +8,6 @@ from config import (
     LOG_HEIGHT,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
-    UI_COLOR_BAR_BG,
     UI_COLOR_BG_HEADER,
     UI_COLOR_BORDER,
     UI_COLOR_ENV_TURN,
@@ -22,7 +21,7 @@ from config import (
     GameStates,
 )
 from core.ui.message_log import MessageLog
-from game.components import EffectiveStats, HotbarSlots, Stats, Targeting
+from game.components import EffectiveStats, Stats, Targeting
 
 
 class LayoutCursor:
@@ -136,6 +135,9 @@ class UISystem(esper.Processor):
             else:
                 turn_str = "Targeting..."
             turn_color = UI_COLOR_TARGETING
+        elif self.turn_system.current_state == GameStates.EXAMINE:
+            turn_str = "Investigating..."
+            turn_color = UI_COLOR_TARGETING
         else:
             turn_str = "Environment Turn"
             turn_color = UI_COLOR_ENV_TURN
@@ -162,44 +164,27 @@ class UISystem(esper.Processor):
                 ),
             )
 
-    def is_action_available(self, action):
-        eff = esper.try_component(self.player_entity, EffectiveStats) or esper.try_component(self.player_entity, Stats)
-        if not eff:
-            return False
-        # Add other resource checks here
-        return not action.cost_mana > eff.mana
-
     def _draw_hotbar(self, surface, start_x):
-        """Draws the 1-9 hotbar slots in the header."""
-        hotbar = esper.try_component(self.player_entity, HotbarSlots)
-        if not hotbar:
-            return
+        """Draws the keyboard shortcuts legend in the header."""
+        shortcuts = [
+            ("G", "Interact"),
+            ("X", "Examine"),
+            ("I", "Items"),
+            ("C", "Char"),
+            ("Space", "Wait"),
+        ]
 
         current_x = start_x
-        for i in range(1, 10):
-            action = hotbar.slots.get(i)
-            if action:
-                # Slot background
-                slot_size = 32
-                slot_rect = pygame.Rect(current_x, (HEADER_HEIGHT - slot_size) // 2, slot_size, slot_size)
-                is_avail = self.is_action_available(action)
+        y_pos = (HEADER_HEIGHT - self.small_font.get_height()) // 2
 
-                bg_color = UI_COLOR_BAR_BG if is_avail else (60, 20, 20)
-                text_color = UI_COLOR_TEXT_BRIGHT if is_avail else UI_COLOR_TEXT_DIM
+        for key, label in shortcuts:
+            # Render key in bright color
+            key_surf = self.small_font.render(key, True, UI_COLOR_TEXT_BRIGHT)
+            surface.blit(key_surf, (current_x, y_pos))
+            current_x += key_surf.get_width()
 
-                pygame.draw.rect(surface, bg_color, slot_rect)
-                pygame.draw.rect(surface, UI_COLOR_BORDER, slot_rect, 1)
-
-                # Action name/initial
-                label = action.name[:1].upper()
-                label_surf = self.small_font.render(label, True, text_color)
-                surface.blit(
-                    label_surf,
-                    (slot_rect.centerx - label_surf.get_width() // 2, slot_rect.centery - label_surf.get_height() // 2),
-                )
-
-                # Key number
-                num_surf = self.small_font.render(str(i), True, UI_COLOR_TEXT_DIM)
-                surface.blit(num_surf, (slot_rect.x + 2, slot_rect.y - 2))
-
-                current_x += slot_size + UI_PADDING
+            # Render colon and label in dim color
+            colon_label = f":{label}"
+            label_surf = self.small_font.render(colon_label, True, UI_COLOR_TEXT_DIM)
+            surface.blit(label_surf, (current_x, y_pos))
+            current_x += label_surf.get_width() + UI_PADDING + 4

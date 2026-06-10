@@ -1,3 +1,5 @@
+import inspect
+import sys
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -32,16 +34,20 @@ class SlotType(str, Enum):
 class PlayerTag:
     pass
 
+
 @dataclass
 class TemplateId:
     """Stores the registry template ID the entity was created from."""
+
     id: str = ""
+
 
 @dataclass
 class Position:
     x: int
     y: int
     layer: int = 0
+
 
 @dataclass
 class Portal:
@@ -52,11 +58,13 @@ class Portal:
     name: str = "Portal"
     travel_ticks: int = 1
 
+
 @dataclass
 class Renderable:
     sprite: str
     layer: int
     color: tuple[int, int, int] = (255, 255, 255)
+
 
 @dataclass
 class Stats:
@@ -79,6 +87,7 @@ class Stats:
     base_intelligence: int = 0
     max_carry_weight: float = 20.0
 
+
 @dataclass
 class EffectiveStats:
     hp: int
@@ -90,6 +99,7 @@ class EffectiveStats:
     perception: int
     intelligence: int
 
+
 @dataclass
 class StatModifiers:
     hp: int = 0
@@ -99,54 +109,67 @@ class StatModifiers:
     perception: int = 0
     intelligence: int = 0
 
+
 @dataclass
 class Portable:
-    weight: float # kg
+    weight: float  # kg
+
 
 @dataclass
 class Equippable:
     slot: SlotType
 
+
 @dataclass
 class ItemMaterial:
-    material: str # e.g., 'iron', 'wood', 'glass'
+    material: str  # e.g., 'iron', 'wood', 'glass'
+
 
 @dataclass
 class Inventory:
     items: list = field(default_factory=list)
 
+
 @dataclass
 class Equipment:
     slots: dict[SlotType, int | None] = field(default_factory=lambda: {s: None for s in SlotType})
+
 
 @dataclass
 class Name:
     name: str
 
+
 @dataclass
 class Blocker:
     pass
+
 
 @dataclass
 class AI:
     pass
 
+
 @dataclass
 class TurnOrder:
     priority: int
 
+
 @dataclass
 class LightSource:
     radius: int
+
 
 @dataclass
 class MovementRequest:
     dx: int
     dy: int
 
+
 @dataclass
 class AttackIntent:
     target_entity: int
+
 
 @dataclass
 class Action:
@@ -155,17 +178,14 @@ class Action:
     cost_arrows: int = 0
     range: int = 0
     requires_targeting: bool = False
-    targeting_mode: str = "auto" # "auto" or "manual"
+    targeting_mode: str = "auto"  # "auto" or "manual"
+
 
 @dataclass
 class ActionList:
     actions: list[Action] = field(default_factory=list)
     selected_idx: int = 0
 
-@dataclass
-class HotbarSlots:
-    # Maps slots 1-9 to Action objects
-    slots: dict[int, Action | None] = field(default_factory=lambda: {i: None for i in range(1, 10)})
 
 @dataclass
 class Targeting:
@@ -174,14 +194,16 @@ class Targeting:
     target_x: int
     target_y: int
     range: int
-    mode: str # 'auto' or 'manual'
+    mode: str  # 'auto' or 'manual'
     action: Action
-    potential_targets: list[int] = field(default_factory=list) # Entity IDs
+    potential_targets: list[int] = field(default_factory=list)  # Entity IDs
     target_idx: int = 0
+
 
 @dataclass
 class Corpse:
     pass
+
 
 @dataclass
 class Description:
@@ -190,9 +212,13 @@ class Description:
     wounded_threshold: float = 0.5
 
     def get(self, stats=None) -> str:
-        if stats is not None and self.wounded_text and stats.max_hp > 0:
-            if stats.hp / stats.max_hp <= self.wounded_threshold:
-                return self.wounded_text
+        if (
+            stats is not None
+            and self.wounded_text
+            and stats.max_hp > 0
+            and stats.hp / stats.max_hp <= self.wounded_threshold
+        ):
+            return self.wounded_text
         return self.base
 
 
@@ -230,6 +256,7 @@ class LootTable:
 @dataclass
 class WanderData:
     """Stub component for wander state. Fields added when wander behavior is implemented."""
+
     pass
 
 
@@ -256,13 +283,13 @@ class FCT:
     offset_x: float = 0.0
     offset_y: float = 0.0
 
+
 @dataclass
 class MapBound:
     """Marker component. Indicates entity belongs to the current map and should be frozen along with it."""
+
     pass
 
-import inspect
-import sys
 
 KNOWN_COMPONENT_TYPES = []
 for name, obj in inspect.getmembers(sys.modules[__name__]):

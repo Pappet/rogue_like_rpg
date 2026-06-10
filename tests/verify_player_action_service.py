@@ -12,7 +12,6 @@ import pytest
 from game.components import (
     Action,
     ActionList,
-    HotbarSlots,
     Inventory,
     MovementRequest,
     Name,
@@ -20,8 +19,8 @@ from game.components import (
     Position,
     Stats,
 )
-from game_context import GameContext, Systems
 from game.services.player_action_service import PlayerActionService
+from game_context import GameContext, Systems
 
 
 def _make_ctx(player_entity):
@@ -50,8 +49,9 @@ def _make_ctx(player_entity):
 
 
 def _make_player(**stat_overrides):
-    stats = Stats(hp=10, max_hp=10, power=1, defense=0, mana=0, max_mana=0,
-                  perception=5, intelligence=5, **stat_overrides)
+    stats = Stats(
+        hp=10, max_hp=10, power=1, defense=0, mana=0, max_mana=0, perception=5, intelligence=5, **stat_overrides
+    )
     return esper.create_entity(Position(3, 3, 0), Inventory(), stats)
 
 
@@ -123,23 +123,9 @@ def test_try_enter_portal_with_portal_performs_action(service, player):
     assert action.name == "Enter Portal"
 
 
-def test_hotbar_action_lookup(service, player):
-    fireball = Action("Fireball", requires_targeting=True)
-    esper.add_component(player, HotbarSlots(slots={1: fireball}))
-
-    assert service.get_hotbar_action(1) is fireball
-    assert service.get_hotbar_action(2) is None
-
-
-def test_trigger_action_routes_targeting_vs_direct(service, player):
-    targeted = Action("Fireball", requires_targeting=True)
-    direct = Action("Shout", requires_targeting=False)
-
-    service.trigger_action(targeted)
-    service.ctx.systems.action_system.start_targeting.assert_called_once_with(player, targeted)
-
-    service.trigger_action(direct)
-    service.ctx.systems.action_system.perform_action.assert_called_once_with(player, direct)
+def test_wait_ends_turn(service, player):
+    service.wait()
+    service.ctx.systems.turn_system.end_player_turn.assert_called_once()
 
 
 def test_select_action_wraps_around(service, player):

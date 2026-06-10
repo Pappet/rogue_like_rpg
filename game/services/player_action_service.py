@@ -4,6 +4,7 @@ The input layer (GameInputHandler) translates InputCommands into calls on
 this service; all ECS access for player-initiated actions lives here.
 """
 
+import contextlib
 import logging
 
 import esper
@@ -12,7 +13,6 @@ from config import GameStates, LogCategory
 from game.components import (
     Action,
     ActionList,
-    HotbarSlots,
     Inventory,
     MovementRequest,
     Name,
@@ -30,7 +30,7 @@ class PlayerActionService:
 
     def __init__(self, ctx):
         """Args:
-            ctx: The shared GameContext.
+        ctx: The shared GameContext.
         """
         self.ctx = ctx
 
@@ -98,10 +98,8 @@ class PlayerActionService:
 
         current_weight = 0
         for inv_item_id in inventory.items:
-            try:
+            with contextlib.suppress(KeyError):
                 current_weight += esper.component_for_entity(inv_item_id, Portable).weight
-            except KeyError:
-                pass
 
         if current_weight + portable.weight > stats.max_carry_weight:
             esper.dispatch_event("log_message", "Too heavy to carry.", None, LogCategory.ALERT)
@@ -127,20 +125,10 @@ class PlayerActionService:
 
     # --- Actions & hotbar ---------------------------------------------------
 
-    def get_hotbar_action(self, slot_idx: int):
-        """Return the Action assigned to a hotbar slot, or None."""
-        try:
-            hotbar = esper.component_for_entity(self._player, HotbarSlots)
-        except KeyError:
-            return None
-        return hotbar.slots.get(slot_idx)
-
-    def trigger_action(self, action) -> None:
-        """Start targeting for an action, or execute it directly."""
-        if action.requires_targeting:
-            self._action_system.start_targeting(self._player, action)
-        else:
-            self._action_system.perform_action(self._player, action)
+    def wait(self) -> None:
+        """Wait a turn and end player turn."""
+        esper.dispatch_event("log_message", "You wait...")
+        self._turn_system.end_player_turn()
 
     def get_selected_action(self):
         """Return the currently selected action from the ActionList, or None."""

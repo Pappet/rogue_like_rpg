@@ -11,32 +11,41 @@ Run:
     python -m pytest tests/test_smoke.py -v
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 import esper
+import pytest
 
+from config import GameStates
 from core.ecs import reset_world
+from core.world_clock_service import WorldClockService
 from game.components import (
-    Position, Renderable, Stats, Name, Blocker, Inventory, Equipment,
-    EffectiveStats, ActionList, HotbarSlots, TurnOrder, PlayerTag,
-    AI, AIBehaviorState, Portal, Schedule, Activity, MovementRequest,
+    AI,
+    ActionList,
+    Blocker,
+    EffectiveStats,
+    Equipment,
+    Inventory,
+    MovementRequest,
+    Name,
+    PlayerTag,
+    Position,
+    Renderable,
+    Stats,
+    TurnOrder,
 )
-from game.map.tile_registry import TileRegistry, tile_registry
-from game.content.entity_registry import EntityRegistry, entity_registry
-from game.content.item_registry import ItemRegistry, item_registry
-from game.content.schedule_registry import schedule_registry
+from game.content.entity_registry import entity_registry
+from game.content.item_registry import item_registry
 from game.content.resource_loader import ResourceLoader
-from game.services.map_service import MapService
+from game.content.schedule_registry import schedule_registry
+from game.map.tile_registry import tile_registry
 from game.services.map_generator import MapGenerator
+from game.services.map_service import MapService
 from game.services.party_service import PartyService, get_entity_closure
 from game.systems.turn_system import TurnSystem
-from core.world_clock_service import WorldClockService
-from config import GameStates
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -82,6 +91,7 @@ def _create_village_world():
 # Test 1: Village scenario & registries
 # ---------------------------------------------------------------------------
 
+
 class TestVillageScenario:
     def test_registries_populated(self):
         """All four registries have at least one entry after loading."""
@@ -97,18 +107,14 @@ class TestVillageScenario:
         _load_all_registries()
 
         for template_id in ("orc", "villager", "guard", "shopkeeper"):
-            assert entity_registry.get(template_id) is not None, (
-                f"EntityRegistry missing template '{template_id}'"
-            )
+            assert entity_registry.get(template_id) is not None, f"EntityRegistry missing template '{template_id}'"
 
     def test_village_maps_created(self):
         """Village scenario registers all expected maps."""
         map_service, _ = _create_village_world()
 
         for map_id in ("Village", "Cottage", "Tavern", "Shop"):
-            assert map_service.get_map(map_id) is not None, (
-                f"Map '{map_id}' not found in MapService"
-            )
+            assert map_service.get_map(map_id) is not None, f"Map '{map_id}' not found in MapService"
 
     def test_village_active_map(self):
         """After create_village_scenario, Village is the active map."""
@@ -128,10 +134,7 @@ class TestVillageScenario:
         for ent, (pos, name, ai) in world.get_components(Position, Name, AI):
             npcs.append((ent, name.name))
 
-        assert len(npcs) >= 4, (
-            f"Expected at least 4 NPCs in Village, found {len(npcs)}: "
-            f"{[n for _, n in npcs]}"
-        )
+        assert len(npcs) >= 4, f"Expected at least 4 NPCs in Village, found {len(npcs)}: {[n for _, n in npcs]}"
 
     def test_house_interiors_have_frozen_entities(self):
         """House interior maps have frozen entities (NPCs + portals)."""
@@ -140,14 +143,14 @@ class TestVillageScenario:
         for map_id in ("Cottage", "Tavern", "Shop"):
             mc = map_service.get_map(map_id)
             assert len(mc.frozen_entities) >= 1, (
-                f"Map '{map_id}' should have at least 1 frozen entity "
-                f"(NPC or portal), found {len(mc.frozen_entities)}"
+                f"Map '{map_id}' should have at least 1 frozen entity (NPC or portal), found {len(mc.frozen_entities)}"
             )
 
 
 # ---------------------------------------------------------------------------
 # Test 2: Player entity has all expected components
 # ---------------------------------------------------------------------------
+
 
 class TestPlayerEntity:
     def test_player_has_required_components(self):
@@ -162,14 +165,20 @@ class TestPlayerEntity:
         player = party.create_initial_party(1, 1)
 
         required = [
-            PlayerTag, Position, Renderable, Stats, Equipment,
-            EffectiveStats, Name, Blocker, Inventory, TurnOrder,
-            ActionList, HotbarSlots,
+            PlayerTag,
+            Position,
+            Renderable,
+            Stats,
+            Equipment,
+            EffectiveStats,
+            Name,
+            Blocker,
+            Inventory,
+            TurnOrder,
+            ActionList,
         ]
         for comp_type in required:
-            assert world.has_component(player, comp_type), (
-                f"Player missing component {comp_type.__name__}"
-            )
+            assert world.has_component(player, comp_type), f"Player missing component {comp_type.__name__}"
 
     def test_player_stats_sane(self):
         """Player stats have sensible initial values."""
@@ -202,25 +211,11 @@ class TestPlayerEntity:
 
         assert len(action_list.actions) >= 1, "Player should have at least one action"
 
-    def test_player_hotbar_populated(self):
-        """Player hotbar has at least one slot filled."""
-        _load_all_registries()
-        world = esper
-        map_service = MapService()
-        map_generator = MapGenerator(map_service)
-        map_generator.create_village_scenario(world)
-
-        party = PartyService()
-        player = party.create_initial_party(1, 1)
-        hotbar = world.component_for_entity(player, HotbarSlots)
-
-        filled = [s for s in hotbar.slots.values() if s is not None]
-        assert len(filled) >= 1, "Player hotbar should have at least one slot filled"
-
 
 # ---------------------------------------------------------------------------
 # Test 3: Turn cycle
 # ---------------------------------------------------------------------------
+
 
 class TestTurnCycle:
     def test_turn_cycle_completes(self):
@@ -264,6 +259,7 @@ class TestTurnCycle:
 # Test 4: Player actions (movement request)
 # ---------------------------------------------------------------------------
 
+
 class TestPlayerActions:
     def test_movement_request_applied(self):
         """Adding a MovementRequest component doesn't crash."""
@@ -297,28 +293,11 @@ class TestPlayerActions:
         for action in action_list.actions:
             assert isinstance(action.name, str) and len(action.name) > 0
 
-    def test_hotbar_actions_match_action_list(self):
-        """Every non-None hotbar action has a valid name."""
-        _load_all_registries()
-        world = esper
-        map_service = MapService()
-        map_generator = MapGenerator(map_service)
-        map_generator.create_village_scenario(world)
-
-        party = PartyService()
-        player = party.create_initial_party(1, 1)
-        hotbar = world.component_for_entity(player, HotbarSlots)
-
-        for slot, action in hotbar.slots.items():
-            if action is not None:
-                assert isinstance(action.name, str) and len(action.name) > 0, (
-                    f"Hotbar slot {slot} has invalid action name"
-                )
-
 
 # ---------------------------------------------------------------------------
 # Test 5: Map freeze/thaw roundtrip
 # ---------------------------------------------------------------------------
+
 
 class TestFreezeThaw:
     def test_freeze_thaw_preserves_entity_count(self):
@@ -348,14 +327,12 @@ class TestFreezeThaw:
         # Only player party should remain
         remaining = list(world.get_components(Position))
         assert len(remaining) == len(exclude), (
-            f"After freeze, expected {len(exclude)} entities (player party), "
-            f"found {len(remaining)}"
+            f"After freeze, expected {len(exclude)} entities (player party), found {len(remaining)}"
         )
 
         frozen_count = len(village.frozen_entities)
         assert frozen_count == len(entities_before), (
-            f"Frozen count ({frozen_count}) should match pre-freeze entity count "
-            f"({len(entities_before)})"
+            f"Frozen count ({frozen_count}) should match pre-freeze entity count ({len(entities_before)})"
         )
 
         # Thaw
@@ -368,8 +345,7 @@ class TestFreezeThaw:
                 entities_after.append(ent)
 
         assert len(entities_after) == len(entities_before), (
-            f"Thaw restored {len(entities_after)} entities, "
-            f"expected {len(entities_before)}"
+            f"Thaw restored {len(entities_after)} entities, expected {len(entities_before)}"
         )
 
     def test_freeze_thaw_preserves_components(self):
@@ -402,9 +378,7 @@ class TestFreezeThaw:
                 names_after.add(name.name)
 
         assert names_before == names_after, (
-            f"Name mismatch after thaw.\n"
-            f"Before: {sorted(names_before)}\n"
-            f"After:  {sorted(names_after)}"
+            f"Name mismatch after thaw.\nBefore: {sorted(names_before)}\nAfter:  {sorted(names_after)}"
         )
 
     def test_empty_map_freeze_thaw(self):

@@ -32,11 +32,5 @@
     {
       "name": "Items"
     }
-  ],
-  "hotbar": {
-    "1": "Move",
-    "2": "Wait",
-    "3": "Investigate",
-    "4": "Items"
-  }
+  ]
 }
