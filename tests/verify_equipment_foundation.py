@@ -1,8 +1,10 @@
 import esper
+
 from core.ecs import reset_world
-from game.components import Equippable, SlotType, Equipment, EffectiveStats, StatModifiers
-from game.content.item_registry import ItemTemplate, item_registry
+from game.components import EffectiveStats, Equipment, Equippable, SlotType, StatModifiers
 from game.content.item_factory import ItemFactory
+from game.content.item_registry import ItemTemplate, item_registry
+
 
 def test_equipment_components():
     print("Testing equipment components...")

@@ -10,13 +10,13 @@ import logging
 import os
 
 from config import SpriteLayer
-
-logger = logging.getLogger(__name__)
 from game.components import AIState, Alignment
 from game.content.entity_registry import EntityRegistry, EntityTemplate, entity_registry
 from game.content.item_registry import ItemRegistry, ItemTemplate, item_registry
 from game.content.schedule_registry import ScheduleEntry, ScheduleRegistry, ScheduleTemplate, schedule_registry
 from game.map.tile_registry import TileRegistry, TileType, tile_registry
+
+logger = logging.getLogger(__name__)
 
 
 class ResourceLoader:
@@ -212,7 +212,7 @@ class ResourceLoader:
                 raise ValueError(
                     f"Entity '{item['id']}' has invalid default_state '{raw_state}'. "
                     f"Valid values: {[s.value for s in AIState]}"
-                )
+                ) from None
 
             raw_alignment = item.get("alignment", "hostile")
             try:
@@ -221,7 +221,7 @@ class ResourceLoader:
                 raise ValueError(
                     f"Entity '{item['id']}' has invalid alignment '{raw_alignment}'. "
                     f"Valid values: {[a.value for a in Alignment]}"
-                )
+                ) from None
 
             # --- parse optional description fields ---
             description = item.get("description", "")

@@ -76,10 +76,7 @@ class InventoryWindow(UIWindow):
             pass
 
         # Consume all KEYDOWN events when window is open
-        if event.type == pygame.KEYDOWN:
-            return True
-
-        return False
+        return event.type == pygame.KEYDOWN
 
     def drop_item(self):
         try:

@@ -69,17 +69,15 @@ class GameplayState(GameState):
             return
 
         stack_consumed = False
-        if self.ui_stack.is_active():
-            if self.ui_stack.handle_event(event):
-                stack_consumed = True
+        if self.ui_stack.is_active() and self.ui_stack.handle_event(event):
+            stack_consumed = True
 
         command = self.input_manager.handle_event(event, self.turn_system.current_state)
 
         # If stack consumed event, don't process further unless it's a TooltipWindow
         # (which shouldn't block game commands like movement or exit)
-        if stack_consumed:
-            if not (self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow)):
-                return
+        if stack_consumed and not (self.ui_stack.stack and isinstance(self.ui_stack.stack[-1], TooltipWindow)):
+            return
 
         self.input_controller.handle_event(command, self)
 

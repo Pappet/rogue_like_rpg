@@ -25,7 +25,7 @@ class ScheduleSystem(esper.Processor):
     def process(self, world_clock_service, map_container):
         """
         Updates entities with schedules based on the current hour.
-        
+
         Args:
             world_clock_service: WorldClockService instance providing the current hour.
             map_container: Current map container for pathfinding.
@@ -104,8 +104,10 @@ class ScheduleSystem(esper.Processor):
                     if target_changed and esper.has_component(ent, PathData):
                         esper.remove_component(ent, PathData)
             elif activity_key == "SLEEP":
-                 # If we are in SLEEP activity but not yet SLEEP state (because we were traveling)
-                 # Check if we reached home now
-                 if ai_state.state != AIState.SLEEP:
-                     if resolved_target_pos is None or (pos.x == resolved_target_pos[0] and pos.y == resolved_target_pos[1]):
-                         ai_state.state = AIState.SLEEP
+                # If we are in SLEEP activity but not yet SLEEP state (because we were traveling)
+                # Check if we reached home now
+                if ai_state.state != AIState.SLEEP and (
+                    resolved_target_pos is None
+                    or (pos.x == resolved_target_pos[0] and pos.y == resolved_target_pos[1])
+                ):
+                    ai_state.state = AIState.SLEEP

@@ -17,10 +17,9 @@ class TitleScreen(GameState):
         self.button_rect = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2, 200, 50)
 
     def get_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.button_rect.collidepoint(event.pos):
-                self.done = True
-                self.next_state = "GAME"
+        if event.type == pygame.MOUSEBUTTONDOWN and self.button_rect.collidepoint(event.pos):
+            self.done = True
+            self.next_state = "GAME"
 
         command = self.input_manager.handle_event(event)
         if command == InputCommand.CONFIRM:

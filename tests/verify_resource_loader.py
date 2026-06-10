@@ -4,15 +4,15 @@ Run from project root:
     python3 tests/verify_resource_loader.py
 """
 
-import sys
 import os
+import sys
 
 # Ensure project root is on the path when run directly.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import SpriteLayer
-from game.map.tile_registry import TileRegistry, tile_registry
 from game.content.resource_loader import ResourceLoader
+from game.map.tile_registry import tile_registry
 
 TILE_FILE = "assets/data/tile_types.json"
 

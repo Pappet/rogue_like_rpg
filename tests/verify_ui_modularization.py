@@ -1,6 +1,7 @@
+import os
 import re
 import sys
-import os
+
 
 def verify_ui_modularization():
     file_path = "ecs/systems/ui_system.py"
@@ -8,7 +9,7 @@ def verify_ui_modularization():
         print(f"Error: {file_path} not found.")
         return False
 
-    with open(file_path, 'r') as f:
+    with open(file_path) as f:
         content = f.read()
 
     # Methods to check

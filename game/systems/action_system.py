@@ -18,11 +18,11 @@ from game.components import (
     Stats,
     Targeting,
 )
-
-logger = logging.getLogger(__name__)
 from game.map.tile import VisibilityState
 from game.map.tile_registry import tile_registry
 from game.systems.map_aware_system import MapAwareSystem
+
+logger = logging.getLogger(__name__)
 
 
 class ActionSystem(esper.Processor, MapAwareSystem):
@@ -147,10 +147,13 @@ class ActionSystem(esper.Processor, MapAwareSystem):
             # Check if in visibility
             is_visible = False
             for layer in self._map_container.layers:
-                if 0 <= pos.y < len(layer.tiles) and 0 <= pos.x < len(layer.tiles[pos.y]):
-                    if layer.tiles[pos.y][pos.x].visibility_state == VisibilityState.VISIBLE:
-                        is_visible = True
-                        break
+                if (
+                    0 <= pos.y < len(layer.tiles)
+                    and 0 <= pos.x < len(layer.tiles[pos.y])
+                    and layer.tiles[pos.y][pos.x].visibility_state == VisibilityState.VISIBLE
+                ):
+                    is_visible = True
+                    break
 
             if is_visible:
                 targets.append(ent)
@@ -185,10 +188,13 @@ class ActionSystem(esper.Processor, MapAwareSystem):
         # 2. Check tile accessibility (any previously-seen tile is reachable)
         is_accessible = False
         for layer in self._map_container.layers:
-            if 0 <= new_y < len(layer.tiles) and 0 <= new_x < len(layer.tiles[new_y]):
-                if layer.tiles[new_y][new_x].visibility_state != VisibilityState.UNEXPLORED:
-                    is_accessible = True
-                    break
+            if (
+                0 <= new_y < len(layer.tiles)
+                and 0 <= new_x < len(layer.tiles[new_y])
+                and layer.tiles[new_y][new_x].visibility_state != VisibilityState.UNEXPLORED
+            ):
+                is_accessible = True
+                break
 
         if is_accessible:
             targeting.target_x = new_x

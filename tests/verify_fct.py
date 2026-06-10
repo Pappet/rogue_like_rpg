@@ -1,9 +1,10 @@
+
 import esper
-import pygame
-import time
-from game.components import Position, Stats, Name, FCT, AttackIntent
+
+from game.components import FCT, AttackIntent, Name, Position, Stats
 from game.systems.combat_system import CombatSystem
 from game.systems.fct_system import FCTSystem
+
 
 def test_fct():
     # Initialize esper world

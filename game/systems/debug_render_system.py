@@ -36,10 +36,7 @@ class DebugRenderSystem(MapAwareSystem):
             return False
 
         # Fallback for old tile systems where '#' character indicates a wall
-        if tile.sprites.get(SpriteLayer.GROUND) == "#":
-            return False
-
-        return True
+        return tile.sprites.get(SpriteLayer.GROUND) != "#"
 
     def process(self, surface, flags, player_layer):
         """Render the enabled debug overlays.
@@ -71,9 +68,9 @@ class DebugRenderSystem(MapAwareSystem):
             if pos.layer != player_layer:
                 continue
 
-            # Transparency function for shadowcasting
-            def transparency_func(x, y):
-                return self._is_transparent(x, y, pos.layer)
+            # Transparency function for shadowcasting (layer bound per iteration)
+            def transparency_func(x, y, layer=pos.layer):
+                return self._is_transparent(x, y, layer)
 
             # Optimization: Only process entities within the self.camera viewport (plus margin)
             margin = 10  # Margin to ensure we catch NPCs just off-screen whose FOV enters screen

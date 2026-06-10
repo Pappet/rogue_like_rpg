@@ -186,7 +186,7 @@ is neutral constants, usable by both.
     │   └── map_generator_utils.py   # Shared map generation utilities
     ├── services/
     │   ├── system_initializer.py    # build_systems() / register_processors()
-    │   ├── player_action_service.py # Player game rules (move, pickup, portal, hotbar, targeting)
+    │   ├── player_action_service.py # Player game rules (move, pickup, portal, wait, targeting)
     │   ├── map_service.py           # Map registry + active map management
     │   ├── map_generator.py         # Village scenario, terrain, prefab loading
     │   ├── map_transition_service.py# Map transition (freeze/thaw, set_map fan-out)
@@ -373,7 +373,6 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Consumable`      | Use effect (heal_hp, etc.)                   |
 | `LightSource`     | Light emission radius                        |
 | `ActionList`      | Available actions with selected index        |
-| `HotbarSlots`     | Hotbar slot mapping (slots 1–9)              |
 | `Targeting`       | Targeting state: origin, target, range, mode |
 | `FCT`             | Floating combat text with velocity + TTL     |
 
@@ -445,7 +444,7 @@ class MapAwareSystem:
 - **Add new entities**: `assets/data/entities.json` → spawn with `EntityFactory.create(world, "id", x, y)`
 - **Add new items**: `assets/data/items.json` → create with `ItemFactory.create(world, "id")`
 - **Add new schedules**: `assets/data/schedules.json` → assign via `schedule_id` in entity template
-- **Player stats**: `assets/data/player.json` → base stats, actions, hotbar config loaded by `PartyService`
+- **Player stats**: `assets/data/player.json` → base stats and actions loaded by `PartyService`
 - **Dialogues**: `assets/data/dialogues.json` → NPC dialogue lines keyed by template_id, loaded by `DialogueService`
 - **Map scenarios**: `assets/data/scenarios/*.json` → data-driven map layouts loaded by `MapGenerator`
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)

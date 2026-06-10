@@ -13,26 +13,21 @@ Run from project root:
     python -m pytest tests/verify_action_wiring.py -v
 """
 
-import sys
 import os
+import sys
 
 # Ensure project root is on the path when run directly.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 import esper
 
 from core.ecs import reset_world
-from game.components import (
-    Position, Stats, ActionList, Action, Targeting, Description
-)
-from game.systems.action_system import ActionSystem
-from game.systems.turn_system import TurnSystem
+from game.components import Action, ActionList, Description, Position, Stats
 from game.map.map_container import MapContainer
 from game.map.map_layer import MapLayer
 from game.map.tile import Tile, VisibilityState
 from game.services.party_service import PartyService
-
+from game.systems.action_system import ActionSystem
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -278,7 +273,6 @@ def test_render_system_cursor_colors():
     )
 
     # Verify actual render_system.py contains the cyan color constant
-    import ast
     with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                            "game", "systems", "render_system.py")) as f:
         source = f.read()

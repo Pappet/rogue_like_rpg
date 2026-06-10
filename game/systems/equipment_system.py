@@ -30,17 +30,20 @@ class EquipmentSystem(esper.Processor):
             if esper.has_component(ent, Equipment):
                 equipment = esper.component_for_entity(ent, Equipment)
                 for slot, item_id in equipment.slots.items():
-                    if item_id is not None and esper.entity_exists(item_id):
-                        if esper.has_component(item_id, StatModifiers):
-                            mods = esper.component_for_entity(item_id, StatModifiers)
-                            hp_bonus += mods.hp
-                            max_hp += mods.hp
-                            power += mods.power
-                            defense += mods.defense
-                            mana_bonus += mods.mana
-                            max_mana += mods.mana
-                            perception += mods.perception
-                            intelligence += mods.intelligence
+                    if (
+                        item_id is not None
+                        and esper.entity_exists(item_id)
+                        and esper.has_component(item_id, StatModifiers)
+                    ):
+                        mods = esper.component_for_entity(item_id, StatModifiers)
+                        hp_bonus += mods.hp
+                        max_hp += mods.hp
+                        power += mods.power
+                        defense += mods.defense
+                        mana_bonus += mods.mana
+                        max_mana += mods.mana
+                        perception += mods.perception
+                        intelligence += mods.intelligence
 
             # 3. Apply time-of-day multiplier to perception
             perception = max(1, int(perception * multiplier))

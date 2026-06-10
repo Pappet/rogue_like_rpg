@@ -1,10 +1,12 @@
 
 import esper
-from game.services.map_service import MapService
-from game.services.map_generator import MapGenerator
-from game.content.resource_loader import ResourceLoader
-from game.components import Position, Portal, Name
+
 from config import SpriteLayer
+from game.components import Name, Portal, Position
+from game.content.resource_loader import ResourceLoader
+from game.services.map_generator import MapGenerator
+from game.services.map_service import MapService
+
 
 def test_village_refactor():
     world = esper

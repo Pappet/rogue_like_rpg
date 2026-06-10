@@ -13,24 +13,20 @@ Run from project root:
     python -m pytest tests/verify_range_movement.py -v
 """
 
-import sys
 import os
+import sys
 
 # Ensure project root is on the path when run directly.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 import esper
 
 from core.ecs import reset_world
-from game.components import (
-    Position, Stats, ActionList, Action, Targeting
-)
-from game.systems.action_system import ActionSystem
+from game.components import Action, ActionList, Position, Stats, Targeting
 from game.map.map_container import MapContainer
 from game.map.map_layer import MapLayer
 from game.map.tile import Tile, VisibilityState
-
+from game.systems.action_system import ActionSystem
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -316,7 +312,6 @@ def test_existing_phase12_tests_unbroken():
     reset_world()
 
     from game.services.party_service import PartyService
-    from game.components import ActionList
 
     map_container = make_map_with_visibility(5, 5, VisibilityState.VISIBLE)
     turn_system = MockTurnSystem()

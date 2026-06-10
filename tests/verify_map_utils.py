@@ -1,14 +1,14 @@
-import sys
 import os
+import sys
 
 # Add the project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from game.map.map_layer import MapLayer
-from game.map.tile import Tile
-from game.map.map_generator_utils import draw_rectangle, place_door
 from config import SpriteLayer
 from game.content.resource_loader import ResourceLoader
+from game.map.map_generator_utils import draw_rectangle, place_door
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile
 
 TILE_FILE = "assets/data/tile_types.json"
 

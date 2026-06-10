@@ -19,7 +19,8 @@ FORBIDDEN_PREFIXES_FOR_CORE = (
 
 
 def _imported_modules(path):
-    tree = ast.parse(open(path).read(), filename=path)
+    with open(path) as f:
+        tree = ast.parse(f.read(), filename=path)
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:

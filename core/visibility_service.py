@@ -55,12 +55,20 @@ class VisibilityService:
     @staticmethod
     def _transform_octant(dx, dy, octant, origin):
         x, y = origin
-        if octant == 0: return x + dx, y - dy
-        if octant == 1: return x + dy, y - dx
-        if octant == 2: return x + dy, y + dx
-        if octant == 3: return x + dx, y + dy
-        if octant == 4: return x - dx, y + dy
-        if octant == 5: return x - dy, y + dx
-        if octant == 6: return x - dy, y - dx
-        if octant == 7: return x - dx, y - dy
+        if octant == 0:
+            return x + dx, y - dy
+        if octant == 1:
+            return x + dy, y - dx
+        if octant == 2:
+            return x + dy, y + dx
+        if octant == 3:
+            return x + dx, y + dy
+        if octant == 4:
+            return x - dx, y + dy
+        if octant == 5:
+            return x - dy, y + dx
+        if octant == 6:
+            return x - dy, y - dx
+        if octant == 7:
+            return x - dx, y - dy
         return x, y

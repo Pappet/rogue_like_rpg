@@ -13,21 +13,21 @@ Run from project root:
     python -m pytest tests/verify_description.py -v
 """
 
-import sys
 import os
+import sys
 
 # Ensure project root is on the path when run directly.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 
-from game.map.tile_registry import tile_registry
-from game.content.entity_registry import EntityTemplate, entity_registry
-from game.content.entity_factory import EntityFactory
-from game.content.resource_loader import ResourceLoader
 import esper
+
 from core.ecs import reset_world
-from game.components import Stats, Description
+from game.components import Description, Stats
+from game.content.entity_factory import EntityFactory
+from game.content.entity_registry import EntityTemplate, entity_registry
+from game.content.resource_loader import ResourceLoader
+from game.map.tile_registry import tile_registry
 
 TILE_FILE = "assets/data/tile_types.json"
 ENTITY_FILE = "assets/data/entities.json"

@@ -7,7 +7,7 @@ class FCTSystem(esper.Processor):
     def process(self, dt, *args, **kwargs):
         """
         Processes the lifecycle and movement of Floating Combat Text entities.
-        
+
         Args:
             dt: Delta time in seconds.
         """

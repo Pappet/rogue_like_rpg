@@ -1,4 +1,5 @@
 from enum import Enum
+
 from config.colors import COLOR_GOLD, COLOR_YELLOW
 
 

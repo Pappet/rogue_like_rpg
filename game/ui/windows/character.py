@@ -87,7 +87,8 @@ class CharacterWindow(UIWindow):
             ]
 
             for i, line in enumerate(stat_lines):
-                if not line: continue
+                if not line:
+                    continue
                 stat_text = self.font.render(line, True, UI_COLOR_WINDOW_TEXT)
                 surface.blit(stat_text, (box_x + 30, box_y + 100 + i * UI_SECTION_SPACING))
 

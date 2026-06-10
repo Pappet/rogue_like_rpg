@@ -7,12 +7,12 @@ import esper
 # Ensure we can import from the project root
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from game.components import Activity, AIBehaviorState, AIState, Alignment, Name, Position, Schedule
-from game.systems.schedule_system import ScheduleSystem
 from core.ecs import reset_world
+from game.components import Activity, AIBehaviorState, AIState, Alignment, Name, Position, Schedule
+from game.content.resource_loader import ResourceLoader
 from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
-from game.content.resource_loader import ResourceLoader
+from game.systems.schedule_system import ScheduleSystem
 
 
 def test_village_population():

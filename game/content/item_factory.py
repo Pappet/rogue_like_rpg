@@ -19,11 +19,11 @@ class ItemFactory:
     @staticmethod
     def create(world, template_id: str) -> int:
         """Create an item entity without a Position.
-        
+
         Args:
             world: The ECS world.
             template_id: The ID of the item template to use.
-            
+
         Returns:
             The entity ID of the newly created item.
         """
@@ -79,14 +79,14 @@ class ItemFactory:
     @staticmethod
     def create_on_ground(world, template_id: str, x: int, y: int, layer: int = 0) -> int:
         """Create an item entity and place it on the ground at (x, y).
-        
+
         Args:
             world: The ECS world.
             template_id: The ID of the item template to use.
             x: X-coordinate.
             y: Y-coordinate.
             layer: Map layer.
-            
+
         Returns:
             The entity ID of the newly created item.
         """

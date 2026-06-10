@@ -26,6 +26,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E", "W", "F841"]  # relaxed rules for test files
+"config/__init__.py" = ["F403"]  # intentional star re-exports for backwards compat
 
 [tool.ruff.format]
 quote-style = "double"

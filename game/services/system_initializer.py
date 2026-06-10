@@ -5,6 +5,8 @@ lazy-init-and-rewire pattern (persist dict) is gone: systems live in the
 typed GameContext.systems dataclass for the whole session.
 """
 
+import contextlib
+
 import esper
 
 from core.world_clock_service import WorldClockService
@@ -66,10 +68,8 @@ def register_processors(systems: Systems) -> None:
     ]
 
     for processor in ordered:
-        try:
+        with contextlib.suppress(KeyError):
             esper.remove_processor(type(processor))
-        except KeyError:
-            pass
 
     for processor in ordered:
         esper.add_processor(processor)

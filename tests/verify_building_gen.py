@@ -1,20 +1,20 @@
-import sys
 import os
+import sys
+
 import esper
 
 # Add the project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from game.services.map_service import MapService
-from game.services.map_generator import MapGenerator
+from config import SpriteLayer
+from core.ecs import reset_world
+from game.components import Portal, Position
 from game.content.resource_loader import ResourceLoader
 from game.map.map_container import MapContainer
 from game.map.map_layer import MapLayer
 from game.map.tile import Tile
-from game.components import Portal, Position
-from config import SpriteLayer
-
-from core.ecs import reset_world
+from game.services.map_generator import MapGenerator
+from game.services.map_service import MapService
 
 TILE_FILE = "assets/data/tile_types.json"
 

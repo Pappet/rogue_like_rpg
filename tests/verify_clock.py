@@ -1,9 +1,10 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.getcwd())
 
 from core.world_clock_service import WorldClockService
-import config
+
 
 def verify_clock():
     clock = WorldClockService()

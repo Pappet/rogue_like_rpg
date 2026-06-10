@@ -1,13 +1,15 @@
-import pygame
-import sys
 import os
+import sys
+
+import pygame
 
 # Add root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from config import SCREEN_HEIGHT, SCREEN_WIDTH
 from core.ui.stack_manager import UIStack
 from core.ui.window_base import UIWindow
-from config import SCREEN_WIDTH, SCREEN_HEIGHT
+
 
 class DummyWindow(UIWindow):
     def __init__(self, rect, color=(255, 0, 0)):
@@ -16,11 +18,10 @@ class DummyWindow(UIWindow):
         self.clicked = False
 
     def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.rect.collidepoint(event.pos):
-                self.clicked = True
-                print("DummyWindow clicked!")
-                return True
+        if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
+            self.clicked = True
+            print("DummyWindow clicked!")
+            return True
         return False
 
     def draw(self, surface):

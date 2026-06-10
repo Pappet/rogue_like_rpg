@@ -10,27 +10,36 @@ Run from project root:
     python -m pytest tests/verify_sleep_mechanics.py -v
 """
 
-import sys
 import os
+import sys
 
 # Ensure project root is on the path when run directly.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import esper
 from unittest.mock import MagicMock
+
+import esper
 
 from core.ecs import reset_world
 from game.components import (
-    AI, AIBehaviorState, AIState, Alignment, Position, 
-    PathData, MovementRequest, Blocker, Stats, AttackIntent, Name
+    AI,
+    AIBehaviorState,
+    AIState,
+    Alignment,
+    AttackIntent,
+    Blocker,
+    MovementRequest,
+    Name,
+    PathData,
+    Position,
+    Stats,
 )
-from game.systems.ai_system import AISystem
-from game.systems.turn_system import TurnSystem
-from game.systems.movement_system import MovementSystem
-from game.systems.combat_system import CombatSystem
 from game.systems.action_system import ActionSystem
-from config import GameStates
+from game.systems.ai_system import AISystem
+from game.systems.combat_system import CombatSystem
+from game.systems.movement_system import MovementSystem
+from game.systems.turn_system import TurnSystem
+
 
 def test_sleep_skips_turn():
     """NPCs in SLEEP state do not move even if they have PathData."""
