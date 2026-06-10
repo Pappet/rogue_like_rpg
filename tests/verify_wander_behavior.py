@@ -1,13 +1,13 @@
 import esper
 import pytest
-from ecs.world import reset_world
-from ecs.components import AI, AIBehaviorState, AIState, Alignment, Position, Blocker, Corpse
-from ecs.systems.ai_system import AISystem
-from ecs.systems.turn_system import TurnSystem
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile
-from services.resource_loader import ResourceLoader
+from core.ecs import reset_world
+from game.components import AI, AIBehaviorState, AIState, Alignment, Position, Blocker, Corpse
+from game.systems.ai_system import AISystem
+from game.systems.turn_system import TurnSystem
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile
+from game.content.resource_loader import ResourceLoader
 from config import GameStates
 
 TILE_FILE = "assets/data/tile_types.json"

@@ -6,17 +6,17 @@ Nothing else in the codebase should construct services or systems.
 
 import esper
 
-from components.camera import Camera
 from config import HEADER_HEIGHT, LOG_HEIGHT, SCREEN_HEIGHT, SCREEN_WIDTH, SIDEBAR_WIDTH
+from core.camera import Camera
+from core.input_manager import InputManager
+from core.ui.stack_manager import UIStack
+from core.world_clock_service import WorldClockService
+from game.content.content_database import default_content
+from game.services.map_generator import MapGenerator
+from game.services.map_service import MapService
+from game.services.render_service import RenderService
+from game.services.system_initializer import build_systems, register_processors
 from game_context import GameContext
-from services.content_database import default_content
-from services.input_manager import InputManager
-from services.map_generator import MapGenerator
-from services.map_service import MapService
-from services.render_service import RenderService
-from services.system_initializer import build_systems, register_processors
-from services.world_clock_service import WorldClockService
-from ui.stack_manager import UIStack
 
 DATA_DIR = "assets/data"
 

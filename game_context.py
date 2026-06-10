@@ -7,24 +7,24 @@ GameState via ``startup(ctx)``.
 
 from dataclasses import dataclass, field
 
-from components.camera import Camera
-from ecs.systems.action_system import ActionSystem
-from ecs.systems.ai_system import AISystem
-from ecs.systems.combat_system import CombatSystem
-from ecs.systems.death_system import DeathSystem
-from ecs.systems.equipment_system import EquipmentSystem
-from ecs.systems.fct_system import FCTSystem
-from ecs.systems.movement_system import MovementSystem
-from ecs.systems.schedule_system import ScheduleSystem
-from ecs.systems.turn_system import TurnSystem
-from ecs.systems.visibility_system import VisibilitySystem
-from map.map_container import MapContainer
-from services.content_database import ContentDatabase
-from services.input_manager import InputManager
-from services.map_service import MapService
-from services.render_service import RenderService
-from services.world_clock_service import WorldClockService
-from ui.stack_manager import UIStack
+from core.camera import Camera
+from core.input_manager import InputManager
+from core.ui.stack_manager import UIStack
+from core.world_clock_service import WorldClockService
+from game.content.content_database import ContentDatabase
+from game.map.map_container import MapContainer
+from game.services.map_service import MapService
+from game.services.render_service import RenderService
+from game.systems.action_system import ActionSystem
+from game.systems.ai_system import AISystem
+from game.systems.combat_system import CombatSystem
+from game.systems.death_system import DeathSystem
+from game.systems.equipment_system import EquipmentSystem
+from game.systems.fct_system import FCTSystem
+from game.systems.movement_system import MovementSystem
+from game.systems.schedule_system import ScheduleSystem
+from game.systems.turn_system import TurnSystem
+from game.systems.visibility_system import VisibilitySystem
 
 
 @dataclass

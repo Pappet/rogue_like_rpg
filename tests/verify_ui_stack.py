@@ -1,5 +1,5 @@
-from ui.stack_manager import UIStack
-from ui.windows.base import UIWindow
+from core.ui.stack_manager import UIStack
+from core.ui.window_base import UIWindow
 import pygame
 
 def test_stack():

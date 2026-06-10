@@ -19,22 +19,22 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import esper
 
-from ecs.world import reset_world
-from ecs.components import (
+from core.ecs import reset_world
+from game.components import (
     Position, Renderable, Stats, Name, Blocker, Inventory, Equipment,
     EffectiveStats, ActionList, HotbarSlots, TurnOrder, PlayerTag,
     AI, AIBehaviorState, Portal, Schedule, Activity, MovementRequest,
 )
-from map.tile_registry import TileRegistry, tile_registry
-from entities.entity_registry import EntityRegistry, entity_registry
-from entities.item_registry import ItemRegistry, item_registry
-from entities.schedule_registry import schedule_registry
-from services.resource_loader import ResourceLoader
-from services.map_service import MapService
-from services.map_generator import MapGenerator
-from services.party_service import PartyService, get_entity_closure
-from ecs.systems.turn_system import TurnSystem
-from services.world_clock_service import WorldClockService
+from game.map.tile_registry import TileRegistry, tile_registry
+from game.content.entity_registry import EntityRegistry, entity_registry
+from game.content.item_registry import ItemRegistry, item_registry
+from game.content.schedule_registry import schedule_registry
+from game.content.resource_loader import ResourceLoader
+from game.services.map_service import MapService
+from game.services.map_generator import MapGenerator
+from game.services.party_service import PartyService, get_entity_closure
+from game.systems.turn_system import TurnSystem
+from core.world_clock_service import WorldClockService
 from config import GameStates
 
 

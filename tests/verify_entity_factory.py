@@ -18,13 +18,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 
-from map.tile_registry import tile_registry
-from entities.entity_registry import EntityRegistry, entity_registry
-from entities.entity_factory import EntityFactory
-from services.resource_loader import ResourceLoader
+from game.map.tile_registry import tile_registry
+from game.content.entity_registry import EntityRegistry, entity_registry
+from game.content.entity_factory import EntityFactory
+from game.content.resource_loader import ResourceLoader
 import esper
-from ecs.world import reset_world
-from ecs.components import Position, Renderable, Stats, Name, Blocker, AI, AIBehaviorState, AIState, Alignment
+from core.ecs import reset_world
+from game.components import Position, Renderable, Stats, Name, Blocker, AI, AIBehaviorState, AIState, Alignment
 
 TILE_FILE = "assets/data/tile_types.json"
 ENTITY_FILE = "assets/data/entities.json"
@@ -113,7 +113,7 @@ def test_invalid_state_raises():
     reset_world()
     world = esper
 
-    from entities.entity_registry import EntityTemplate
+    from game.content.entity_registry import EntityTemplate
     bad_template = EntityTemplate(
         id="bad_entity",
         name="Bad",

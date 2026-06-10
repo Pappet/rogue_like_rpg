@@ -5,8 +5,8 @@ import esper
 # Ensure project root is on the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ecs.world import reset_world
-from ecs.components import Position, Portable, Inventory, Stats, Name, Renderable
+from core.ecs import reset_world
+from game.components import Position, Portable, Inventory, Stats, Name, Renderable
 from config import SpriteLayer
 
 def test_inventory_logic():

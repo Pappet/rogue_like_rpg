@@ -5,13 +5,13 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from ecs.world import reset_world
-from ecs.systems.death_system import DeathSystem
-from ecs.components import Position, LootTable, Name, Blocker
-from entities.item_registry import ItemTemplate, item_registry
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile
+from core.ecs import reset_world
+from game.systems.death_system import DeathSystem
+from game.components import Position, LootTable, Name, Blocker
+from game.content.item_registry import ItemTemplate, item_registry
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile
 
 class MockMap:
     def __init__(self, walkable_mask):

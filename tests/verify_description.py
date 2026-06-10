@@ -21,13 +21,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 
-from map.tile_registry import tile_registry
-from entities.entity_registry import EntityTemplate, entity_registry
-from entities.entity_factory import EntityFactory
-from services.resource_loader import ResourceLoader
+from game.map.tile_registry import tile_registry
+from game.content.entity_registry import EntityTemplate, entity_registry
+from game.content.entity_factory import EntityFactory
+from game.content.resource_loader import ResourceLoader
 import esper
-from ecs.world import reset_world
-from ecs.components import Stats, Description
+from core.ecs import reset_world
+from game.components import Stats, Description
 
 TILE_FILE = "assets/data/tile_types.json"
 ENTITY_FILE = "assets/data/entities.json"

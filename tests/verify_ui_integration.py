@@ -5,8 +5,8 @@ import os
 # Add root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from ui.stack_manager import UIStack
-from ui.windows.base import UIWindow
+from core.ui.stack_manager import UIStack
+from core.ui.window_base import UIWindow
 from config import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class DummyWindow(UIWindow):

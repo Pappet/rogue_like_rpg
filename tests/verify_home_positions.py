@@ -1,12 +1,12 @@
 import pytest
 import esper
-from ecs.components import (
+from game.components import (
     Position, AIBehaviorState, Activity, AIState, 
     Alignment, Schedule, PathData, Stats, Name, AI
 )
-from ecs.systems.schedule_system import ScheduleSystem
-from entities.schedule_registry import schedule_registry, ScheduleTemplate, ScheduleEntry
-from services.world_clock_service import WorldClockService
+from game.systems.schedule_system import ScheduleSystem
+from game.content.schedule_registry import schedule_registry, ScheduleTemplate, ScheduleEntry
+from core.world_clock_service import WorldClockService
 from unittest.mock import MagicMock
 
 class MockMap:

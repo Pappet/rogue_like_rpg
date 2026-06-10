@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.getcwd())
 
-from services.world_clock_service import WorldClockService
+from core.world_clock_service import WorldClockService
 from config import TICKS_PER_HOUR, DAWN_START, DAY_START
 
 def verify_smooth_tint():

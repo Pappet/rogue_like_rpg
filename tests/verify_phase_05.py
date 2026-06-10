@@ -2,13 +2,13 @@ import unittest
 from unittest.mock import MagicMock
 
 import esper
-from ecs.components import Position, Portal, Name, Renderable, ActionList, Action, MapBound
+from game.components import Position, Portal, Name, Renderable, ActionList, Action, MapBound
 from game_context import GameContext, Systems
-from services.map_service import MapService
-from services.map_transition_service import MapTransitionService
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile
+from game.services.map_service import MapService
+from game.services.map_transition_service import MapTransitionService
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile
 
 
 def _mock_systems():

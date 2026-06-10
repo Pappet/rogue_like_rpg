@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 import esper
 import pytest
 
-from ecs.components import (
+from game.components import (
     Action,
     ActionList,
     HotbarSlots,
@@ -21,7 +21,7 @@ from ecs.components import (
     Stats,
 )
 from game_context import GameContext, Systems
-from services.player_action_service import PlayerActionService
+from game.services.player_action_service import PlayerActionService
 
 
 def _make_ctx(player_entity):
@@ -112,7 +112,7 @@ def test_try_enter_portal_without_portal_returns_false(service):
 
 
 def test_try_enter_portal_with_portal_performs_action(service, player):
-    from ecs.components import Portal
+    from game.components import Portal
 
     esper.create_entity(Position(3, 3, 0), Portal(target_map_id="X", target_x=0, target_y=0, target_layer=0))
     service.ctx.systems.action_system.perform_action.return_value = True

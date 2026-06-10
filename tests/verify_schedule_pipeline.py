@@ -1,9 +1,9 @@
 import esper
-from services.resource_loader import ResourceLoader
-from entities.entity_factory import EntityFactory
-from entities.entity_registry import EntityRegistry, entity_registry
-from entities.schedule_registry import schedule_registry
-from ecs.components import Schedule
+from game.content.resource_loader import ResourceLoader
+from game.content.entity_factory import EntityFactory
+from game.content.entity_registry import EntityRegistry, entity_registry
+from game.content.schedule_registry import schedule_registry
+from game.components import Schedule
 import os
 
 def test_pipeline():

@@ -3,11 +3,11 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from map.tile_registry import tile_registry
-from services.resource_loader import ResourceLoader
-from services.map_service import MapService
-from services.map_generator import MapGenerator
-from map.map_container import MapContainer
+from game.map.tile_registry import tile_registry
+from game.content.resource_loader import ResourceLoader
+from game.services.map_service import MapService
+from game.services.map_generator import MapGenerator
+from game.map.map_container import MapContainer
 
 TILE_FILE = "assets/data/tile_types.json"
 

@@ -5,8 +5,8 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import unittest
-from services.world_clock_service import WorldClockService
-from ecs.systems.turn_system import TurnSystem
+from core.world_clock_service import WorldClockService
+from game.systems.turn_system import TurnSystem
 from config import TICKS_PER_HOUR, DAWN_START, DAY_START, DUSK_START, NIGHT_START
 
 class TestWorldClock(unittest.TestCase):

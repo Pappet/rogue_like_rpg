@@ -5,7 +5,7 @@ Each content domain subclasses Registry and exposes a module-level default
 instance; injectable for tests that need isolated content.
 """
 
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
@@ -20,7 +20,7 @@ class Registry(Generic[T]):
         """Add a template; its ``id`` attribute is the key."""
         self._items[item.id] = item
 
-    def get(self, item_id: str) -> Optional[T]:
+    def get(self, item_id: str) -> T | None:
         """Retrieve a template by ID. Returns None if not found."""
         return self._items.get(item_id)
 

@@ -22,16 +22,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import esper
 
-from ecs.world import reset_world
-from ecs.components import (
+from core.ecs import reset_world
+from game.components import (
     Position, Stats, ActionList, Action, Targeting, Description
 )
-from ecs.systems.action_system import ActionSystem
-from ecs.systems.turn_system import TurnSystem
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile, VisibilityState
-from services.party_service import PartyService
+from game.systems.action_system import ActionSystem
+from game.systems.turn_system import TurnSystem
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile, VisibilityState
+from game.services.party_service import PartyService
 
 
 # ---------------------------------------------------------------------------
@@ -280,7 +280,7 @@ def test_render_system_cursor_colors():
     # Verify actual render_system.py contains the cyan color constant
     import ast
     with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                           "ecs", "systems", "render_system.py")) as f:
+                           "game", "systems", "render_system.py")) as f:
         source = f.read()
     assert "0, 255, 255" in source, (
         "render_system.py does not contain cyan color (0, 255, 255)"

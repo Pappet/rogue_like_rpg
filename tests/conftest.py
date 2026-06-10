@@ -12,8 +12,8 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 import pytest
 
-from ecs.world import reset_world
-from services.content_database import default_content
+from core.ecs import reset_world
+from game.content.content_database import default_content
 
 
 @pytest.fixture(autouse=True)

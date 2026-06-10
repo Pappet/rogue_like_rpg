@@ -22,14 +22,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import esper
 
-from ecs.world import reset_world
-from ecs.components import (
+from core.ecs import reset_world
+from game.components import (
     Position, Stats, ActionList, Action, Targeting
 )
-from ecs.systems.action_system import ActionSystem
-from map.map_container import MapContainer
-from map.map_layer import MapLayer
-from map.tile import Tile, VisibilityState
+from game.systems.action_system import ActionSystem
+from game.map.map_container import MapContainer
+from game.map.map_layer import MapLayer
+from game.map.tile import Tile, VisibilityState
 
 
 # ---------------------------------------------------------------------------
@@ -315,8 +315,8 @@ def test_existing_phase12_tests_unbroken():
     """Lightweight sanity guard: Investigate action must start targeting successfully."""
     reset_world()
 
-    from services.party_service import PartyService
-    from ecs.components import ActionList
+    from game.services.party_service import PartyService
+    from game.components import ActionList
 
     map_container = make_map_with_visibility(5, 5, VisibilityState.VISIBLE)
     turn_system = MockTurnSystem()

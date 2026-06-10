@@ -6,10 +6,10 @@ import pygame
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import esper
-from ecs.world import reset_world
-from ecs.components import Position, AIBehaviorState, AIState, Alignment, ChaseData
-from ecs.systems.debug_render_system import DebugRenderSystem
-from map.tile import Tile, VisibilityState
+from core.ecs import reset_world
+from game.components import Position, AIBehaviorState, AIState, Alignment, ChaseData
+from game.systems.debug_render_system import DebugRenderSystem
+from game.map.tile import Tile, VisibilityState
 from config import TILE_SIZE, SpriteLayer
 from game_context import DebugFlags
 

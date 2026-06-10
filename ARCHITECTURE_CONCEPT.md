@@ -2,6 +2,12 @@
 
 > **Stand:** Juni 2026 · Nachfolger von `REFACTORING_PLAN.md` ("Back on Track")
 > **Befund-Basis:** Vollanalyse aller 112 Python-Dateien (~12.400 LOC), 134 grüne Tests
+>
+> **STATUS: UMGESETZT.** Alle Phasen R0–R6 sind implementiert (siehe Commits
+> `test(R0)` bis `refactor(R6)`). Die Ziel-Verzeichnisstruktur aus Abschnitt 4.6
+> ist live, die Schichtregel wird durch `tests/verify_layering.py` maschinell
+> geprüft, und CLAUDE.md beschreibt die neue Architektur. Dieses Dokument
+> bleibt als Begründung der Entwurfsentscheidungen erhalten.
 
 ---
 

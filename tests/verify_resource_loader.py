@@ -11,8 +11,8 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import SpriteLayer
-from map.tile_registry import TileRegistry, tile_registry
-from services.resource_loader import ResourceLoader
+from game.map.tile_registry import TileRegistry, tile_registry
+from game.content.resource_loader import ResourceLoader
 
 TILE_FILE = "assets/data/tile_types.json"
 

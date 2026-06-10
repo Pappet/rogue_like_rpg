@@ -13,7 +13,7 @@ import esper
 import pygame
 
 from config import GameStates
-from ecs.components import Position
+from game.components import Position
 
 
 def _boot_game():

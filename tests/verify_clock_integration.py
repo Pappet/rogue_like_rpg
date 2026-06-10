@@ -3,8 +3,8 @@ import os
 sys.path.append(os.getcwd())
 
 import esper
-from ecs.systems.turn_system import TurnSystem
-from services.world_clock_service import WorldClockService
+from game.systems.turn_system import TurnSystem
+from core.world_clock_service import WorldClockService
 from config import GameStates
 
 def verify_integration():
