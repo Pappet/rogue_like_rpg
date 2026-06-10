@@ -1,17 +1,16 @@
-import sys
 import os
+import sys
 
 # Add project root to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import esper
+
 from core.ecs import reset_world
-from game.systems.death_system import DeathSystem
-from game.components import Position, LootTable, Name, Blocker
+from game.components import LootTable, Name, Position
 from game.content.item_registry import ItemTemplate, item_registry
-from game.map.map_container import MapContainer
-from game.map.map_layer import MapLayer
-from game.map.tile import Tile
+from game.systems.death_system import DeathSystem
+
 
 class MockMap:
     def __init__(self, walkable_mask):
@@ -24,78 +23,80 @@ class MockMap:
             return self.walkable_mask[y][x]
         return False
 
+
 def test_loot_drop_guaranteed():
     print("Testing guaranteed loot drop...")
     reset_world()
     world = esper
-    
+
     death_system = DeathSystem()
-    world.add_processor(death_system)
-    
+
     # Register test item
     item_registry.clear()
-    item_registry.register(ItemTemplate(
-        id="test_item", name="Test Item", sprite="i", color=(255,255,255),
-        sprite_layer="ITEMS", weight=1.0, material="gold"
-    ))
-    
+    item_registry.register(
+        ItemTemplate(
+            id="test_item",
+            name="Test Item",
+            sprite="i",
+            color=(255, 255, 255),
+            sprite_layer="ITEMS",
+            weight=1.0,
+            material="gold",
+        )
+    )
+
     # Create mock map (all walkable)
     mock_map = MockMap([[True, True, True], [True, True, True], [True, True, True]])
     death_system.set_map(mock_map)
-    
+
     # Create monster with guaranteed drop
-    monster = world.create_entity(
-        Position(1, 1),
-        LootTable(entries=[("test_item", 1.0)]),
-        Name("Monster")
-    )
-    
+    monster = world.create_entity(Position(1, 1), LootTable(entries=[("test_item", 1.0)]), Name("Monster"))
+
     # Trigger death
     esper.dispatch_event("entity_died", monster)
-    
+
     # Verify item spawned at (1, 1)
     found = False
     for ent, (pos, name) in world.get_components(Position, Name):
         if name.name == "Test Item" and pos.x == 1 and pos.y == 1:
             found = True
             break
-    
+
     assert found, "Item should have dropped at (1, 1)"
     print("Guaranteed loot drop test PASSED!")
+
 
 def test_loot_scattering():
     print("Testing loot scattering when center is blocked...")
     reset_world()
     world = esper
-    
+
     death_system = DeathSystem()
-    world.add_processor(death_system)
-    
+
     # Register test item
     item_registry.clear()
-    item_registry.register(ItemTemplate(
-        id="test_item", name="Test Item", sprite="i", color=(255,255,255),
-        sprite_layer="ITEMS", weight=1.0, material="gold"
-    ))
-    
-    # Create mock map (center (1,1) is NOT walkable)
-    mock_map = MockMap([
-        [True, True, True],
-        [True, False, True],
-        [True, True, True]
-    ])
-    death_system.set_map(mock_map)
-    
-    # Create monster with guaranteed drop at (1, 1)
-    monster = world.create_entity(
-        Position(1, 1),
-        LootTable(entries=[("test_item", 1.0)]),
-        Name("Monster")
+    item_registry.register(
+        ItemTemplate(
+            id="test_item",
+            name="Test Item",
+            sprite="i",
+            color=(255, 255, 255),
+            sprite_layer="ITEMS",
+            weight=1.0,
+            material="gold",
+        )
     )
-    
+
+    # Create mock map (center (1,1) is NOT walkable)
+    mock_map = MockMap([[True, True, True], [True, False, True], [True, True, True]])
+    death_system.set_map(mock_map)
+
+    # Create monster with guaranteed drop at (1, 1)
+    monster = world.create_entity(Position(1, 1), LootTable(entries=[("test_item", 1.0)]), Name("Monster"))
+
     # Trigger death
     esper.dispatch_event("entity_died", monster)
-    
+
     # Verify item spawned at a walkable neighbor
     found = False
     drop_pos = None
@@ -104,12 +105,13 @@ def test_loot_scattering():
             found = True
             drop_pos = (pos.x, pos.y)
             break
-    
+
     assert found, "Item should have dropped"
     assert drop_pos != (1, 1), "Item should NOT have dropped at blocked (1, 1)"
     assert mock_map.is_walkable(drop_pos[0], drop_pos[1]), f"Item dropped at non-walkable position {drop_pos}"
-    
+
     print(f"Loot scattered to {drop_pos}. Test PASSED!")
+
 
 if __name__ == "__main__":
     try:
@@ -119,5 +121,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Test FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
