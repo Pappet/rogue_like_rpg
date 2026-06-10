@@ -22,6 +22,8 @@ class WorldLocation:
     type: str = "settlement"
     scenario: str = ""
     discovered: bool = False
+    # Abstract overworld coordinates (0-100 grid) for drawing the travel map.
+    map_pos: tuple[int, int] = (50, 50)
 
 
 @dataclass
@@ -60,6 +62,7 @@ class WorldGraphService:
                     type=loc.get("type", "settlement"),
                     scenario=loc.get("scenario", ""),
                     discovered=loc.get("discovered", False),
+                    map_pos=tuple(loc.get("map_pos", (50, 50))),
                 )
             )
 

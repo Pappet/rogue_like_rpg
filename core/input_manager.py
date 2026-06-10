@@ -95,6 +95,11 @@ class InputManager:
             GameStates.WORLD_MAP: {
                 pygame.K_ESCAPE: InputCommand.CANCEL,
                 pygame.K_m: InputCommand.CANCEL,
+                pygame.K_UP: InputCommand.MOVE_UP,
+                pygame.K_w: InputCommand.MOVE_UP,
+                pygame.K_DOWN: InputCommand.MOVE_DOWN,
+                pygame.K_s: InputCommand.MOVE_DOWN,
+                pygame.K_RETURN: InputCommand.CONFIRM,
             },
             GameStates.EXAMINE: {
                 pygame.K_UP: InputCommand.MOVE_UP,
