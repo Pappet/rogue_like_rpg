@@ -8,8 +8,8 @@ class ConsumableService:
     @staticmethod
     def use_item(world, user_ent, item_ent) -> bool:
         """Attempt to use a consumable item.
-        
-        Returns True if the item was used (and possibly consumed), 
+
+        Returns True if the item was used (and possibly consumed),
         False if it couldn't be used (e.g. at full health).
         """
         if not world.has_component(item_ent, Consumable):

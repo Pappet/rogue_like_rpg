@@ -48,9 +48,12 @@ class RenderSystem(esper.Processor, MapAwareSystem):
             # Check the visibility on the entity's own layer
             if 0 <= pos.layer < len(self._map_container.layers):
                 layer = self._map_container.layers[pos.layer]
-                if 0 <= pos.y < len(layer.tiles) and 0 <= pos.x < len(layer.tiles[pos.y]):
-                    if layer.tiles[pos.y][pos.x].visibility_state == VisibilityState.VISIBLE:
-                        is_visible = True
+                if (
+                    0 <= pos.y < len(layer.tiles)
+                    and 0 <= pos.x < len(layer.tiles[pos.y])
+                    and layer.tiles[pos.y][pos.x].visibility_state == VisibilityState.VISIBLE
+                ):
+                    is_visible = True
 
             if is_visible:
                 # Calculate depth darkening factor for entities
@@ -128,10 +131,13 @@ class RenderSystem(esper.Processor, MapAwareSystem):
                     # Check visibility
                     is_visible = False
                     for layer in self._map_container.layers:
-                        if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
-                            if layer.tiles[y][x].visibility_state == VisibilityState.VISIBLE:
-                                is_visible = True
-                                break
+                        if (
+                            0 <= y < len(layer.tiles)
+                            and 0 <= x < len(layer.tiles[y])
+                            and layer.tiles[y][x].visibility_state == VisibilityState.VISIBLE
+                        ):
+                            is_visible = True
+                            break
 
                     if not is_visible:
                         continue

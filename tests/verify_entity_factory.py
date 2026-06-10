@@ -10,21 +10,21 @@ Run from project root:
     python -m pytest tests/verify_entity_factory.py -v
 """
 
-import sys
 import os
+import sys
 
 # Ensure project root is on the path when run directly.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import esper
 import pytest
 
-from game.map.tile_registry import tile_registry
-from game.content.entity_registry import EntityRegistry, entity_registry
-from game.content.entity_factory import EntityFactory
-from game.content.resource_loader import ResourceLoader
-import esper
 from core.ecs import reset_world
-from game.components import Position, Renderable, Stats, Name, Blocker, AI, AIBehaviorState, AIState, Alignment
+from game.components import AI, AIBehaviorState, AIState, Alignment, Blocker, Name, Position, Renderable, Stats
+from game.content.entity_factory import EntityFactory
+from game.content.entity_registry import entity_registry
+from game.content.resource_loader import ResourceLoader
+from game.map.tile_registry import tile_registry
 
 TILE_FILE = "assets/data/tile_types.json"
 ENTITY_FILE = "assets/data/entities.json"

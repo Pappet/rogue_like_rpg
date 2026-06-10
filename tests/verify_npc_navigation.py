@@ -1,16 +1,18 @@
-import sys
 import os
+import sys
 
 # Add the project root to the python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from game.systems.ai_system import AISystem
-from game.components import Position, AI, AIBehaviorState, AIState, Alignment, PathData, ChaseData, Stats, Name, Blocker
+
 from config import GameStates
+from game.components import AI, AIBehaviorState, AIState, Alignment, Blocker, ChaseData, PathData, Position, Stats
 from game.map.map_container import MapContainer
 from game.map.map_layer import MapLayer
 from game.map.tile import Tile
+from game.systems.ai_system import AISystem
+
 
 def create_mock_tile(walkable=True):
     tile = Tile(transparent=True)

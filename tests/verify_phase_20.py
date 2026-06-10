@@ -1,17 +1,20 @@
-import sys
 import os
+import sys
+
 import pygame
 
 # Ensure project root is on the path when run directly.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import esper
+
+from config import SpriteLayer
 from core.ecs import reset_world
-from game.components import Position, AIBehaviorState, AIState, Alignment, ChaseData
-from game.systems.debug_render_system import DebugRenderSystem
+from game.components import AIBehaviorState, AIState, Alignment, ChaseData, Position
 from game.map.tile import Tile, VisibilityState
-from config import TILE_SIZE, SpriteLayer
+from game.systems.debug_render_system import DebugRenderSystem
 from game_context import DebugFlags
+
 
 # Mock Camera
 class MockCamera:

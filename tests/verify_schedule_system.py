@@ -1,15 +1,17 @@
-import esper
-import sys
 import os
+import sys
 from unittest.mock import MagicMock
+
+import esper
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from game.components import Schedule, AIBehaviorState, Activity, Position, AIState, Alignment, PathData
-from game.systems.schedule_system import ScheduleSystem
-from game.content.schedule_registry import schedule_registry, ScheduleTemplate, ScheduleEntry
+from game.components import Activity, AIBehaviorState, AIState, Alignment, PathData, Position, Schedule
+from game.content.schedule_registry import ScheduleEntry, ScheduleTemplate, schedule_registry
 from game.services.pathfinding_service import PathfindingService
+from game.systems.schedule_system import ScheduleSystem
+
 
 def test_full_schedule_lifecycle():
     # Setup

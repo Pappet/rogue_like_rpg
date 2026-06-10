@@ -1,13 +1,15 @@
-import pygame
-import sys
 import os
+import sys
+
+import pygame
 
 # Mock pygame to avoid window creation
 os.environ['SDL_VIDEODRIVER'] = 'dummy'
 pygame.init()
 
-from core.input_manager import InputManager, InputCommand
 from config import GameStates
+from core.input_manager import InputCommand, InputManager
+
 
 def test_input_manager():
     im = InputManager()

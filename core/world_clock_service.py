@@ -68,7 +68,7 @@ class WorldClockService:
                 factor = (t - t1) / (t2 - t1)
                 color1 = DN_SETTINGS[p1]["tint"]
                 color2 = DN_SETTINGS[p2]["tint"]
-                return tuple(int(c1 + (c2 - c1) * factor) for c1, c2 in zip(color1, color2))
+                return tuple(int(c1 + (c2 - c1) * factor) for c1, c2 in zip(color1, color2, strict=False))
 
         # Fallback to current phase tint if loop fails
         return DN_SETTINGS.get(self.phase, {}).get("tint", (0, 0, 0, 0))

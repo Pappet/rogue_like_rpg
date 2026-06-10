@@ -13,20 +13,19 @@ Run from project root:
     python -m pytest tests/verify_ai_system.py -v
 """
 
-import sys
 import os
+import sys
 
 # Ensure project root is on the path when run directly.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 import esper
 
+from config import GameStates
 from core.ecs import reset_world
 from game.components import AI, AIBehaviorState, AIState, Alignment, Corpse, Position
 from game.systems.ai_system import AISystem
 from game.systems.turn_system import TurnSystem
-from config import GameStates
 
 
 def make_ai_entity(layer=0, state=AIState.IDLE, alignment=Alignment.HOSTILE, add_corpse=False):

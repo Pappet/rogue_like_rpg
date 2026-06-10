@@ -1,13 +1,15 @@
-import sys
 import os
+import sys
 
 # Add the project root to the python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import unittest
+
+from config import DAWN_START, DAY_START, DUSK_START, NIGHT_START, TICKS_PER_HOUR
 from core.world_clock_service import WorldClockService
 from game.systems.turn_system import TurnSystem
-from config import TICKS_PER_HOUR, DAWN_START, DAY_START, DUSK_START, NIGHT_START
+
 
 class TestWorldClock(unittest.TestCase):
     def test_clock_math(self):

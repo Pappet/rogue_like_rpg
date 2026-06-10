@@ -12,14 +12,14 @@ class PathfindingService:
     def get_path(world, map_container: MapContainer, start: tuple[int, int], end: tuple[int, int], layer: int = 0) -> list[tuple[int, int]]:
         """
         Calculates a path from start to end using A* algorithm.
-        
+
         Args:
             world: The esper World (or module in esper 3.x) to check for blockers.
             map_container: The current map container for terrain walkability.
             start: (x, y) starting coordinates.
             end: (x, y) target coordinates.
             layer: The map layer to path on.
-            
+
         Returns:
             A list of (x, y) coordinates representing the path, excluding the start point.
             Returns an empty list if no path is found.

@@ -1,13 +1,12 @@
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from game.map.tile_registry import tile_registry
 from game.content.resource_loader import ResourceLoader
-from game.services.map_service import MapService
+from game.map.tile_registry import tile_registry
 from game.services.map_generator import MapGenerator
-from game.map.map_container import MapContainer
+from game.services.map_service import MapService
 
 TILE_FILE = "assets/data/tile_types.json"
 
@@ -40,7 +39,7 @@ def test_map_service():
     # Test error case
     try:
         service.set_active_map("non_existent")
-        assert False, "Should have raised ValueError"
+        raise AssertionError("Should have raised ValueError")
     except ValueError:
         pass
 

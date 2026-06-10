@@ -1,10 +1,12 @@
+
 import esper
-from game.content.resource_loader import ResourceLoader
-from game.content.entity_factory import EntityFactory
-from game.content.entity_registry import EntityRegistry, entity_registry
-from game.content.schedule_registry import schedule_registry
+
 from game.components import Schedule
-import os
+from game.content.entity_factory import EntityFactory
+from game.content.entity_registry import entity_registry
+from game.content.resource_loader import ResourceLoader
+from game.content.schedule_registry import schedule_registry
+
 
 def test_pipeline():
     print("Initializing verification...")

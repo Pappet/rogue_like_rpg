@@ -1,9 +1,12 @@
-import esper
 from unittest.mock import MagicMock
-from game.components import Stats, Equipment, EffectiveStats, StatModifiers, Equippable, SlotType, Name, AttackIntent
-from game.systems.equipment_system import EquipmentSystem
-from game.systems.combat_system import CombatSystem
+
+import esper
+
+from game.components import AttackIntent, Equipment, Equippable, Name, SlotType, StatModifiers, Stats
 from game.services.equipment_service import equip_item
+from game.systems.combat_system import CombatSystem
+from game.systems.equipment_system import EquipmentSystem
+
 
 def test_combat_with_equipment():
     # Setup world and systems

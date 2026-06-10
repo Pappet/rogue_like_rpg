@@ -133,9 +133,12 @@ class TooltipWindow(UIWindow):
                     is_visible = False
                     if 0 <= current_layer < len(map_container.layers):
                         layer = map_container.layers[current_layer]
-                        if 0 <= ty < len(layer.tiles) and 0 <= tx < len(layer.tiles[ty]):
-                            if layer.tiles[ty][tx].visibility_state == VisibilityState.VISIBLE:
-                                is_visible = True
+                        if (
+                            0 <= ty < len(layer.tiles)
+                            and 0 <= tx < len(layer.tiles[ty])
+                            and layer.tiles[ty][tx].visibility_state == VisibilityState.VISIBLE
+                        ):
+                            is_visible = True
 
                     if is_visible:
                         entities.append(ent)

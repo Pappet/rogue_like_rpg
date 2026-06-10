@@ -3,15 +3,14 @@ import sys
 
 import pygame
 
+from bootstrap import build_game_context
 from config import SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH
+from game.states import GameOver, GameplayState, TitleScreen, WorldMapState
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 )
-
-from bootstrap import build_game_context
-from game.states import GameOver, GameplayState, TitleScreen, WorldMapState
 
 
 class GameController:

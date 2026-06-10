@@ -1,4 +1,5 @@
-from game.components import Position, Portal
+from game.components import Portal, Position
+
 
 def test_components():
     pos = Position(x=10, y=20, layer=1)

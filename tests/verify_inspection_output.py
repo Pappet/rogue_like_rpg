@@ -13,26 +13,23 @@ Run from project root:
     python -m pytest tests/verify_inspection_output.py -v
 """
 
-import sys
 import os
+import sys
 
 # Ensure project root is on the path when run directly.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 import esper
+import pytest
 
+from config import SpriteLayer
 from core.ecs import reset_world
-from game.components import (
-    Position, Stats, ActionList, Action, Targeting, Name, Description
-)
-from game.systems.action_system import ActionSystem
+from game.components import Action, Description, Name, Position, Stats
 from game.map.map_container import MapContainer
 from game.map.map_layer import MapLayer
 from game.map.tile import Tile, VisibilityState
 from game.map.tile_registry import TileType, tile_registry
-from config import SpriteLayer
-
+from game.systems.action_system import ActionSystem
 
 # ---------------------------------------------------------------------------
 # Module-level test tile type registration

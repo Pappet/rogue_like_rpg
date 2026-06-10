@@ -1,16 +1,28 @@
-import sys
 import os
+import sys
 
 # Add the project root to the path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from game.components import Position, MovementRequest, AIBehaviorState, AIState, Alignment, Stats, Name, AttackIntent, Blocker
-from game.systems.movement_system import MovementSystem
+
+from config import SpriteLayer
+from game.components import (
+    AIBehaviorState,
+    AIState,
+    Alignment,
+    AttackIntent,
+    Blocker,
+    MovementRequest,
+    Name,
+    Position,
+    Stats,
+)
 from game.map.map_container import MapContainer
 from game.map.map_layer import MapLayer
 from game.map.tile import Tile
-from config import SpriteLayer
+from game.systems.movement_system import MovementSystem
+
 
 # Mock ActionSystem
 class MockActionSystem:

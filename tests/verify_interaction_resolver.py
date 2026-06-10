@@ -1,12 +1,14 @@
-import sys
 import os
+import sys
 
 # Add the project root to the path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from game.components import AIBehaviorState, AIState, Alignment, Stats, Name
+
+from game.components import AIBehaviorState, AIState, Alignment, Name, Stats
 from game.services.interaction_resolver import InteractionResolver, InteractionType
+
 
 def test_interaction_resolver():
     # In esper 3.x, we clear the global database
