@@ -6,6 +6,7 @@ import esper
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from core.ecs import reset_world
 from game.components import PlayerTag, Position, Stats
 from game.map.map_container import MapContainer
 from game.map.map_layer import MapLayer
@@ -15,9 +16,8 @@ from game.systems.visibility_system import VisibilitySystem
 
 
 def test_visibility_does_not_leak_from_npc():
-    # Setup world
-    esper.clear_database()
-    esper._processors.clear()
+    # Setup world (conftest's reset_world fixture already cleared all state)
+    reset_world()
 
     # Setup map: 3x3 tiles, all starting as SHROUDED
     tiles = [[Tile(transparent=True, dark=False) for _ in range(3)] for _ in range(3)]
