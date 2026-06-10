@@ -1,14 +1,15 @@
-import pygame
-import sys
 import os
 
+import pygame
+
 # Mock pygame.display.set_mode and other display functions
-os.environ['SDL_VIDEODRIVER'] = 'dummy'
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 pygame.init()
 pygame.display.set_mode((1280, 720))
 
+from config import HEADER_HEIGHT, LOG_HEIGHT, SCREEN_WIDTH, SIDEBAR_WIDTH
 from main import GameController
-from config import SCREEN_WIDTH, SIDEBAR_WIDTH, HEADER_HEIGHT, LOG_HEIGHT
+
 
 def test_viewport_expansion():
     gc = GameController()
@@ -24,11 +25,12 @@ def test_viewport_expansion():
     # Start GAME state to initialize systems
     gc.states["GAME"].startup(gc.ctx)
     ui = gc.ctx.systems.ui_system
-    
+
     assert ui.header_rect.width == SCREEN_WIDTH
-    assert ui.log_rect.width == SCREEN_WIDTH
-    
+    assert ui.log_rect.width == SCREEN_WIDTH - ui.actions_width
+
     print("UI rects are correct!")
+
 
 if __name__ == "__main__":
     test_viewport_expansion()

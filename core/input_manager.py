@@ -13,34 +13,26 @@ class InputCommand(Enum):
     MOVE_RIGHT = auto()
 
     # Interactions
-    INTERACT = auto() # G
-    CONFIRM = auto() # RETURN
-    CANCEL = auto() # ESCAPE
+    INTERACT = auto()  # G
+    CONFIRM = auto()  # RETURN
+    CANCEL = auto()  # ESCAPE
 
     # UI / Menus
-    OPEN_INVENTORY = auto() # I
-    OPEN_CHARACTER = auto() # C
-    OPEN_WORLD_MAP = auto() # M
-    EXAMINE_ITEM = auto() # X
-    NEXT_ACTION = auto() # S
-    PREVIOUS_ACTION = auto() # W
-    NEXT_TARGET = auto() # TAB
+    OPEN_INVENTORY = auto()  # I
+    OPEN_CHARACTER = auto()  # C
+    OPEN_WORLD_MAP = auto()  # M
+    EXAMINE_ITEM = auto()  # X
+    NEXT_ACTION = auto()  # S
+    PREVIOUS_ACTION = auto()  # W
+    NEXT_TARGET = auto()  # TAB
 
-    # Hotbar
-    HOTBAR_1 = auto()
-    HOTBAR_2 = auto()
-    HOTBAR_3 = auto()
-    HOTBAR_4 = auto()
-    HOTBAR_5 = auto()
-    HOTBAR_6 = auto()
-    HOTBAR_7 = auto()
-    HOTBAR_8 = auto()
-    HOTBAR_9 = auto()
+    # Wait
+    WAIT = auto()  # SPACE
 
     # Inventory Actions
-    DROP_ITEM = auto() # D
-    USE_ITEM = auto() # U
-    EQUIP_ITEM = auto() # E
+    DROP_ITEM = auto()  # D
+    USE_ITEM = auto()  # U
+    EQUIP_ITEM = auto()  # E
 
     # Debug
     DEBUG_TOGGLE_MASTER = auto()
@@ -48,6 +40,7 @@ class InputCommand(Enum):
     DEBUG_TOGGLE_NPC_FOV = auto()
     DEBUG_TOGGLE_CHASE = auto()
     DEBUG_TOGGLE_LABELS = auto()
+
 
 class InputManager:
     def __init__(self):
@@ -71,15 +64,7 @@ class InputManager:
                 pygame.K_F5: InputCommand.DEBUG_TOGGLE_NPC_FOV,
                 pygame.K_F6: InputCommand.DEBUG_TOGGLE_CHASE,
                 pygame.K_F7: InputCommand.DEBUG_TOGGLE_LABELS,
-                pygame.K_1: InputCommand.HOTBAR_1,
-                pygame.K_2: InputCommand.HOTBAR_2,
-                pygame.K_3: InputCommand.HOTBAR_3,
-                pygame.K_4: InputCommand.HOTBAR_4,
-                pygame.K_5: InputCommand.HOTBAR_5,
-                pygame.K_6: InputCommand.HOTBAR_6,
-                pygame.K_7: InputCommand.HOTBAR_7,
-                pygame.K_8: InputCommand.HOTBAR_8,
-                pygame.K_9: InputCommand.HOTBAR_9,
+                pygame.K_SPACE: InputCommand.WAIT,
             },
             GameStates.TARGETING: {
                 pygame.K_UP: InputCommand.MOVE_UP,
@@ -123,7 +108,7 @@ class InputManager:
                 pygame.K_RETURN: InputCommand.CONFIRM,
                 pygame.K_ESCAPE: InputCommand.CANCEL,
                 pygame.K_x: InputCommand.CANCEL,
-            }
+            },
         }
 
         # Default map for any other state

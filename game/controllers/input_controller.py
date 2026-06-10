@@ -17,11 +17,6 @@ from game.ui.windows.inventory import InventoryWindow
 
 logger = logging.getLogger(__name__)
 
-_HOTBAR_COMMANDS = {
-    InputCommand.HOTBAR_1: 1, InputCommand.HOTBAR_2: 2, InputCommand.HOTBAR_3: 3,
-    InputCommand.HOTBAR_4: 4, InputCommand.HOTBAR_5: 5, InputCommand.HOTBAR_6: 6,
-    InputCommand.HOTBAR_7: 7, InputCommand.HOTBAR_8: 8, InputCommand.HOTBAR_9: 9,
-}
 
 _MOVE_COMMANDS = {
     InputCommand.MOVE_UP: (0, -1),
@@ -36,7 +31,7 @@ class InputController:
 
     def __init__(self, ctx):
         """Args:
-            ctx: The shared GameContext.
+        ctx: The shared GameContext.
         """
         self.ctx = ctx
         self.actions = PlayerActionService(ctx)
@@ -51,9 +46,7 @@ class InputController:
 
     def _open_inventory(self):
         rect = pygame.Rect(*UI_MODAL_RECT)
-        self.ui_stack.push(
-            InventoryWindow(rect, self.ctx.player_entity, self.ctx.input_manager, self.turn_system)
-        )
+        self.ui_stack.push(InventoryWindow(rect, self.ctx.player_entity, self.ctx.input_manager, self.turn_system))
 
     def _open_character_sheet(self):
         rect = pygame.Rect(*UI_MODAL_RECT)
@@ -124,21 +117,8 @@ class InputController:
             self.actions.interact()
             return
 
-        # Hotbar Selection
-        if command in _HOTBAR_COMMANDS:
-            slot_idx = _HOTBAR_COMMANDS[command]
-
-            # Hotbar 6 always opens inventory regardless of assigned action
-            if slot_idx == 6:
-                self._open_inventory()
-                return
-
-            action = self.actions.get_hotbar_action(slot_idx)
-            if action:
-                if action.name == "Items":
-                    self._open_inventory()
-                else:
-                    self.actions.trigger_action(action)
+        if command == InputCommand.WAIT:
+            self.actions.wait()
             return
 
         # Action Selection

@@ -11,7 +11,7 @@ repos:
     hooks:
       - id: smoke-tests
         name: Smoke Tests
-        entry: python -m pytest tests/test_smoke.py -x -q
+        entry: .venv/bin/python -m pytest tests/test_smoke.py -x -q
         language: system
         pass_filenames: false
         always_run: true

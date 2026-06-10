@@ -44,7 +44,7 @@ python main.py
 | M | Toggle world map |
 | X | Examine mode |
 | W / S | Cycle actions |
-| 1–9 | Hotbar slots |
+| Space | Wait |
 
 ### Debug Controls
 

@@ -10,7 +10,6 @@ from game.components import (
     Blocker,
     EffectiveStats,
     Equipment,
-    HotbarSlots,
     Inventory,
     Name,
     PlayerTag,
@@ -20,11 +19,13 @@ from game.components import (
     TurnOrder,
 )
 
-_DATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'data', 'player.json')
+_DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "data", "player.json")
+
 
 def _load_player_data():
     with open(_DATA_PATH) as f:
         return json.load(f)
+
 
 def _build_action(data: dict) -> Action:
     """Build an Action from a JSON dict."""
@@ -36,6 +37,7 @@ def _build_action(data: dict) -> Action:
         requires_targeting=data.get("requires_targeting", False),
         targeting_mode=data.get("targeting_mode", "auto"),
     )
+
 
 class PartyService:
     def __init__(self):
@@ -51,17 +53,11 @@ class PartyService:
         wait_action = Action(name="Wait")
         actions_by_name["Wait"] = wait_action
 
-        # Build hotbar mapping
-        hotbar = {i: None for i in range(1, 10)}
-        for slot_str, action_name in data["hotbar"].items():
-            hotbar[int(slot_str)] = actions_by_name[action_name]
-
         layer = SpriteLayer[data["sprite_layer"]].value
         color = tuple(data["color"])
 
         stat_fields = {
-            k: data[k] for k in
-            ("hp", "max_hp", "power", "defense", "mana", "max_mana", "perception", "intelligence")
+            k: data[k] for k in ("hp", "max_hp", "power", "defense", "mana", "max_mana", "perception", "intelligence")
         }
 
         player_entity = esper.create_entity(
@@ -80,10 +76,10 @@ class PartyService:
             Inventory(),
             TurnOrder(priority=0),
             ActionList(actions=actions),
-            HotbarSlots(slots=hotbar),
         )
 
         return player_entity
+
 
 def get_entity_closure(world, root_entity):
     """Find all entities that should travel with the root_entity (e.g., inventory items)."""
