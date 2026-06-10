@@ -15,6 +15,7 @@ This project is a grid-based, turn-based roguelike RPG. It features exploration 
 1. **Entity Component System (ECS)**: We separate data (Components) from logic (Systems) using the `esper` framework. This allows clean, decoupled extensions of game mechanics.
 2. **Split Bottom Panel & Action List**: The bottom screen panel is split into two regions: a left column (`Actions Panel`, 280px wide) displaying the list of active player actions and highlighting the currently cycled selection, and a right column (`Message Log`) showing game events. The top header is cleaned of keyboard shortcut legends, leaving the center focused on game phase states.
 3. **Pure Input Controllers**: Input controller acts as a pure translation layer routing `InputCommands` to state/action services without importing `esper` directly.
+4. **Player-Only Visibility Updates**: Only player entities (or entities with `PlayerTag`) calculate and update the map's `visibility_state`. NPCs calculate their own field-of-view independently for AI/chase logic, preventing the player from seeing the map as revealed by NPCs.
 
 ## Detailed Architecture
 The game loop runs inside `GameController` driving the active `GameState` subclass:

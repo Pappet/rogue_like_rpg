@@ -2,7 +2,7 @@ import esper
 
 from config import SpriteLayer
 from core.visibility_service import VisibilityService
-from game.components import EffectiveStats, LightSource, Position, Stats
+from game.components import EffectiveStats, LightSource, PlayerTag, Position, Stats
 from game.map.tile import VisibilityState
 from game.systems.map_aware_system import MapAwareSystem
 
@@ -64,15 +64,17 @@ class VisibilitySystem(esper.Processor, MapAwareSystem):
                             return False
 
                         # Also check for '#' in GROUND layer as a fallback/convention
-                        if tile.sprites.get(SpriteLayer.GROUND) == "#":
-                            return False
-                        return True
+                        return tile.sprites.get(SpriteLayer.GROUND) != "#"
                 return False
+
             return is_transparent
 
         # Get entities providing vision
         for ent, (pos, stats) in esper.get_components(Position, Stats):
-            # Player party members or NPCs with stats provide vision based on perception
+            # Only player or party members (entities with PlayerTag) provide vision to the player's map
+            if not esper.has_component(ent, PlayerTag):
+                continue
+
             # Use EffectiveStats if available, otherwise fallback to base stats
             if esper.has_component(ent, EffectiveStats):
                 eff_stats = esper.component_for_entity(ent, EffectiveStats)
@@ -83,11 +85,15 @@ class VisibilitySystem(esper.Processor, MapAwareSystem):
             if esper.has_component(ent, LightSource):
                 radius = max(radius, esper.component_for_entity(ent, LightSource).radius)
 
-            visible_coords.update(VisibilityService.compute_visibility((pos.x, pos.y), radius, get_is_transparent(pos.layer)))
+            visible_coords.update(
+                VisibilityService.compute_visibility((pos.x, pos.y), radius, get_is_transparent(pos.layer))
+            )
 
         for ent, (pos, light) in esper.get_components(Position, LightSource):
             if not esper.has_component(ent, Stats):
-                visible_coords.update(VisibilityService.compute_visibility((pos.x, pos.y), light.radius, get_is_transparent(pos.layer)))
+                visible_coords.update(
+                    VisibilityService.compute_visibility((pos.x, pos.y), light.radius, get_is_transparent(pos.layer))
+                )
 
         # 3. Mark newly visible tiles
         for x, y in visible_coords:
