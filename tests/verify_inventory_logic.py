@@ -32,7 +32,7 @@ def test_inventory_logic():
     
     print("Testing Pickup...")
     
-    # Simulate pickup_item logic from game_states.py
+    # Simulate pickup_item logic from PlayerActionService
     def pickup(player_ent, item_ent):
         player_pos = esper.component_for_entity(player_ent, Position)
         inventory = esper.component_for_entity(player_ent, Inventory)
@@ -65,7 +65,7 @@ def test_inventory_logic():
 
     print("Testing Drop...")
     
-    # Simulate drop_item logic from game_states.py
+    # Simulate drop_item logic from the inventory window
     def drop(player_ent, item_idx):
         inventory = esper.component_for_entity(player_ent, Inventory)
         item_ent = inventory.items.pop(item_idx)

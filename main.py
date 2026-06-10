@@ -11,7 +11,7 @@ logging.basicConfig(
 )
 
 from bootstrap import build_game_context
-from game_states import Game, GameOver, TitleScreen, WorldMapState
+from states import GameOver, GameplayState, TitleScreen, WorldMapState
 
 
 class GameController:
@@ -24,7 +24,7 @@ class GameController:
 
         self.states = {
             "TITLE": TitleScreen(),
-            "GAME": Game(),
+            "GAME": GameplayState(),
             "WORLD_MAP": WorldMapState(),
             "GAME_OVER": GameOver(),
         }

@@ -59,14 +59,14 @@ class ActionSystem(esper.Processor, MapAwareSystem):
                 if p_pos.x == pos.x and p_pos.y == pos.y and p_pos.layer == pos.layer:
                     portal_found = True
                     esper.dispatch_event("log_message", f"You enter the {portal.name}...")
-                    esper.dispatch_event("change_map", {
+                    esper.dispatch_event("map_change_requested", {
                         "target_map_id": portal.target_map_id,
                         "target_x": portal.target_x,
                         "target_y": portal.target_y,
                         "target_layer": portal.target_layer,
                         "travel_ticks": portal.travel_ticks
                     })
-                    # Note: change_map event will trigger map transition in game_states.py
+                    # Note: map_change_requested is handled by MapTransitionService (wired in GameplayState)
                     # We end turn here, but the map transition might reset things.
                     self.turn_system.end_player_turn()
                     break

@@ -1,4 +1,4 @@
-"""Input controller for the Game state.
+"""Input controller for the gameplay state.
 
 Pure translation layer: maps InputCommands to PlayerActionService calls or
 UI window pushes. Game rules and ECS access live in PlayerActionService —
@@ -31,7 +31,7 @@ _MOVE_COMMANDS = {
 }
 
 
-class GameInputHandler:
+class InputController:
     """Routes input commands during the game state."""
 
     def __init__(self, ctx):

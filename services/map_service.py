@@ -33,15 +33,3 @@ class MapService:
             self.active_map_id = map_id
         else:
             raise ValueError(f"Map ID '{map_id}' not found in registry.")
-
-
-
-
-
-
-
-    def change_map(self, current_map: MapContainer, new_map: MapContainer) -> MapContainer:
-        """Handles transition between maps, forgetting details of the current map."""
-        if current_map:
-            current_map.forget_all()
-        return new_map

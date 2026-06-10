@@ -91,6 +91,24 @@ ENEMY_TURN  → ScheduleSystem → AISystem → end_enemy_turn() → PLAYER_TURN
 
 World clock advances 1 tick per player turn. 1 hour = 60 ticks.
 
+### Event Policy — "Befehle nach unten, Fakten nach oben"
+
+**Direct call** when the caller needs a result or must guarantee ordering:
+`action_system.perform_action(...)`, `turn_system.end_player_turn()`,
+`schedule_system.process(...)` — anything a controller/orchestrator drives.
+
+**Event (`esper.dispatch_event`)** when something *happened* and any number of
+observers may react. Events carry past-tense names: `entity_died`,
+`player_died`, `log_message` (a fact being reported).
+
+**Request events** (`*_requested`) are the one sanctioned exception: a lower
+layer asks the orchestration layer to do something it must not know about
+directly (e.g. `map_change_requested` dispatched by ActionSystem, handled by
+MapTransitionService). Use sparingly — never as a substitute for a direct call
+within the same layer.
+
+Whoever dispatches an event must not rely on a handler being registered.
+
 ## Project Structure
 
 ```
