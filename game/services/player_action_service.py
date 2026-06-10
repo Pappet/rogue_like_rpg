@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class PlayerActionService:
-    """Executes player actions (move, pickup, portals, hotbar, targeting)."""
+    """Executes player actions (move, pickup, portals, wait, targeting)."""
 
     def __init__(self, ctx):
         """Args:
@@ -123,7 +123,7 @@ class PlayerActionService:
             return
         self.pickup_item()
 
-    # --- Actions & hotbar ---------------------------------------------------
+    # --- Actions ------------------------------------------------------------
 
     def wait(self) -> None:
         """Wait a turn and end player turn."""
