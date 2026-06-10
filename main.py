@@ -1,24 +1,27 @@
-import pygame
-import sys
 import logging
+import sys
 
-from config import SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, HEADER_HEIGHT, SIDEBAR_WIDTH, LOG_HEIGHT
-from game_states import TitleScreen, Game, WorldMapState, GameOver
+import pygame
+
+from config import HEADER_HEIGHT, LOG_HEIGHT, SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH, SIDEBAR_WIDTH
+from game_states import Game, GameOver, TitleScreen, WorldMapState
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 )
-from services.map_service import MapService
+import esper
+
+from components.camera import Camera
+from services.dialogue_service import DialogueService
+from services.input_manager import InputManager
 from services.map_generator import MapGenerator
+from services.map_service import MapService
 from services.render_service import RenderService
 from services.resource_loader import ResourceLoader
 from services.world_clock_service import WorldClockService
-from services.input_manager import InputManager
-from services.dialogue_service import DialogueService
 from ui.stack_manager import UIStack
-from components.camera import Camera
-from ecs.world import get_world
+
 
 class GameController:
     def __init__(self):
@@ -41,11 +44,11 @@ class GameController:
         ResourceLoader.load_entities("assets/data/entities.json")
         ResourceLoader.load_items("assets/data/items.json")
         DialogueService.load("assets/data/dialogues.json")
-        world = get_world()
+        world = esper
         self.map_generator = MapGenerator(self.map_service)
         self.map_generator.create_village_scenario(world)
         self.map_container = self.map_service.get_active_map()
-        
+
         self.persist = {
             "map_container": self.map_container,
             "render_service": self.render_service,
@@ -55,7 +58,7 @@ class GameController:
             "input_manager": self.input_manager,
             "ui_stack": self.ui_stack
         }
-        
+
         self.states = {
             "TITLE": TitleScreen(),
             "GAME": Game(),

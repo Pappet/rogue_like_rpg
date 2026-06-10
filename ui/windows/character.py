@@ -2,7 +2,6 @@ import pygame
 import esper
 from ui.windows.base import UIWindow
 from ecs.components import Stats, Equipment, Name, SlotType
-from ecs.world import get_world
 from services.input_manager import InputCommand
 from config import (
     GameStates,
@@ -17,7 +16,7 @@ class CharacterWindow(UIWindow):
         super().__init__(rect)
         self.player_entity = player_entity
         self.input_manager = input_manager
-        self.world = get_world()
+        self.world = esper
         self.font = pygame.font.Font(None, 32)
         self.title_font = pygame.font.Font(None, 48)
         self.wants_to_close = False

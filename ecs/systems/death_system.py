@@ -4,7 +4,6 @@ import logging
 from ecs.components import Name, Renderable, Blocker, AI, Corpse, Stats, AIBehaviorState, ChaseData, WanderData, LootTable, Position, PlayerTag
 from config import SpriteLayer, LogCategory
 from entities.item_factory import ItemFactory
-from ecs.world import get_world
 from ecs.systems.map_aware_system import MapAwareSystem
 
 logger = logging.getLogger(__name__)
@@ -62,7 +61,7 @@ class DeathSystem(MapAwareSystem):
 
     def _handle_loot_drops(self, loot_table, pos):
         """Roll for loot and spawn items, scattering if needed."""
-        world = get_world()
+        world = esper
         for template_id, chance in loot_table.entries:
             if random.random() < chance:
                 # Find a valid position for the loot

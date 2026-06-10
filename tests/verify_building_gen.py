@@ -14,7 +14,7 @@ from map.tile import Tile
 from ecs.components import Portal, Position
 from config import SpriteLayer
 
-from ecs.world import get_world, reset_world
+from ecs.world import reset_world
 
 TILE_FILE = "assets/data/tile_types.json"
 
@@ -22,7 +22,7 @@ TILE_FILE = "assets/data/tile_types.json"
 def test_add_house_to_map():
     ResourceLoader.load_tiles(TILE_FILE)
     reset_world()
-    world = get_world()
+    world = esper
     map_service = MapService()
 
     # Create an empty MapContainer using registry tiles

@@ -1,14 +1,27 @@
-import pygame
-import esper
 import logging
 
-from config import GameStates, LogCategory
-from ecs.components import ActionList, Action, HotbarSlots, MovementRequest, Position, Portal, Inventory, Stats, Portable, Name
+import esper
+import pygame
+
+from config import UI_MODAL_RECT, GameStates, LogCategory
+from ecs.components import (
+    Action,
+    ActionList,
+    HotbarSlots,
+    Inventory,
+    MovementRequest,
+    Name,
+    Portable,
+    Portal,
+    Position,
+    Stats,
+)
 
 logger = logging.getLogger(__name__)
 from services.input_manager import InputCommand
-from ui.windows.inventory import InventoryWindow
 from ui.windows.character import CharacterWindow
+from ui.windows.inventory import InventoryWindow
+
 
 class GameInputHandler:
     """Handles parsing and delegating input commands during the game state."""
@@ -19,7 +32,11 @@ class GameInputHandler:
         self.ui_stack = ui_stack
         self.player_entity = player_entity
         self.persist = persist
-        
+
+    def _open_inventory(self, game_instance):
+        rect = pygame.Rect(*UI_MODAL_RECT)
+        self.ui_stack.push(InventoryWindow(rect, self.player_entity, game_instance.input_manager, self.turn_system))
+
     def handle_event(self, command, game_instance) -> None:
         """
         Main routing function for input commands. 
@@ -41,7 +58,7 @@ class GameInputHandler:
             self.persist["debug_flags"]["master"] = not self.persist["debug_flags"]["master"]
             logger.debug(f"Debug master: {self.persist['debug_flags']['master']}")
             return
-        
+
         if self.persist["debug_flags"].get("master"):
             if command == InputCommand.DEBUG_TOGGLE_PLAYER_FOV:
                 self.persist["debug_flags"]["player_fov"] = not self.persist["debug_flags"]["player_fov"]
@@ -68,8 +85,7 @@ class GameInputHandler:
 
         # Inventory Toggle
         if command == InputCommand.OPEN_INVENTORY:
-            rect = pygame.Rect(140, 100, 1000, 500)
-            self.ui_stack.push(InventoryWindow(rect, self.player_entity, game_instance.input_manager, self.turn_system))
+            self._open_inventory(game_instance)
             return
 
         # Examine Toggle
@@ -81,7 +97,7 @@ class GameInputHandler:
 
         # Character Toggle
         if command == InputCommand.OPEN_CHARACTER:
-            rect = pygame.Rect(140, 100, 1000, 500)
+            rect = pygame.Rect(*UI_MODAL_RECT)
             self.ui_stack.push(CharacterWindow(rect, self.player_entity, game_instance.input_manager))
             return
 
@@ -100,11 +116,10 @@ class GameInputHandler:
         }
         if command in hotbar_commands:
             slot_idx = hotbar_commands[command]
-            
+
             # Hotbar 6 always opens inventory regardless of assigned action
             if slot_idx == 6:
-                rect = pygame.Rect(140, 100, 1000, 500)
-                self.ui_stack.push(InventoryWindow(rect, self.player_entity, game_instance.input_manager, self.turn_system))
+                self._open_inventory(game_instance)
                 return
 
             try:
@@ -112,8 +127,7 @@ class GameInputHandler:
                 action = hotbar.slots.get(slot_idx)
                 if action:
                     if action.name == "Items":
-                        rect = pygame.Rect(140, 100, 1000, 500)
-                        self.ui_stack.push(InventoryWindow(rect, self.player_entity, game_instance.input_manager, self.turn_system))
+                        self._open_inventory(game_instance)
                         return
                     if action.requires_targeting:
                         self.action_system.start_targeting(self.player_entity, action)
@@ -135,8 +149,7 @@ class GameInputHandler:
                     return
                 selected_action = action_list.actions[action_list.selected_idx]
                 if selected_action.name == "Items":
-                    rect = pygame.Rect(140, 100, 1000, 500)
-                    self.ui_stack.push(InventoryWindow(rect, self.player_entity, game_instance.input_manager, self.turn_system))
+                    self._open_inventory(game_instance)
                     return
                 if selected_action.requires_targeting:
                     self.action_system.start_targeting(self.player_entity, selected_action)
@@ -157,7 +170,7 @@ class GameInputHandler:
             dx = -1
         elif command == InputCommand.MOVE_RIGHT:
             dx = 1
-        
+
         if dx != 0 or dy != 0:
             self.move_player(dx, dy)
 
@@ -183,7 +196,7 @@ class GameInputHandler:
                 dx = -1
             elif command == InputCommand.MOVE_RIGHT:
                 dx = 1
-            
+
             if dx != 0 or dy != 0:
                 self.action_system.move_cursor(self.player_entity, dx, dy)
 
@@ -207,14 +220,14 @@ class GameInputHandler:
                 dx = -1
             elif command == InputCommand.MOVE_RIGHT:
                 dx = 1
-            
+
             if dx != 0 or dy != 0:
                 self.action_system.move_cursor(self.player_entity, dx, dy)
 
     def move_player(self, dx, dy):
         # Add movement request to player entity
         esper.add_component(self.player_entity, MovementRequest(dx, dy))
-        
+
         # For now, we end player turn immediately after requesting movement
         # In the future, we might wait for movement to complete
         if self.turn_system:
@@ -251,7 +264,7 @@ class GameInputHandler:
         for ent, (pos, portable) in esper.get_components(Position, Portable):
             if pos.x == player_pos.x and pos.y == player_pos.y and pos.layer == player_pos.layer:
                 items_here.append(ent)
-        
+
         if not items_here:
             esper.dispatch_event("log_message", "There is nothing here to pick up.", None, LogCategory.ALERT)
             return
@@ -259,7 +272,7 @@ class GameInputHandler:
         # For now, pick up the first item found
         item_ent = items_here[0]
         portable = esper.component_for_entity(item_ent, Portable)
-        
+
         # 2. Calculate current weight
         current_weight = 0
         for inv_item_id in inventory.items:
@@ -268,7 +281,7 @@ class GameInputHandler:
                 current_weight += inv_portable.weight
             except KeyError:
                 pass
-        
+
         # 3. Check capacity
         if current_weight + portable.weight > stats.max_carry_weight:
             esper.dispatch_event("log_message", "Too heavy to carry.", None, LogCategory.ALERT)
@@ -277,14 +290,14 @@ class GameInputHandler:
         # 4. Success: Move item to inventory
         esper.remove_component(item_ent, Position)
         inventory.items.append(item_ent)
-        
+
         try:
             name_comp = esper.component_for_entity(item_ent, Name)
             item_name = name_comp.name
         except KeyError:
             item_name = "item"
-            
+
         esper.dispatch_event("log_message", f"You pick up the {item_name}.", None, LogCategory.LOOT)
-        
+
         if self.turn_system:
             self.turn_system.end_player_turn()

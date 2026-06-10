@@ -14,14 +14,13 @@ from map.map_container import MapContainer
 from map.map_layer import MapLayer
 from map.tile import Tile
 from game_states import Game
-from ecs.world import get_world
 
 class TestNestedWorlds(unittest.TestCase):
     def setUp(self):
         # Reset global esper state
         esper.clear_database()
         
-        self.world = get_world()
+        self.world = esper
         
         # Mock services
         self.map_service = MapService()

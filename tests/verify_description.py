@@ -25,7 +25,8 @@ from map.tile_registry import TileRegistry
 from entities.entity_registry import EntityRegistry, EntityTemplate
 from entities.entity_factory import EntityFactory
 from services.resource_loader import ResourceLoader
-from ecs.world import get_world, reset_world
+import esper
+from ecs.world import reset_world
 from ecs.components import Stats, Description
 
 TILE_FILE = "assets/data/tile_types.json"
@@ -95,7 +96,7 @@ def test_orc_entity_has_description_component():
     """Orc entity created via EntityFactory has Description component with correct values."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     entity_id = EntityFactory.create(world, "orc", 0, 0)
 
@@ -114,7 +115,7 @@ def test_description_not_attached_without_field():
     """Entity template with empty description does NOT get a Description component."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     # Register a minimal template with no description
     minimal_template = EntityTemplate(

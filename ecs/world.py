@@ -1,16 +1,11 @@
 import esper
 
-def get_world():
-    """
-    In esper 3.x, the module itself handles the default world state.
-    We return the module to maintain a consistent interface if needed,
-    although calling esper functions directly is also valid.
-    """
-    return esper
 
 def reset_world():
-    """
-    Clears the current world state.
+    """Clear the esper world state (entities, components, event handlers).
+
+    esper 3.x is module-global: the module itself is the world. Code that
+    needs the world should simply ``import esper`` directly.
     """
     esper.clear_database()
     if hasattr(esper, "event_registry"):

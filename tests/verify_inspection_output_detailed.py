@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from ecs.world import get_world, reset_world
+from ecs.world import reset_world
 from ecs.systems.action_system import ActionSystem
 from ecs.systems.turn_system import TurnSystem
 from ecs.components import Position, Name, Description, ItemMaterial, Portable, Action, Targeting, Stats
@@ -16,7 +16,7 @@ from map.tile import Tile, VisibilityState
 def test_inspection_output_detailed():
     print("Testing detailed inspection output...")
     reset_world()
-    world = get_world()
+    world = esper
     
     # Mock map with one visible tile
     tile = Tile(transparent=True)

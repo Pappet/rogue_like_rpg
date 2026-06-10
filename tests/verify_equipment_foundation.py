@@ -1,11 +1,12 @@
-from ecs.world import get_world, reset_world
+import esper
+from ecs.world import reset_world
 from ecs.components import Equippable, SlotType, Equipment, EffectiveStats, StatModifiers
 from entities.item_registry import ItemRegistry, ItemTemplate
 from entities.item_factory import ItemFactory
 
 def test_equipment_components():
     print("Testing equipment components...")
-    world = get_world()
+    world = esper
     
     # Test SlotType
     assert SlotType.HEAD == "head"
@@ -32,7 +33,7 @@ def test_equipment_components():
 def test_item_factory_with_slot():
     print("\nTesting ItemFactory with slots...")
     reset_world()
-    world = get_world()
+    world = esper
     ItemRegistry.clear()
     
     template = ItemTemplate(

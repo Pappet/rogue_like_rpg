@@ -1,4 +1,4 @@
-from ecs.world import get_world
+import esper
 from services.resource_loader import ResourceLoader
 from entities.entity_factory import EntityFactory
 from entities.entity_registry import EntityRegistry
@@ -28,7 +28,7 @@ def test_pipeline():
     
     # Create entity
     print("Creating 'villager' entity via EntityFactory...")
-    world = get_world()
+    world = esper
     v_id = EntityFactory.create(world, "villager", 5, 5)
     
     schedule_comp = world.component_for_entity(v_id, Schedule)

@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import esper
-from ecs.world import get_world, reset_world
+from ecs.world import reset_world
 from ecs.systems.death_system import DeathSystem
 from ecs.components import Position, LootTable, Name, Blocker
 from entities.item_registry import ItemRegistry, ItemTemplate
@@ -27,7 +27,7 @@ class MockMap:
 def test_loot_drop_guaranteed():
     print("Testing guaranteed loot drop...")
     reset_world()
-    world = get_world()
+    world = esper
     
     death_system = DeathSystem()
     world.add_processor(death_system)
@@ -66,7 +66,7 @@ def test_loot_drop_guaranteed():
 def test_loot_scattering():
     print("Testing loot scattering when center is blocked...")
     reset_world()
-    world = get_world()
+    world = esper
     
     death_system = DeathSystem()
     world.add_processor(death_system)

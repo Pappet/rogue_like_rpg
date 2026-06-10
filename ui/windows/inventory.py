@@ -2,7 +2,6 @@ import pygame
 import esper
 from ui.windows.base import UIWindow
 from ecs.components import Inventory, Name, Equipment, Position, Renderable, Portable
-from ecs.world import get_world
 from ecs.systems.action_system import ActionSystem
 from services.input_manager import InputCommand
 import services.equipment_service as equipment_service
@@ -21,7 +20,7 @@ class InventoryWindow(UIWindow):
         self.player_entity = player_entity
         self.input_manager = input_manager
         self.turn_system = turn_system
-        self.world = get_world()
+        self.world = esper
         self.selected_idx = 0
         self.font = pygame.font.Font(None, 32)
         self.title_font = pygame.font.Font(None, 48)

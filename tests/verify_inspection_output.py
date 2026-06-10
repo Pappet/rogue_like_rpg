@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import esper
 
-from ecs.world import get_world, reset_world
+from ecs.world import reset_world
 from ecs.components import (
     Position, Stats, ActionList, Action, Targeting, Name, Description
 )

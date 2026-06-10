@@ -22,7 +22,8 @@ from map.tile_registry import TileRegistry
 from entities.entity_registry import EntityRegistry
 from entities.entity_factory import EntityFactory
 from services.resource_loader import ResourceLoader
-from ecs.world import get_world, reset_world
+import esper
+from ecs.world import reset_world
 from ecs.components import Position, Renderable, Stats, Name, Blocker, AI, AIBehaviorState, AIState, Alignment
 
 TILE_FILE = "assets/data/tile_types.json"
@@ -58,7 +59,7 @@ def test_entity_factory_create():
     """EntityFactory.create() produces an entity with all expected components."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     entity_id = EntityFactory.create(world, "orc", 5, 10)
     assert entity_id is not None, "EntityFactory.create() should return an entity ID"
@@ -98,7 +99,7 @@ def test_ai_state_talk_assignable():
     """AIState.TALK is a valid, assignable state for AIBehaviorState."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     entity_id = EntityFactory.create(world, "orc", 0, 0)
     behavior = world.component_for_entity(entity_id, AIBehaviorState)
@@ -110,7 +111,7 @@ def test_invalid_state_raises():
     """EntityFactory.create() raises ValueError for invalid default_state in template."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     from entities.entity_registry import EntityTemplate
     bad_template = EntityTemplate(
@@ -134,7 +135,7 @@ def test_entity_factory_unknown_template():
     """EntityFactory.create() raises ValueError for unknown template IDs."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     with pytest.raises(ValueError):
         EntityFactory.create(world, "nonexistent", 0, 0)

@@ -13,13 +13,13 @@ from map.map_container import MapContainer
 from map.map_layer import MapLayer
 from map.tile import Tile
 
-from ecs.world import get_world, reset_world
+from ecs.world import reset_world
 
 def test_item_persistence():
     print("Starting Item Persistence Test...")
     # 1. Setup
     reset_world()
-    world = get_world()
+    world = esper
     
     # Register a dummy item
     ItemRegistry.register(ItemTemplate(

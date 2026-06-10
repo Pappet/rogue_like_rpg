@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import esper
 
-from ecs.world import get_world, reset_world
+from ecs.world import reset_world
 from ecs.components import (
     Position, Renderable, Stats, Name, Blocker, Inventory, Equipment,
     EffectiveStats, ActionList, HotbarSlots, TurnOrder, PlayerTag,
@@ -71,7 +71,7 @@ def _load_all_registries():
 def _create_village_world():
     """Helper: load registries, create village scenario, return (map_service, world)."""
     _load_all_registries()
-    world = get_world()
+    world = esper
     map_service = MapService()
     map_generator = MapGenerator(map_service)
     map_generator.create_village_scenario(world)
@@ -153,7 +153,7 @@ class TestPlayerEntity:
     def test_player_has_required_components(self):
         """Player entity carries every component PartyService assigns."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -174,7 +174,7 @@ class TestPlayerEntity:
     def test_player_stats_sane(self):
         """Player stats have sensible initial values."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -191,7 +191,7 @@ class TestPlayerEntity:
     def test_player_has_actions(self):
         """Player has an ActionList with at least one action."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -205,7 +205,7 @@ class TestPlayerEntity:
     def test_player_hotbar_populated(self):
         """Player hotbar has at least one slot filled."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -268,7 +268,7 @@ class TestPlayerActions:
     def test_movement_request_applied(self):
         """Adding a MovementRequest component doesn't crash."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -285,7 +285,7 @@ class TestPlayerActions:
     def test_all_action_names_present(self):
         """Every action name in the ActionList is a non-empty string."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -300,7 +300,7 @@ class TestPlayerActions:
     def test_hotbar_actions_match_action_list(self):
         """Every non-None hotbar action has a valid name."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -324,7 +324,7 @@ class TestFreezeThaw:
     def test_freeze_thaw_preserves_entity_count(self):
         """Freezing and thawing a map preserves the number of entities."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -375,7 +375,7 @@ class TestFreezeThaw:
     def test_freeze_thaw_preserves_components(self):
         """Entities thawed from a map retain their key components."""
         _load_all_registries()
-        world = get_world()
+        world = esper
         map_service = MapService()
         map_generator = MapGenerator(map_service)
         map_generator.create_village_scenario(world)
@@ -410,7 +410,7 @@ class TestFreezeThaw:
     def test_empty_map_freeze_thaw(self):
         """Freeze/thaw on a map with no entities doesn't crash."""
         _load_all_registries()
-        world = get_world()
+        world = esper
 
         map_service = MapService()
         map_generator = MapGenerator(map_service)

@@ -12,3 +12,5 @@ UI_COLUMN_OFFSET = 95
 UI_CLOCK_OFFSET = 130
 UI_ACTION_HEIGHT = 30
 UI_ACTION_HIGHLIGHT_HEIGHT = 25
+# Default rect (x, y, w, h) for modal windows (inventory, character sheet)
+UI_MODAL_RECT = (140, 100, 1000, 500)

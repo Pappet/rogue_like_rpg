@@ -59,7 +59,7 @@ esper.dispatch_event("log_message", "Hello!")
 esper.set_handler("entity_died", handler_func)
 ```
 
-**`ecs/world.py`** provides `get_world()` which returns the `esper` module itself — this is a compatibility shim, not a world instance.
+**`ecs/world.py`** provides `reset_world()` for clearing ECS state (used by tests). The former `get_world()` shim has been removed — always `import esper` directly.
 
 ### Core Patterns
 
@@ -117,7 +117,7 @@ World clock advances 1 tick per player turn. 1 hour = 60 ticks.
 │   └── scenarios/                   # Data-driven map scenarios (e.g. village.json)
 │
 ├── ecs/
-│   ├── world.py                     # get_world() / reset_world() shims
+│   ├── world.py                     # reset_world() helper (tests)
 │   ├── components.py                # All dataclass components
 │   └── systems/                     # One file per system
 │       ├── map_aware_system.py      # MapAwareSystem mixin (see below)
@@ -267,7 +267,7 @@ class MapAwareSystem:
 - **Logging:** Use Python `logging` module — `logging.getLogger(__name__)` per module. `main.py` configures `logging.basicConfig()`. No `print()` in production code.
 
 ### ECS Rules
-- **Never store `World` instances** — use `esper` module directly or `get_world()`
+- **Never store `World` instances** — use the `esper` module directly
 - **Components are plain dataclasses** — no methods with side effects
 - **Systems do not hold entity references** — query via `esper.get_components()` each frame
 - **Events for cross-system communication**: `esper.dispatch_event()` / `esper.set_handler()`

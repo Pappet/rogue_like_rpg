@@ -28,7 +28,8 @@ from entities.entity_factory import EntityFactory
 from services.map_service import MapService
 from services.map_generator import MapGenerator
 from services.resource_loader import ResourceLoader
-from ecs.world import get_world, reset_world
+import esper
+from ecs.world import reset_world
 from ecs.components import Position, Name
 
 TILE_FILE = "assets/data/tile_types.json"
@@ -57,7 +58,7 @@ def test_load_prefab_stamps_tiles():
     """Prefab tiles are correctly stamped onto the MapLayer at the given offset."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     layer = make_layer(10, 10, "floor_stone")
     map_service = MapService()
@@ -82,7 +83,7 @@ def test_load_prefab_preserves_visibility():
     """
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     layer = make_layer(10, 10, "floor_stone")
     # Mark tile (2,2) as VISIBLE before stamping
@@ -102,7 +103,7 @@ def test_load_prefab_spawns_entities():
     """Entity spawn points in the prefab are created via EntityFactory at the correct position."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     layer = make_layer(10, 10, "floor_stone")
     map_service = MapService()
@@ -124,7 +125,7 @@ def test_load_prefab_with_offset():
     """Offset is applied to both tile stamps and entity spawns."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     # Use a 20x20 layer so the prefab + offset fits
     layer = make_layer(20, 20, "floor_stone")
@@ -152,7 +153,7 @@ def test_load_prefab_file_not_found():
     """FileNotFoundError is raised when the prefab file does not exist."""
     setup_registries()
     reset_world()
-    world = get_world()
+    world = esper
 
     layer = make_layer(10, 10, "floor_stone")
     map_service = MapService()
