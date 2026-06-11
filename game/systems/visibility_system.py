@@ -2,7 +2,7 @@ import esper
 
 from config import SpriteLayer
 from core.visibility_service import VisibilityService
-from game.components import EffectiveStats, LightSource, PlayerTag, Position, Stats
+from game.components import EffectiveStats, Hidden, LightSource, Name, PlayerTag, Position, Stats
 from game.map.tile import VisibilityState
 from game.systems.map_aware_system import MapAwareSystem
 
@@ -100,3 +100,30 @@ class VisibilitySystem(esper.Processor, MapAwareSystem):
             for layer in self._map_container.layers:
                 if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
                     layer.tiles[y][x].visibility_state = VisibilityState.VISIBLE
+
+        # 4. Reveal hidden entities the player gets close to (Phase F).
+        # Sharp-eyed characters notice secrets from further away.
+        self._reveal_hidden_secrets()
+
+    def _reveal_hidden_secrets(self):
+        player_pos = None
+        bonus = 0
+        for ent, (pos, _tag) in esper.get_components(Position, PlayerTag):
+            player_pos = pos
+            eff = esper.try_component(ent, EffectiveStats)
+            if eff is not None:
+                # Perception above baseline (10) extends the reveal radius
+                bonus = max(0, (eff.perception - 10) // 4)
+            break
+        if player_pos is None:
+            return
+
+        for ent, (pos, hidden) in list(esper.get_components(Position, Hidden)):
+            if pos.layer != player_pos.layer:
+                continue
+            distance = max(abs(pos.x - player_pos.x), abs(pos.y - player_pos.y))
+            if distance <= hidden.reveal_radius + bonus:
+                esper.remove_component(ent, Hidden)
+                name = esper.try_component(ent, Name)
+                what = name.name if name else "something"
+                esper.dispatch_event("log_message", f"[color=cyan]You notice something hidden: {what}![/color]")

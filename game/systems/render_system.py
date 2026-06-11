@@ -4,7 +4,7 @@ import esper
 import pygame
 
 from config import TILE_SIZE, SpriteLayer
-from game.components import FCT, AIBehaviorState, AIState, Position, Renderable, Targeting
+from game.components import FCT, AIBehaviorState, AIState, Hidden, Position, Renderable, Targeting
 from game.map.tile import VisibilityState
 from game.systems.map_aware_system import MapAwareSystem
 
@@ -26,6 +26,9 @@ class RenderSystem(esper.Processor, MapAwareSystem):
         # 2. Get all entities with Position and Renderable components
         renderables = []
         for ent, (pos, rend) in esper.get_components(Position, Renderable):
+            # Concealed entities stay invisible until revealed (Phase F)
+            if esper.has_component(ent, Hidden):
+                continue
             # Only render if entity is at or below player layer
             if pos.layer > player_layer:
                 continue

@@ -13,6 +13,7 @@ from config import GameStates, LogCategory
 from game.components import (
     Action,
     ActionList,
+    Hidden,
     Inventory,
     MovementRequest,
     Name,
@@ -87,7 +88,10 @@ class PlayerActionService:
         items_here = [
             ent
             for ent, (pos, portable) in esper.get_components(Position, Portable)
-            if pos.x == player_pos.x and pos.y == player_pos.y and pos.layer == player_pos.layer
+            if pos.x == player_pos.x
+            and pos.y == player_pos.y
+            and pos.layer == player_pos.layer
+            and not esper.has_component(ent, Hidden)
         ]
         if not items_here:
             esper.dispatch_event("log_message", "There is nothing here to pick up.", None, LogCategory.ALERT)

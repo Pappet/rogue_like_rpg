@@ -329,6 +329,18 @@ class Merchant:
 
 
 @dataclass
+class Hidden:
+    """Marker: entity is concealed until revealed (ROADMAP Phase F).
+
+    Hidden entities are not rendered, not listed by the tooltip and not
+    picked up. VisibilitySystem reveals them when the player gets close
+    enough (perception-gated).
+    """
+
+    reveal_radius: int = 2
+
+
+@dataclass
 class QuestGiver:
     """Marker: bumping this NPC opens the quest window (ROADMAP Phase E)."""
 

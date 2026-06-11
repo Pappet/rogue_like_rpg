@@ -2,9 +2,12 @@ import json
 import os
 import random
 
+import esper as _esper
+
 from config import SpriteLayer
 from game.components import MapBound, Name, Portal, Position, Renderable
 from game.content.entity_factory import EntityFactory
+from game.content.item_factory import ItemFactory
 from game.map.map_container import MapContainer
 from game.map.map_generator_utils import draw_rectangle, get_nearest_walkable_tile
 from game.map.map_layer import MapLayer
@@ -101,18 +104,19 @@ class MapGenerator:
                 )
 
     def create_world(self, world, world_graph) -> None:
-        """Build a map for every settlement location on the world graph,
-        then activate the start location (ROADMAP Phase A).
+        """Build a map for every location on the world graph, then activate
+        the start location (ROADMAP Phase A; POI dungeons: Phase F).
 
         Args:
             world: The ECS world.
             world_graph: WorldGraphService with locations referencing scenarios.
         """
         for location in world_graph.locations.values():
-            if location.type != "settlement":
-                continue
-            scenario_path = f"assets/data/scenarios/{location.scenario}.json"
-            self.create_scenario(world, scenario_path, map_id=location.id)
+            if location.type == "settlement":
+                scenario_path = f"assets/data/scenarios/{location.scenario}.json"
+                self.create_scenario(world, scenario_path, map_id=location.id)
+            elif location.type == "poi":
+                self.create_dungeon(world, map_id=location.id)
 
         start_id = world_graph.start_location_id
         self.map_service.set_active_map(start_id)
@@ -242,6 +246,78 @@ class MapGenerator:
             h_container.freeze(world)
 
         return village_container
+
+    def create_dungeon(
+        self,
+        world,
+        map_id: str,
+        width: int = 30,
+        height: int = 30,
+        seed: int | None = None,
+        monster_density: float = 0.025,
+    ) -> MapContainer:
+        """Generate a small procedural dungeon for a POI (ROADMAP Phase F).
+
+        Classic rooms-and-corridors: carve random non-overlapping rooms into
+        solid rock, connect consecutive room centers with L-corridors.
+        Spawns monsters and places a hidden cache in the last room — the
+        secret the Investigate/perception mechanics can uncover.
+
+        The map is registered and left frozen (like create_scenario);
+        arrival_pos is the center of the first room.
+        """
+        from game.components import Hidden
+
+        rng = random.Random(seed)
+        tiles = [[Tile(type_id="wall_stone") for _ in range(width)] for _ in range(height)]
+        layer = MapLayer(tiles)
+
+        # 1. Carve rooms
+        rooms: list[tuple[int, int, int, int]] = []  # (x, y, w, h)
+        for _ in range(40):
+            if len(rooms) >= 7:
+                break
+            rw, rh = rng.randint(4, 8), rng.randint(4, 7)
+            rx, ry = rng.randint(1, width - rw - 2), rng.randint(1, height - rh - 2)
+            if any(
+                rx < ox + ow + 1 and rx + rw + 1 > ox and ry < oy + oh + 1 and ry + rh + 1 > oy
+                for ox, oy, ow, oh in rooms
+            ):
+                continue
+            rooms.append((rx, ry, rw, rh))
+            for y in range(ry, ry + rh):
+                for x in range(rx, rx + rw):
+                    tiles[y][x].set_type("floor_stone")
+
+        # 2. Connect consecutive rooms with L-corridors
+        def center(room):
+            rx, ry, rw, rh = room
+            return rx + rw // 2, ry + rh // 2
+
+        for a, b in zip(rooms, rooms[1:], strict=False):
+            ax, ay = center(a)
+            bx, by = center(b)
+            for x in range(min(ax, bx), max(ax, bx) + 1):
+                tiles[ay][x].set_type("floor_stone")
+            for y in range(min(ay, by), max(ay, by) + 1):
+                tiles[y][bx].set_type("floor_stone")
+
+        container = MapContainer([layer], arrival_pos=center(rooms[0]))
+        if self.map_service.get_map(map_id) is not None:
+            raise ValueError(f"Map id '{map_id}' is already registered.")
+        self.map_service.register_map(map_id, container)
+
+        # 3. Monsters guard the place
+        SpawnService.spawn_monsters(world, container, density=monster_density)
+
+        # 4. Hidden cache in the last room (Phase F secret)
+        cx, cy = center(rooms[-1])
+        for template_id in ("steel_sword", "health_potion"):
+            item = ItemFactory.create_on_ground(world, template_id, cx, cy, 0)
+            _esper.add_component(item, Hidden())
+
+        container.freeze(world)
+        return container
 
     def create_sample_map(self, width: int, height: int, map_id: str | None = None) -> MapContainer:
         """Creates a sample map for testing and optionally registers it."""
