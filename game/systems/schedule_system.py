@@ -30,6 +30,11 @@ class ScheduleSystem(esper.Processor):
         for ent, (sched, ai_state, activity, pos) in esper.get_components(
             Schedule, AIBehaviorState, Activity, Position
         ):
+            # A need (e.g. EAT) is preempting the schedule — leave the
+            # entity alone until NeedsSystem clears the override.
+            if activity.need_override:
+                continue
+
             template = schedule_registry.get(sched.schedule_id)
             if not template:
                 continue

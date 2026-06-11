@@ -66,7 +66,12 @@
   "home_pos": [
    10,
    10
-  ]
+  ],
+  "needs": {
+   "hunger_rate": 3.0,
+   "eat_threshold": 70.0,
+   "eat_duration_ticks": 30
+  }
  },
  {
   "id": "guard",
@@ -135,6 +140,11 @@
     "dagger"
    ],
    "gold": 200
+  },
+  "needs": {
+   "hunger_rate": 3.0,
+   "eat_threshold": 70.0,
+   "eat_duration_ticks": 30
   }
  },
  {
@@ -232,7 +242,12 @@
   "home_pos": [
    20,
    20
-  ]
+  ],
+  "needs": {
+   "hunger_rate": 3.0,
+   "eat_threshold": 70.0,
+   "eat_duration_ticks": 30
+  }
  },
  {
   "id": "blacksmith",
@@ -261,6 +276,11 @@
   "home_pos": [
    8,
    8
-  ]
+  ],
+  "needs": {
+   "hunger_rate": 3.0,
+   "eat_threshold": 70.0,
+   "eat_duration_ticks": 30
+  }
  }
 ]

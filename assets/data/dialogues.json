@@ -1,42 +1,106 @@
 {
-    "villager": [
-        "Good day, traveler!",
-        "The harvest was good this year.",
-        "Have you seen the guards today?",
-        "I heard strange noises from the woods last night...",
-        "Welcome to our village!"
-    ],
-    "guard": [
-        "Move along, citizen.",
-        "Stay out of trouble.",
-        "The roads aren't safe at night.",
-        "I'm keeping watch. No need to worry.",
-        "Report anything suspicious to me."
-    ],
-    "shopkeeper": [
-        "Looking to buy something?",
-        "I just got a new shipment in!",
-        "Best prices in the village, I guarantee it.",
-        "Come back anytime!",
-        "Trade keeps the village alive."
-    ],
-    "mayor": [
-        "Welcome to our humble village.",
-        "I try my best to keep the peace around here.",
-        "Please, cause no trouble during your stay.",
-        "The recent monster attacks have been concerning.",
-        "If you can help defend us, you'll be well rewarded."
-    ],
-    "blacksmith": [
-        "Need some steel forged?",
-        "My blades never dull.",
-        "Strike while the iron is hot!",
-        "Armor or weapons, you name it, I can craft it.",
-        "Keep your gear in good condition out there."
-    ],
-    "_default": [
-        "...",
-        "They nod at you.",
-        "They don't seem interested in talking."
+ "villager": {
+  "default": [
+   "Good day, traveler!",
+   "The harvest was good this year.",
+   "Have you seen the guards today?",
+   "I heard strange noises from the woods last night...",
+   "Welcome to our village!"
+  ],
+  "conditional": [
+   {
+    "when": {
+     "rep": "beloved"
+    },
+    "lines": [
+     "Always a pleasure to see you, friend!",
+     "Our hero returns! What can we do for you?",
+     "You are welcome at my table any time."
     ]
+   },
+   {
+    "when": {
+     "rep": "notorious"
+    },
+    "lines": [
+     "Stay away from me!",
+     "I know what you did. Everyone knows.",
+     "We don't want your kind here."
+    ]
+   },
+   {
+    "when": {
+     "phase": "night"
+    },
+    "lines": [
+     "You're up late, traveler.",
+     "Quiet night, isn't it?"
+    ]
+   },
+   {
+    "when": {
+     "activity": "WORK"
+    },
+    "lines": [
+     "Can't chat long \u2014 work to do.",
+     "These fields won't tend themselves."
+    ]
+   }
+  ]
+ },
+ "guard": [
+  "Move along, citizen.",
+  "Stay out of trouble.",
+  "The roads aren't safe at night.",
+  "I'm keeping watch. No need to worry.",
+  "Report anything suspicious to me."
+ ],
+ "shopkeeper": {
+  "default": [
+   "Looking to buy something?",
+   "I just got a new shipment in!",
+   "Best prices in the village, I guarantee it.",
+   "Come back anytime!",
+   "Trade keeps the village alive."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "rep": "beloved"
+    },
+    "lines": [
+     "For you? Special prices, of course!",
+     "My best customer! Come in, come in."
+    ]
+   },
+   {
+    "when": {
+     "rep": "notorious"
+    },
+    "lines": [
+     "Your coin is good, but I'm watching you.",
+     "Buy something or get out."
+    ]
+   }
+  ]
+ },
+ "mayor": [
+  "Welcome to our humble village.",
+  "I try my best to keep the peace around here.",
+  "Please, cause no trouble during your stay.",
+  "The recent monster attacks have been concerning.",
+  "If you can help defend us, you'll be well rewarded."
+ ],
+ "blacksmith": [
+  "Need some steel forged?",
+  "My blades never dull.",
+  "Strike while the iron is hot!",
+  "Armor or weapons, you name it, I can craft it.",
+  "Keep your gear in good condition out there."
+ ],
+ "_default": [
+  "...",
+  "They nod at you.",
+  "They don't seem interested in talking."
+ ]
 }

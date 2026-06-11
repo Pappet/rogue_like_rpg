@@ -41,15 +41,17 @@ class TradeService:
     """
 
     @staticmethod
-    def buy_price(template_id: str, economy=None, location_id: str | None = None) -> int:
+    def buy_price(template_id: str, economy=None, location_id: str | None = None, reputation=None) -> int:
         template = item_registry.get(template_id)
         if not template:
             return 0
         factor = economy.price_factor(location_id, template_id) if economy else 1.0
+        if reputation is not None:
+            factor *= reputation.buy_price_factor(location_id)
         return max(1, round(template.value * factor))
 
     @staticmethod
-    def sell_price(item_entity: int, economy=None, location_id: str | None = None) -> int:
+    def sell_price(item_entity: int, economy=None, location_id: str | None = None, reputation=None) -> int:
         value = esper.try_component(item_entity, Value)
         if not value or value.amount <= 0:
             return 1
@@ -58,11 +60,19 @@ class TradeService:
             tid = esper.try_component(item_entity, TemplateId)
             if tid is not None:
                 factor = economy.price_factor(location_id, tid.id)
+        if reputation is not None:
+            factor *= reputation.sell_price_factor(location_id)
         return max(1, round(value.amount * SELL_FACTOR * factor))
 
     @staticmethod
     def buy(
-        world, player: int, merchant_ent: int, stock_index: int, economy=None, location_id: str | None = None
+        world,
+        player: int,
+        merchant_ent: int,
+        stock_index: int,
+        economy=None,
+        location_id: str | None = None,
+        reputation=None,
     ) -> bool:
         """Player buys merchant.stock[stock_index]. Returns True on success."""
         merchant = world.try_component(merchant_ent, Merchant)
@@ -74,7 +84,7 @@ class TradeService:
             return False
 
         template_id = merchant.stock[stock_index]
-        price = TradeService.buy_price(template_id, economy, location_id)
+        price = TradeService.buy_price(template_id, economy, location_id, reputation)
         if purse.gold < price:
             esper.dispatch_event("log_message", "You cannot afford that.", None, LogCategory.ALERT)
             return False
@@ -101,6 +111,8 @@ class TradeService:
         inventory.items.append(item_ent)
         if economy is not None:
             economy.record_purchase(location_id, template_id)
+        if reputation is not None:
+            reputation.record_trade(location_id)
 
         name = world.component_for_entity(item_ent, Name).name
         esper.dispatch_event("log_message", f"Bought {name} for {price} gold.", None, LogCategory.LOOT)
@@ -108,7 +120,13 @@ class TradeService:
 
     @staticmethod
     def sell(
-        world, player: int, merchant_ent: int, item_ent: int, economy=None, location_id: str | None = None
+        world,
+        player: int,
+        merchant_ent: int,
+        item_ent: int,
+        economy=None,
+        location_id: str | None = None,
+        reputation=None,
     ) -> bool:
         """Player sells an inventory item to the merchant. Returns True on success."""
         merchant = world.try_component(merchant_ent, Merchant)
@@ -122,7 +140,7 @@ class TradeService:
             esper.dispatch_event("log_message", "The merchant has no interest in that.", None, LogCategory.ALERT)
             return False
 
-        price = TradeService.sell_price(item_ent, economy, location_id)
+        price = TradeService.sell_price(item_ent, economy, location_id, reputation)
         merchant_purse = world.try_component(merchant_ent, Purse)
         if merchant_purse is not None and merchant_purse.gold < price:
             esper.dispatch_event("log_message", "The merchant cannot afford that.", None, LogCategory.ALERT)
@@ -143,6 +161,8 @@ class TradeService:
         purse.gold += price
         if economy is not None:
             economy.record_sale(location_id, template_id_comp.id)
+        if reputation is not None:
+            reputation.record_trade(location_id)
         if merchant_purse is not None:
             merchant_purse.gold -= price
 

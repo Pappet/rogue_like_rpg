@@ -16,6 +16,7 @@ from game.services.economy_service import EconomyService
 from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
 from game.services.render_service import RenderService
+from game.services.reputation_service import ReputationService
 from game.services.system_initializer import build_systems, register_processors
 from game.services.world_chronicle_service import WorldChronicleService
 from game.services.world_graph_service import WorldGraphService
@@ -65,5 +66,18 @@ def build_game_context() -> GameContext:
     economy.load_from_world(world_graph, f"{DATA_DIR}/scenarios")
     ctx.economy = economy
     esper.set_handler("clock_tick", economy.on_clock_tick)
+
+    # Player reputation per settlement (registers its entity_died handler)
+    ctx.reputation = ReputationService(ctx=ctx)
+
+    # Dialogue selection context: rep tier at the current location + day phase
+    def _dialogue_context() -> dict:
+        location_id = ctx.world_graph.current_location_id if ctx.world_graph else None
+        return {
+            "rep": ctx.reputation.tier(location_id) if ctx.reputation else "neutral",
+            "phase": ctx.world_clock.phase if ctx.world_clock else "day",
+        }
+
+    default_content.dialogues.context_provider = _dialogue_context
 
     return ctx

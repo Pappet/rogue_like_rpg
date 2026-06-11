@@ -242,6 +242,7 @@ class ResourceLoader:
                 schedule_id=schedule_id,
                 home_pos=home_pos,
                 merchant=item.get("merchant"),
+                needs=item.get("needs"),
             )
 
             registry.register(template)

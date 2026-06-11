@@ -17,6 +17,7 @@ from game.components import (
     MapBound,
     Merchant,
     Name,
+    Needs,
     Position,
     Purse,
     Renderable,
@@ -117,5 +118,14 @@ class EntityFactory:
         if template.merchant:
             components.append(Merchant(stock=list(template.merchant.get("stock", []))))
             components.append(Purse(gold=int(template.merchant.get("gold", 0))))
+
+        if template.needs:
+            components.append(
+                Needs(
+                    hunger_rate=float(template.needs.get("hunger_rate", 2.0)),
+                    eat_threshold=float(template.needs.get("eat_threshold", 70.0)),
+                    eat_duration_ticks=int(template.needs.get("eat_duration_ticks", 30)),
+                )
+            )
 
         return world.create_entity(*components)

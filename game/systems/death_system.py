@@ -31,7 +31,7 @@ class DeathSystem(MapAwareSystem):
         # Register the event handler for entity death
         esper.set_handler("entity_died", self.on_entity_died)
 
-    def on_entity_died(self, entity):
+    def on_entity_died(self, entity, attacker=None):
         # --- Player death: dispatch event and return early ---
         if esper.has_component(entity, PlayerTag):
             logger.info("Player has died!")

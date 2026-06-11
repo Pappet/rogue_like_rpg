@@ -18,6 +18,7 @@ from game.systems.death_system import DeathSystem
 from game.systems.equipment_system import EquipmentSystem
 from game.systems.fct_system import FCTSystem
 from game.systems.movement_system import MovementSystem
+from game.systems.needs_system import NeedsSystem
 from game.systems.schedule_system import ScheduleSystem
 from game.systems.turn_system import TurnSystem
 from game.systems.visibility_system import VisibilitySystem
@@ -44,6 +45,7 @@ def build_systems(world_clock: WorldClockService, map_container: MapContainer) -
         death_system=death_system,
         ai_system=AISystem(),
         schedule_system=ScheduleSystem(),
+        needs_system=NeedsSystem(),
     )
 
     for system in systems.map_aware():
