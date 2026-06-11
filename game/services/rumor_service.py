@@ -26,10 +26,34 @@ class RumorService:
         """A rumor line with RUMOR_CHANCE probability, else None."""
         if self.rng.random() >= RUMOR_CHANCE:
             return None
+        # Undiscovered POIs take priority: hearing about them puts them on
+        # the travel map (Phase F — rumors lead to secrets).
+        poi_rumor = self._poi_rumor()
+        if poi_rumor is not None:
+            return poi_rumor
         candidates = self._candidates()
         if not candidates:
             return None
         return self.rng.choice(candidates)
+
+    def _poi_rumor(self) -> str | None:
+        """Reveal an undiscovered POI connected to a discovered location."""
+        graph = self.ctx.world_graph if self.ctx else None
+        if graph is None:
+            return None
+        for location in graph.locations.values():
+            if location.type != "poi" or location.discovered:
+                continue
+            # Only POIs reachable from somewhere the player knows
+            anchors = [other.name for other, _ in graph.neighbors(location.id) if other.discovered]
+            if not anchors:
+                continue
+            graph.discover(location.id)
+            return (
+                f"Have you heard of the {location.name}? Somewhere out past "
+                f"{anchors[0]}, they say. Few who go looking come back."
+            )
+        return None
 
     def _candidates(self) -> list[str]:
         if self.ctx is None or self.ctx.world_graph is None:

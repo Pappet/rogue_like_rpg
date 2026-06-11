@@ -402,6 +402,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Merchant`        | NPC trades; stock = item template id list    |
 | `Needs`           | Hunger state; preempts schedule via override |
 | `QuestGiver`      | Marker: bump opens the quest window          |
+| `Hidden`          | Concealed until revealed at close range      |
 
 ### Enums
 

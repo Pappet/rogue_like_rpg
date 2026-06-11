@@ -175,7 +175,7 @@ and `RumorService` feeding chronicle/offer rumors into NPC smalltalk.
 The done-criterion runs end-to-end in
 `tests/verify_quests.py::test_rumor_leads_to_generated_quest_with_real_cause`.
 
-### Phase F — Secrets & Exploration
+### Phase F — Secrets & Exploration ✅ (done)
 
 - **POIs:** hidden locations on the world graph (ruins, caves, shrines),
   not shown on the travel map until discovered via rumor, document item or
@@ -187,6 +187,24 @@ The done-criterion runs end-to-end in
 
 **Done when:** a rumor from Phase E leads to an undiscovered POI with a
 hand-placed secret and a generated dungeon.
+
+*Shipped as:* the undiscovered "Old Ruins" POI on the world graph
+(rumors discover it — only POIs behind known locations can be heard of),
+`MapGenerator.create_dungeon()` (seeded rooms-and-corridors with
+monsters) and the `Hidden` component (concealed entities are invisible
+to rendering/tooltip/pickup until `VisibilitySystem` reveals them at
+close range; perception extends the radius). The full chain runs in
+`tests/verify_secrets.py::test_rumor_leads_to_dungeon_with_secret`.
+Deviation from the plan: the secret reveal is proximity/perception-based
+rather than requiring the manual Investigate mode — less friction, same
+perception payoff.
+
+---
+
+**All six phases of this roadmap are complete.** Candidates for the next
+planning round: multiple save slots, NPC↔NPC relationships (deferred from
+Phase D), deeper dungeon levels with stairs, quest chains, settlement
+growth/decline driven by the economy, and a walkable overworld.
 
 ## 4. Recommended order & why
 

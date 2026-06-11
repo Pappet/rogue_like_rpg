@@ -130,6 +130,10 @@ class TooltipWindow(UIWindow):
             # Find entities at tx, ty on the same layer
             entities = []
             for ent, (pos,) in esper.get_components(Position):
+                from game.components import Hidden
+
+                if esper.has_component(ent, Hidden):
+                    continue
                 if pos.x == tx and pos.y == ty and pos.layer == current_layer:
                     # Only show visible entities
                     is_visible = False
