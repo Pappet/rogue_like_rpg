@@ -34,6 +34,10 @@ class InputCommand(Enum):
     USE_ITEM = auto()  # U
     EQUIP_ITEM = auto()  # E
 
+    # Meta
+    SAVE_GAME = auto()  # F9
+    LOAD_GAME = auto()  # F10
+
     # Debug
     DEBUG_TOGGLE_MASTER = auto()
     DEBUG_TOGGLE_PLAYER_FOV = auto()
@@ -64,6 +68,8 @@ class InputManager:
                 pygame.K_F5: InputCommand.DEBUG_TOGGLE_NPC_FOV,
                 pygame.K_F6: InputCommand.DEBUG_TOGGLE_CHASE,
                 pygame.K_F7: InputCommand.DEBUG_TOGGLE_LABELS,
+                pygame.K_F9: InputCommand.SAVE_GAME,
+                pygame.K_F10: InputCommand.LOAD_GAME,
                 pygame.K_SPACE: InputCommand.WAIT,
             },
             GameStates.TARGETING: {
@@ -95,6 +101,11 @@ class InputManager:
             GameStates.WORLD_MAP: {
                 pygame.K_ESCAPE: InputCommand.CANCEL,
                 pygame.K_m: InputCommand.CANCEL,
+                pygame.K_UP: InputCommand.MOVE_UP,
+                pygame.K_w: InputCommand.MOVE_UP,
+                pygame.K_DOWN: InputCommand.MOVE_DOWN,
+                pygame.K_s: InputCommand.MOVE_DOWN,
+                pygame.K_RETURN: InputCommand.CONFIRM,
             },
             GameStates.EXAMINE: {
                 pygame.K_UP: InputCommand.MOVE_UP,

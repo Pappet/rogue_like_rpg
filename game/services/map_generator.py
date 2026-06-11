@@ -98,10 +98,49 @@ class MapGenerator:
                     Name("Stairs Down")
                 )
 
+    def create_world(self, world, world_graph) -> None:
+        """Build a map for every settlement location on the world graph,
+        then activate the start location (ROADMAP Phase A).
+
+        Args:
+            world: The ECS world.
+            world_graph: WorldGraphService with locations referencing scenarios.
+        """
+        for location in world_graph.locations.values():
+            if location.type != "settlement":
+                continue
+            scenario_path = f"assets/data/scenarios/{location.scenario}.json"
+            self.create_scenario(world, scenario_path, map_id=location.id)
+
+        start_id = world_graph.start_location_id
+        self.map_service.set_active_map(start_id)
+        self.map_service.get_map(start_id).thaw(world)
+
     def create_village_scenario(self, world):
-        """Creates a village scenario with procedural houses and terrain variety based on a JSON config."""
-        with open("assets/data/scenarios/village.json") as f:
+        """Creates the default village scenario and activates it (legacy entry point)."""
+        container = self.create_scenario(world, "assets/data/scenarios/village.json")
+        self.map_service.set_active_map("Village")
+        container.thaw(world)
+
+    def create_scenario(self, world, scenario_path: str, map_id: str | None = None) -> MapContainer:
+        """Build one settlement (exterior + structure interiors) from a scenario JSON.
+
+        All maps are registered with the MapService and left frozen — the
+        caller decides which map becomes active (see create_world()).
+
+        Args:
+            world: The ECS world.
+            scenario_path: Path to the scenario JSON file.
+            map_id: Map id for the exterior map; defaults to the scenario's "id".
+                Structure ids must be globally unique across all scenarios.
+
+        Returns:
+            The (frozen) exterior MapContainer.
+        """
+        with open(scenario_path) as f:
             config = json.load(f)
+
+        map_id = map_id or config["id"]
 
         def create_empty_layer(width, height, fill_type_id: str | None = None):
             tiles = []
@@ -116,7 +155,6 @@ class MapGenerator:
                 tiles.append(row)
             return MapLayer(tiles)
 
-        # Create "Village" MapContainer
         v_width = config["dimensions"]["width"]
         v_height = config["dimensions"]["height"]
         base_layer = config["base_layer"]
@@ -126,8 +164,13 @@ class MapGenerator:
             create_empty_layer(v_width, v_height),                 # Layer 1
             create_empty_layer(v_width, v_height)                  # Layer 2
         ]
-        village_container = MapContainer(village_layers)
-        self.map_service.register_map(config["id"], village_container)
+        arrival = config.get("arrival_pos")
+        village_container = MapContainer(
+            village_layers, arrival_pos=tuple(arrival) if arrival else None
+        )
+        if self.map_service.get_map(map_id) is not None:
+            raise ValueError(f"Map id '{map_id}' is already registered — scenario ids must be unique.")
+        self.map_service.register_map(map_id, village_container)
 
         # Apply terrain variety to ground
         tv = config.get("terrain_variety")
@@ -168,6 +211,8 @@ class MapGenerator:
             hi, hj = h["h_size"]
             floors = h["floors"]
             h_container = MapContainer([create_empty_layer(hi, hj) for _ in range(floors)])
+            if self.map_service.get_map(h["id"]) is not None:
+                raise ValueError(f"Map id '{h['id']}' is already registered — structure ids must be unique.")
             self.map_service.register_map(h["id"], h_container)
 
             # Populate house interior
@@ -186,9 +231,9 @@ class MapGenerator:
             world.create_entity(
                 MapBound(),
                 Position(hi // 2, hj - 2, 0),  # Placed one tile north of the south wall
-                Portal(config["id"], door_vx, door_vy + 1, 0, "Leave House", travel_ticks=1),
+                Portal(map_id, door_vx, door_vy + 1, 0, "Leave House", travel_ticks=1),
                 Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
-                Name(f"Portal to {config['id']}")
+                Name(f"Portal to {map_id}")
             )
 
             # Generate generic monsters for the house map (higher density for interiors)
@@ -196,9 +241,7 @@ class MapGenerator:
 
             h_container.freeze(world)
 
-        # Set active and thaw
-        self.map_service.set_active_map(config["id"])
-        village_container.thaw(world)
+        return village_container
 
     def create_sample_map(self, width: int, height: int, map_id: str | None = None) -> MapContainer:
         """Creates a sample map for testing and optionally registers it."""

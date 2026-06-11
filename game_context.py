@@ -15,6 +15,7 @@ from game.content.content_database import ContentDatabase
 from game.map.map_container import MapContainer
 from game.services.map_service import MapService
 from game.services.render_service import RenderService
+from game.services.world_graph_service import WorldGraphService
 from game.systems.action_system import ActionSystem
 from game.systems.ai_system import AISystem
 from game.systems.combat_system import CombatSystem
@@ -84,6 +85,7 @@ class GameContext:
     ui_stack: UIStack
     camera: Camera
     systems: Systems
+    world_graph: WorldGraphService | None = None
     debug_flags: DebugFlags = field(default_factory=DebugFlags)
     player_entity: int | None = None
     content: ContentDatabase | None = None

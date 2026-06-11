@@ -16,6 +16,7 @@ from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
 from game.services.render_service import RenderService
 from game.services.system_initializer import build_systems, register_processors
+from game.services.world_graph_service import WorldGraphService
 from game_context import GameContext
 
 DATA_DIR = "assets/data"
@@ -27,13 +28,14 @@ def build_game_context() -> GameContext:
 
     map_service = MapService()
     world_clock = WorldClockService()
+    world_graph = WorldGraphService.from_file(f"{DATA_DIR}/world.json")
 
     # Viewport is the area not covered by UI header and log
     viewport_width = SCREEN_WIDTH - SIDEBAR_WIDTH
     viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT
     camera = Camera(viewport_width, viewport_height, 0, HEADER_HEIGHT)
 
-    MapGenerator(map_service).create_village_scenario(esper)
+    MapGenerator(map_service).create_world(esper, world_graph)
 
     systems = build_systems(world_clock, map_service.get_active_map())
     register_processors(systems)
@@ -46,5 +48,6 @@ def build_game_context() -> GameContext:
         ui_stack=UIStack(),
         camera=camera,
         systems=systems,
+        world_graph=world_graph,
         content=content,
     )
