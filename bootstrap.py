@@ -12,10 +12,10 @@ from core.input_manager import InputManager
 from core.ui.stack_manager import UIStack
 from core.world_clock_service import WorldClockService
 from game.content.content_database import default_content
+from game.services.economy_service import EconomyService
 from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
 from game.services.render_service import RenderService
-from game.services.economy_service import EconomyService
 from game.services.system_initializer import build_systems, register_processors
 from game.services.world_chronicle_service import WorldChronicleService
 from game.services.world_graph_service import WorldGraphService

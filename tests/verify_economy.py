@@ -37,7 +37,7 @@ def test_price_factor_scales_with_scarcity():
     cheap = economy.price_factor("Brackenfen", "health_potion")  # glut
     expensive = economy.price_factor("Eastmoor", "health_potion")  # scarce
     assert cheap < 1.0 < expensive
-    assert ECON_PRICE_FACTOR_MIN <= cheap
+    assert cheap >= ECON_PRICE_FACTOR_MIN
     assert expensive <= ECON_PRICE_FACTOR_MAX
 
 
