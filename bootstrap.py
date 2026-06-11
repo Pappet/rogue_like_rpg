@@ -15,8 +15,10 @@ from game.content.content_database import default_content
 from game.services.economy_service import EconomyService
 from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
+from game.services.quest_service import QuestService
 from game.services.render_service import RenderService
 from game.services.reputation_service import ReputationService
+from game.services.rumor_service import RumorService
 from game.services.system_initializer import build_systems, register_processors
 from game.services.world_chronicle_service import WorldChronicleService
 from game.services.world_graph_service import WorldGraphService
@@ -69,6 +71,15 @@ def build_game_context() -> GameContext:
 
     # Player reputation per settlement (registers its entity_died handler)
     ctx.reputation = ReputationService(ctx=ctx)
+
+    # Quests: authored from JSON, generated ones appear on arrival
+    quests = QuestService(ctx=ctx)
+    quests.load_authored(f"{DATA_DIR}/quests.json")
+    ctx.quests = quests
+
+    # Rumors: smalltalk occasionally points at other settlements
+    ctx.rumors = RumorService(ctx=ctx)
+    default_content.dialogues.rumor_provider = ctx.rumors.maybe_rumor
 
     # Dialogue selection context: rep tier at the current location + day phase
     def _dialogue_context() -> dict:

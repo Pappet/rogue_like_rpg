@@ -1,0 +1,37 @@
+[
+  {
+    "id": "taste_of_home",
+    "title": "A Taste of Home",
+    "description": "Eastmoor's taverns have run dry of remedies. Bring 2 health potions.",
+    "quest_type": "deliver",
+    "giver_location": "Eastmoor",
+    "target": {
+      "item": "health_potion",
+      "count": 2
+    },
+    "reward_gold": 60
+  },
+  {
+    "id": "wolf_cull",
+    "title": "Wolf Cull",
+    "description": "Wolves prowl around Brackenfen and the herds are nervous. Cull 2 of them.",
+    "quest_type": "kill",
+    "giver_location": "Brackenfen",
+    "target": {
+      "template": "wolf",
+      "count": 2
+    },
+    "reward_gold": 50
+  },
+  {
+    "id": "long_road",
+    "title": "The Long Road",
+    "description": "The mayor wants word carried to Brackenfen. Visit the hamlet.",
+    "quest_type": "visit",
+    "giver_location": "Village",
+    "target": {
+      "location": "Brackenfen"
+    },
+    "reward_gold": 15
+  }
+]

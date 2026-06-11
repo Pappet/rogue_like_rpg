@@ -15,8 +15,10 @@ from game.content.content_database import ContentDatabase
 from game.map.map_container import MapContainer
 from game.services.economy_service import EconomyService
 from game.services.map_service import MapService
+from game.services.quest_service import QuestService
 from game.services.render_service import RenderService
 from game.services.reputation_service import ReputationService
+from game.services.rumor_service import RumorService
 from game.services.world_chronicle_service import WorldChronicleService
 from game.services.world_graph_service import WorldGraphService
 from game.systems.action_system import ActionSystem
@@ -94,6 +96,8 @@ class GameContext:
     world_chronicle: WorldChronicleService | None = None
     economy: EconomyService | None = None
     reputation: ReputationService | None = None
+    quests: QuestService | None = None
+    rumors: RumorService | None = None
     debug_flags: DebugFlags = field(default_factory=DebugFlags)
     player_entity: int | None = None
     content: ContentDatabase | None = None

@@ -95,6 +95,10 @@ class MapTransitionService:
         if ctx.world_graph is not None and ctx.world_graph.get_location(target_map_id) is not None:
             ctx.world_graph.set_current_location(target_map_id)
 
+            # Quests: visit completion, cause-spawning, generated offers
+            if ctx.quests is not None:
+                ctx.quests.on_arrival(target_map_id)
+
             # Tell the player what happened here while they were away
             if ctx.world_chronicle is not None:
                 missed = ctx.world_chronicle.events_for(target_map_id, since_tick=new_map.last_visited_turn)

@@ -65,6 +65,7 @@ class SaveService:
                 "chronicle": ctx.world_chronicle.to_dict() if ctx.world_chronicle else None,
                 "economy": ctx.economy.to_dict() if ctx.economy else None,
                 "reputation": ctx.reputation.to_dict() if ctx.reputation else None,
+                "quests": ctx.quests.to_dict() if ctx.quests else None,
                 "party": party,
                 "player_old_id": ctx.player_entity,
             }
@@ -122,6 +123,10 @@ class SaveService:
         # Reputation
         if ctx.reputation is not None and data.get("reputation"):
             ctx.reputation.from_dict(data["reputation"])
+
+        # Quests
+        if ctx.quests is not None and data.get("quests"):
+            ctx.quests.from_dict(data["quests"])
 
         # Party (with entity-id remapping)
         id_map: dict[int, int] = {}

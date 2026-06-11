@@ -243,6 +243,7 @@ class ResourceLoader:
                 home_pos=home_pos,
                 merchant=item.get("merchant"),
                 needs=item.get("needs"),
+                quest_giver=bool(item.get("quest_giver", False)),
             )
 
             registry.register(template)

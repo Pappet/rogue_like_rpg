@@ -143,6 +143,7 @@ is neutral constants, usable by both.
 │   ├── player.json                  # Player base stats & actions
 │   ├── world.json                   # World graph: locations + travel routes
 │   ├── world_events.json            # Chronicle event pool (off-screen events)
+│   ├── quests.json                  # Authored quests (generated ones come from the sim)
 │   ├── schedules.json               # NPC daily routines
 │   ├── dialogues.json               # NPC dialogue lines by template_id
 │   ├── prefabs/                     # Prefab room layouts
@@ -212,6 +213,8 @@ is neutral constants, usable by both.
     │   ├── trade_service.py         # Buy/sell rules between player and merchants
     │   ├── economy_service.py       # Per-settlement stock levels -> local prices
     │   ├── reputation_service.py    # Player standing per settlement (price/dialogue)
+    │   ├── quest_service.py         # Authored + generated quests, progress, turn-in
+    │   ├── rumor_service.py         # Smalltalk rumors from chronicle/offers elsewhere
     │   ├── consumable_service.py    # Item consumption logic
     │   └── equipment_service.py     # Equipment slot logic
     ├── controllers/                 # Gameplay orchestration (driven by states)
@@ -228,6 +231,7 @@ is neutral constants, usable by both.
         ├── inventory.py             # Inventory window
         ├── character.py             # Character sheet window
         ├── trade.py                 # Merchant buy/sell window
+        ├── quests.py                # Quest offers/turn-in + journal window
         └── tooltip.py               # Examine/tooltip window
 ```
 
@@ -397,6 +401,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Value`           | Base trade value of an item in gold          |
 | `Merchant`        | NPC trades; stock = item template id list    |
 | `Needs`           | Hunger state; preempts schedule via override |
+| `QuestGiver`      | Marker: bump opens the quest window          |
 
 ### Enums
 

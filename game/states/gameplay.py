@@ -11,6 +11,7 @@ from game.states.base import GameState
 from game.systems.debug_render_system import DebugRenderSystem
 from game.systems.render_system import RenderSystem
 from game.systems.ui_system import UISystem
+from game.ui.windows.quests import QuestWindow
 from game.ui.windows.tooltip import TooltipWindow
 from game.ui.windows.trade import TradeWindow
 
@@ -62,11 +63,19 @@ class GameplayState(GameState):
         esper.set_handler("map_change_requested", self.map_transition_service.transition)
         esper.set_handler("player_died", self._on_player_died)
         esper.set_handler("trade_requested", self._on_trade_requested)
+        esper.set_handler("quests_requested", self._on_quests_requested)
 
     def _on_player_died(self):
         """Handle the player_died event by transitioning to GAME_OVER state."""
         self.done = True
         self.next_state = "GAME_OVER"
+
+    def _on_quests_requested(self, giver_entity):
+        """Open the quest window after bumping a quest giver."""
+        if self.ui_stack.is_active():
+            return
+        rect = pygame.Rect(*UI_MODAL_RECT)
+        self.ui_stack.push(QuestWindow(rect, self.ctx, mode="giver"))
 
     def _on_trade_requested(self, merchant_entity):
         """Open the trade window after bumping into a merchant."""
