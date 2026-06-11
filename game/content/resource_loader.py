@@ -241,6 +241,7 @@ class ResourceLoader:
                 loot_table=loot_table,
                 schedule_id=schedule_id,
                 home_pos=home_pos,
+                merchant=item.get("merchant"),
             )
 
             registry.register(template)
@@ -294,6 +295,7 @@ class ResourceLoader:
                 slot=item.get("slot"),
                 stats=item.get("stats", {}),
                 consumable=item.get("consumable"),
+                value=int(item.get("value", 0)),
             )
 
             registry.register(template)

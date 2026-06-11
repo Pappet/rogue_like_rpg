@@ -11,6 +11,8 @@ from game.components import (
     Renderable,
     SlotType,
     StatModifiers,
+    TemplateId,
+    Value,
 )
 from game.content.item_registry import item_registry
 
@@ -35,6 +37,8 @@ class ItemFactory:
 
         world.add_component(entity, MapBound())
         world.add_component(entity, Name(name=template.name))
+        world.add_component(entity, TemplateId(template_id))
+        world.add_component(entity, Value(amount=template.value))
 
         # Convert sprite_layer string to SpriteLayer enum value
         try:

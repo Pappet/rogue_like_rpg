@@ -303,6 +303,28 @@ class MapBound:
     pass
 
 
+@dataclass
+class Purse:
+    """Gold carried by an entity (player or NPC)."""
+
+    gold: int = 0
+
+
+@dataclass
+class Value:
+    """Base trade value of an item in gold."""
+
+    amount: int = 0
+
+
+@dataclass
+class Merchant:
+    """Marks an NPC as a trader. Stock is a list of item template ids —
+    fungible goods, not item entities, so freeze/thaw never dangles."""
+
+    stock: list[str] = field(default_factory=list)
+
+
 KNOWN_COMPONENT_TYPES = []
 for name, obj in inspect.getmembers(sys.modules[__name__]):
     if inspect.isclass(obj) and obj.__module__ == __name__:

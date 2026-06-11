@@ -15,8 +15,10 @@ from game.components import (
     Description,
     LootTable,
     MapBound,
+    Merchant,
     Name,
     Position,
+    Purse,
     Renderable,
     Schedule,
     Stats,
@@ -111,5 +113,9 @@ class EntityFactory:
         if template.schedule_id:
             components.append(Schedule(template.schedule_id))
             components.append(Activity(home_pos=template.home_pos))
+
+        if template.merchant:
+            components.append(Merchant(stock=list(template.merchant.get("stock", []))))
+            components.append(Purse(gold=int(template.merchant.get("gold", 0))))
 
         return world.create_entity(*components)
