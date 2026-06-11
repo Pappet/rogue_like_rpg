@@ -100,15 +100,11 @@ def test_orc_entity_has_description_component():
 
     entity_id = EntityFactory.create(world, "orc", 0, 0)
 
-    assert world.has_component(entity_id, Description), (
-        "Orc entity should have a Description component attached"
-    )
+    assert world.has_component(entity_id, Description), "Orc entity should have a Description component attached"
 
     desc = world.component_for_entity(entity_id, Description)
     assert desc.base == "A generic orc", f"Expected 'A generic orc', got '{desc.base}'"
-    assert desc.wounded_text == "A wounded orc", (
-        f"Expected 'A wounded orc', got '{desc.wounded_text}'"
-    )
+    assert desc.wounded_text == "A wounded orc", f"Expected 'A wounded orc', got '{desc.wounded_text}'"
 
 
 def test_description_not_attached_without_field():

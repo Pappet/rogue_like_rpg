@@ -2,7 +2,7 @@ import os
 import sys
 
 # Add the project root to the path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import esper
 
@@ -32,35 +32,36 @@ class MockActionSystem:
     def wake_up(self, ent):
         self.woken_up = ent
 
+
 def test_bump_attack():
     esper.clear_database()
-    
+
     # Mock map - make it walkable
     tiles = [[Tile() for _ in range(10)] for _ in range(10)]
     for row in tiles:
         for tile in row:
             tile.sprites = {SpriteLayer.GROUND: "."}
-            
+
     layer = MapLayer(tiles)
     m = MapContainer([layer])
-            
+
     action_system = MockActionSystem()
     movement_system = MovementSystem(action_system)
     movement_system.set_map(m)
-    
+
     # Player
     player = esper.create_entity(Position(1, 1), MovementRequest(1, 0))
     # Hostile monster at (2, 1)
     monster = esper.create_entity(
-        Position(2, 1), 
-        AIBehaviorState(AIState.IDLE, Alignment.HOSTILE), 
-        Stats(10,10,5,5,5,5,1,1), 
+        Position(2, 1),
+        AIBehaviorState(AIState.IDLE, Alignment.HOSTILE),
+        Stats(10, 10, 5, 5, 5, 5, 1, 1),
         Name("Monster"),
-        Blocker()
+        Blocker(),
     )
-    
+
     movement_system.process()
-    
+
     # Check if player still at (1, 1) and has AttackIntent
     pos = esper.component_for_entity(player, Position)
     assert pos.x == 1 and pos.y == 1
@@ -68,37 +69,36 @@ def test_bump_attack():
     assert esper.component_for_entity(player, AttackIntent).target_entity == monster
     print("Bump Attack test passed!")
 
+
 def test_bump_wake_up():
     esper.clear_database()
-    
+
     # Mock map - make it walkable
     tiles = [[Tile() for _ in range(10)] for _ in range(10)]
     for row in tiles:
         for tile in row:
             tile.sprites = {SpriteLayer.GROUND: "."}
-            
+
     layer = MapLayer(tiles)
     m = MapContainer([layer])
-            
+
     action_system = MockActionSystem()
     movement_system = MovementSystem(action_system)
     movement_system.set_map(m)
-    
+
     # Player
     player = esper.create_entity(Position(1, 1), MovementRequest(1, 0))
     # Sleeping villager at (2, 1)
     villager = esper.create_entity(
-        Position(2, 1), 
-        AIBehaviorState(AIState.SLEEP, Alignment.NEUTRAL), 
-        Name("Villager"),
-        Blocker()
+        Position(2, 1), AIBehaviorState(AIState.SLEEP, Alignment.NEUTRAL), Name("Villager"), Blocker()
     )
-    
+
     movement_system.process()
-    
+
     # Check if action_system.wake_up was called
     assert action_system.woken_up == villager
     print("Bump Wake Up test passed!")
+
 
 if __name__ == "__main__":
     test_bump_attack()

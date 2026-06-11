@@ -56,20 +56,13 @@ class TestNestedWorlds(unittest.TestCase):
         self.city_portal_ent = self.world.create_entity(
             Position(5, 5, 0),
             Portal(target_map_id="House", target_x=2, target_y=2, target_layer=0, name="House Entrance"),
-            MapBound()
+            MapBound(),
         )
-        self.city_npc = self.world.create_entity(
-            Position(10, 10, 0),
-            Name("City NPC"),
-            Renderable("@", 0),
-            MapBound()
-        )
+        self.city_npc = self.world.create_entity(Position(10, 10, 0), Name("City NPC"), Renderable("@", 0), MapBound())
 
         # 4. Setup Player
         self.player = self.world.create_entity(
-            Position(5, 5, 0),
-            Name("Player"),
-            ActionList(actions=[Action("Enter Portal")])
+            Position(5, 5, 0), Name("Player"), ActionList(actions=[Action("Enter Portal")])
         )
 
         # 5. Build a context with mocked systems around the real MapService
@@ -94,12 +87,7 @@ class TestNestedWorlds(unittest.TestCase):
         self.assertEqual(self.ctx.map_container, self.city_map)
 
         # 1. Enter Portal to House
-        event_data = {
-            "target_map_id": "House",
-            "target_x": 2,
-            "target_y": 2,
-            "target_layer": 0
-        }
+        event_data = {"target_map_id": "House", "target_x": 2, "target_y": 2, "target_layer": 0}
 
         self.transition_service.transition(event_data)
 
@@ -124,17 +112,11 @@ class TestNestedWorlds(unittest.TestCase):
 
         # Spawn return portal in House (Simulating map content)
         self.world.create_entity(
-            Position(2, 2, 0),
-            Portal(target_map_id="City", target_x=5, target_y=5, target_layer=2, name="City Exit")
+            Position(2, 2, 0), Portal(target_map_id="City", target_x=5, target_y=5, target_layer=2, name="City Exit")
         )
 
         # 2. Enter Portal back to City (Layer 2)
-        event_data = {
-            "target_map_id": "City",
-            "target_x": 5,
-            "target_y": 5,
-            "target_layer": 2
-        }
+        event_data = {"target_map_id": "City", "target_x": 5, "target_y": 5, "target_layer": 2}
         self.transition_service.transition(event_data)
 
         # Verify Player moved

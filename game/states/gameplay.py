@@ -88,7 +88,7 @@ class GameplayState(GameState):
 
         if self.ui_stack.is_active():
             # Check if top window wants to close
-            if getattr(self.ui_stack.stack[-1], 'wants_to_close', False):
+            if getattr(self.ui_stack.stack[-1], "wants_to_close", False):
                 self.ui_stack.pop()
             else:
                 self.ui_stack.update(dt)

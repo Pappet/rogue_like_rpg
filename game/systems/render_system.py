@@ -15,9 +15,8 @@ class RenderSystem(esper.Processor, MapAwareSystem):
         MapAwareSystem.__init__(self)
         self.camera = camera
         pygame.font.init()
-        self.font = pygame.font.SysFont('monospace', TILE_SIZE)
-        self.fct_font = pygame.font.SysFont('monospace', 20, bold=True)
-
+        self.font = pygame.font.SysFont("monospace", TILE_SIZE)
+        self.fct_font = pygame.font.SysFont("monospace", 20, bold=True)
 
     def process(self, surface, player_layer=0):
         # 1. Draw range highlight and targeting cursor
@@ -75,7 +74,7 @@ class RenderSystem(esper.Processor, MapAwareSystem):
 
         # Sort by layer to ensure correct draw order
         # Handle both integers and SpriteLayer enum members safely
-        renderables.sort(key=lambda x: int(x[0].value) if hasattr(x[0], 'value') else int(x[0]))
+        renderables.sort(key=lambda x: int(x[0].value) if hasattr(x[0], "value") else int(x[0]))
 
         for layer, pos, rend, color in renderables:
             # Calculate pixel position in the world
@@ -86,9 +85,10 @@ class RenderSystem(esper.Processor, MapAwareSystem):
             screen_x, screen_y = self.camera.apply_to_pos(pixel_x, pixel_y)
 
             # Basic screen culling and viewport clipping
-            if (self.camera.offset_x - TILE_SIZE <= screen_x <= self.camera.offset_x + self.camera.width and
-                self.camera.offset_y - TILE_SIZE <= screen_y <= self.camera.offset_y + self.camera.height):
-
+            if (
+                self.camera.offset_x - TILE_SIZE <= screen_x <= self.camera.offset_x + self.camera.width
+                and self.camera.offset_y - TILE_SIZE <= screen_y <= self.camera.offset_y + self.camera.height
+            ):
                 # Render the sprite (character)
                 text_surface = self.font.render(rend.sprite, True, color)
                 surface.blit(text_surface, (screen_x, screen_y))
@@ -103,9 +103,10 @@ class RenderSystem(esper.Processor, MapAwareSystem):
             screen_x, screen_y = self.camera.apply_to_pos(pixel_x, pixel_y)
 
             # Basic screen culling
-            if (self.camera.offset_x - 100 <= screen_x <= self.camera.offset_x + self.camera.width + 100 and
-                self.camera.offset_y - 100 <= screen_y <= self.camera.offset_y + self.camera.height + 100):
-
+            if (
+                self.camera.offset_x - 100 <= screen_x <= self.camera.offset_x + self.camera.width + 100
+                and self.camera.offset_y - 100 <= screen_y <= self.camera.offset_y + self.camera.height + 100
+            ):
                 # Alpha calculation
                 alpha = int(255 * max(0, fct.ttl / fct.max_ttl))
 
@@ -126,7 +127,7 @@ class RenderSystem(esper.Processor, MapAwareSystem):
         # Draw range highlight
         for y in range(targeting.origin_y - int(targeting.range), targeting.origin_y + int(targeting.range) + 1):
             for x in range(targeting.origin_x - int(targeting.range), targeting.origin_x + int(targeting.range) + 1):
-                dist = math.sqrt((x - targeting.origin_x)**2 + (y - targeting.origin_y)**2)
+                dist = math.sqrt((x - targeting.origin_x) ** 2 + (y - targeting.origin_y) ** 2)
                 if dist <= targeting.range:
                     # Check visibility
                     is_visible = False
@@ -146,9 +147,10 @@ class RenderSystem(esper.Processor, MapAwareSystem):
                     pixel_y = y * TILE_SIZE
                     screen_x, screen_y = self.camera.apply_to_pos(pixel_x, pixel_y)
 
-                    if (self.camera.offset_x <= screen_x < self.camera.offset_x + self.camera.width and
-                        self.camera.offset_y <= screen_y < self.camera.offset_y + self.camera.height):
-
+                    if (
+                        self.camera.offset_x <= screen_x < self.camera.offset_x + self.camera.width
+                        and self.camera.offset_y <= screen_y < self.camera.offset_y + self.camera.height
+                    ):
                         s = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
                         s.fill(range_color)
                         surface.blit(s, (screen_x, screen_y))
@@ -158,8 +160,9 @@ class RenderSystem(esper.Processor, MapAwareSystem):
         pixel_y = targeting.target_y * TILE_SIZE
         screen_x, screen_y = self.camera.apply_to_pos(pixel_x, pixel_y)
 
-        if (self.camera.offset_x <= screen_x < self.camera.offset_x + self.camera.width and
-            self.camera.offset_y <= screen_y < self.camera.offset_y + self.camera.height):
-
+        if (
+            self.camera.offset_x <= screen_x < self.camera.offset_x + self.camera.width
+            and self.camera.offset_y <= screen_y < self.camera.offset_y + self.camera.height
+        ):
             # Draw a thick box for the cursor
             pygame.draw.rect(surface, cursor_color, (screen_x, screen_y, TILE_SIZE, TILE_SIZE), 2)

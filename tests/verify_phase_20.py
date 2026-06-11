@@ -26,19 +26,23 @@ class MockCamera:
         self.offset_x = 0
         self.offset_y = 0
 
+
 # Mock MapContainer
 class MockMapContainer:
     def __init__(self, width, height):
         self.width = width
         self.height = height
         # Minimal tile structure
-        self.tiles = [[Tile(transparent=True, sprites={SpriteLayer.GROUND: "."}) for x in range(width)] for y in range(height)]
-    
+        self.tiles = [
+            [Tile(transparent=True, sprites={SpriteLayer.GROUND: "."}) for x in range(width)] for y in range(height)
+        ]
+
     def get_tile(self, x, y, layer=0):
 
         if 0 <= y < self.height and 0 <= x < self.width:
             return self.tiles[y][x]
         return None
+
 
 def test_debug_render_system():
     # Setup headless pygame
@@ -48,13 +52,13 @@ def test_debug_render_system():
         pygame.display.set_mode((800, 600))
 
     reset_world()
-    
+
     # Create entities
     # 1. Wanderer
     e1 = esper.create_entity()
     esper.add_component(e1, Position(5, 5))
     esper.add_component(e1, AIBehaviorState(AIState.WANDER, Alignment.HOSTILE))
-    
+
     # 2. Chaser
     e2 = esper.create_entity()
     esper.add_component(e2, Position(10, 10))
@@ -64,22 +68,25 @@ def test_debug_render_system():
     # Setup System
     camera = MockCamera(800, 600)
     map_container = MockMapContainer(20, 20)
-    
+
     # Mark some tiles visible
     map_container.tiles[5][5].visibility_state = VisibilityState.VISIBLE
     map_container.tiles[8][8].visibility_state = VisibilityState.VISIBLE
 
     system = DebugRenderSystem(camera)
     system.set_map(map_container)
-    
+
     # Run process
     surface = pygame.Surface((800, 600))
     try:
-        system.process(surface, flags=DebugFlags(player_fov=True, npc_fov=False, chase=False, labels=False), player_layer=0)
+        system.process(
+            surface, flags=DebugFlags(player_fov=True, npc_fov=False, chase=False, labels=False), player_layer=0
+        )
         print("DebugRenderSystem.process() executed successfully.")
     except Exception as e:
         print(f"DebugRenderSystem.process() failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
@@ -87,8 +94,9 @@ def test_debug_render_system():
     assert system.overlay is not None
     assert system.overlay.get_width() == 800
     assert system.overlay.get_height() == 600
-    
+
     print("All checks passed.")
+
 
 if __name__ == "__main__":
     test_debug_render_system()

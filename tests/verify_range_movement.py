@@ -32,11 +32,9 @@ from game.systems.action_system import ActionSystem
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_stats(perception: int = 10, hp: int = 100, max_hp: int = 100) -> Stats:
-    return Stats(
-        hp=hp, max_hp=max_hp, power=5, defense=2,
-        mana=50, max_mana=50, perception=perception, intelligence=10
-    )
+    return Stats(hp=hp, max_hp=max_hp, power=5, defense=2, mana=50, max_mana=50, perception=perception, intelligence=10)
 
 
 def make_map_with_visibility(width: int, height: int, visibility_map) -> MapContainer:
@@ -64,8 +62,10 @@ def make_map_with_visibility(width: int, height: int, visibility_map) -> MapCont
 
 class MockTurnSystem:
     """Minimal TurnSystem replacement."""
+
     def __init__(self):
         from config import GameStates
+
         self.current_state = GameStates.PLAYER_TURN
         self.end_turn_called = False
 
@@ -79,6 +79,7 @@ class MockTurnSystem:
 # ---------------------------------------------------------------------------
 # Test 1: Inspect targeting range equals perception stat (INV-02)
 # ---------------------------------------------------------------------------
+
 
 def test_inspect_targeting_range_equals_perception():
     """start_targeting() for inspect mode must set range to stats.perception."""
@@ -96,21 +97,18 @@ def test_inspect_targeting_range_equals_perception():
     action_system.set_map(map_container)
 
     # Investigate action with static range=10 — perception should override it.
-    investigate = Action(
-        name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"
-    )
+    investigate = Action(name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect")
     started = action_system.start_targeting(player, investigate)
     assert started, "start_targeting() returned False — targeting did not begin"
 
     targeting = esper.component_for_entity(player, Targeting)
-    assert targeting.range == 3, (
-        f"Expected targeting.range == 3 (perception), got {targeting.range}"
-    )
+    assert targeting.range == 3, f"Expected targeting.range == 3 (perception), got {targeting.range}"
 
 
 # ---------------------------------------------------------------------------
 # Test 2: Combat targeting range is unchanged by perception (regression)
 # ---------------------------------------------------------------------------
+
 
 def test_combat_targeting_range_unchanged():
     """start_targeting() for auto/combat mode must NOT change range to perception."""
@@ -127,21 +125,18 @@ def test_combat_targeting_range_unchanged():
     action_system = ActionSystem(turn_system)
     action_system.set_map(map_container)
 
-    combat_action = Action(
-        name="Ranged", range=5, requires_targeting=True, targeting_mode="auto"
-    )
+    combat_action = Action(name="Ranged", range=5, requires_targeting=True, targeting_mode="auto")
     started = action_system.start_targeting(player, combat_action)
     assert started, "start_targeting() returned False — targeting did not begin"
 
     targeting = esper.component_for_entity(player, Targeting)
-    assert targeting.range == 5, (
-        f"Expected targeting.range == 5 (combat range unchanged), got {targeting.range}"
-    )
+    assert targeting.range == 5, f"Expected targeting.range == 5 (combat range unchanged), got {targeting.range}"
 
 
 # ---------------------------------------------------------------------------
 # Test 3: Cursor moves successfully onto a SHROUDED tile
 # ---------------------------------------------------------------------------
+
 
 def test_cursor_moves_to_shrouded_tile():
     """move_cursor() must allow movement onto SHROUDED tiles."""
@@ -161,26 +156,21 @@ def test_cursor_moves_to_shrouded_tile():
     action_system = ActionSystem(turn_system)
     action_system.set_map(map_container)
 
-    investigate = Action(
-        name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"
-    )
+    investigate = Action(name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect")
     action_system.start_targeting(player, investigate)
 
     # Move cursor right (dx=1, dy=0) — should land on (3,2).
     action_system.move_cursor(player, 1, 0)
 
     targeting = esper.component_for_entity(player, Targeting)
-    assert targeting.target_x == 3, (
-        f"Expected cursor at x=3, got {targeting.target_x}"
-    )
-    assert targeting.target_y == 2, (
-        f"Expected cursor at y=2, got {targeting.target_y}"
-    )
+    assert targeting.target_x == 3, f"Expected cursor at x=3, got {targeting.target_x}"
+    assert targeting.target_y == 2, f"Expected cursor at y=2, got {targeting.target_y}"
 
 
 # ---------------------------------------------------------------------------
 # Test 4: Cursor moves successfully onto a FORGOTTEN tile
 # ---------------------------------------------------------------------------
+
 
 def test_cursor_moves_to_forgotten_tile():
     """move_cursor() must allow movement onto FORGOTTEN tiles."""
@@ -200,26 +190,21 @@ def test_cursor_moves_to_forgotten_tile():
     action_system = ActionSystem(turn_system)
     action_system.set_map(map_container)
 
-    investigate = Action(
-        name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"
-    )
+    investigate = Action(name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect")
     action_system.start_targeting(player, investigate)
 
     # Move cursor right (dx=1, dy=0) — should land on (3,2).
     action_system.move_cursor(player, 1, 0)
 
     targeting = esper.component_for_entity(player, Targeting)
-    assert targeting.target_x == 3, (
-        f"Expected cursor at x=3, got {targeting.target_x}"
-    )
-    assert targeting.target_y == 2, (
-        f"Expected cursor at y=2, got {targeting.target_y}"
-    )
+    assert targeting.target_x == 3, f"Expected cursor at x=3, got {targeting.target_x}"
+    assert targeting.target_y == 2, f"Expected cursor at y=2, got {targeting.target_y}"
 
 
 # ---------------------------------------------------------------------------
 # Test 5: Cursor blocked on UNEXPLORED tile (TILE-03)
 # ---------------------------------------------------------------------------
+
 
 def test_cursor_blocked_on_unexplored_tile():
     """move_cursor() must NOT move the cursor onto UNEXPLORED tiles."""
@@ -239,26 +224,21 @@ def test_cursor_blocked_on_unexplored_tile():
     action_system = ActionSystem(turn_system)
     action_system.set_map(map_container)
 
-    investigate = Action(
-        name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"
-    )
+    investigate = Action(name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect")
     action_system.start_targeting(player, investigate)
 
     # Attempt to move cursor right — target tile is UNEXPLORED, must be blocked.
     action_system.move_cursor(player, 1, 0)
 
     targeting = esper.component_for_entity(player, Targeting)
-    assert targeting.target_x == 2, (
-        f"Expected cursor to stay at x=2 (blocked by UNEXPLORED), got {targeting.target_x}"
-    )
-    assert targeting.target_y == 2, (
-        f"Expected cursor to stay at y=2 (blocked by UNEXPLORED), got {targeting.target_y}"
-    )
+    assert targeting.target_x == 2, f"Expected cursor to stay at x=2 (blocked by UNEXPLORED), got {targeting.target_x}"
+    assert targeting.target_y == 2, f"Expected cursor to stay at y=2 (blocked by UNEXPLORED), got {targeting.target_y}"
 
 
 # ---------------------------------------------------------------------------
 # Test 6: Cursor blocked beyond perception range
 # ---------------------------------------------------------------------------
+
 
 def test_cursor_blocked_beyond_perception_range():
     """move_cursor() must not move the cursor beyond the perception-derived range."""
@@ -276,24 +256,18 @@ def test_cursor_blocked_beyond_perception_range():
     action_system = ActionSystem(turn_system)
     action_system.set_map(map_container)
 
-    investigate = Action(
-        name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect"
-    )
+    investigate = Action(name="Investigate", range=10, requires_targeting=True, targeting_mode="inspect")
     action_system.start_targeting(player, investigate)
 
     # Move 1: (2,2) -> (3,2). dist=1, within range 2. Should succeed.
     action_system.move_cursor(player, 1, 0)
     targeting = esper.component_for_entity(player, Targeting)
-    assert targeting.target_x == 3, (
-        f"After move 1, expected cursor at x=3, got {targeting.target_x}"
-    )
+    assert targeting.target_x == 3, f"After move 1, expected cursor at x=3, got {targeting.target_x}"
 
     # Move 2: (3,2) -> (4,2). dist=2 from origin (2,2). Still within range. Should succeed.
     action_system.move_cursor(player, 1, 0)
     targeting = esper.component_for_entity(player, Targeting)
-    assert targeting.target_x == 4, (
-        f"After move 2, expected cursor at x=4, got {targeting.target_x}"
-    )
+    assert targeting.target_x == 4, f"After move 2, expected cursor at x=4, got {targeting.target_x}"
 
     # Move 3: (4,2) -> (5,2). dist=3, exceeds range 2. Must be blocked.
     action_system.move_cursor(player, 1, 0)
@@ -306,6 +280,7 @@ def test_cursor_blocked_beyond_perception_range():
 # ---------------------------------------------------------------------------
 # Test 7: Investigate action starts targeting (Phase 12 sanity regression)
 # ---------------------------------------------------------------------------
+
 
 def test_existing_phase12_tests_unbroken():
     """Lightweight sanity guard: Investigate action must start targeting successfully."""
@@ -320,17 +295,13 @@ def test_existing_phase12_tests_unbroken():
     player = party.create_initial_party(2, 2)
 
     action_list = esper.component_for_entity(player, ActionList)
-    investigate = next(
-        (a for a in action_list.actions if a.name == "Investigate"), None
-    )
+    investigate = next((a for a in action_list.actions if a.name == "Investigate"), None)
     assert investigate is not None, "Investigate action not found in ActionList"
 
     action_system = ActionSystem(turn_system)
     action_system.set_map(map_container)
     started = action_system.start_targeting(player, investigate)
-    assert started is True, (
-        f"start_targeting() returned {started} for Investigate — should return True"
-    )
+    assert started is True, f"start_targeting() returned {started} for Investigate — should return True"
 
     targeting = esper.component_for_entity(player, Targeting)
     assert targeting is not None, "Targeting component not added to player entity"

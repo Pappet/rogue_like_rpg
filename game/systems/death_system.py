@@ -23,6 +23,7 @@ from game.systems.map_aware_system import MapAwareSystem
 
 logger = logging.getLogger(__name__)
 
+
 class DeathSystem(MapAwareSystem):
     def __init__(self):
         super().__init__()
@@ -68,7 +69,7 @@ class DeathSystem(MapAwareSystem):
         renderable = esper.try_component(entity, Renderable)
         if renderable:
             renderable.sprite = "%"
-            renderable.color = (139, 0, 0) # Dark Red
+            renderable.color = (139, 0, 0)  # Dark Red
             renderable.layer = SpriteLayer.CORPSES.value
 
         # Add Corpse tag component
@@ -91,9 +92,14 @@ class DeathSystem(MapAwareSystem):
 
         # Search neighbors if center is blocked
         neighbors = [
-            (x-1, y-1), (x, y-1), (x+1, y-1),
-            (x-1, y),           (x+1, y),
-            (x-1, y+1), (x, y+1), (x+1, y+1)
+            (x - 1, y - 1),
+            (x, y - 1),
+            (x + 1, y - 1),
+            (x - 1, y),
+            (x + 1, y),
+            (x - 1, y + 1),
+            (x, y + 1),
+            (x + 1, y + 1),
         ]
         random.shuffle(neighbors)
 
@@ -103,4 +109,3 @@ class DeathSystem(MapAwareSystem):
 
         # Fallback to original position if all neighbors are blocked
         return x, y
-

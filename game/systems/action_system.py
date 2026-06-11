@@ -74,13 +74,16 @@ class ActionSystem(esper.Processor, MapAwareSystem):
                 if p_pos.x == pos.x and p_pos.y == pos.y and p_pos.layer == pos.layer:
                     portal_found = True
                     esper.dispatch_event("log_message", f"You enter the {portal.name}...")
-                    esper.dispatch_event("map_change_requested", {
-                        "target_map_id": portal.target_map_id,
-                        "target_x": portal.target_x,
-                        "target_y": portal.target_y,
-                        "target_layer": portal.target_layer,
-                        "travel_ticks": portal.travel_ticks
-                    })
+                    esper.dispatch_event(
+                        "map_change_requested",
+                        {
+                            "target_map_id": portal.target_map_id,
+                            "target_x": portal.target_x,
+                            "target_y": portal.target_y,
+                            "target_layer": portal.target_layer,
+                            "travel_ticks": portal.travel_ticks,
+                        },
+                    )
                     # Note: map_change_requested is handled by MapTransitionService (wired in GameplayState)
                     # We end turn here, but the map transition might reset things.
                     self.turn_system.end_player_turn()
@@ -97,7 +100,7 @@ class ActionSystem(esper.Processor, MapAwareSystem):
         # 1. Check resources using effective stats
         eff = esper.try_component(entity, EffectiveStats) or esper.component_for_entity(entity, Stats)
         if action.cost_mana > eff.mana:
-            return False # Not enough mana
+            return False  # Not enough mana
 
         # 2. Transition to targeting mode
         pos = esper.component_for_entity(entity, Position)
@@ -109,7 +112,7 @@ class ActionSystem(esper.Processor, MapAwareSystem):
             target_y=pos.y,
             range=action.range,
             mode=action.targeting_mode,
-            action=action
+            action=action,
         )
 
         if action.targeting_mode == "inspect":
@@ -140,7 +143,7 @@ class ActionSystem(esper.Processor, MapAwareSystem):
                 continue
 
             # Check if in range
-            dist = math.sqrt((pos.x - x)**2 + (pos.y - y)**2)
+            dist = math.sqrt((pos.x - x) ** 2 + (pos.y - y) ** 2)
             if dist > range_limit:
                 continue
 
@@ -181,7 +184,7 @@ class ActionSystem(esper.Processor, MapAwareSystem):
         new_y = targeting.target_y + dy
 
         # 1. Check range from origin
-        dist = math.sqrt((new_x - targeting.origin_x)**2 + (new_y - targeting.origin_y)**2)
+        dist = math.sqrt((new_x - targeting.origin_x) ** 2 + (new_y - targeting.origin_y) ** 2)
         if dist > targeting.range:
             return
 
@@ -209,7 +212,9 @@ class ActionSystem(esper.Processor, MapAwareSystem):
         tile_visibility = VisibilityState.UNEXPLORED
         target_tile = None
         for layer in self._map_container.layers:
-            if 0 <= targeting.target_y < len(layer.tiles) and 0 <= targeting.target_x < len(layer.tiles[targeting.target_y]):
+            if 0 <= targeting.target_y < len(layer.tiles) and 0 <= targeting.target_x < len(
+                layer.tiles[targeting.target_y]
+            ):
                 t = layer.tiles[targeting.target_y][targeting.target_x]
                 if t.visibility_state != VisibilityState.UNEXPLORED:
                     target_tile = t

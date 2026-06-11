@@ -145,7 +145,13 @@ class InventoryWindow(UIWindow):
 
         # Vertical separator
         separator_x = box_x + box_width // 2
-        pygame.draw.line(surface, UI_COLOR_WINDOW_SEPARATOR, (separator_x, box_y + UI_SPACING_X), (separator_x, box_y + box_height - UI_SPACING_X), 1)
+        pygame.draw.line(
+            surface,
+            UI_COLOR_WINDOW_SEPARATOR,
+            (separator_x, box_y + UI_SPACING_X),
+            (separator_x, box_y + box_height - UI_SPACING_X),
+            1,
+        )
 
         # Draw title
         title_text = self.title_font.render("Inventory", True, UI_COLOR_WINDOW_TITLE)
@@ -187,7 +193,9 @@ class InventoryWindow(UIWindow):
                     if i == self.selected_idx:
                         color = UI_COLOR_WINDOW_SELECTED
                         # Draw selection highlight
-                        highlight_rect = pygame.Rect(box_x + UI_PADDING, box_y + 80 + i * UI_SECTION_SPACING, (box_width // 2) - UI_SPACING_X, 30)
+                        highlight_rect = pygame.Rect(
+                            box_x + UI_PADDING, box_y + 80 + i * UI_SECTION_SPACING, (box_width // 2) - UI_SPACING_X, 30
+                        )
                         pygame.draw.rect(surface, UI_COLOR_WINDOW_HIGHLIGHT, highlight_rect)
 
                     item_text = self.font.render(item_name, True, color)
@@ -197,9 +205,11 @@ class InventoryWindow(UIWindow):
                 if self.selected_idx < len(inventory.items):
                     item_id = inventory.items[self.selected_idx]
                     detailed_desc = ActionSystem.get_detailed_description(self.world, item_id)
-                    lines = detailed_desc.split('\n')
+                    lines = detailed_desc.split("\n")
                     for j, line in enumerate(lines):
-                        detail_text = self.font.render(line, True, UI_COLOR_WINDOW_BORDER) # Using BORDER color as it matches (200,200,200)
+                        detail_text = self.font.render(
+                            line, True, UI_COLOR_WINDOW_BORDER
+                        )  # Using BORDER color as it matches (200,200,200)
                         surface.blit(detail_text, (separator_x + UI_SPACING_X, box_y + 80 + j * 30))
 
                     # Also show usage hints

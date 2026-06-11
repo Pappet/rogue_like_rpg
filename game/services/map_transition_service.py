@@ -14,7 +14,7 @@ class MapTransitionService:
 
     def __init__(self, ctx):
         """Args:
-            ctx: The shared GameContext.
+        ctx: The shared GameContext.
         """
         self.ctx = ctx
 

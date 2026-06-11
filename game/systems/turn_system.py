@@ -6,6 +6,7 @@ from config import GameStates
 
 logger = logging.getLogger(__name__)
 
+
 class TurnSystem(esper.Processor):
     def __init__(self, world_clock=None):
         self.current_state = GameStates.PLAYER_TURN

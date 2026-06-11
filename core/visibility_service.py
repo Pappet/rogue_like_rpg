@@ -1,4 +1,3 @@
-
 class VisibilityService:
     @staticmethod
     def compute_visibility(origin, max_radius, transparency_func):
@@ -30,7 +29,7 @@ class VisibilityService:
                 else:
                     mx, my = VisibilityService._transform_octant(dx, dy, octant, origin)
                     # Our light beam is touching this square; light it:
-                    if dx*dx + dy*dy <= radius_sq:
+                    if dx * dx + dy * dy <= radius_sq:
                         visible.add((mx, my))
 
                     if blocked:
@@ -46,7 +45,9 @@ class VisibilityService:
                         if not transparency_func(mx, my) and j < radius:
                             # This is a blocking square, start a child scan:
                             blocked = True
-                            VisibilityService._cast_light(origin, j + 1, start, l_slope, radius, octant, transparency_func, visible)
+                            VisibilityService._cast_light(
+                                origin, j + 1, start, l_slope, radius, octant, transparency_func, visible
+                            )
                             new_start = r_slope
                 dx += 1
             if blocked:

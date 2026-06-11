@@ -44,8 +44,7 @@ def main():
     check("floor_stone.occludes_below is False", floor.occludes_below is False)
     check("floor_stone has GROUND sprite", SpriteLayer.GROUND in floor.sprites)
     check("floor_stone GROUND sprite is '.'", floor.sprites[SpriteLayer.GROUND] == ".")
-    check("floor_stone sprite key is SpriteLayer enum",
-          isinstance(list(floor.sprites.keys())[0], SpriteLayer))
+    check("floor_stone sprite key is SpriteLayer enum", isinstance(list(floor.sprites.keys())[0], SpriteLayer))
     print()
 
     # --- wall_stone ---

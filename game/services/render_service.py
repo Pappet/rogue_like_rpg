@@ -9,7 +9,7 @@ from game.map.tile import VisibilityState
 class RenderService:
     def __init__(self):
         pygame.font.init()
-        self.font = pygame.font.SysFont('monospace', TILE_SIZE)
+        self.font = pygame.font.SysFont("monospace", TILE_SIZE)
         self.tint_surface = None
 
     def apply_viewport_tint(self, surface: pygame.Surface, tint_color: tuple, viewport_rect: pygame.Rect):

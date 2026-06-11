@@ -49,22 +49,15 @@ class SaveService:
         # frozen_entities; thaw again afterwards to restore the session.
         active_map.freeze(esper, exclude_entities=closure)
         try:
-            party = [
-                {"old_id": ent, "components": encode_components_of(esper, ent)}
-                for ent in closure
-            ]
+            party = [{"old_id": ent, "components": encode_components_of(esper, ent)} for ent in closure]
             data = {
                 "version": SAVE_VERSION,
                 "clock_ticks": ctx.world_clock.total_ticks,
                 "round_counter": ctx.systems.turn_system.round_counter,
                 "active_map_id": ctx.map_service.active_map_id,
                 "world_graph": {
-                    "current_location_id": ctx.world_graph.current_location_id
-                    if ctx.world_graph
-                    else None,
-                    "discovered": [
-                        loc.id for loc in ctx.world_graph.locations.values() if loc.discovered
-                    ]
+                    "current_location_id": ctx.world_graph.current_location_id if ctx.world_graph else None,
+                    "discovered": [loc.id for loc in ctx.world_graph.locations.values() if loc.discovered]
                     if ctx.world_graph
                     else [],
                 },
@@ -100,9 +93,7 @@ class SaveService:
         esper.clear_database()
 
         # Maps
-        ctx.map_service.maps = {
-            map_id: decode_map(encoded) for map_id, encoded in data["maps"].items()
-        }
+        ctx.map_service.maps = {map_id: decode_map(encoded) for map_id, encoded in data["maps"].items()}
         ctx.map_service.active_map_id = None  # set after thaw below
 
         # World graph state

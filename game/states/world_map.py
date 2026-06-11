@@ -115,17 +115,13 @@ class WorldMapState(GameState):
             return
 
         current = graph.get_location(graph.current_location_id)
-        selected_id = (
-            self.destinations[self.selected_idx][0].id if self.destinations else None
-        )
+        selected_id = self.destinations[self.selected_idx][0].id if self.destinations else None
 
         # Routes between discovered locations
         for route in graph.routes:
             loc_a, loc_b = graph.get_location(route.a), graph.get_location(route.b)
             if loc_a and loc_b and loc_a.discovered and loc_b.discovered:
-                pygame.draw.line(
-                    surface, COLOR_ROUTE, self._node_screen_pos(loc_a), self._node_screen_pos(loc_b), 2
-                )
+                pygame.draw.line(surface, COLOR_ROUTE, self._node_screen_pos(loc_a), self._node_screen_pos(loc_b), 2)
 
         # Location nodes
         for location in graph.locations.values():
@@ -144,9 +140,7 @@ class WorldMapState(GameState):
 
         # Destination list / status line
         y = 56
-        surface.blit(
-            self.font_small.render(f"You are in: {current.name}", True, COLOR_NODE_CURRENT), (20, y)
-        )
+        surface.blit(self.font_small.render(f"You are in: {current.name}", True, COLOR_NODE_CURRENT), (20, y))
         y += 30
         if not self.can_travel:
             surface.blit(
@@ -155,9 +149,7 @@ class WorldMapState(GameState):
             )
             return
         if not self.destinations:
-            surface.blit(
-                self.font_small.render("No known destinations from here.", True, COLOR_TEXT_DIM), (20, y)
-            )
+            surface.blit(self.font_small.render("No known destinations from here.", True, COLOR_TEXT_DIM), (20, y))
             return
 
         surface.blit(self.font_small.render("Travel to (UP/DOWN, ENTER):", True, COLOR_TEXT), (20, y))

@@ -4,7 +4,7 @@ import sys
 import pygame
 
 # Mock pygame to avoid window creation
-os.environ['SDL_VIDEODRIVER'] = 'dummy'
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 pygame.init()
 
 from config import GameStates
@@ -13,19 +13,19 @@ from core.input_manager import InputCommand, InputManager
 
 def test_input_manager():
     im = InputManager()
-    
+
     # Test PLAYER_TURN UP
     event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_UP)
     cmd = im.handle_event(event, GameStates.PLAYER_TURN)
     assert cmd == InputCommand.MOVE_UP
     print("Test PLAYER_TURN UP: PASSED")
-    
+
     # Test TARGETING ESCAPE
     event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE)
     cmd = im.handle_event(event, GameStates.TARGETING)
     assert cmd == InputCommand.CANCEL
     print("Test TARGETING ESCAPE: PASSED")
-    
+
     # Test INVENTORY D
     event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_d)
     cmd = im.handle_event(event, GameStates.INVENTORY)
@@ -37,7 +37,7 @@ def test_input_manager():
     cmd = im.handle_event(event, GameStates.INVENTORY)
     assert cmd == InputCommand.MOVE_UP
     print("Test INVENTORY W: PASSED")
-    
+
     # Test TARGETING A
     event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_a)
     cmd = im.handle_event(event, GameStates.TARGETING)
@@ -49,6 +49,7 @@ def test_input_manager():
     cmd = im.handle_event(event, GameStates.PLAYER_TURN)
     assert cmd is None
     print("Test unknown key: PASSED")
+
 
 if __name__ == "__main__":
     try:

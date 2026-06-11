@@ -44,9 +44,7 @@ def test_npc_wander_moves_to_adjacent_cardinal_tile():
 
     pos = esper.component_for_entity(ent, Position)
     # Exactly one cardinal step from (2, 2)
-    assert (abs(pos.x - 2) + abs(pos.y - 2)) == 1, (
-        "NPC must move exactly one cardinal step"
-    )
+    assert (abs(pos.x - 2) + abs(pos.y - 2)) == 1, "NPC must move exactly one cardinal step"
 
 
 def test_npc_wander_never_moves_to_unwalkable_tile():
@@ -116,12 +114,14 @@ def test_two_npcs_do_not_stack_on_same_tile():
 
     # Two NPCs with Blocker — placed near center with open space between
     ent1 = esper.create_entity(
-        AI(), Blocker(),
+        AI(),
+        Blocker(),
         AIBehaviorState(state=AIState.WANDER, alignment=Alignment.HOSTILE),
         Position(1, 2, layer=0),
     )
     ent2 = esper.create_entity(
-        AI(), Blocker(),
+        AI(),
+        Blocker(),
         AIBehaviorState(state=AIState.WANDER, alignment=Alignment.HOSTILE),
         Position(3, 2, layer=0),
     )
@@ -131,9 +131,7 @@ def test_two_npcs_do_not_stack_on_same_tile():
 
     pos1 = esper.component_for_entity(ent1, Position)
     pos2 = esper.component_for_entity(ent2, Position)
-    assert (pos1.x, pos1.y) != (pos2.x, pos2.y), (
-        "Two NPCs must not occupy the same tile after one turn"
-    )
+    assert (pos1.x, pos1.y) != (pos2.x, pos2.y), "Two NPCs must not occupy the same tile after one turn"
 
 
 def test_npc_wander_blocked_by_entity_blocker():
@@ -157,7 +155,5 @@ def test_npc_wander_blocked_by_entity_blocker():
     ai_sys.process(turn, map_c, player_layer=0)
 
     pos = esper.component_for_entity(ent, Position)
-    assert pos.x == 2 and pos.y == 2, (
-        "NPC must not move when all adjacent tiles have blocker entities"
-    )
+    assert pos.x == 2 and pos.y == 2, "NPC must not move when all adjacent tiles have blocker entities"
     assert turn.current_state == GameStates.PLAYER_TURN, "Turn must still end"

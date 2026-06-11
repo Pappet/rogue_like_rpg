@@ -4,7 +4,7 @@ import sys
 import esper
 
 # Add the project root to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from config import SpriteLayer
 from core.ecs import reset_world
@@ -40,18 +40,18 @@ def test_add_house_to_map():
     assert len(container.layers) == 2
 
     # Verify walls on Layer 0 — corners become wall_stone (sprite '#')
-    assert container.layers[0].tiles[5][5].sprites[SpriteLayer.GROUND] == '#'
+    assert container.layers[0].tiles[5][5].sprites[SpriteLayer.GROUND] == "#"
     assert container.layers[0].tiles[5][5].transparent is False
 
     # Bottom-right corner
-    assert container.layers[0].tiles[10][10].sprites[SpriteLayer.GROUND] == '#'
+    assert container.layers[0].tiles[10][10].sprites[SpriteLayer.GROUND] == "#"
 
     # Verify interior floor on Layer 0
-    assert container.layers[0].tiles[7][7].sprites[SpriteLayer.GROUND] == '.'
+    assert container.layers[0].tiles[7][7].sprites[SpriteLayer.GROUND] == "."
     assert container.layers[0].tiles[7][7].transparent is True
 
     # Verify walls on Layer 1
-    assert container.layers[1].tiles[5][5].sprites[SpriteLayer.GROUND] == '#'
+    assert container.layers[1].tiles[5][5].sprites[SpriteLayer.GROUND] == "#"
 
     # Verify Portals — add_house_to_map places Stairs Up (layer 0) and Stairs Down (layer 1)
     # For start=(5,5), w=6, h=6:

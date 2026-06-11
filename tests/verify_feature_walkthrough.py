@@ -73,9 +73,7 @@ class _Harness:
         for y in range(2, mc.height - 2):
             for x in range(2, mc.width - 2):
                 cells = [(x, y), (x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
-                if all(mc.is_walkable(cx, cy, layer_idx) for cx, cy in cells) and all(
-                    c not in occupied for c in cells
-                ):
+                if all(mc.is_walkable(cx, cy, layer_idx) for cx, cy in cells) and all(c not in occupied for c in cells):
                     return x, y
         raise AssertionError("no open spot found on active map")
 
@@ -167,11 +165,7 @@ def test_bump_hostile_npc_fights_to_death_with_loot():
     else:
         raise AssertionError("orc did not die within 20 bump attacks")
 
-    loot_here = [
-        ent
-        for ent, (pos, _) in esper.get_components(Position, Portable)
-        if (pos.x, pos.y) == (x + 1, y)
-    ]
+    loot_here = [ent for ent, (pos, _) in esper.get_components(Position, Portable) if (pos.x, pos.y) == (x + 1, y)]
     assert loot_here, "orc loot table (chance 1.0) should drop items at the death position"
 
 
@@ -180,9 +174,7 @@ def test_portal_roundtrip():
     # Outbound: any portal leading away from the Village (a structure door,
     # not stairs — stairs target the same map).
     portals = [
-        (ent, pos)
-        for ent, (pos, portal) in esper.get_components(Position, Portal)
-        if portal.target_map_id != "Village"
+        (ent, pos) for ent, (pos, portal) in esper.get_components(Position, Portal) if portal.target_map_id != "Village"
     ]
     assert portals, "Village should contain portals into structures"
 
@@ -196,9 +188,7 @@ def test_portal_roundtrip():
 
     # Return: explicitly the portal that targets the Village (not the stairs).
     back = [
-        (ent, pos)
-        for ent, (pos, portal) in esper.get_components(Position, Portal)
-        if portal.target_map_id == "Village"
+        (ent, pos) for ent, (pos, portal) in esper.get_components(Position, Portal) if portal.target_map_id == "Village"
     ]
     assert back, "interior map should contain a return portal to the Village"
     _, b_pos = back[0]

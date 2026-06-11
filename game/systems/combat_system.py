@@ -60,10 +60,14 @@ class CombatSystem(esper.Processor):
 
                 # Dispatch log message
                 if damage > 0:
-                    esper.dispatch_event("log_message", f"{attacker_name} hits {target_name} for {damage} damage.", None, category)
+                    esper.dispatch_event(
+                        "log_message", f"{attacker_name} hits {target_name} for {damage} damage.", None, category
+                    )
                     self._spawn_fct(target, str(damage), (255, 0, 0))
                 else:
-                    esper.dispatch_event("log_message", f"{attacker_name} attacks {target_name} but deals no damage.", None, category)
+                    esper.dispatch_event(
+                        "log_message", f"{attacker_name} attacks {target_name} but deals no damage.", None, category
+                    )
                     self._spawn_fct(target, "0", (200, 200, 200))
 
                 # Death Check
@@ -81,14 +85,7 @@ class CombatSystem(esper.Processor):
             esper.create_entity(
                 MapBound(),
                 Position(pos.x, pos.y, pos.layer),
-                FCT(
-                    text=text,
-                    color=color,
-                    vx=random.uniform(-0.5, 0.5),
-                    vy=-1.5,
-                    ttl=1.0,
-                    max_ttl=1.0
-                )
+                FCT(text=text, color=color, vx=random.uniform(-0.5, 0.5), vy=-1.5, ttl=1.0, max_ttl=1.0),
             )
 
     def _get_name(self, entity):

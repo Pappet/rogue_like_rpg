@@ -25,23 +25,26 @@ COLOR_MAP = {
     "yellow": COLOR_YELLOW,
     "orange": COLOR_ORANGE,
     "purple": COLOR_PURPLE,
-    "grey": COLOR_GREY
+    "grey": COLOR_GREY,
 }
 
-def parse_rich_text(text: str, default_color: tuple[int, int, int] = COLOR_WHITE) -> list[tuple[str, tuple[int, int, int]]]:
+
+def parse_rich_text(
+    text: str, default_color: tuple[int, int, int] = COLOR_WHITE
+) -> list[tuple[str, tuple[int, int, int]]]:
     """
     Parses text with [color=name]tags[/color] into a list of (text, color) tuples.
     """
     results = []
     # Pattern to find tags
-    pattern = r'(\[color=[a-zA-Z]+\].*?\[/color\])'
+    pattern = r"(\[color=[a-zA-Z]+\].*?\[/color\])"
     parts = re.split(pattern, text)
 
     for part in parts:
         if not part:
             continue
 
-        tag_match = re.match(r'\[color=([a-zA-Z]+)\](.*?)\[/color\]', part)
+        tag_match = re.match(r"\[color=([a-zA-Z]+)\](.*?)\[/color\]", part)
         if tag_match:
             color_name = tag_match.group(1).lower()
             inner_text = tag_match.group(2)
@@ -51,6 +54,7 @@ def parse_rich_text(text: str, default_color: tuple[int, int, int] = COLOR_WHITE
             results.append((part, default_color))
 
     return results
+
 
 class MessageLog:
     def __init__(self, rect: pygame.Rect, font: pygame.font.Font, max_messages: int = 100):

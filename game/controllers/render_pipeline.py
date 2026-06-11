@@ -12,7 +12,7 @@ from game.components import Position
 class RenderPipeline:
     def __init__(self, ctx):
         """Args:
-            ctx: The shared GameContext.
+        ctx: The shared GameContext.
         """
         self.ctx = ctx
 

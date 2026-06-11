@@ -1,4 +1,3 @@
-
 from game.map.map_layer import MapLayer
 from game.map.tile import VisibilityState
 
@@ -66,7 +65,7 @@ class MapContainer:
                 for tile in row:
                     if tile.visibility_state in (VisibilityState.VISIBLE, VisibilityState.SHROUDED):
                         tile.visibility_state = VisibilityState.FORGOTTEN
-                        tile.rounds_since_seen = 1000 # Ensure it stays forgotten
+                        tile.rounds_since_seen = 1000  # Ensure it stays forgotten
 
     def freeze(self, world, exclude_entities: list[int] = None):
         """Removes entities from the world and stores them in this container."""

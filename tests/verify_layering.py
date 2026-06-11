@@ -11,8 +11,8 @@ import os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 FORBIDDEN_PREFIXES_FOR_CORE = (
-    "game",          # the game layer
-    "bootstrap",     # composition root
+    "game",  # the game layer
+    "bootstrap",  # composition root
     "game_context",  # session state (knows game systems)
     "main",
 )

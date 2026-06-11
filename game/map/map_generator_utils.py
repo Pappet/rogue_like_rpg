@@ -27,7 +27,7 @@ def draw_rectangle(
     for i in range(y, y + h):
         for j in range(x, x + w):
             if 0 <= i < rows and 0 <= j < cols:
-                is_border = (i == y or i == y + h - 1 or j == x or j == x + w - 1)
+                is_border = i == y or i == y + h - 1 or j == x or j == x + w - 1
                 if filled or is_border:
                     layer.tiles[i][j].set_type(type_id)
 
