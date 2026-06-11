@@ -11,6 +11,9 @@ DAY_START = 7
 DUSK_START = 18
 NIGHT_START = 20
 
+# Save game
+SAVE_FILE = "saves/save.json"
+
 # Day/Night Settings
 DN_SETTINGS = {
     "day":   {"tint": (0, 0, 0, 0),     "light": 1.0, "perception": 1.0},

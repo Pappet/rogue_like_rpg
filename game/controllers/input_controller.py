@@ -12,6 +12,7 @@ import pygame
 from config import UI_MODAL_RECT, GameStates
 from core.input_manager import InputCommand
 from game.services.player_action_service import PlayerActionService
+from game.services.save_service import SaveService
 from game.ui.windows.character import CharacterWindow
 from game.ui.windows.inventory import InventoryWindow
 
@@ -99,6 +100,17 @@ class InputController:
         if command == InputCommand.OPEN_WORLD_MAP:
             game_instance.next_state = "WORLD_MAP"
             game_instance.done = True
+            return
+
+        # Save / Load (F9 / F10)
+        if command == InputCommand.SAVE_GAME:
+            SaveService.save(self.ctx)
+            return
+        if command == InputCommand.LOAD_GAME:
+            if SaveService.load(self.ctx):
+                # Player entity id changed: rebuild render systems, UI and
+                # controllers against the restored session.
+                game_instance.startup(self.ctx)
             return
 
         if command == InputCommand.OPEN_INVENTORY:
