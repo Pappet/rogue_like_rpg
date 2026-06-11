@@ -151,7 +151,7 @@ activity. Verified by `tests/verify_needs_system.py` and
 `tests/verify_reputation.py`. NPC↔NPC relationships were deferred — they
 only pay off with Phase E rumor content.
 
-### Phase E — Quests & Rumors
+### Phase E — Quests & Rumors ✅ (done)
 
 - **Quest model:** `quests.json` + `QuestLog` component + journal window.
   States: offered → active → complete/failed. Objective types to start:
@@ -167,6 +167,13 @@ only pay off with Phase E rumor content.
 **Done when:** the player hears about a problem in another settlement
 through a rumor, travels there, and resolves a generated quest whose cause
 genuinely exists in the simulation.
+
+*Shipped as:* `QuestService` + `quests.json` (3 authored quests), bump-a-
+mayor `QuestWindow` + J journal, generated deliver/hunt requests from
+economy shortages and wolf chronicle events (cause-spawning on arrival),
+and `RumorService` feeding chronicle/offer rumors into NPC smalltalk.
+The done-criterion runs end-to-end in
+`tests/verify_quests.py::test_rumor_leads_to_generated_quest_with_real_cause`.
 
 ### Phase F — Secrets & Exploration
 
