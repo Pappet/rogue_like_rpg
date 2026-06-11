@@ -95,6 +95,12 @@ class MapTransitionService:
         if ctx.world_graph is not None and ctx.world_graph.get_location(target_map_id) is not None:
             ctx.world_graph.set_current_location(target_map_id)
 
+            # Tell the player what happened here while they were away
+            if ctx.world_chronicle is not None:
+                missed = ctx.world_chronicle.events_for(target_map_id, since_tick=new_map.last_visited_turn)
+                for event in missed[-3:]:
+                    esper.dispatch_event("log_message", f"[color=cyan]Word around town:[/color] {event.text}")
+
         # Update Camera
         ctx.camera.update(target_x, target_y)
 

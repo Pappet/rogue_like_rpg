@@ -1,0 +1,42 @@
+[
+  {
+    "id": "wolves_spotted",
+    "text": "Wolves were spotted near {location}.",
+    "weight": 3
+  },
+  {
+    "id": "merchant_arrived",
+    "text": "A traveling merchant arrived in {location}.",
+    "weight": 3
+  },
+  {
+    "id": "merchant_left",
+    "text": "A traveling merchant left {location}.",
+    "weight": 2
+  },
+  {
+    "id": "harvest_brought_in",
+    "text": "The farmers of {location} brought in a harvest.",
+    "weight": 2
+  },
+  {
+    "id": "tavern_brawl",
+    "text": "A brawl broke out in the tavern of {location}.",
+    "weight": 2
+  },
+  {
+    "id": "tools_stolen",
+    "text": "Tools went missing in {location} — folk suspect a thief.",
+    "weight": 1
+  },
+  {
+    "id": "feast_day",
+    "text": "{location} celebrated a small feast day.",
+    "weight": 1
+  },
+  {
+    "id": "strange_lights",
+    "text": "Strange lights were seen outside {location} at night.",
+    "weight": 1
+  }
+]
