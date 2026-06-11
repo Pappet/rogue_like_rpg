@@ -230,6 +230,18 @@ def test_ui_windows_open_and_close():
 def test_multi_turn_stability():
     h = _Harness()
     h.teleport_to_open_spot()
+
+    # This test checks turn-loop stability, not survival: randomly spawned
+    # hostiles may otherwise wander over and kill the waiting player
+    # (RNG-dependent => flaky). Remove them up front.
+    from game.components import AIBehaviorState, Alignment
+
+    hostiles = [
+        ent for ent, (behavior,) in esper.get_components(AIBehaviorState) if behavior.alignment == Alignment.HOSTILE
+    ]
+    for ent in hostiles:
+        esper.delete_entity(ent, immediate=True)
+
     ticks0 = h.ctx.world_clock.total_ticks
 
     for _ in range(50):

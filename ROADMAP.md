@@ -69,7 +69,7 @@ persistent save. Without this there is nothing to simulate.*
 F9/F10 (A4). Verified end-to-end by `tests/verify_world_travel.py` and
 `tests/verify_save_load.py`.
 
-### Phase B — The World Lives While You're Away (Off-screen Simulation)
+### Phase B — The World Lives While You're Away (Off-screen Simulation) ✅ (done)
 
 *The heart of the "more alive than Skyrim" claim.*
 
@@ -91,6 +91,15 @@ F9/F10 (A4). Verified end-to-end by `tests/verify_world_travel.py` and
 **Done when:** leave village A at 08:00 with the smith at his anvil, travel
 2 days, return — the smith is wherever 14:00 puts him, and the notice/log
 shows at least one thing that happened in between.
+
+*Shipped as:* `WorldSimulationService.reconcile_arrivals()` hooked into
+`MapTransitionService` (B1; threshold `SIM_RECONCILE_MIN_TICKS` protects
+short door hops) and `WorldChronicleService` + `world_events.json` (B2;
+"Word around town" arrival log, saved in the snapshot). Verified by
+`tests/verify_world_simulation.py` and `tests/verify_world_chronicle.py`.
+NPC positions are not continuously simulated — they are derived from the
+schedule at arrival time, which is the cheap two-level model working as
+designed.
 
 ### Phase C — Trade & Economy
 

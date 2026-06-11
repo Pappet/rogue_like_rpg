@@ -16,6 +16,7 @@ from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
 from game.services.render_service import RenderService
 from game.services.system_initializer import build_systems, register_processors
+from game.services.world_chronicle_service import WorldChronicleService
 from game.services.world_graph_service import WorldGraphService
 from game_context import GameContext
 
@@ -40,7 +41,7 @@ def build_game_context() -> GameContext:
     systems = build_systems(world_clock, map_service.get_active_map())
     register_processors(systems)
 
-    return GameContext(
+    ctx = GameContext(
         map_service=map_service,
         render_service=RenderService(),
         world_clock=world_clock,
@@ -51,3 +52,11 @@ def build_game_context() -> GameContext:
         world_graph=world_graph,
         content=content,
     )
+
+    # World chronicle: generates off-screen events as game hours pass
+    chronicle = WorldChronicleService(ctx=ctx)
+    chronicle.load_templates(f"{DATA_DIR}/world_events.json")
+    ctx.world_chronicle = chronicle
+    esper.set_handler("clock_tick", chronicle.on_clock_tick)
+
+    return ctx

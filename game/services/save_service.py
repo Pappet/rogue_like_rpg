@@ -62,6 +62,7 @@ class SaveService:
                     else [],
                 },
                 "maps": {map_id: encode_map(c) for map_id, c in ctx.map_service.maps.items()},
+                "chronicle": ctx.world_chronicle.to_dict() if ctx.world_chronicle else None,
                 "party": party,
                 "player_old_id": ctx.player_entity,
             }
@@ -107,6 +108,10 @@ class SaveService:
         # Clock & turn flow
         ctx.world_clock.total_ticks = data["clock_ticks"]
         ctx.systems.turn_system.round_counter = data.get("round_counter", data["clock_ticks"] + 1)
+
+        # World chronicle
+        if ctx.world_chronicle is not None and data.get("chronicle"):
+            ctx.world_chronicle.from_dict(data["chronicle"])
 
         # Party (with entity-id remapping)
         id_map: dict[int, int] = {}

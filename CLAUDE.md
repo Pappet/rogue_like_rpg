@@ -142,6 +142,7 @@ is neutral constants, usable by both.
 │   ├── items.json                   # Item templates
 │   ├── player.json                  # Player base stats & actions
 │   ├── world.json                   # World graph: locations + travel routes
+│   ├── world_events.json            # Chronicle event pool (off-screen events)
 │   ├── schedules.json               # NPC daily routines
 │   ├── dialogues.json               # NPC dialogue lines by template_id
 │   ├── prefabs/                     # Prefab room layouts
@@ -198,6 +199,8 @@ is neutral constants, usable by both.
     │   ├── map_generator.py         # Village scenario, terrain, prefab loading
     │   ├── map_transition_service.py# Map transition (freeze/thaw, set_map fan-out)
     │   ├── world_graph_service.py   # World graph: locations, routes, current location
+    │   ├── world_simulation_service.py # Off-screen sim: schedule reconciliation on arrival
+    │   ├── world_chronicle_service.py  # Per-location event log ("Word around town")
     │   ├── save_service.py          # Session snapshot save/load (F9/F10)
     │   ├── save_serialization.py    # Generic dataclass/tile JSON (de)serialization
     │   ├── spawn_service.py         # Monster/NPC spawning

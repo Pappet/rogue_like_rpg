@@ -5,6 +5,7 @@ import esper
 from game.components import Position, Stats
 from game.services.map_generator import MapGenerator
 from game.services.party_service import get_entity_closure
+from game.services.world_simulation_service import WorldSimulationService
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +69,13 @@ class MapTransitionService:
         # Thaw new map
         new_map.thaw(esper)
 
+        # Off-screen simulation: the world moved on while this map was
+        # frozen — snap schedule-bound NPCs to where their day plan puts
+        # them now (no-op for short absences).
+        if ctx.world_clock is not None:
+            elapsed = turn_system.round_counter - new_map.last_visited_turn
+            WorldSimulationService.reconcile_arrivals(esper, new_map, ctx.world_clock.hour, elapsed)
+
         # Update Player Position
         if ctx.player_entity is not None:
             try:
@@ -86,6 +94,12 @@ class MapTransitionService:
         # are graph nodes; interior maps like "Tavern" are not).
         if ctx.world_graph is not None and ctx.world_graph.get_location(target_map_id) is not None:
             ctx.world_graph.set_current_location(target_map_id)
+
+            # Tell the player what happened here while they were away
+            if ctx.world_chronicle is not None:
+                missed = ctx.world_chronicle.events_for(target_map_id, since_tick=new_map.last_visited_turn)
+                for event in missed[-3:]:
+                    esper.dispatch_event("log_message", f"[color=cyan]Word around town:[/color] {event.text}")
 
         # Update Camera
         ctx.camera.update(target_x, target_y)

@@ -1,8 +1,9 @@
 import esper
 
-from game.components import Activity, AIBehaviorState, AIState, PathData, Position, Schedule
+from game.components import ACTIVITY_TO_STATE, Activity, AIBehaviorState, AIState, PathData, Position, Schedule
 from game.content.schedule_registry import schedule_registry
 from game.services.pathfinding_service import PathfindingService
+from game.services.world_simulation_service import resolve_scheduled_target
 
 
 class ScheduleSystem(esper.Processor):
@@ -11,15 +12,9 @@ class ScheduleSystem(esper.Processor):
     based on the current world time.
     """
 
-    # Mapping from schedule activity strings to AIState enum values
-    ACTIVITY_TO_STATE = {
-        "WORK": AIState.WORK,
-        "PATROL": AIState.PATROL,
-        "SOCIALIZE": AIState.SOCIALIZE,
-        "SLEEP": AIState.SLEEP,
-        "IDLE": AIState.IDLE,
-        "WANDER": AIState.WANDER,
-    }
+    # Kept as class attribute for backwards compat; canonical mapping lives
+    # in game.components next to AIState.
+    ACTIVITY_TO_STATE = ACTIVITY_TO_STATE
 
     def process(self, world_clock_service, map_container):
         """
@@ -39,26 +34,11 @@ class ScheduleSystem(esper.Processor):
             if not template:
                 continue
 
-            # Find the entry for the current hour
-            current_entry = None
-            for entry in template.entries:
-                # Handle wrapping schedules (e.g., 22:00 to 04:00)
-                if entry.start <= entry.end:
-                    if entry.start <= current_hour < entry.end:
-                        current_entry = entry
-                        break
-                else:
-                    if current_hour >= entry.start or current_hour < entry.end:
-                        current_entry = entry
-                        break
-
+            current_entry = template.entry_for_hour(current_hour)
             if not current_entry:
                 continue
 
-            # Resolve target_pos
-            resolved_target_pos = current_entry.target_pos
-            if current_entry.target_meta == "home":
-                resolved_target_pos = activity.home_pos
+            resolved_target_pos = resolve_scheduled_target(current_entry, activity)
 
             # Check for activity or target change
             activity_key = current_entry.activity.upper()
