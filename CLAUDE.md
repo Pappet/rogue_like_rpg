@@ -82,7 +82,7 @@ The ECS logic is separated into four distinct categories:
 1. **FRAME-PROCESSORS**: Registered once with `esper.add_processor()` (via `register_processors()` in the bootstrap) and run every frame by `TurnOrchestrator.update()` via `esper.process()`.
    - `TurnSystem`, `EquipmentSystem`, `VisibilitySystem`, `MovementSystem`, `CombatSystem`, `FCTSystem`
 2. **PHASE-SYSTEMS**: Called by `TurnOrchestrator` during specific game phases (like enemy turn).
-   - `AISystem` (`ENEMY_TURN`), `ScheduleSystem` (`ENEMY_TURN`)
+   - `AISystem` (`ENEMY_TURN`), `ScheduleSystem` (`ENEMY_TURN`), `NeedsSystem` (`ENEMY_TURN`, after ScheduleSystem)
 3. **RENDER-SYSTEMS**: Called by `RenderPipeline` during the `draw()` cycle. (Re)created in `GameplayState.startup()`.
    - `RenderSystem`, `UISystem`, `DebugRenderSystem`
 4. **EVENT-SYSTEMS**: React exclusively to events (callbacks set up in `__init__` via `esper.set_handler()`), without a `process()` loop and therefore *not* added as an `esper.Processor`.
@@ -173,6 +173,7 @@ is neutral constants, usable by both.
     │   ├── action_system.py         # ActionSystem (action dispatch)
     │   ├── ai_system.py             # AISystem (phase system)
     │   ├── schedule_system.py       # ScheduleSystem (phase system)
+    │   ├── needs_system.py          # NeedsSystem (phase system; needs preempt schedules)
     │   ├── death_system.py          # DeathSystem (event system)
     │   ├── render_system.py         # RenderSystem (render system)
     │   ├── ui_system.py             # UISystem (render system)
@@ -210,6 +211,7 @@ is neutral constants, usable by both.
     │   ├── interaction_resolver.py  # Bump interaction resolution
     │   ├── trade_service.py         # Buy/sell rules between player and merchants
     │   ├── economy_service.py       # Per-settlement stock levels -> local prices
+    │   ├── reputation_service.py    # Player standing per settlement (price/dialogue)
     │   ├── consumable_service.py    # Item consumption logic
     │   └── equipment_service.py     # Equipment slot logic
     ├── controllers/                 # Gameplay orchestration (driven by states)
@@ -394,6 +396,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Purse`           | Gold carried by player or NPC                |
 | `Value`           | Base trade value of an item in gold          |
 | `Merchant`        | NPC trades; stock = item template id list    |
+| `Needs`           | Hunger state; preempts schedule via override |
 
 ### Enums
 
