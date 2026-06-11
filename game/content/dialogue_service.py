@@ -37,6 +37,9 @@ class DialogueService:
         # Optional callable returning context keys the game layer knows
         # (rep tier, day phase). Wired once in bootstrap.
         self.context_provider = None
+        # Optional callable returning a rumor line (or None). Rumors
+        # occasionally replace smalltalk (wired in bootstrap).
+        self.rumor_provider = None
 
     def load(self, filepath: str) -> None:
         """Load dialogue definitions from a JSON file.

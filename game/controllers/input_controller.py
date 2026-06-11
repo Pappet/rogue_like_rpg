@@ -15,6 +15,7 @@ from game.services.player_action_service import PlayerActionService
 from game.services.save_service import SaveService
 from game.ui.windows.character import CharacterWindow
 from game.ui.windows.inventory import InventoryWindow
+from game.ui.windows.quests import QuestWindow
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +124,11 @@ class InputController:
 
         if command == InputCommand.OPEN_CHARACTER:
             self._open_character_sheet()
+            return
+
+        if command == InputCommand.OPEN_JOURNAL:
+            rect = pygame.Rect(*UI_MODAL_RECT)
+            self.ui_stack.push(QuestWindow(rect, self.ctx, mode="journal"))
             return
 
         if command == InputCommand.INTERACT:

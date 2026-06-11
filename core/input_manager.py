@@ -21,6 +21,7 @@ class InputCommand(Enum):
     OPEN_INVENTORY = auto()  # I
     OPEN_CHARACTER = auto()  # C
     OPEN_WORLD_MAP = auto()  # M
+    OPEN_JOURNAL = auto()  # J
     EXAMINE_ITEM = auto()  # X
     NEXT_ACTION = auto()  # S
     PREVIOUS_ACTION = auto()  # W
@@ -61,6 +62,7 @@ class InputManager:
                 pygame.K_i: InputCommand.OPEN_INVENTORY,
                 pygame.K_c: InputCommand.OPEN_CHARACTER,
                 pygame.K_m: InputCommand.OPEN_WORLD_MAP,
+                pygame.K_j: InputCommand.OPEN_JOURNAL,
                 pygame.K_x: InputCommand.EXAMINE_ITEM,
                 pygame.K_RETURN: InputCommand.CONFIRM,
                 pygame.K_F3: InputCommand.DEBUG_TOGGLE_MASTER,

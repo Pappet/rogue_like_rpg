@@ -20,6 +20,7 @@ from game.components import (
     Needs,
     Position,
     Purse,
+    QuestGiver,
     Renderable,
     Schedule,
     Stats,
@@ -118,6 +119,9 @@ class EntityFactory:
         if template.merchant:
             components.append(Merchant(stock=list(template.merchant.get("stock", []))))
             components.append(Purse(gold=int(template.merchant.get("gold", 0))))
+
+        if template.quest_giver:
+            components.append(QuestGiver())
 
         if template.needs:
             components.append(

@@ -329,6 +329,13 @@ class Merchant:
 
 
 @dataclass
+class QuestGiver:
+    """Marker: bumping this NPC opens the quest window (ROADMAP Phase E)."""
+
+    pass
+
+
+@dataclass
 class Needs:
     """Physical needs that can preempt an NPC's schedule (ROADMAP Phase D).
 

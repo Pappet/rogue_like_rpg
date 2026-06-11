@@ -8,6 +8,7 @@ from game.components import (
     AttackIntent,
     Merchant,
     Name,
+    QuestGiver,
     Stats,
     TemplateId,
 )
@@ -20,6 +21,7 @@ class InteractionType(Enum):
     WAKE_UP = auto()
     TALK = auto()
     TRADE = auto()
+    QUESTS = auto()
 
 
 class InteractionResolver:
@@ -40,6 +42,10 @@ class InteractionResolver:
             # Non-hostile merchants open their shop
             if world.has_component(target_ent, Merchant):
                 return InteractionType.TRADE
+
+            # Quest givers open their request board
+            if world.has_component(target_ent, QuestGiver):
+                return InteractionType.QUESTS
 
             # Neutral/Friendly entities are talked to
             if behavior.alignment in [Alignment.NEUTRAL, Alignment.FRIENDLY]:
@@ -80,9 +86,20 @@ class InteractionResolver:
             # the gameplay state opens the trade window.
             world.dispatch_event("trade_requested", target_ent)
 
+        elif interaction == InteractionType.QUESTS:
+            InteractionResolver._say_line(world, target_ent)
+            world.dispatch_event("quests_requested", target_ent)
+
     @staticmethod
     def _say_line(world, target_ent: int) -> None:
         name = world.component_for_entity(target_ent, Name).name if world.has_component(target_ent, Name) else "Someone"
+        # Sometimes NPCs share a rumor about the wider world instead of
+        # their usual smalltalk (Phase E3).
+        if dialogue_service.rumor_provider is not None:
+            rumor = dialogue_service.rumor_provider()
+            if rumor:
+                world.dispatch_event("log_message", f"[color=yellow]{name}:[/color] {rumor}")
+                return
         # Look up template-specific dialogue, with selection context:
         # the NPC's current activity plus whatever the game layer provides
         # (reputation tier, day phase) via the context_provider.
