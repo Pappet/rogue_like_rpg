@@ -73,7 +73,7 @@ class CombatSystem(esper.Processor):
                 # Death Check
                 # Use effective HP for death check to account for bonuses
                 if target_eff.hp <= 0:
-                    esper.dispatch_event("entity_died", target)
+                    esper.dispatch_event("entity_died", target, attacker)
 
             # Remove AttackIntent
             esper.remove_component(attacker, AttackIntent)

@@ -17,6 +17,7 @@ from game.components import (
     ACTIVITY_TO_STATE,
     Activity,
     AIBehaviorState,
+    Needs,
     PathData,
     Position,
     Schedule,
@@ -68,9 +69,15 @@ class WorldSimulationService:
             activity_key = entry.activity.upper()
             target = resolve_scheduled_target(entry, activity)
 
-            # Update the activity bookkeeping in any case
+            # Update the activity bookkeeping in any case. Off-screen NPCs
+            # took care of their needs themselves (NEED-02).
             activity.current_activity = activity_key
             activity.target_pos = target
+            activity.need_override = None
+            needs = world.try_component(_ent, Needs)
+            if needs is not None:
+                needs.hunger = 0.0
+                needs.eating_ticks_left = 0
 
             # Place the NPC where its day plan says it should be by now
             if target is not None:

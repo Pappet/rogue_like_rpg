@@ -127,7 +127,7 @@ Verified by `tests/verify_trade.py` and `tests/verify_economy.py` —
 including the arbitrage criterion (potions: buy cheap in Brackenfen,
 sell dear in Eastmoor).
 
-### Phase D — NPC Depth: Needs & Relationships
+### Phase D — NPC Depth: Needs & Relationships ✅ (done)
 
 - **Needs:** a `Needs` component (sleep, food, social, work). Schedules
   remain the default day plan; needs can override (a starving NPC leaves
@@ -141,6 +141,15 @@ sell dear in Eastmoor).
 
 **Done when:** an NPC interrupts its schedule out of a need, and two
 villagers talk differently to a beloved vs. notorious player.
+
+*Shipped as:* `Needs` component + `NeedsSystem` with
+`Activity.need_override` (hunger preempts the schedule, ScheduleSystem
+yields), `ReputationService` (-100..100 per settlement; kill penalty via
+attacker-aware `entity_died`, trade goodwill, price factors) and
+conditional `dialogues.json` pools keyed on rep tier / day phase / NPC
+activity. Verified by `tests/verify_needs_system.py` and
+`tests/verify_reputation.py`. NPC↔NPC relationships were deferred — they
+only pay off with Phase E rumor content.
 
 ### Phase E — Quests & Rumors
 

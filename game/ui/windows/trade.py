@@ -51,6 +51,9 @@ class TradeWindow(UIWindow):
     def _economy(self):
         return getattr(self.ctx, "economy", None)
 
+    def _reputation(self):
+        return getattr(self.ctx, "reputation", None)
+
     def _location_id(self):
         graph = getattr(self.ctx, "world_graph", None)
         return graph.current_location_id if graph else None
@@ -113,6 +116,7 @@ class TradeWindow(UIWindow):
                     self.selected_idx,
                     self._economy(),
                     self._location_id(),
+                    self._reputation(),
                 )
         else:
             items = self._player_items()
@@ -124,6 +128,7 @@ class TradeWindow(UIWindow):
                     items[self.selected_idx],
                     self._economy(),
                     self._location_id(),
+                    self._reputation(),
                 )
         self._clamp_selection()
 
@@ -178,7 +183,7 @@ class TradeWindow(UIWindow):
             entries=[
                 (
                     item_registry.get(tid).name if item_registry.get(tid) else tid,
-                    TradeService.buy_price(tid, self._economy(), self._location_id()),
+                    TradeService.buy_price(tid, self._economy(), self._location_id(), self._reputation()),
                 )
                 for tid in self._merchant_stock()
             ],
@@ -195,7 +200,7 @@ class TradeWindow(UIWindow):
                     self.world.component_for_entity(ent, Name).name
                     if self.world.has_component(ent, Name)
                     else f"Item {ent}",
-                    TradeService.sell_price(ent, self._economy(), self._location_id()),
+                    TradeService.sell_price(ent, self._economy(), self._location_id(), self._reputation()),
                 )
                 for ent in self._player_items()
             ],

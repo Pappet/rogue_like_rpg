@@ -1,6 +1,16 @@
 from enum import Enum, auto
 
-from game.components import AIBehaviorState, AIState, Alignment, AttackIntent, Merchant, Name, Stats, TemplateId
+from game.components import (
+    Activity,
+    AIBehaviorState,
+    AIState,
+    Alignment,
+    AttackIntent,
+    Merchant,
+    Name,
+    Stats,
+    TemplateId,
+)
 from game.content.dialogue_service import dialogue_service
 
 
@@ -73,7 +83,15 @@ class InteractionResolver:
     @staticmethod
     def _say_line(world, target_ent: int) -> None:
         name = world.component_for_entity(target_ent, Name).name if world.has_component(target_ent, Name) else "Someone"
-        # Look up template-specific dialogue
+        # Look up template-specific dialogue, with selection context:
+        # the NPC's current activity plus whatever the game layer provides
+        # (reputation tier, day phase) via the context_provider.
+        context = {}
+        if dialogue_service.context_provider is not None:
+            context.update(dialogue_service.context_provider())
+        activity = world.try_component(target_ent, Activity)
+        if activity is not None:
+            context["activity"] = activity.current_activity
         tid = world.try_component(target_ent, TemplateId)
-        line = dialogue_service.get_line(tid.id if tid else "")
+        line = dialogue_service.get_line(tid.id if tid else "", context)
         world.dispatch_event("log_message", f"[color=yellow]{name}:[/color] {line}")

@@ -16,6 +16,7 @@ from game.map.map_container import MapContainer
 from game.services.economy_service import EconomyService
 from game.services.map_service import MapService
 from game.services.render_service import RenderService
+from game.services.reputation_service import ReputationService
 from game.services.world_chronicle_service import WorldChronicleService
 from game.services.world_graph_service import WorldGraphService
 from game.systems.action_system import ActionSystem
@@ -25,6 +26,7 @@ from game.systems.death_system import DeathSystem
 from game.systems.equipment_system import EquipmentSystem
 from game.systems.fct_system import FCTSystem
 from game.systems.movement_system import MovementSystem
+from game.systems.needs_system import NeedsSystem
 from game.systems.schedule_system import ScheduleSystem
 from game.systems.turn_system import TurnSystem
 from game.systems.visibility_system import VisibilitySystem
@@ -59,6 +61,7 @@ class Systems:
     death_system: DeathSystem
     ai_system: AISystem
     schedule_system: ScheduleSystem
+    needs_system: NeedsSystem = field(default_factory=NeedsSystem)
     render_system: object | None = None
     debug_render_system: object | None = None
     ui_system: object | None = None
@@ -90,6 +93,7 @@ class GameContext:
     world_graph: WorldGraphService | None = None
     world_chronicle: WorldChronicleService | None = None
     economy: EconomyService | None = None
+    reputation: ReputationService | None = None
     debug_flags: DebugFlags = field(default_factory=DebugFlags)
     player_entity: int | None = None
     content: ContentDatabase | None = None

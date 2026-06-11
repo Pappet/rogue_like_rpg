@@ -38,6 +38,7 @@ class EntityTemplate:
     schedule_id: str | None = None
     home_pos: tuple[int, int] | None = None
     merchant: dict | None = None  # {"stock": [item ids], "gold": int}
+    needs: dict | None = None  # {"hunger_rate": float, "eat_threshold": float}
 
 
 class EntityRegistry(Registry[EntityTemplate]):

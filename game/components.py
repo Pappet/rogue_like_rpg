@@ -245,6 +245,9 @@ class Activity:
     current_activity: str = "IDLE"
     target_pos: tuple[int, int] | None = None
     home_pos: tuple[int, int] | None = None
+    # Set by NeedsSystem while a need (e.g. "EAT") preempts the schedule;
+    # ScheduleSystem skips entities with an active override.
+    need_override: str | None = None
 
 
 @dataclass
@@ -323,6 +326,21 @@ class Merchant:
     fungible goods, not item entities, so freeze/thaw never dangles."""
 
     stock: list[str] = field(default_factory=list)
+
+
+@dataclass
+class Needs:
+    """Physical needs that can preempt an NPC's schedule (ROADMAP Phase D).
+
+    hunger rises by hunger_rate per in-game hour; above eat_threshold the
+    NeedsSystem overrides the schedule with an EAT activity.
+    """
+
+    hunger: float = 0.0
+    hunger_rate: float = 2.0  # points per in-game hour
+    eat_threshold: float = 70.0
+    eat_duration_ticks: int = 30  # half an hour per meal
+    eating_ticks_left: int = 0
 
 
 KNOWN_COMPONENT_TYPES = []
