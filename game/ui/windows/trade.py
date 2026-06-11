@@ -32,11 +32,12 @@ from game.services.trade_service import TradeService
 
 
 class TradeWindow(UIWindow):
-    def __init__(self, rect, player_entity, merchant_entity, input_manager):
+    def __init__(self, rect, player_entity, merchant_entity, ctx):
         super().__init__(rect)
         self.player_entity = player_entity
         self.merchant_entity = merchant_entity
-        self.input_manager = input_manager
+        self.ctx = ctx
+        self.input_manager = ctx.input_manager
         self.world = esper
         self.selected_idx = 0
         self.active_pane = 0  # 0 = merchant (buy), 1 = player (sell)
@@ -46,6 +47,13 @@ class TradeWindow(UIWindow):
         self.wants_to_close = False
 
     # --- Data access -----------------------------------------------------
+
+    def _economy(self):
+        return getattr(self.ctx, "economy", None)
+
+    def _location_id(self):
+        graph = getattr(self.ctx, "world_graph", None)
+        return graph.current_location_id if graph else None
 
     def _merchant_stock(self) -> list[str]:
         merchant = self.world.try_component(self.merchant_entity, Merchant)
@@ -98,11 +106,25 @@ class TradeWindow(UIWindow):
         if self.active_pane == 0:
             stock = self._merchant_stock()
             if stock and self.selected_idx < len(stock):
-                TradeService.buy(self.world, self.player_entity, self.merchant_entity, self.selected_idx)
+                TradeService.buy(
+                    self.world,
+                    self.player_entity,
+                    self.merchant_entity,
+                    self.selected_idx,
+                    self._economy(),
+                    self._location_id(),
+                )
         else:
             items = self._player_items()
             if items and self.selected_idx < len(items):
-                TradeService.sell(self.world, self.player_entity, self.merchant_entity, items[self.selected_idx])
+                TradeService.sell(
+                    self.world,
+                    self.player_entity,
+                    self.merchant_entity,
+                    items[self.selected_idx],
+                    self._economy(),
+                    self._location_id(),
+                )
         self._clamp_selection()
 
     def update(self, dt):
@@ -154,7 +176,10 @@ class TradeWindow(UIWindow):
             y=box_y + 86,
             width=(box_width // 2) - UI_SPACING_X,
             entries=[
-                (item_registry.get(tid).name if item_registry.get(tid) else tid, TradeService.buy_price(tid))
+                (
+                    item_registry.get(tid).name if item_registry.get(tid) else tid,
+                    TradeService.buy_price(tid, self._economy(), self._location_id()),
+                )
                 for tid in self._merchant_stock()
             ],
             pane=0,
@@ -170,7 +195,7 @@ class TradeWindow(UIWindow):
                     self.world.component_for_entity(ent, Name).name
                     if self.world.has_component(ent, Name)
                     else f"Item {ent}",
-                    TradeService.sell_price(ent),
+                    TradeService.sell_price(ent, self._economy(), self._location_id()),
                 )
                 for ent in self._player_items()
             ],

@@ -137,5 +137,17 @@
     8
    ]
   }
- ]
+ ],
+ "economy": {
+  "stock": {
+   "health_potion": 5,
+   "iron_sword": 4,
+   "leather_armor": 4
+  },
+  "rates_per_day": {
+   "health_potion": 0.5,
+   "iron_sword": 0.25,
+   "leather_armor": 0.25
+  }
+ }
 }

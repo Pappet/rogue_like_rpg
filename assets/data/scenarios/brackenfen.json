@@ -4,7 +4,10 @@
   "width": 30,
   "height": 30
  },
- "arrival_pos": [15, 28],
+ "arrival_pos": [
+  15,
+  28
+ ],
  "base_layer": "floor_grass",
  "terrain_variety": {
   "chance": 0.5,
@@ -16,27 +19,51 @@
  "structures": [
   {
    "id": "Brackenfen Farmhouse",
-   "v_pos": [6, 6],
-   "v_size": [8, 6],
-   "h_size": [12, 9],
+   "v_pos": [
+    6,
+    6
+   ],
+   "v_size": [
+    8,
+    6
+   ],
+   "h_size": [
+    12,
+    9
+   ],
    "floors": 1,
    "npcs": [
     {
      "type": "villager",
-     "pos": [5, 4]
+     "pos": [
+      5,
+      4
+     ]
     }
    ]
   },
   {
    "id": "Brackenfen Trading Post",
-   "v_pos": [18, 12],
-   "v_size": [7, 6],
-   "h_size": [10, 8],
+   "v_pos": [
+    18,
+    12
+   ],
+   "v_size": [
+    7,
+    6
+   ],
+   "h_size": [
+    10,
+    8
+   ],
    "floors": 1,
    "npcs": [
     {
      "type": "shopkeeper",
-     "pos": [5, 4]
+     "pos": [
+      5,
+      4
+     ]
     }
    ]
   }
@@ -44,15 +71,36 @@
  "village_npcs": [
   {
    "type": "guard",
-   "pos": [15, 25]
+   "pos": [
+    15,
+    25
+   ]
   },
   {
    "type": "villager",
-   "pos": [12, 16]
+   "pos": [
+    12,
+    16
+   ]
   },
   {
    "type": "villager",
-   "pos": [20, 20]
+   "pos": [
+    20,
+    20
+   ]
   }
- ]
+ ],
+ "economy": {
+  "stock": {
+   "health_potion": 14,
+   "leather_armor": 8,
+   "iron_sword": 1
+  },
+  "rates_per_day": {
+   "health_potion": 3,
+   "leather_armor": 1,
+   "iron_sword": -0.5
+  }
+ }
 }

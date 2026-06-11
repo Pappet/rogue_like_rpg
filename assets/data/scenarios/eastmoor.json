@@ -4,7 +4,10 @@
   "width": 50,
   "height": 50
  },
- "arrival_pos": [25, 48],
+ "arrival_pos": [
+  25,
+  48
+ ],
  "base_layer": "floor_stone",
  "terrain_variety": {
   "chance": 0.35,
@@ -16,61 +19,115 @@
  "structures": [
   {
    "id": "Eastmoor Inn",
-   "v_pos": [8, 6],
-   "v_size": [12, 9],
-   "h_size": [16, 12],
+   "v_pos": [
+    8,
+    6
+   ],
+   "v_size": [
+    12,
+    9
+   ],
+   "h_size": [
+    16,
+    12
+   ],
    "floors": 2,
    "npcs": [
     {
      "type": "shopkeeper",
-     "pos": [8, 6]
+     "pos": [
+      8,
+      6
+     ]
     },
     {
      "type": "villager",
-     "pos": [4, 4]
+     "pos": [
+      4,
+      4
+     ]
     }
    ]
   },
   {
    "id": "Eastmoor Smithy",
-   "v_pos": [30, 8],
-   "v_size": [8, 7],
-   "h_size": [12, 10],
+   "v_pos": [
+    30,
+    8
+   ],
+   "v_size": [
+    8,
+    7
+   ],
+   "h_size": [
+    12,
+    10
+   ],
    "floors": 1,
    "npcs": [
     {
      "type": "blacksmith",
-     "pos": [6, 5]
+     "pos": [
+      6,
+      5
+     ]
     }
    ]
   },
   {
    "id": "Eastmoor Market Hall",
-   "v_pos": [18, 24],
-   "v_size": [14, 10],
-   "h_size": [18, 14],
+   "v_pos": [
+    18,
+    24
+   ],
+   "v_size": [
+    14,
+    10
+   ],
+   "h_size": [
+    18,
+    14
+   ],
    "floors": 1,
    "npcs": [
     {
      "type": "shopkeeper",
-     "pos": [9, 7]
+     "pos": [
+      9,
+      7
+     ]
     },
     {
      "type": "villager",
-     "pos": [5, 5]
+     "pos": [
+      5,
+      5
+     ]
     }
    ]
   },
   {
    "id": "Eastmoor Manor",
-   "v_pos": [36, 30],
-   "v_size": [10, 10],
-   "h_size": [14, 14],
+   "v_pos": [
+    36,
+    30
+   ],
+   "v_size": [
+    10,
+    10
+   ],
+   "h_size": [
+    14,
+    14
+   ],
    "floors": 3,
    "npcs": [
     {
      "type": "mayor",
-     "pos": [7, 7]
+     "pos": [
+      7,
+      7
+     ]
     }
    ]
   }
@@ -78,31 +135,64 @@
  "village_npcs": [
   {
    "type": "guard",
-   "pos": [25, 45]
+   "pos": [
+    25,
+    45
+   ]
   },
   {
    "type": "guard",
-   "pos": [10, 20]
+   "pos": [
+    10,
+    20
+   ]
   },
   {
    "type": "guard",
-   "pos": [40, 20]
+   "pos": [
+    40,
+    20
+   ]
   },
   {
    "type": "villager",
-   "pos": [22, 18]
+   "pos": [
+    22,
+    18
+   ]
   },
   {
    "type": "villager",
-   "pos": [28, 20]
+   "pos": [
+    28,
+    20
+   ]
   },
   {
    "type": "villager",
-   "pos": [15, 30]
+   "pos": [
+    15,
+    30
+   ]
   },
   {
    "type": "villager",
-   "pos": [33, 38]
+   "pos": [
+    33,
+    38
+   ]
   }
- ]
+ ],
+ "economy": {
+  "stock": {
+   "iron_sword": 12,
+   "steel_sword": 6,
+   "health_potion": 1
+  },
+  "rates_per_day": {
+   "iron_sword": 2,
+   "steel_sword": 0.5,
+   "health_potion": -3
+  }
+ }
 }

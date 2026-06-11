@@ -73,7 +73,7 @@ class GameplayState(GameState):
         if self.ui_stack.is_active():
             return
         rect = pygame.Rect(*UI_MODAL_RECT)
-        self.ui_stack.push(TradeWindow(rect, self.ctx.player_entity, merchant_entity, self.ctx.input_manager))
+        self.ui_stack.push(TradeWindow(rect, self.ctx.player_entity, merchant_entity, self.ctx))
 
     def get_event(self, event):
         if not self.ctx:

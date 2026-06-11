@@ -63,6 +63,7 @@ class SaveService:
                 },
                 "maps": {map_id: encode_map(c) for map_id, c in ctx.map_service.maps.items()},
                 "chronicle": ctx.world_chronicle.to_dict() if ctx.world_chronicle else None,
+                "economy": ctx.economy.to_dict() if ctx.economy else None,
                 "party": party,
                 "player_old_id": ctx.player_entity,
             }
@@ -112,6 +113,10 @@ class SaveService:
         # World chronicle
         if ctx.world_chronicle is not None and data.get("chronicle"):
             ctx.world_chronicle.from_dict(data["chronicle"])
+
+        # Settlement economy
+        if ctx.economy is not None and data.get("economy"):
+            ctx.economy.from_dict(data["economy"])
 
         # Party (with entity-id remapping)
         id_map: dict[int, int] = {}
