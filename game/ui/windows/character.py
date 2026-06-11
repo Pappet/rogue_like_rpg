@@ -18,7 +18,7 @@ from config import (
 )
 from core.input_manager import InputCommand
 from core.ui.window_base import UIWindow
-from game.components import Equipment, Name, SlotType, Stats
+from game.components import EffectiveStats, Equipment, Name, SlotType, Stats
 
 
 class CharacterWindow(UIWindow):
@@ -79,15 +79,21 @@ class CharacterWindow(UIWindow):
         # 1. Draw Stats
         try:
             stats = self.world.component_for_entity(self.player_entity, Stats)
+            eff = self.world.component_for_entity(self.player_entity, EffectiveStats)
+
+            def _fmt(label: str, eff_val: int, base_val: int) -> str:
+                if eff_val != base_val:
+                    return f"{label}: {eff_val} (base {base_val})"
+                return f"{label}: {eff_val}"
 
             stat_lines = [
-                f"HP: {stats.hp} / {stats.max_hp}",
-                f"Mana: {stats.mana} / {stats.max_mana}",
+                f"HP: {stats.hp} / {eff.max_hp}",
+                f"Mana: {stats.mana} / {eff.max_mana}",
                 "",
-                f"Power: {stats.power}",
-                f"Defense: {stats.defense}",
-                f"Perception: {stats.perception}",
-                f"Intelligence: {stats.intelligence}",
+                _fmt("Power", eff.power, stats.base_power),
+                _fmt("Defense", eff.defense, stats.base_defense),
+                _fmt("Perception", eff.perception, stats.base_perception),
+                _fmt("Intelligence", eff.intelligence, stats.base_intelligence),
                 "",
                 f"Max Weight: {stats.max_carry_weight} kg",
             ]
