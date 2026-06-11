@@ -8,6 +8,7 @@ class WorldClockService:
     Manages game time in ticks.
     1 tick = 1 player turn.
     """
+
     def __init__(self, total_ticks=0):
         self.total_ticks = total_ticks
 
@@ -56,13 +57,13 @@ class WorldClockService:
             (DUSK_START, "day"),
             ((DUSK_START + NIGHT_START) / 2, "dusk"),
             (NIGHT_START, "night"),
-            (24, "night")
+            (24, "night"),
         ]
 
         # Find the two points we are between
         for i in range(len(points) - 1):
             t1, p1 = points[i]
-            t2, p2 = points[i+1]
+            t2, p2 = points[i + 1]
             if t1 <= t < t2:
                 # Linear interpolation between color1 and color2
                 factor = (t - t1) / (t2 - t1)
@@ -85,5 +86,5 @@ class WorldClockService:
             "day": self.day,
             "hour": self.hour,
             "minute": self.minute,
-            "phase": self.phase
+            "phase": self.phase,
         }

@@ -16,8 +16,8 @@ SAVE_FILE = "saves/save.json"
 
 # Day/Night Settings
 DN_SETTINGS = {
-    "day":   {"tint": (0, 0, 0, 0),     "light": 1.0, "perception": 1.0},
-    "dawn":  {"tint": (255, 200, 150, 60), "light": 0.8, "perception": 0.8},
-    "dusk":  {"tint": (150, 100, 200, 80), "light": 0.7, "perception": 0.7},
-    "night": {"tint": (0, 0, 40, 140),     "light": 0.4, "perception": 0.5},
+    "day": {"tint": (0, 0, 0, 0), "light": 1.0, "perception": 1.0},
+    "dawn": {"tint": (255, 200, 150, 60), "light": 0.8, "perception": 0.8},
+    "dusk": {"tint": (150, 100, 200, 80), "light": 0.7, "perception": 0.7},
+    "night": {"tint": (0, 0, 40, 140), "light": 0.4, "perception": 0.5},
 }

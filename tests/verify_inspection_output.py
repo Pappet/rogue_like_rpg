@@ -56,15 +56,12 @@ def setup_tile_registry():
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_stats(hp: int = 100, max_hp: int = 100, perception: int = 10) -> Stats:
-    return Stats(
-        hp=hp, max_hp=max_hp, power=5, defense=2,
-        mana=50, max_mana=50, perception=perception, intelligence=10
-    )
+    return Stats(hp=hp, max_hp=max_hp, power=5, defense=2, mana=50, max_mana=50, perception=perception, intelligence=10)
 
 
-def make_map_with_visibility(width: int, height: int, visibility_map,
-                              tile_type_ids=None) -> MapContainer:
+def make_map_with_visibility(width: int, height: int, visibility_map, tile_type_ids=None) -> MapContainer:
     """Build a MapContainer with controlled visibility and optional tile type IDs.
 
     Args:
@@ -94,8 +91,10 @@ def make_map_with_visibility(width: int, height: int, visibility_map,
 
 class MockTurnSystem:
     """Minimal TurnSystem replacement."""
+
     def __init__(self):
         from config import GameStates
+
         self.current_state = GameStates.PLAYER_TURN
         self.end_turn_called = False
 
@@ -120,6 +119,7 @@ def make_inspect_action() -> Action:
 # Message capture fixture
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(autouse=True)
 def fresh_world_and_capture(monkeypatch):
     """Reset ECS world and register a log_message capture handler before each test."""
@@ -139,6 +139,7 @@ def fresh_world_and_capture(monkeypatch):
 # ---------------------------------------------------------------------------
 # Test 1: TILE-01 — VISIBLE tile shows name (yellow) and description
 # ---------------------------------------------------------------------------
+
 
 def test_visible_tile_shows_name_and_description(fresh_world_and_capture):
     """Confirming inspection on a VISIBLE tile dispatches tile name in yellow and tile description."""
@@ -173,6 +174,7 @@ def test_visible_tile_shows_name_and_description(fresh_world_and_capture):
 # ---------------------------------------------------------------------------
 # Test 2: TILE-02 — SHROUDED tile shows name only (no description, no entities)
 # ---------------------------------------------------------------------------
+
 
 def test_shrouded_tile_shows_name_only(fresh_world_and_capture):
     """Confirming inspection on a SHROUDED tile dispatches tile name but not description or entities."""
@@ -225,6 +227,7 @@ def test_shrouded_tile_shows_name_only(fresh_world_and_capture):
 # Test 3: ENT-01 — Entity at VISIBLE tile is listed
 # ---------------------------------------------------------------------------
 
+
 def test_entity_listed_at_visible_tile(fresh_world_and_capture):
     """An entity with Name and Description at the VISIBLE target position must be listed."""
     captured = fresh_world_and_capture
@@ -265,6 +268,7 @@ def test_entity_listed_at_visible_tile(fresh_world_and_capture):
 # Test 4: ENT-02 — Wounded entity shows wounded_text
 # ---------------------------------------------------------------------------
 
+
 def test_wounded_entity_shows_wounded_text(fresh_world_and_capture):
     """An entity below its HP wound threshold shows wounded_text instead of base description."""
     captured = fresh_world_and_capture
@@ -280,8 +284,14 @@ def test_wounded_entity_shows_wounded_text(fresh_world_and_capture):
 
     # Orc at hp=3/max_hp=10 — below 0.5 threshold
     wounded_orc_stats = Stats(
-        hp=3, max_hp=10, power=5, defense=2,
-        mana=0, max_mana=0, perception=3, intelligence=1,
+        hp=3,
+        max_hp=10,
+        power=5,
+        defense=2,
+        mana=0,
+        max_mana=0,
+        perception=3,
+        intelligence=1,
     )
     _orc = esper.create_entity(
         Position(2, 2),
@@ -312,6 +322,7 @@ def test_wounded_entity_shows_wounded_text(fresh_world_and_capture):
 # ---------------------------------------------------------------------------
 # Test 5: ENT-03 — Multiple entities all listed
 # ---------------------------------------------------------------------------
+
 
 def test_multiple_entities_all_listed(fresh_world_and_capture):
     """All entities at the VISIBLE target position must be listed in the message log."""
@@ -346,17 +357,14 @@ def test_multiple_entities_all_listed(fresh_world_and_capture):
     result = action_system.confirm_action(player)
     assert result is True
 
-    assert any("Orc" in msg for msg in captured), (
-        f"Expected 'Orc' in messages, got: {captured}"
-    )
-    assert any("Goblin" in msg for msg in captured), (
-        f"Expected 'Goblin' in messages, got: {captured}"
-    )
+    assert any("Orc" in msg for msg in captured), f"Expected 'Orc' in messages, got: {captured}"
+    assert any("Goblin" in msg for msg in captured), f"Expected 'Goblin' in messages, got: {captured}"
 
 
 # ---------------------------------------------------------------------------
 # Test 6: ENT-04 — Entity without Stats component does not crash
 # ---------------------------------------------------------------------------
+
 
 def test_entity_without_stats_no_crash(fresh_world_and_capture):
     """Entities without a Stats component (portals, corpses) produce output without crash."""
@@ -397,6 +405,7 @@ def test_entity_without_stats_no_crash(fresh_world_and_capture):
 # ---------------------------------------------------------------------------
 # Test 7: Regression guard — player excluded from own inspection
 # ---------------------------------------------------------------------------
+
 
 def test_player_excluded_from_own_inspection(fresh_world_and_capture):
     """The player entity must not appear in their own inspection output."""

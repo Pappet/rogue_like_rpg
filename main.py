@@ -7,10 +7,7 @@ from bootstrap import build_game_context
 from config import SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH
 from game.states import GameOver, GameplayState, TitleScreen, WorldMapState
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 
 class GameController:
@@ -59,6 +56,7 @@ def main():
     pygame.init()
     game = GameController()
     game.run()
+
 
 if __name__ == "__main__":
     main()

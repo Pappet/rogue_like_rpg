@@ -96,10 +96,7 @@ def _decode_value(annotation, raw):
     if origin is dict or annotation is dict:
         args = typing.get_args(annotation)
         k_ann, v_ann = args if args else (None, None)
-        return {
-            _decode_value(k_ann, k) if k_ann else k: _decode_value(v_ann, v) if v_ann else v
-            for k, v in raw
-        }
+        return {_decode_value(k_ann, k) if k_ann else k: _decode_value(v_ann, v) if v_ann else v for k, v in raw}
     if isinstance(annotation, type) and dataclasses.is_dataclass(annotation):
         return decode_dataclass(raw)
     return raw
@@ -133,10 +130,7 @@ def encode_components_of(world, entity: int) -> list[dict]:
 
 def encode_frozen_entities(frozen: list[list]) -> list[list[dict]]:
     """Encode a MapContainer.frozen_entities structure."""
-    return [
-        [encode_dataclass(c) for c in comps if not isinstance(c, TRANSIENT_COMPONENT_TYPES)]
-        for comps in frozen
-    ]
+    return [[encode_dataclass(c) for c in comps if not isinstance(c, TRANSIENT_COMPONENT_TYPES)] for comps in frozen]
 
 
 def decode_frozen_entities(encoded: list[list[dict]]) -> list[list]:

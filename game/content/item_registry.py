@@ -19,7 +19,7 @@ class ItemTemplate:
     sprite: str
     color: tuple[int, int, int]
     sprite_layer: str  # Raw string — converted to SpriteLayer enum at entity creation time
-    weight: float      # kg
+    weight: float  # kg
     material: str
     description: str = ""
     slot: str | None = None

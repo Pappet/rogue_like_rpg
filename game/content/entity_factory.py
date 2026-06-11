@@ -87,10 +87,12 @@ class EntityFactory:
 
         if template.ai:
             components.append(AI())
-            components.append(AIBehaviorState(
-                state=AIState(template.default_state),
-                alignment=Alignment(template.alignment),
-            ))
+            components.append(
+                AIBehaviorState(
+                    state=AIState(template.default_state),
+                    alignment=Alignment(template.alignment),
+                )
+            )
 
         if template.description:
             components.append(

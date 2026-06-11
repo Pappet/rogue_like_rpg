@@ -1,4 +1,3 @@
-
 from game.map.map_container import MapContainer
 
 

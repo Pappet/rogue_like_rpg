@@ -73,6 +73,6 @@ class EquipmentSystem(esper.Processor):
                     mana=current_mana,
                     max_mana=max_mana,
                     perception=perception,
-                    intelligence=intelligence
+                    intelligence=intelligence,
                 )
                 esper.add_component(ent, eff)

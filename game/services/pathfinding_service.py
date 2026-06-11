@@ -1,4 +1,3 @@
-
 from pathfinding.core.diagonal_movement import DiagonalMovement
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
@@ -9,7 +8,9 @@ from game.map.map_container import MapContainer
 
 class PathfindingService:
     @staticmethod
-    def get_path(world, map_container: MapContainer, start: tuple[int, int], end: tuple[int, int], layer: int = 0) -> list[tuple[int, int]]:
+    def get_path(
+        world, map_container: MapContainer, start: tuple[int, int], end: tuple[int, int], layer: int = 0
+    ) -> list[tuple[int, int]]:
         """
         Calculates a path from start to end using A* algorithm.
 

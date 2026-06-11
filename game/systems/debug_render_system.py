@@ -79,14 +79,13 @@ class DebugRenderSystem(MapAwareSystem):
             screen_y = pos.y * TILE_SIZE - self.camera.y
 
             # Check if NPC is roughly near the viewport
-            if -margin * TILE_SIZE < screen_x < self.camera.width + margin * TILE_SIZE and \
-               -margin * TILE_SIZE < screen_y < self.camera.height + margin * TILE_SIZE:
-
+            if (
+                -margin * TILE_SIZE < screen_x < self.camera.width + margin * TILE_SIZE
+                and -margin * TILE_SIZE < screen_y < self.camera.height + margin * TILE_SIZE
+            ):
                 # Compute visible tiles for this NPC
                 visible_tiles = VisibilityService.compute_visibility(
-                    (pos.x, pos.y),
-                    stats.perception,
-                    transparency_func
+                    (pos.x, pos.y), stats.perception, transparency_func
                 )
 
                 # Render the visible tiles
@@ -97,11 +96,7 @@ class DebugRenderSystem(MapAwareSystem):
 
                     # Only draw if the tile is actually on screen
                     if 0 <= vs_x < self.camera.width and 0 <= vs_y < self.camera.height:
-                        pygame.draw.rect(
-                            self.overlay,
-                            DEBUG_NPC_FOV_COLOR,
-                            (vs_x, vs_y, TILE_SIZE, TILE_SIZE)
-                        )
+                        pygame.draw.rect(self.overlay, DEBUG_NPC_FOV_COLOR, (vs_x, vs_y, TILE_SIZE, TILE_SIZE))
 
     def _render_fov_overlay(self, player_layer):
         # Calculate visible tile range based on camera position
@@ -122,11 +117,7 @@ class DebugRenderSystem(MapAwareSystem):
                     screen_x = x * TILE_SIZE - self.camera.x
                     screen_y = y * TILE_SIZE - self.camera.y
 
-                    pygame.draw.rect(
-                        self.overlay,
-                        DEBUG_FOV_COLOR,
-                        (screen_x, screen_y, TILE_SIZE, TILE_SIZE)
-                    )
+                    pygame.draw.rect(self.overlay, DEBUG_FOV_COLOR, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
 
     def _render_ai_labels(self, player_layer):
         # Iterate over entities with AIBehaviorState and Position
@@ -185,10 +176,14 @@ class DebugRenderSystem(MapAwareSystem):
 
                 # Optimization: Cull if both points are significantly off-screen
                 margin = TILE_SIZE * 2
-                npc_on_screen = -margin < npc_center_x < self.camera.width + margin and \
-                                -margin < npc_center_y < self.camera.height + margin
-                target_on_screen = -margin < target_center_x < self.camera.width + margin and \
-                                   -margin < target_center_y < self.camera.height + margin
+                npc_on_screen = (
+                    -margin < npc_center_x < self.camera.width + margin
+                    and -margin < npc_center_y < self.camera.height + margin
+                )
+                target_on_screen = (
+                    -margin < target_center_x < self.camera.width + margin
+                    and -margin < target_center_y < self.camera.height + margin
+                )
 
                 if npc_on_screen or target_on_screen:
                     # Draw line from NPC to target
@@ -197,21 +192,23 @@ class DebugRenderSystem(MapAwareSystem):
                         DEBUG_CHASE_COLOR,
                         (npc_center_x, npc_center_y),
                         (target_center_x, target_center_y),
-                        2
+                        2,
                     )
 
                     # Draw a circle at the target position
                     pygame.draw.circle(
-                        self.overlay,
-                        DEBUG_CHASE_COLOR,
-                        (target_center_x, target_center_y),
-                        TILE_SIZE // 4
+                        self.overlay, DEBUG_CHASE_COLOR, (target_center_x, target_center_y), TILE_SIZE // 4
                     )
 
                     # Draw outline at target tile
                     pygame.draw.rect(
                         self.overlay,
                         DEBUG_CHASE_COLOR,
-                        (target_x * TILE_SIZE - self.camera.x, target_y * TILE_SIZE - self.camera.y, TILE_SIZE, TILE_SIZE),
-                        1
+                        (
+                            target_x * TILE_SIZE - self.camera.x,
+                            target_y * TILE_SIZE - self.camera.y,
+                            TILE_SIZE,
+                            TILE_SIZE,
+                        ),
+                        1,
                     )

@@ -36,8 +36,7 @@ def main():
     check("floor_tile.walkable is True", floor_tile.walkable is True)
     check("floor_tile.transparent is True", floor_tile.transparent is True)
     check("floor_tile has GROUND sprite '.'", floor_tile.sprites.get(SpriteLayer.GROUND) == ".")
-    check("floor_tile.visibility_state is UNEXPLORED",
-          floor_tile.visibility_state == VisibilityState.UNEXPLORED)
+    check("floor_tile.visibility_state is UNEXPLORED", floor_tile.visibility_state == VisibilityState.UNEXPLORED)
     check("floor_tile.rounds_since_seen == 0", floor_tile.rounds_since_seen == 0)
     print()
 

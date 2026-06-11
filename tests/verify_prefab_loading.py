@@ -46,10 +46,7 @@ def setup_registries():
 
 def make_layer(width: int, height: int, fill_type_id: str = "floor_stone") -> MapLayer:
     """Helper: create a MapLayer filled with a single tile type."""
-    tiles = [
-        [Tile(type_id=fill_type_id) for _ in range(width)]
-        for _ in range(height)
-    ]
+    tiles = [[Tile(type_id=fill_type_id) for _ in range(width)] for _ in range(height)]
     return MapLayer(tiles)
 
 
@@ -134,9 +131,7 @@ def test_load_prefab_with_offset():
     MapGenerator(map_service).load_prefab(world, layer, PREFAB_FILE, ox=ox, oy=oy)
 
     # Top-left corner of prefab (0,0) maps to (5,5) -> wall_stone
-    assert not layer.tiles[5][5].walkable, (
-        "Tile at prefab offset origin (5,5) should be wall_stone (not walkable)"
-    )
+    assert not layer.tiles[5][5].walkable, "Tile at prefab offset origin (5,5) should be wall_stone (not walkable)"
 
     # Orc spawn is at x=3, y=3 in prefab -> (5+3, 5+3) = (8, 8)
     found = False

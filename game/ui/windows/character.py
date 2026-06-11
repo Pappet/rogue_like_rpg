@@ -60,7 +60,13 @@ class CharacterWindow(UIWindow):
 
         # Vertical separator
         separator_x = box_x + box_width // 2
-        pygame.draw.line(surface, UI_COLOR_WINDOW_SEPARATOR, (separator_x, box_y + UI_SPACING_X), (separator_x, box_y + box_height - UI_SPACING_X), 1)
+        pygame.draw.line(
+            surface,
+            UI_COLOR_WINDOW_SEPARATOR,
+            (separator_x, box_y + UI_SPACING_X),
+            (separator_x, box_y + box_height - UI_SPACING_X),
+            1,
+        )
 
         # Draw title
         title_text = self.title_font.render("Character Sheet", True, UI_COLOR_WINDOW_TITLE)
@@ -83,7 +89,7 @@ class CharacterWindow(UIWindow):
                 f"Perception: {stats.perception}",
                 f"Intelligence: {stats.intelligence}",
                 "",
-                f"Max Weight: {stats.max_carry_weight} kg"
+                f"Max Weight: {stats.max_carry_weight} kg",
             ]
 
             for i, line in enumerate(stat_lines):
@@ -110,9 +116,11 @@ class CharacterWindow(UIWindow):
                     except KeyError:
                         item_name = f"Unknown ({item_id})"
 
-                slot_label = slot.value.replace('_', ' ').title()
+                slot_label = slot.value.replace("_", " ").title()
                 slot_text = self.font.render(f"{slot_label}:", True, UI_COLOR_WINDOW_TEXT_DIM)
-                item_text = self.font.render(item_name, True, UI_COLOR_WINDOW_SELECTED if item_id else UI_COLOR_WINDOW_HIGHLIGHT)
+                item_text = self.font.render(
+                    item_name, True, UI_COLOR_WINDOW_SELECTED if item_id else UI_COLOR_WINDOW_HIGHLIGHT
+                )
 
                 surface.blit(slot_text, (separator_x + UI_SPACING_X, box_y + 100 + i * 40))
                 surface.blit(item_text, (separator_x + 160, box_y + 100 + i * 40))

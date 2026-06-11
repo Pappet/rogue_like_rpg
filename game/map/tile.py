@@ -64,9 +64,7 @@ class Tile:
 
         tile_type = tile_registry.get(type_id)
         if tile_type is None:
-            raise ValueError(
-                f"Tile type '{type_id}' not found in TileRegistry."
-            )
+            raise ValueError(f"Tile type '{type_id}' not found in TileRegistry.")
         self._type_id = type_id
         self.sprites = dict(tile_type.sprites)
         self.transparent = tile_type.transparent

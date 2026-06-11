@@ -46,7 +46,7 @@ def test_sleep_skips_turn():
     reset_world()
     turn = TurnSystem()
     turn.end_player_turn()
-    
+
     ent = esper.create_entity()
     esper.add_component(ent, AI())
     behavior = AIBehaviorState(state=AIState.SLEEP, alignment=Alignment.HOSTILE)
@@ -55,56 +55,57 @@ def test_sleep_skips_turn():
     esper.add_component(ent, pos)
     # Give it a path to follow
     esper.add_component(ent, PathData(path=[(6, 5)], destination=(6, 5)))
-    
+
     ai_sys = AISystem()
     ai_sys.process(turn, None, player_layer=0)
-    
+
     assert pos.x == 5 and pos.y == 5, "Sleeping entity should not have moved"
+
 
 def test_sleep_blocks_detection():
     """NPCs in SLEEP state do not detect the player."""
     reset_world()
     turn = TurnSystem()
     turn.end_player_turn()
-    
+
     # Mock map container for LOS checks
     map_container = MagicMock()
     map_container.layers = [MagicMock()]
     map_container.get_tile.return_value = MagicMock(walkable=True, transparent=True, sprites={})
-    
+
     ent = esper.create_entity()
     esper.add_component(ent, AI())
     behavior = AIBehaviorState(state=AIState.SLEEP, alignment=Alignment.HOSTILE)
     esper.add_component(ent, behavior)
     esper.add_component(ent, Position(x=5, y=5, layer=0))
-    esper.add_component(ent, Stats(
-        hp=10, max_hp=10, power=1, defense=0, 
-        mana=0, max_mana=0, perception=10, intelligence=10
-    ))
+    esper.add_component(
+        ent, Stats(hp=10, max_hp=10, power=1, defense=0, mana=0, max_mana=0, perception=10, intelligence=10)
+    )
     esper.add_component(ent, Name(name="Sleeper"))
-    
+
     player_pos = Position(x=6, y=5, layer=0)
-    
+
     ai_sys = AISystem()
     # Manual dispatch to verify detection block specifically
     claimed_tiles = set()
     ai_sys._dispatch(ent, behavior, Position(x=5, y=5), map_container, claimed_tiles, player_pos)
-    
+
     assert behavior.state == AIState.SLEEP, "Sleeping entity should not have transitioned to CHASE"
+
 
 def test_bump_wakes_npc():
     """Bumping into a sleeping NPC wakes them up (sets state to IDLE)."""
     reset_world()
-    
+
     turn = TurnSystem()
     map_container = MagicMock()
     map_container.get_tile.return_value = MagicMock(walkable=True)
-    
+
     action_sys = ActionSystem(turn)
     action_sys.set_map(map_container)
     move_sys = MovementSystem(action_sys)
     move_sys.set_map(map_container)
-    
+
     # Sleeping NPC
     npc = esper.create_entity()
     behavior = AIBehaviorState(state=AIState.SLEEP, alignment=Alignment.NEUTRAL)
@@ -113,47 +114,45 @@ def test_bump_wakes_npc():
     esper.add_component(npc, Blocker())
     esper.add_component(npc, Name(name="Sleeper"))
     # Add stats so it's considered an attack-bump candidate (required by MovementSystem)
-    esper.add_component(npc, Stats(
-        hp=10, max_hp=10, power=1, defense=0, 
-        mana=0, max_mana=0, perception=10, intelligence=10
-    ))
-    
+    esper.add_component(
+        npc, Stats(hp=10, max_hp=10, power=1, defense=0, mana=0, max_mana=0, perception=10, intelligence=10)
+    )
+
     # Player bumping into NPC
     player = esper.create_entity()
     esper.add_component(player, Position(x=5, y=5, layer=0))
     esper.add_component(player, MovementRequest(dx=1, dy=0))
-    
+
     move_sys.process()
-    
+
     assert behavior.state == AIState.IDLE, "Bumping should have woken the NPC"
+
 
 def test_attack_wakes_npc():
     """Attacking a sleeping NPC wakes them up (sets state to IDLE)."""
     reset_world()
-    
+
     turn = TurnSystem()
     action_sys = ActionSystem(turn)
     combat_sys = CombatSystem(action_sys)
-    
+
     # Sleeping NPC
     npc = esper.create_entity()
     behavior = AIBehaviorState(state=AIState.SLEEP, alignment=Alignment.HOSTILE)
     esper.add_component(npc, behavior)
     esper.add_component(npc, Position(x=6, y=5, layer=0))
-    esper.add_component(npc, Stats(
-        hp=10, max_hp=10, power=1, defense=0, 
-        mana=0, max_mana=0, perception=10, intelligence=10
-    ))
+    esper.add_component(
+        npc, Stats(hp=10, max_hp=10, power=1, defense=0, mana=0, max_mana=0, perception=10, intelligence=10)
+    )
     esper.add_component(npc, Name(name="Sleeper"))
-    
+
     # Attacker
     attacker = esper.create_entity()
-    esper.add_component(attacker, Stats(
-        hp=10, max_hp=10, power=5, defense=0, 
-        mana=0, max_mana=0, perception=10, intelligence=10
-    ))
+    esper.add_component(
+        attacker, Stats(hp=10, max_hp=10, power=5, defense=0, mana=0, max_mana=0, perception=10, intelligence=10)
+    )
     esper.add_component(attacker, AttackIntent(target_entity=npc))
-    
+
     combat_sys.process()
-    
+
     assert behavior.state == AIState.IDLE, "Attacking should have woken the NPC"

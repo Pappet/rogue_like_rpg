@@ -51,9 +51,7 @@ def test_ai_system_ends_enemy_turn():
     ai_sys = AISystem()
     ai_sys.process(turn, None, player_layer=0)
 
-    assert turn.current_state == GameStates.PLAYER_TURN, (
-        "AISystem must call end_enemy_turn() after processing entities"
-    )
+    assert turn.current_state == GameStates.PLAYER_TURN, "AISystem must call end_enemy_turn() after processing entities"
 
 
 def test_ai_system_skips_corpse():
@@ -69,9 +67,7 @@ def test_ai_system_skips_corpse():
     # Must complete without error and still end the turn
     ai_sys.process(turn, None, player_layer=0)
 
-    assert turn.current_state == GameStates.PLAYER_TURN, (
-        "Turn must still end even when all entities are corpses"
-    )
+    assert turn.current_state == GameStates.PLAYER_TURN, "Turn must still end even when all entities are corpses"
 
 
 def test_ai_system_skips_wrong_layer():
@@ -86,9 +82,7 @@ def test_ai_system_skips_wrong_layer():
     ai_sys = AISystem()
     ai_sys.process(turn, None, player_layer=0)
 
-    assert turn.current_state == GameStates.PLAYER_TURN, (
-        "Turn must still end even when all entities are on wrong layer"
-    )
+    assert turn.current_state == GameStates.PLAYER_TURN, "Turn must still end even when all entities are on wrong layer"
 
 
 def test_ai_system_noop_in_player_turn():
@@ -104,9 +98,7 @@ def test_ai_system_noop_in_player_turn():
     ai_sys.process(turn, None, player_layer=0)
 
     # State must remain PLAYER_TURN — system was a complete no-op
-    assert turn.current_state == GameStates.PLAYER_TURN, (
-        "AISystem must not call end_enemy_turn() during PLAYER_TURN"
-    )
+    assert turn.current_state == GameStates.PLAYER_TURN, "AISystem must not call end_enemy_turn() during PLAYER_TURN"
 
 
 def test_ai_system_noop_in_targeting():
@@ -120,9 +112,7 @@ def test_ai_system_noop_in_targeting():
     ai_sys = AISystem()
     ai_sys.process(turn, None, player_layer=0)
 
-    assert turn.current_state == GameStates.TARGETING, (
-        "AISystem must not call end_enemy_turn() during TARGETING"
-    )
+    assert turn.current_state == GameStates.TARGETING, "AISystem must not call end_enemy_turn() during TARGETING"
 
 
 def test_ai_system_dispatches_idle():
@@ -137,9 +127,7 @@ def test_ai_system_dispatches_idle():
     ai_sys = AISystem()
     ai_sys.process(turn, None, player_layer=0)
 
-    assert turn.current_state == GameStates.PLAYER_TURN, (
-        "IDLE dispatch must complete without error and end the turn"
-    )
+    assert turn.current_state == GameStates.PLAYER_TURN, "IDLE dispatch must complete without error and end the turn"
 
 
 def test_ai_system_empty_world():

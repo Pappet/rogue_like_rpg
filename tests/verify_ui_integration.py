@@ -4,7 +4,7 @@ import sys
 import pygame
 
 # Add root to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from config import SCREEN_HEIGHT, SCREEN_WIDTH
 from core.ui.stack_manager import UIStack
@@ -29,30 +29,32 @@ class DummyWindow(UIWindow):
         if self.clicked:
             pygame.draw.rect(surface, (255, 255, 255), self.rect, 2)
 
+
 def test_integration():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     stack = UIStack()
-    
+
     win = DummyWindow((100, 100, 200, 200))
     stack.push(win)
-    
+
     # Simulate event
     event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=(150, 150), button=1)
     consumed = stack.handle_event(event)
     assert consumed
     assert win.clicked
-    
+
     # Draw
     screen.fill((0, 0, 0))
     stack.draw(screen)
-    
+
     # Check if pixel is red
     pixel_color = screen.get_at((150, 150))
     assert pixel_color[:3] == (255, 0, 0)
-    
+
     print("UI Integration manual/simulated tests passed!")
     pygame.quit()
+
 
 if __name__ == "__main__":
     test_integration()

@@ -1,4 +1,3 @@
-
 import esper
 
 from game.components import Activity, AIBehaviorState, AIState, PathData, Position, Schedule
@@ -74,10 +73,12 @@ class ScheduleSystem(esper.Processor):
                 # Update AI state
                 if activity_key == "SLEEP":
                     # Check if at home
-                    if resolved_target_pos is None or (pos.x == resolved_target_pos[0] and pos.y == resolved_target_pos[1]):
+                    if resolved_target_pos is None or (
+                        pos.x == resolved_target_pos[0] and pos.y == resolved_target_pos[1]
+                    ):
                         ai_state.state = AIState.SLEEP
                     else:
-                        ai_state.state = AIState.IDLE # Move to home
+                        ai_state.state = AIState.IDLE  # Move to home
                 else:
                     new_state = self.ACTIVITY_TO_STATE.get(activity_key)
                     if new_state:
@@ -107,7 +108,6 @@ class ScheduleSystem(esper.Processor):
                 # If we are in SLEEP activity but not yet SLEEP state (because we were traveling)
                 # Check if we reached home now
                 if ai_state.state != AIState.SLEEP and (
-                    resolved_target_pos is None
-                    or (pos.x == resolved_target_pos[0] and pos.y == resolved_target_pos[1])
+                    resolved_target_pos is None or (pos.x == resolved_target_pos[0] and pos.y == resolved_target_pos[1])
                 ):
                     ai_state.state = AIState.SLEEP

@@ -34,7 +34,9 @@ class MapGenerator:
                     type_id = random.choice(type_id_choices)
                     tile.set_type(type_id)
 
-    def add_house_to_map(self, world, map_container: MapContainer, start_x: int, start_y: int, w: int, h: int, num_layers: int):
+    def add_house_to_map(
+        self, world, map_container: MapContainer, start_x: int, start_y: int, w: int, h: int, num_layers: int
+    ):
         """
         Populates a MapContainer with a house structure.
 
@@ -86,7 +88,7 @@ class MapGenerator:
                     Position(pos_up[0], pos_up[1], z),
                     Portal(map_id, pos_up[0], pos_up[1], z + 1, "Stairs Up", travel_ticks=1),
                     Renderable("^", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
-                    Name("Stairs Up")
+                    Name("Stairs Up"),
                 )
             if z > 0:
                 # Stairs Down
@@ -95,7 +97,7 @@ class MapGenerator:
                     Position(pos_down[0], pos_down[1], z),
                     Portal(map_id, pos_down[0], pos_down[1], z - 1, "Stairs Down", travel_ticks=1),
                     Renderable("v", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
-                    Name("Stairs Down")
+                    Name("Stairs Down"),
                 )
 
     def create_world(self, world, world_graph) -> None:
@@ -161,13 +163,11 @@ class MapGenerator:
 
         village_layers = [
             create_empty_layer(v_width, v_height, base_layer),  # Layer 0: Ground
-            create_empty_layer(v_width, v_height),                 # Layer 1
-            create_empty_layer(v_width, v_height)                  # Layer 2
+            create_empty_layer(v_width, v_height),  # Layer 1
+            create_empty_layer(v_width, v_height),  # Layer 2
         ]
         arrival = config.get("arrival_pos")
-        village_container = MapContainer(
-            village_layers, arrival_pos=tuple(arrival) if arrival else None
-        )
+        village_container = MapContainer(village_layers, arrival_pos=tuple(arrival) if arrival else None)
         if self.map_service.get_map(map_id) is not None:
             raise ValueError(f"Map id '{map_id}' is already registered — scenario ids must be unique.")
         self.map_service.register_map(map_id, village_container)
@@ -193,7 +193,7 @@ class MapGenerator:
                 Position(door_vx, door_vy + 1, 0),
                 Portal(h["id"], h["h_size"][0] // 2, h["h_size"][1] - 2, 0, f"Enter {h['id']}", travel_ticks=1),
                 Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
-                Name(f"Portal to {h['id']}")
+                Name(f"Portal to {h['id']}"),
             )
 
         # --- SPAWN VILLAGE NPCS ---
@@ -233,7 +233,7 @@ class MapGenerator:
                 Position(hi // 2, hj - 2, 0),  # Placed one tile north of the south wall
                 Portal(map_id, door_vx, door_vy + 1, 0, "Leave House", travel_ticks=1),
                 Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
-                Name(f"Portal to {map_id}")
+                Name(f"Portal to {map_id}"),
             )
 
             # Generate generic monsters for the house map (higher density for interiors)
@@ -250,10 +250,8 @@ class MapGenerator:
             row = []
             for x in range(width):
                 # Determine tile type based on position
-                is_border = (x == 0 or x == width - 1 or y == 0 or y == height - 1)
-                is_internal_wall = (
-                    (x == 10 and 5 < y < 15) or (y == 10 and 5 < x < 15)
-                )
+                is_border = x == 0 or x == width - 1 or y == 0 or y == height - 1
+                is_internal_wall = (x == 10 and 5 < y < 15) or (y == 10 and 5 < x < 15)
 
                 if is_border or is_internal_wall:
                     tile = Tile(type_id="wall_stone")

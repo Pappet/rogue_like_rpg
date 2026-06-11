@@ -19,12 +19,13 @@ def test_components():
     # Test default values
     pos_default = Position(x=0, y=0)
     assert pos_default.layer == 0
-    
+
     portal_default = Portal(target_map_id="test", target_x=1, target_y=1)
     assert portal_default.target_layer == 0
     assert portal_default.name == "Portal"
 
     print("Verification PASSED")
+
 
 if __name__ == "__main__":
     test_components()

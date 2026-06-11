@@ -30,9 +30,7 @@ def test_every_settlement_gets_a_map():
     map_service, graph = _build_world()
     for location in graph.locations.values():
         if location.type == "settlement":
-            assert map_service.get_map(location.id) is not None, (
-                f"settlement '{location.id}' has no generated map"
-            )
+            assert map_service.get_map(location.id) is not None, f"settlement '{location.id}' has no generated map"
 
 
 def test_start_location_is_active_and_thawed():

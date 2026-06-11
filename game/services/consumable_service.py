@@ -18,7 +18,11 @@ class ConsumableService:
         consumable = world.component_for_entity(item_ent, Consumable)
 
         stats = world.component_for_entity(user_ent, Stats)
-        eff = world.component_for_entity(user_ent, EffectiveStats) if world.has_component(user_ent, EffectiveStats) else None
+        eff = (
+            world.component_for_entity(user_ent, EffectiveStats)
+            if world.has_component(user_ent, EffectiveStats)
+            else None
+        )
         item_name = world.component_for_entity(item_ent, Name).name if world.has_component(item_ent, Name) else "item"
 
         # Determine current and max HP

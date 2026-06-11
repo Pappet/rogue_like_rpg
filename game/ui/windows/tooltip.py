@@ -24,7 +24,7 @@ from game.map.tile import VisibilityState
 class TooltipWindow(UIWindow):
     def __init__(self, rect, entities):
         super().__init__(rect)
-        self.entities = entities # List of entity IDs
+        self.entities = entities  # List of entity IDs
         self.font_name = pygame.font.Font(None, 24)
         self.font_desc = pygame.font.Font(None, 20)
         self.font_stats = pygame.font.Font(None, 18)
@@ -56,7 +56,9 @@ class TooltipWindow(UIWindow):
                 pygame.draw.rect(surface, UI_COLOR_BAR_BG, (self.rect.x + UI_PADDING, curr_y, bar_width, UI_BAR_HEIGHT))
                 # Fill
                 hp_pct = max(0, min(1, stats.hp / stats.max_hp))
-                pygame.draw.rect(surface, UI_COLOR_HP, (self.rect.x + UI_PADDING, curr_y, int(bar_width * hp_pct), UI_BAR_HEIGHT))
+                pygame.draw.rect(
+                    surface, UI_COLOR_HP, (self.rect.x + UI_PADDING, curr_y, int(bar_width * hp_pct), UI_BAR_HEIGHT)
+                )
 
                 hp_text = f"HP: {stats.hp}/{stats.max_hp}"
                 hp_surf = self.font_stats.render(hp_text, True, UI_COLOR_TEXT_BRIGHT)
@@ -83,7 +85,7 @@ class TooltipWindow(UIWindow):
             if desc_comp:
                 desc_text = desc_comp.get(stats)
                 # Wrap text
-                words = desc_text.split(' ')
+                words = desc_text.split(" ")
                 lines = []
                 curr_line = ""
                 for word in words:
@@ -100,7 +102,7 @@ class TooltipWindow(UIWindow):
                     surface.blit(line_surf, (self.rect.x + UI_PADDING, curr_y))
                     curr_y = curr_y + 18
 
-            curr_y += 10 # Spacing between entities
+            curr_y += 10  # Spacing between entities
 
             # Stop if we exceed rect height
             if curr_y > self.rect.bottom - 20:

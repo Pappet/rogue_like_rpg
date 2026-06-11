@@ -38,9 +38,14 @@ def make_walkable_map(width=10, height=10):
 def make_default_stats(perception=5):
     """Create a minimal Stats component for testing."""
     return Stats(
-        hp=10, max_hp=10, power=5, defense=2,
-        mana=0, max_mana=0,
-        perception=perception, intelligence=5,
+        hp=10,
+        max_hp=10,
+        power=5,
+        defense=2,
+        mana=0,
+        max_mana=0,
+        perception=perception,
+        intelligence=5,
     )
 
 
@@ -69,12 +74,8 @@ def test_hostile_npc_transitions_to_chase_on_seeing_player():
     ai_sys.process(turn, map_c, player_layer=0, player_entity=player)
 
     behavior = esper.component_for_entity(npc, AIBehaviorState)
-    assert behavior.state == AIState.CHASE, (
-        f"Expected CHASE state, got {behavior.state}"
-    )
-    assert esper.has_component(npc, ChaseData), (
-        "NPC must have ChaseData after transitioning to CHASE"
-    )
+    assert behavior.state == AIState.CHASE, f"Expected CHASE state, got {behavior.state}"
+    assert esper.has_component(npc, ChaseData), "NPC must have ChaseData after transitioning to CHASE"
 
 
 def test_notices_message_fires_once():
@@ -154,9 +155,7 @@ def test_chase_npc_moves_toward_player():
     ai_sys.process(turn, map_c, player_layer=0, player_entity=player)
 
     pos = esper.component_for_entity(npc, Position)
-    assert pos.x == 3 and pos.y == 5, (
-        f"Expected NPC at (3, 5) after one step east, got ({pos.x}, {pos.y})"
-    )
+    assert pos.x == 3 and pos.y == 5, f"Expected NPC at (3, 5) after one step east, got ({pos.x}, {pos.y})"
 
 
 def test_npc_reverts_to_wander_after_losing_sight():
@@ -203,12 +202,8 @@ def test_npc_reverts_to_wander_after_losing_sight():
     ai_sys.process(turn, map_c, player_layer=0, player_entity=player)
 
     behavior = esper.component_for_entity(npc, AIBehaviorState)
-    assert behavior.state == AIState.WANDER, (
-        f"Expected WANDER state after losing sight, got {behavior.state}"
-    )
-    assert not esper.has_component(npc, ChaseData), (
-        "ChaseData must be removed when NPC reverts to WANDER"
-    )
+    assert behavior.state == AIState.WANDER, f"Expected WANDER state after losing sight, got {behavior.state}"
+    assert not esper.has_component(npc, ChaseData), "ChaseData must be removed when NPC reverts to WANDER"
 
 
 def test_chase_data_stores_coordinates_not_entity_ids():
@@ -239,18 +234,10 @@ def test_chase_data_stores_coordinates_not_entity_ids():
     chase_data = esper.component_for_entity(npc, ChaseData)
     player_pos = esper.component_for_entity(player, Position)
 
-    assert chase_data.last_known_x == player_pos.x, (
-        f"last_known_x {chase_data.last_known_x} != player x {player_pos.x}"
-    )
-    assert chase_data.last_known_y == player_pos.y, (
-        f"last_known_y {chase_data.last_known_y} != player y {player_pos.y}"
-    )
-    assert not hasattr(chase_data, "player_entity"), (
-        "ChaseData must not store player_entity"
-    )
-    assert not hasattr(chase_data, "target_entity"), (
-        "ChaseData must not store target_entity"
-    )
+    assert chase_data.last_known_x == player_pos.x, f"last_known_x {chase_data.last_known_x} != player x {player_pos.x}"
+    assert chase_data.last_known_y == player_pos.y, f"last_known_y {chase_data.last_known_y} != player y {player_pos.y}"
+    assert not hasattr(chase_data, "player_entity"), "ChaseData must not store player_entity"
+    assert not hasattr(chase_data, "target_entity"), "ChaseData must not store target_entity"
 
 
 def test_friendly_npc_does_not_chase():
@@ -278,9 +265,5 @@ def test_friendly_npc_does_not_chase():
     ai_sys.process(turn, map_c, player_layer=0, player_entity=player)
 
     behavior = esper.component_for_entity(npc, AIBehaviorState)
-    assert behavior.state == AIState.WANDER, (
-        f"FRIENDLY NPC must remain in WANDER state, got {behavior.state}"
-    )
-    assert not esper.has_component(npc, ChaseData), (
-        "FRIENDLY NPC must not have ChaseData"
-    )
+    assert behavior.state == AIState.WANDER, f"FRIENDLY NPC must remain in WANDER state, got {behavior.state}"
+    assert not esper.has_component(npc, ChaseData), "FRIENDLY NPC must not have ChaseData"

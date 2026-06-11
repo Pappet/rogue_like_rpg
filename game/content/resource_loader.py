@@ -34,22 +34,16 @@ class ResourceLoader:
             ValueError: If the JSON is malformed or missing required fields.
         """
         if not os.path.exists(filepath):
-            raise FileNotFoundError(
-                f"Schedule resource file not found: '{filepath}'."
-            )
+            raise FileNotFoundError(f"Schedule resource file not found: '{filepath}'.")
 
         try:
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError as exc:
-            raise ValueError(
-                f"Malformed JSON in schedule resource file '{filepath}': {exc}"
-            ) from exc
+            raise ValueError(f"Malformed JSON in schedule resource file '{filepath}': {exc}") from exc
 
         if not isinstance(data, list):
-            raise ValueError(
-                f"Schedule resource file '{filepath}' must contain a JSON array."
-            )
+            raise ValueError(f"Schedule resource file '{filepath}' must contain a JSON array.")
 
         for item in data:
             # Validate required fields
@@ -68,19 +62,17 @@ class ResourceLoader:
                 if "target_pos" in entry_data and entry_data["target_pos"] is not None:
                     target_pos = tuple(entry_data["target_pos"])
 
-                entries.append(ScheduleEntry(
-                    start=int(entry_data["start"]),
-                    end=int(entry_data["end"]),
-                    activity=entry_data["activity"],
-                    target_pos=target_pos,
-                    target_meta=entry_data.get("target_meta")
-                ))
+                entries.append(
+                    ScheduleEntry(
+                        start=int(entry_data["start"]),
+                        end=int(entry_data["end"]),
+                        activity=entry_data["activity"],
+                        target_pos=target_pos,
+                        target_meta=entry_data.get("target_meta"),
+                    )
+                )
 
-            template = ScheduleTemplate(
-                id=item["id"],
-                name=item["name"],
-                entries=entries
-            )
+            template = ScheduleTemplate(id=item["id"], name=item["name"], entries=entries)
             registry.register(template)
 
     @staticmethod
@@ -96,31 +88,23 @@ class ResourceLoader:
         """
         if not os.path.exists(filepath):
             raise FileNotFoundError(
-                f"Tile resource file not found: '{filepath}'. "
-                f"Expected a JSON file with tile definitions."
+                f"Tile resource file not found: '{filepath}'. Expected a JSON file with tile definitions."
             )
 
         try:
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError as exc:
-            raise ValueError(
-                f"Malformed JSON in tile resource file '{filepath}': {exc}"
-            ) from exc
+            raise ValueError(f"Malformed JSON in tile resource file '{filepath}': {exc}") from exc
 
         if not isinstance(data, list):
-            raise ValueError(
-                f"Tile resource file '{filepath}' must contain a JSON array, "
-                f"got {type(data).__name__}."
-            )
+            raise ValueError(f"Tile resource file '{filepath}' must contain a JSON array, got {type(data).__name__}.")
 
         for item in data:
             # --- validate required fields ---
             for required_field in ("id", "name", "walkable", "transparent"):
                 if required_field not in item:
-                    raise ValueError(
-                        f"Tile entry missing required field '{required_field}': {item}"
-                    )
+                    raise ValueError(f"Tile entry missing required field '{required_field}': {item}")
 
             # --- convert sprite layer string keys to SpriteLayer enum ---
             sprites: dict = {}
@@ -130,8 +114,7 @@ class ResourceLoader:
                     sprites[layer] = char
                 except KeyError:
                     logger.warning(
-                        f"Unknown sprite layer '{layer_name}' in tile "
-                        f"'{item['id']}' — skipping that sprite entry."
+                        f"Unknown sprite layer '{layer_name}' in tile '{item['id']}' — skipping that sprite entry."
                     )
 
             # --- build color tuple ---
@@ -164,37 +147,38 @@ class ResourceLoader:
         """
         if not os.path.exists(filepath):
             raise FileNotFoundError(
-                f"Entity resource file not found: '{filepath}'. "
-                f"Expected a JSON file with entity definitions."
+                f"Entity resource file not found: '{filepath}'. Expected a JSON file with entity definitions."
             )
 
         try:
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError as exc:
-            raise ValueError(
-                f"Malformed JSON in entity resource file '{filepath}': {exc}"
-            ) from exc
+            raise ValueError(f"Malformed JSON in entity resource file '{filepath}': {exc}") from exc
 
         if not isinstance(data, list):
-            raise ValueError(
-                f"Entity resource file '{filepath}' must contain a JSON array, "
-                f"got {type(data).__name__}."
-            )
+            raise ValueError(f"Entity resource file '{filepath}' must contain a JSON array, got {type(data).__name__}.")
 
         required_fields = (
-            "id", "name", "sprite", "sprite_layer",
-            "hp", "max_hp", "power", "defense",
-            "mana", "max_mana", "perception", "intelligence",
+            "id",
+            "name",
+            "sprite",
+            "sprite_layer",
+            "hp",
+            "max_hp",
+            "power",
+            "defense",
+            "mana",
+            "max_mana",
+            "perception",
+            "intelligence",
         )
 
         for item in data:
             # --- validate required fields ---
             for required_field in required_fields:
                 if required_field not in item:
-                    raise ValueError(
-                        f"Entity entry missing required field '{required_field}': {item}"
-                    )
+                    raise ValueError(f"Entity entry missing required field '{required_field}': {item}")
 
             # --- build color tuple (default white if missing) ---
             raw_color = item.get("color", [255, 255, 255])
@@ -274,23 +258,17 @@ class ResourceLoader:
         """
         if not os.path.exists(filepath):
             raise FileNotFoundError(
-                f"Item resource file not found: '{filepath}'. "
-                f"Expected a JSON file with item definitions."
+                f"Item resource file not found: '{filepath}'. Expected a JSON file with item definitions."
             )
 
         try:
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError as exc:
-            raise ValueError(
-                f"Malformed JSON in item resource file '{filepath}': {exc}"
-            ) from exc
+            raise ValueError(f"Malformed JSON in item resource file '{filepath}': {exc}") from exc
 
         if not isinstance(data, list):
-            raise ValueError(
-                f"Item resource file '{filepath}' must contain a JSON array, "
-                f"got {type(data).__name__}."
-            )
+            raise ValueError(f"Item resource file '{filepath}' must contain a JSON array, got {type(data).__name__}.")
 
         required_fields = ("id", "name", "sprite", "sprite_layer", "weight", "material")
 
@@ -298,9 +276,7 @@ class ResourceLoader:
             # --- validate required fields ---
             for required_field in required_fields:
                 if required_field not in item:
-                    raise ValueError(
-                        f"Item entry missing required field '{required_field}': {item}"
-                    )
+                    raise ValueError(f"Item entry missing required field '{required_field}': {item}")
 
             # --- build color tuple ---
             raw_color = item.get("color", [255, 255, 255])

@@ -13,7 +13,7 @@ from game.components import Position
 class TurnOrchestrator:
     def __init__(self, ctx):
         """Args:
-            ctx: The shared GameContext.
+        ctx: The shared GameContext.
         """
         self.ctx = ctx
 
@@ -41,6 +41,4 @@ class TurnOrchestrator:
         if ctx.systems.turn_system.current_state == GameStates.ENEMY_TURN:
             player_layer = self._player_layer()
             ctx.systems.schedule_system.process(ctx.world_clock, ctx.map_container)
-            ctx.systems.ai_system.process(
-                ctx.systems.turn_system, ctx.map_container, player_layer, ctx.player_entity
-            )
+            ctx.systems.ai_system.process(ctx.systems.turn_system, ctx.map_container, player_layer, ctx.player_entity)

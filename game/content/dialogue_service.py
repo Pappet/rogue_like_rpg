@@ -35,14 +35,10 @@ class DialogueService:
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError as exc:
-            raise ValueError(
-                f"Malformed JSON in dialogue file '{filepath}': {exc}"
-            ) from exc
+            raise ValueError(f"Malformed JSON in dialogue file '{filepath}': {exc}") from exc
 
         if not isinstance(data, dict):
-            raise ValueError(
-                f"Dialogue file '{filepath}' must contain a JSON object."
-            )
+            raise ValueError(f"Dialogue file '{filepath}' must contain a JSON object.")
 
         self._dialogues = data
         logger.info(f"Loaded dialogues for {len(data)} template IDs.")

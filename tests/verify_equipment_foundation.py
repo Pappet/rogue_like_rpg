@@ -9,35 +9,36 @@ from game.content.item_registry import ItemTemplate, item_registry
 def test_equipment_components():
     print("Testing equipment components...")
     world = esper
-    
+
     # Test SlotType
     assert SlotType.HEAD == "head"
     assert SlotType.MAIN_HAND == "main_hand"
     print("SlotType enum OK.")
-    
+
     # Test Equippable
     eq = Equippable(slot=SlotType.HEAD)
     assert eq.slot == SlotType.HEAD
     print("Equippable component OK.")
-    
+
     # Test Equipment
     equipment = Equipment()
     assert len(equipment.slots) == len(SlotType)
     assert equipment.slots[SlotType.HEAD] is None
     print("Equipment component OK.")
-    
+
     # Test EffectiveStats
     eff = EffectiveStats(hp=10, max_hp=10, power=5, defense=2, mana=0, max_mana=0, perception=5, intelligence=5)
     assert eff.hp == 10
     assert eff.power == 5
     print("EffectiveStats component OK.")
 
+
 def test_item_factory_with_slot():
     print("\nTesting ItemFactory with slots...")
     reset_world()
     world = esper
     item_registry.clear()
-    
+
     template = ItemTemplate(
         id="iron_helmet",
         name="Iron Helmet",
@@ -47,18 +48,18 @@ def test_item_factory_with_slot():
         weight=2.0,
         material="iron",
         slot="head",
-        stats={"defense": 2}
+        stats={"defense": 2},
     )
     item_registry.register(template)
-    
+
     item_entity = ItemFactory.create(world, "iron_helmet")
-    
+
     # Verify Equippable component
     equippable = world.component_for_entity(item_entity, Equippable)
     assert equippable is not None
     assert equippable.slot == SlotType.HEAD
     print(f"Item created with Equippable component: {equippable}")
-    
+
     # Verify StatModifiers component
     mods = world.component_for_entity(item_entity, StatModifiers)
     assert mods is not None
@@ -74,14 +75,15 @@ def test_item_factory_with_slot():
         sprite_layer="ITEMS",
         weight=0.1,
         material="organic",
-        stats={"hp": 5}
+        stats={"hp": 5},
     )
     item_registry.register(template_no_slot)
     apple_entity = ItemFactory.create(world, "apple")
-    
+
     has_equippable = world.has_component(apple_entity, Equippable)
     assert not has_equippable
     print("Item without slot created correctly (no Equippable component).")
+
 
 if __name__ == "__main__":
     try:
@@ -91,5 +93,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\nTests failed: {e}")
         import traceback
+
         traceback.print_exc()
         exit(1)

@@ -114,14 +114,21 @@ def test_invalid_state_raises():
     world = esper
 
     from game.content.entity_registry import EntityTemplate
+
     bad_template = EntityTemplate(
         id="bad_entity",
         name="Bad",
         sprite="X",
         color=(255, 0, 0),
         sprite_layer="ENTITIES",
-        hp=1, max_hp=1, power=1, defense=0,
-        mana=0, max_mana=0, perception=1, intelligence=1,
+        hp=1,
+        max_hp=1,
+        power=1,
+        defense=0,
+        mana=0,
+        max_mana=0,
+        perception=1,
+        intelligence=1,
         default_state="invalid_state",
         alignment="hostile",
     )

@@ -27,11 +27,14 @@ def equip_item(world, entity, item_id):
         # If something else is in the slot, unequip it
         if equipment.slots.get(slot) is not None:
             old_item_id = equipment.slots[slot]
-            old_item_name = world.component_for_entity(old_item_id, Name).name if world.has_component(old_item_id, Name) else "item"
+            old_item_name = (
+                world.component_for_entity(old_item_id, Name).name if world.has_component(old_item_id, Name) else "item"
+            )
             esper.dispatch_event("log_message", f"You unequip the {old_item_name}.")
 
         equipment.slots[slot] = item_id
         esper.dispatch_event("log_message", f"You equip the {item_name}.")
+
 
 def unequip_item(world, entity, slot):
     """

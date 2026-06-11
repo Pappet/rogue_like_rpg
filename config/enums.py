@@ -4,7 +4,6 @@ from config.colors import COLOR_GOLD, COLOR_YELLOW
 
 
 class SpriteLayer(Enum):
-
     GROUND = 0
 
     DECOR_BOTTOM = 1
@@ -23,7 +22,6 @@ class SpriteLayer(Enum):
 
 
 class GameStates(Enum):
-
     PLAYER_TURN = 1
 
     ENEMY_TURN = 2
@@ -51,10 +49,10 @@ class LogCategory(Enum):
 
 
 LOG_COLORS = {
-    LogCategory.DAMAGE_DEALT: (100, 255, 100),    # Light Green
-    LogCategory.DAMAGE_RECEIVED: (255, 100, 100), # Light Red
-    LogCategory.HEALING: (50, 200, 255),          # Light Blue
-    LogCategory.LOOT: COLOR_GOLD,                 # Gold
-    LogCategory.SYSTEM: (200, 200, 200),          # Light Gray
-    LogCategory.ALERT: COLOR_YELLOW,              # Yellow
+    LogCategory.DAMAGE_DEALT: (100, 255, 100),  # Light Green
+    LogCategory.DAMAGE_RECEIVED: (255, 100, 100),  # Light Red
+    LogCategory.HEALING: (50, 200, 255),  # Light Blue
+    LogCategory.LOOT: COLOR_GOLD,  # Gold
+    LogCategory.SYSTEM: (200, 200, 200),  # Light Gray
+    LogCategory.ALERT: COLOR_YELLOW,  # Yellow
 }
