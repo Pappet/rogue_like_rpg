@@ -13,6 +13,7 @@ from core.ui.stack_manager import UIStack
 from core.world_clock_service import WorldClockService
 from game.content.content_database import ContentDatabase
 from game.map.map_container import MapContainer
+from game.services.economy_service import EconomyService
 from game.services.map_service import MapService
 from game.services.render_service import RenderService
 from game.services.world_chronicle_service import WorldChronicleService
@@ -88,6 +89,7 @@ class GameContext:
     systems: Systems
     world_graph: WorldGraphService | None = None
     world_chronicle: WorldChronicleService | None = None
+    economy: EconomyService | None = None
     debug_flags: DebugFlags = field(default_factory=DebugFlags)
     player_entity: int | None = None
     content: ContentDatabase | None = None

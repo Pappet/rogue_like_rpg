@@ -14,6 +14,7 @@ from game.components import (
     Name,
     PlayerTag,
     Position,
+    Purse,
     Renderable,
     Stats,
     TurnOrder,
@@ -74,6 +75,7 @@ class PartyService:
             Name(data["name"]),
             Blocker(),
             Inventory(),
+            Purse(gold=int(data.get("gold", 0))),
             TurnOrder(priority=0),
             ActionList(actions=actions),
         )

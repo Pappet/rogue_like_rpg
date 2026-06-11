@@ -208,6 +208,8 @@ is neutral constants, usable by both.
     │   ├── render_service.py        # Map rendering + viewport tint
     │   ├── pathfinding_service.py   # A* pathfinding wrapper
     │   ├── interaction_resolver.py  # Bump interaction resolution
+    │   ├── trade_service.py         # Buy/sell rules between player and merchants
+    │   ├── economy_service.py       # Per-settlement stock levels -> local prices
     │   ├── consumable_service.py    # Item consumption logic
     │   └── equipment_service.py     # Equipment slot logic
     ├── controllers/                 # Gameplay orchestration (driven by states)
@@ -223,6 +225,7 @@ is neutral constants, usable by both.
     └── ui/windows/
         ├── inventory.py             # Inventory window
         ├── character.py             # Character sheet window
+        ├── trade.py                 # Merchant buy/sell window
         └── tooltip.py               # Examine/tooltip window
 ```
 
@@ -388,6 +391,9 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `ActionList`      | Available actions with selected index        |
 | `Targeting`       | Targeting state: origin, target, range, mode |
 | `FCT`             | Floating combat text with velocity + TTL     |
+| `Purse`           | Gold carried by player or NPC                |
+| `Value`           | Base trade value of an item in gold          |
+| `Merchant`        | NPC trades; stock = item template id list    |
 
 ### Enums
 

@@ -90,6 +90,10 @@ class InputManager:
                 pygame.K_w: InputCommand.MOVE_UP,
                 pygame.K_DOWN: InputCommand.MOVE_DOWN,
                 pygame.K_s: InputCommand.MOVE_DOWN,
+                pygame.K_LEFT: InputCommand.MOVE_LEFT,
+                pygame.K_a: InputCommand.MOVE_LEFT,
+                pygame.K_RIGHT: InputCommand.MOVE_RIGHT,
+                # K_d stays DROP_ITEM for the inventory window
                 pygame.K_ESCAPE: InputCommand.CANCEL,
                 pygame.K_i: InputCommand.CANCEL,
                 pygame.K_c: InputCommand.CANCEL,

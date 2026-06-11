@@ -1,6 +1,6 @@
 from enum import Enum, auto
 
-from game.components import AIBehaviorState, AIState, Alignment, AttackIntent, Name, Stats, TemplateId
+from game.components import AIBehaviorState, AIState, Alignment, AttackIntent, Merchant, Name, Stats, TemplateId
 from game.content.dialogue_service import dialogue_service
 
 
@@ -9,6 +9,7 @@ class InteractionType(Enum):
     ATTACK = auto()
     WAKE_UP = auto()
     TALK = auto()
+    TRADE = auto()
 
 
 class InteractionResolver:
@@ -25,6 +26,10 @@ class InteractionResolver:
             # Hostile entities are attacked
             if behavior.alignment == Alignment.HOSTILE:
                 return InteractionType.ATTACK
+
+            # Non-hostile merchants open their shop
+            if world.has_component(target_ent, Merchant):
+                return InteractionType.TRADE
 
             # Neutral/Friendly entities are talked to
             if behavior.alignment in [Alignment.NEUTRAL, Alignment.FRIENDLY]:
@@ -57,12 +62,18 @@ class InteractionResolver:
                 world.dispatch_event("log_message", f"You wake up {name}.")
 
         elif interaction == InteractionType.TALK:
-            name = (
-                world.component_for_entity(target_ent, Name).name
-                if world.has_component(target_ent, Name)
-                else "Someone"
-            )
-            # Look up template-specific dialogue
-            tid = world.try_component(target_ent, TemplateId)
-            line = dialogue_service.get_line(tid.id if tid else "")
-            world.dispatch_event("log_message", f"[color=yellow]{name}:[/color] {line}")
+            InteractionResolver._say_line(world, target_ent)
+
+        elif interaction == InteractionType.TRADE:
+            InteractionResolver._say_line(world, target_ent)
+            # Sanctioned request: the movement layer must not know about UI —
+            # the gameplay state opens the trade window.
+            world.dispatch_event("trade_requested", target_ent)
+
+    @staticmethod
+    def _say_line(world, target_ent: int) -> None:
+        name = world.component_for_entity(target_ent, Name).name if world.has_component(target_ent, Name) else "Someone"
+        # Look up template-specific dialogue
+        tid = world.try_component(target_ent, TemplateId)
+        line = dialogue_service.get_line(tid.id if tid else "")
+        world.dispatch_event("log_message", f"[color=yellow]{name}:[/color] {line}")

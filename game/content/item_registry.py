@@ -25,6 +25,7 @@ class ItemTemplate:
     slot: str | None = None
     stats: dict[str, int] = field(default_factory=dict)
     consumable: dict | None = None
+    value: int = 0  # base trade value in gold
 
 
 class ItemRegistry(Registry[ItemTemplate]):

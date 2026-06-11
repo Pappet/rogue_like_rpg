@@ -101,7 +101,7 @@ NPC positions are not continuously simulated — they are derived from the
 schedule at arrival time, which is the cheap two-level model working as
 designed.
 
-### Phase C — Trade & Economy
+### Phase C — Trade & Economy ✅ (done)
 
 *First system where the simulation becomes tangibly useful to the player.*
 
@@ -117,6 +117,15 @@ designed.
 
 **Done when:** the player can earn gold by hauling goods between two
 settlements whose prices differ for simulated reasons.
+
+*Shipped as:* `Purse`/`Value`/`Merchant` components + item values in
+`items.json` (C1), `TradeService` + bump-to-trade `TradeWindow` via the
+`trade_requested` event (C2), `EconomyService` with per-settlement stock
+drift and scarcity price factors from the scenario JSONs (C3). Merchant
+stock is template ids (fungible goods), so freeze/thaw never dangles.
+Verified by `tests/verify_trade.py` and `tests/verify_economy.py` —
+including the arbitrage criterion (potions: buy cheap in Brackenfen,
+sell dear in Eastmoor).
 
 ### Phase D — NPC Depth: Needs & Relationships
 

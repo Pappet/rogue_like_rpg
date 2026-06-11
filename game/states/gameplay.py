@@ -1,5 +1,7 @@
 import esper
+import pygame
 
+from config import UI_MODAL_RECT
 from game.controllers.input_controller import InputController
 from game.controllers.render_pipeline import RenderPipeline
 from game.controllers.turn_orchestrator import TurnOrchestrator
@@ -10,6 +12,7 @@ from game.systems.debug_render_system import DebugRenderSystem
 from game.systems.render_system import RenderSystem
 from game.systems.ui_system import UISystem
 from game.ui.windows.tooltip import TooltipWindow
+from game.ui.windows.trade import TradeWindow
 
 
 class GameplayState(GameState):
@@ -58,11 +61,19 @@ class GameplayState(GameState):
         # Event subscriptions (facts/requests dispatched by lower layers)
         esper.set_handler("map_change_requested", self.map_transition_service.transition)
         esper.set_handler("player_died", self._on_player_died)
+        esper.set_handler("trade_requested", self._on_trade_requested)
 
     def _on_player_died(self):
         """Handle the player_died event by transitioning to GAME_OVER state."""
         self.done = True
         self.next_state = "GAME_OVER"
+
+    def _on_trade_requested(self, merchant_entity):
+        """Open the trade window after bumping into a merchant."""
+        if self.ui_stack.is_active():
+            return
+        rect = pygame.Rect(*UI_MODAL_RECT)
+        self.ui_stack.push(TradeWindow(rect, self.ctx.player_entity, merchant_entity, self.ctx))
 
     def get_event(self, event):
         if not self.ctx:

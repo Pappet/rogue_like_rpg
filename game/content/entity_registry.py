@@ -37,6 +37,7 @@ class EntityTemplate:
     loot_table: list = None  # List of [template_id, chance] pairs
     schedule_id: str | None = None
     home_pos: tuple[int, int] | None = None
+    merchant: dict | None = None  # {"stock": [item ids], "gold": int}
 
 
 class EntityRegistry(Registry[EntityTemplate]):

@@ -21,6 +21,12 @@ SIM_RECONCILE_MIN_TICKS = 30
 # Chance per location per in-game hour that a chronicle event happens
 SIM_EVENT_CHANCE_PER_HOUR = 0.04
 
+# Settlement economy (ROADMAP Phase C)
+ECON_EQUILIBRIUM_STOCK = 5.0  # stock level at which price factor is ~1.0
+ECON_MAX_STOCK = 20.0  # stock cap per good per settlement
+ECON_PRICE_FACTOR_MIN = 0.5  # abundant goods bottom out at half value
+ECON_PRICE_FACTOR_MAX = 2.0  # scarce goods top out at double value
+
 # Day/Night Settings
 DN_SETTINGS = {
     "day": {"tint": (0, 0, 0, 0), "light": 1.0, "perception": 1.0},

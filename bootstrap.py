@@ -12,6 +12,7 @@ from core.input_manager import InputManager
 from core.ui.stack_manager import UIStack
 from core.world_clock_service import WorldClockService
 from game.content.content_database import default_content
+from game.services.economy_service import EconomyService
 from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
 from game.services.render_service import RenderService
@@ -58,5 +59,11 @@ def build_game_context() -> GameContext:
     chronicle.load_templates(f"{DATA_DIR}/world_events.json")
     ctx.world_chronicle = chronicle
     esper.set_handler("clock_tick", chronicle.on_clock_tick)
+
+    # Settlement economy: stock levels drift hourly and drive local prices
+    economy = EconomyService()
+    economy.load_from_world(world_graph, f"{DATA_DIR}/scenarios")
+    ctx.economy = economy
+    esper.set_handler("clock_tick", economy.on_clock_tick)
 
     return ctx
