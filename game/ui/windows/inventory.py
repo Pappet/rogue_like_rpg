@@ -59,18 +59,21 @@ class InventoryWindow(UIWindow):
             elif command == InputCommand.DROP_ITEM:
                 self.drop_item()
                 return True
-            elif command == InputCommand.EQUIP_ITEM or command == InputCommand.CONFIRM:
+            elif command == InputCommand.EQUIP_ITEM:
                 if inventory.items and self.selected_idx < len(inventory.items):
                     selected_item_id = inventory.items[self.selected_idx]
                     equipment_service.equip_item(self.world, self.player_entity, selected_item_id)
                 return True
-            elif command == InputCommand.USE_ITEM:
+            elif command == InputCommand.USE_ITEM or command == InputCommand.CONFIRM:
                 if inventory.items and self.selected_idx < len(inventory.items):
                     selected_item_id = inventory.items[self.selected_idx]
                     if consumable_service.ConsumableService.use_item(self.world, self.player_entity, selected_item_id):
                         if self.turn_system:
                             self.turn_system.end_player_turn()
-                        self.wants_to_close = True
+                        if len(inventory.items) == 0:
+                            self.selected_idx = 0
+                        elif self.selected_idx >= len(inventory.items):
+                            self.selected_idx = len(inventory.items) - 1
                 return True
         except KeyError:
             pass
@@ -214,7 +217,7 @@ class InventoryWindow(UIWindow):
 
                     # Also show usage hints
                     hint_y = box_y + box_height - 60
-                    hints = ["[U] Use  [E] Equip  [D] Drop"]
+                    hints = ["[Enter/U] Use  [E] Equip  [D] Drop"]
                     for k, hint in enumerate(hints):
                         hint_text = self.font.render(hint, True, UI_COLOR_WINDOW_HINT)
                         surface.blit(hint_text, (separator_x + UI_SPACING_X, hint_y + k * 30))
