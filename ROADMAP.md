@@ -41,7 +41,7 @@ does not wait for the player."
 
 ## 3. Phases
 
-### Phase A — World Skeleton: Places, Travel, Saving
+### Phase A — World Skeleton: Places, Travel, Saving ✅ (done)
 
 *The world becomes plural: several settlements, travel between them, and a
 persistent save. Without this there is nothing to simulate.*
@@ -62,6 +62,12 @@ persistent save. Without this there is nothing to simulate.*
 
 **Done when:** start in village A, open the world map, travel to town B
 (clock jumps), trade-free walkabout there, save, quit, load, still in B.
+
+*Shipped as:* `WorldGraphService` + `assets/data/world.json` (A1),
+`MapGenerator.create_world()` + Eastmoor/Brackenfen scenarios (A2),
+`WorldMapState` travel screen (A3), `SaveService` JSON snapshot on
+F9/F10 (A4). Verified end-to-end by `tests/verify_world_travel.py` and
+`tests/verify_save_load.py`.
 
 ### Phase B — The World Lives While You're Away (Off-screen Simulation)
 

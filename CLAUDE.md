@@ -137,6 +137,7 @@ is neutral constants, usable by both.
 │   ├── entities.json                # NPC/monster templates
 │   ├── items.json                   # Item templates
 │   ├── player.json                  # Player base stats & actions
+│   ├── world.json                   # World graph: locations + travel routes
 │   ├── schedules.json               # NPC daily routines
 │   ├── dialogues.json               # NPC dialogue lines by template_id
 │   ├── prefabs/                     # Prefab room layouts
@@ -192,6 +193,9 @@ is neutral constants, usable by both.
     │   ├── map_service.py           # Map registry + active map management
     │   ├── map_generator.py         # Village scenario, terrain, prefab loading
     │   ├── map_transition_service.py# Map transition (freeze/thaw, set_map fan-out)
+    │   ├── world_graph_service.py   # World graph: locations, routes, current location
+    │   ├── save_service.py          # Session snapshot save/load (F9/F10)
+    │   ├── save_serialization.py    # Generic dataclass/tile JSON (de)serialization
     │   ├── spawn_service.py         # Monster/NPC spawning
     │   ├── party_service.py         # Player party creation
     │   ├── render_service.py        # Map rendering + viewport tint
@@ -474,6 +478,8 @@ class MapAwareSystem:
 | F5  | Toggle NPC FOV overlay |
 | F6  | Toggle chase target lines |
 | F7  | Toggle AI state labels |
+| F9  | Save game (saves/save.json) |
+| F10 | Load game |
 
 ## Common Pitfalls
 
