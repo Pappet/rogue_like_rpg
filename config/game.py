@@ -14,6 +14,13 @@ NIGHT_START = 20
 # Save game
 SAVE_FILE = "saves/save.json"
 
+# Off-screen world simulation
+# Minimum absence (in ticks) before NPCs are snapped to their scheduled
+# positions on arrival — short door hops must not teleport anyone.
+SIM_RECONCILE_MIN_TICKS = 30
+# Chance per location per in-game hour that a chronicle event happens
+SIM_EVENT_CHANCE_PER_HOUR = 0.04
+
 # Day/Night Settings
 DN_SETTINGS = {
     "day": {"tint": (0, 0, 0, 0), "light": 1.0, "perception": 1.0},

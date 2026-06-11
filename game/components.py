@@ -15,6 +15,18 @@ class AIState(str, Enum):
     SLEEP = "sleep"
 
 
+# Schedule activity strings -> AI states (shared by ScheduleSystem and
+# WorldSimulationService).
+ACTIVITY_TO_STATE = {
+    "WORK": AIState.WORK,
+    "PATROL": AIState.PATROL,
+    "SOCIALIZE": AIState.SOCIALIZE,
+    "SLEEP": AIState.SLEEP,
+    "IDLE": AIState.IDLE,
+    "WANDER": AIState.WANDER,
+}
+
+
 class Alignment(str, Enum):
     HOSTILE = "hostile"
     NEUTRAL = "neutral"

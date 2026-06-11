@@ -5,6 +5,7 @@ import esper
 from game.components import Position, Stats
 from game.services.map_generator import MapGenerator
 from game.services.party_service import get_entity_closure
+from game.services.world_simulation_service import WorldSimulationService
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,13 @@ class MapTransitionService:
 
         # Thaw new map
         new_map.thaw(esper)
+
+        # Off-screen simulation: the world moved on while this map was
+        # frozen — snap schedule-bound NPCs to where their day plan puts
+        # them now (no-op for short absences).
+        if ctx.world_clock is not None:
+            elapsed = turn_system.round_counter - new_map.last_visited_turn
+            WorldSimulationService.reconcile_arrivals(esper, new_map, ctx.world_clock.hour, elapsed)
 
         # Update Player Position
         if ctx.player_entity is not None:
