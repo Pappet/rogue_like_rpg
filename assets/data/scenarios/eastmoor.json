@@ -181,6 +181,13 @@
     33,
     38
    ]
+  },
+  {
+   "type": "farmer",
+   "pos": [
+    18,
+    40
+   ]
   }
  ],
  "economy": {
@@ -189,7 +196,8 @@
    "steel_sword": 6,
    "health_potion": 1,
    "venison": 2,
-   "iron_ore": 6
+   "iron_ore": 6,
+   "bread": 4
   },
   "rates_per_day": {
    "iron_sword": {
@@ -205,7 +213,8 @@
     }
    },
    "health_potion": -3,
-   "venison": -1.5
+   "venison": -1.5,
+   "bread": -1.5
   }
  },
  "biome": "plains"

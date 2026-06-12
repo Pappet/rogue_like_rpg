@@ -136,6 +136,20 @@
     8,
     8
    ]
+  },
+  {
+   "type": "hunter",
+   "pos": [
+    30,
+    30
+   ]
+  },
+  {
+   "type": "herbalist",
+   "pos": [
+    12,
+    25
+   ]
   }
  ],
  "economy": {
@@ -143,13 +157,15 @@
    "health_potion": 5,
    "iron_sword": 4,
    "leather_armor": 4,
-   "venison": 2
+   "venison": 2,
+   "bread": 8
   },
   "rates_per_day": {
    "health_potion": 0.5,
    "iron_sword": 0.25,
    "leather_armor": 0.25,
-   "venison": -1.5
+   "venison": -1.5,
+   "bread": 2
   }
  },
  "biome": "forest"
