@@ -100,6 +100,32 @@ def test_schedule_system_skips_overridden_npcs():
     assert activity.target_pos == (2, 2)
 
 
+def test_process_survives_npc_without_needs():
+    """Regression: a live guard (AIBehaviorState + Activity + Position, no
+    Needs) used to crash NeedsSystem.process with a KeyError via an esper 3.7
+    query bug. With the compat shim, process() must run cleanly and leave the
+    guard untouched.
+    """
+    container = _open_map()
+    # Guard: scheduled (Activity) and AI-driven (AIBehaviorState) but no Needs.
+    guard = esper.create_entity(
+        Position(8, 8, 0),
+        Activity(current_activity="PATROL", target_pos=(12, 12), home_pos=(8, 8)),
+        AIBehaviorState(AIState.WORK, Alignment.HOSTILE),
+    )
+    # Pad the other component sets so |AIB| < |Needs| < |Activity| < |Position|,
+    # the exact ordering that tripped esper's smallest-set optimisation.
+    _hungry_npc(x=4, y=4, hunger=10.0)
+    _hungry_npc(x=6, y=6, hunger=10.0)
+    esper.create_entity(Position(1, 1, 0))
+
+    NeedsSystem().process(container)  # must not raise
+
+    assert not esper.has_component(guard, Needs)
+    activity = esper.component_for_entity(guard, Activity)
+    assert activity.need_override is None
+
+
 def test_needs_never_preempt_chase_or_sleep():
     container = _open_map()
     npc = _hungry_npc(hunger=99.0)
