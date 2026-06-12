@@ -84,9 +84,7 @@ def get_nearest_walkable_tile(
             return False
         if excluded_positions and (nx, ny) in excluded_positions:
             return False
-        if strict and avoid_type_ids and tile.type_id in avoid_type_ids:
-            return False
-        return True
+        return not (strict and avoid_type_ids and tile.type_id in avoid_type_ids)
 
     def spiral_search(strict: bool = True) -> tuple[int, int] | None:
         if is_candidate(start_x, start_y, strict):
