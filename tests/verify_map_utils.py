@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from config import SpriteLayer
 from game.content.resource_loader import ResourceLoader
-from game.map.map_generator_utils import draw_rectangle, place_door
+from game.map.map_generator_utils import draw_rectangle, get_nearest_walkable_tile, place_door
 from game.map.map_layer import MapLayer
 from game.map.tile import Tile
 
@@ -55,6 +55,47 @@ def test_place_door():
     assert layer.tiles[5][5].transparent is True
 
     print("test_place_door passed")
+
+
+def test_get_nearest_walkable_skips_excluded_positions():
+    """get_nearest_walkable_tile must skip positions listed in excluded_positions."""
+    ResourceLoader.load_tiles(TILE_FILE)
+    tiles = [[Tile(type_id="floor_stone") for _ in range(5)] for _ in range(5)]
+    layer = MapLayer(tiles)
+
+    result = get_nearest_walkable_tile(layer, 2, 2, excluded_positions={(2, 2)})
+    assert result != (2, 2), "Must not return an excluded position"
+    nx, ny = result
+    assert 0 <= nx < 5 and 0 <= ny < 5
+    assert layer.tiles[ny][nx].walkable
+
+
+def test_get_nearest_walkable_avoids_door_tile_in_first_pass():
+    """get_nearest_walkable_tile must prefer non-door tiles when avoid_type_ids is set."""
+    ResourceLoader.load_tiles(TILE_FILE)
+    tiles = [[Tile(type_id="floor_stone") for _ in range(5)] for _ in range(5)]
+    tiles[2][2] = Tile(type_id="door_stone")
+    layer = MapLayer(tiles)
+
+    result = get_nearest_walkable_tile(layer, 2, 2, avoid_type_ids={"door_stone", "door_wood"})
+    nx, ny = result
+    assert layer.tiles[ny][nx].type_id not in {"door_stone", "door_wood"}, (
+        "Must find a non-door tile when floor tiles are available nearby"
+    )
+
+
+def test_get_nearest_walkable_falls_back_to_door_when_only_option():
+    """When the only walkable tile is a door, it must be returned as a fallback."""
+    ResourceLoader.load_tiles(TILE_FILE)
+    tiles = [
+        [Tile(type_id="wall_stone"), Tile(type_id="wall_stone"), Tile(type_id="wall_stone")],
+        [Tile(type_id="wall_stone"), Tile(type_id="door_stone"), Tile(type_id="wall_stone")],
+        [Tile(type_id="wall_stone"), Tile(type_id="wall_stone"), Tile(type_id="wall_stone")],
+    ]
+    layer = MapLayer(tiles)
+
+    result = get_nearest_walkable_tile(layer, 1, 1, avoid_type_ids={"door_stone", "door_wood"})
+    assert result == (1, 1), "Must fall back to door when it is the only walkable tile"
 
 
 if __name__ == "__main__":
