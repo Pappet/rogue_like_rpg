@@ -26,7 +26,7 @@ from config import (
 )
 from core.input_manager import InputCommand
 from core.ui.window_base import UIWindow
-from game.components import Inventory, Merchant, Name, Purse
+from game.components import Equipment, Inventory, Merchant, Name, Purse
 from game.content.item_registry import item_registry
 from game.services.trade_service import TradeService
 
@@ -64,7 +64,11 @@ class TradeWindow(UIWindow):
 
     def _player_items(self) -> list[int]:
         inventory = self.world.try_component(self.player_entity, Inventory)
-        return inventory.items if inventory else []
+        if not inventory:
+            return []
+        equipment = self.world.try_component(self.player_entity, Equipment)
+        equipped_ids: set[int] = set(equipment.slots.values()) if equipment else set()
+        return [e for e in inventory.items if e not in equipped_ids]
 
     def _active_list_len(self) -> int:
         return len(self._merchant_stock()) if self.active_pane == 0 else len(self._player_items())
