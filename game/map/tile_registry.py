@@ -23,6 +23,7 @@ class TileType:
     color: tuple[int, int, int]
     base_description: str = ""
     occludes_below: bool = False
+    bg_color: tuple[int, int, int] | None = None
 
 
 class TileRegistry(Registry[TileType]):

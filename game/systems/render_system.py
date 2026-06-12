@@ -92,9 +92,11 @@ class RenderSystem(esper.Processor, MapAwareSystem):
                 self.camera.offset_x - TILE_SIZE <= screen_x <= self.camera.offset_x + self.camera.width
                 and self.camera.offset_y - TILE_SIZE <= screen_y <= self.camera.offset_y + self.camera.height
             ):
-                # Render the sprite (character)
+                # Render the sprite (character), centered in its tile cell
                 text_surface = self.font.render(rend.sprite, True, color)
-                surface.blit(text_surface, (screen_x, screen_y))
+                offset_x = (TILE_SIZE - text_surface.get_width()) // 2
+                offset_y = (TILE_SIZE - text_surface.get_height()) // 2
+                surface.blit(text_surface, (screen_x + offset_x, screen_y + offset_y))
 
         # 3. Render FCT
         for ent, (pos, fct) in esper.get_components(Position, FCT):
