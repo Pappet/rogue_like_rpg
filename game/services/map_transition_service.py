@@ -117,6 +117,20 @@ class MapTransitionService:
                 for event in missed[-3:]:
                     esper.dispatch_event("log_message", f"[color=cyan]Word around town:[/color] {event.text}")
 
+            # The settlement's long-term state is visible on arrival (G3)
+            if ctx.economy is not None:
+                tier = ctx.economy.prosperity_tier(target_map_id)
+                if tier == "struggling":
+                    esper.dispatch_event(
+                        "log_message",
+                        "[color=cyan]Times are hard here — shutters hang loose, stalls stand empty.[/color]",
+                    )
+                elif tier == "thriving":
+                    esper.dispatch_event(
+                        "log_message",
+                        "[color=cyan]The place is thriving — fresh paint, full stalls, busy streets.[/color]",
+                    )
+
         # Update Camera
         ctx.camera.update(target_x, target_y)
 

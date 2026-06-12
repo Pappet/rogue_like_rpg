@@ -40,6 +40,18 @@ ECON_PRICE_FACTOR_MAX = 2.0  # scarce goods top out at double value
 ECON_STOCK_JITTER = 0.5  # start stocks vary by +-50%
 ECON_RATE_JITTER = 0.3  # produce/consume rates vary by +-30%
 
+# Settlement prosperity (ROADMAP Phase G3) — long-term wealth per settlement
+PROSPERITY_START = 50.0  # every settlement starts stable
+PROSPERITY_MIN = 0.0
+PROSPERITY_MAX = 100.0
+PROSPERITY_LOW = 35.0  # below: "struggling"
+PROSPERITY_HIGH = 65.0  # above: "thriving"
+PROSPERITY_SHORTAGE_DRIFT = -0.15  # per hour, per consumed good at empty stock
+PROSPERITY_COMFORT_DRIFT = 0.05  # per hour when every consumed good is plentiful
+PROSPERITY_SHORTAGE_LEVEL = 0.5  # stock at/below this counts as a shortage
+PROSPERITY_QUEST_GAIN = 2.0  # turning in a quest helps the whole settlement
+PROSPERITY_PRICE_SPAN = 0.2  # price baseline 0.9x (destitute) .. 1.1x (rich)
+
 # Day/Night Settings
 DN_SETTINGS = {
     "day": {"tint": (0, 0, 0, 0), "light": 1.0, "perception": 1.0},

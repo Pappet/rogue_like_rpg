@@ -304,5 +304,21 @@
   "description": "A soft deer pelt, prized by tanners.",
   "stats": {},
   "value": 14
+ },
+ {
+  "id": "iron_ore",
+  "name": "Iron Ore",
+  "sprite": "*",
+  "color": [
+   140,
+   110,
+   90
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 4.0,
+  "material": "iron",
+  "description": "A heavy lump of bog iron. Smithies pay well for it.",
+  "stats": {},
+  "value": 8
  }
 ]

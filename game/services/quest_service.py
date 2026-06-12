@@ -27,7 +27,7 @@ from dataclasses import asdict, dataclass, field
 
 import esper
 
-from config import LogCategory
+from config import PROSPERITY_QUEST_GAIN, LogCategory
 from game.components import Equipment, Inventory, PlayerTag, Position, Purse, TemplateId
 from game.content.item_registry import item_registry
 
@@ -149,6 +149,9 @@ class QuestService:
             purse.gold += quest.reward_gold
         if self.ctx.reputation is not None:
             self.ctx.reputation.adjust(location_id, 5, f"quest '{quest.id}'")
+        # A resolved problem lifts the whole settlement a little (G3)
+        if self.ctx.economy is not None:
+            self.ctx.economy.adjust_prosperity(location_id, PROSPERITY_QUEST_GAIN)
         # Resolving the cause stops what it would have escalated into (G2):
         # hunted wolves never reach the herds.
         if quest.cause_event_id and self.ctx.world_chronicle is not None:
@@ -226,8 +229,9 @@ class QuestService:
         economy = self.ctx.economy
         if economy is not None:
             for item_id, level in economy.stocks.get(location_id, {}).items():
-                rates = economy.rates_per_day.get(location_id, {})
-                if rates.get(item_id, 0) >= 0 or level >= GEN_STOCK_THRESHOLD:
+                # A request needs a real local sink: direct consumption or
+                # a production input (the smith out of ore posts for ore).
+                if level >= GEN_STOCK_THRESHOLD or not economy.consumes(location_id, item_id):
                     continue
                 quest_id = f"gen_deliver_{location_id}_{item_id}"
                 if any(q.id == quest_id and q.state != "turned_in" for q in self.quests):

@@ -30,6 +30,25 @@
    },
    {
     "when": {
+     "prosperity": "struggling"
+    },
+    "lines": [
+     "Hard times, traveler. The larders are thin.",
+     "If things don't turn around soon, folk will start leaving.",
+     "We could use any help we can get."
+    ]
+   },
+   {
+    "when": {
+     "prosperity": "thriving"
+    },
+    "lines": [
+     "Never seen the village do so well!",
+     "Good times — the stalls are full and so are the bellies."
+    ]
+   },
+   {
+    "when": {
      "phase": "night"
     },
     "lines": [
@@ -64,6 +83,15 @@
    "Trade keeps the village alive."
   ],
   "conditional": [
+   {
+    "when": {
+     "prosperity": "struggling"
+    },
+    "lines": [
+     "Shelves are half empty — deliveries keep getting raided.",
+     "Business is terrible. Bring me goods and I'll pay fairly."
+    ]
+   },
    {
     "when": {
      "rep": "beloved"

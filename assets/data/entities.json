@@ -137,7 +137,9 @@
     "health_potion",
     "iron_sword",
     "leather_armor",
-    "dagger"
+    "dagger",
+    "iron_ore",
+    "iron_ore"
    ],
    "gold": 200
   },

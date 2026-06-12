@@ -157,6 +157,9 @@ class WorldChronicleService:
             return
         for item_id, delta in template.effects.get("stock_delta", {}).items():
             economy.apply_stock_delta(location_id, item_id, float(delta))
+        prosperity_delta = template.effects.get("prosperity_delta")
+        if prosperity_delta:
+            economy.adjust_prosperity(location_id, float(prosperity_delta))
 
     def _fire_due_escalations(self, hour_index: int) -> None:
         due = [p for p in self.pending_escalations if p.due_hour <= hour_index]

@@ -45,7 +45,9 @@ class TradeService:
         template = item_registry.get(template_id)
         if not template:
             return 0
-        factor = economy.price_factor(location_id, template_id) if economy else 1.0
+        factor = 1.0
+        if economy is not None:
+            factor = economy.price_factor(location_id, template_id) * economy.prosperity_price_factor(location_id)
         if reputation is not None:
             factor *= reputation.buy_price_factor(location_id)
         return max(1, round(template.value * factor))
@@ -60,6 +62,7 @@ class TradeService:
             tid = esper.try_component(item_entity, TemplateId)
             if tid is not None:
                 factor = economy.price_factor(location_id, tid.id)
+            factor *= economy.prosperity_price_factor(location_id)
         if reputation is not None:
             factor *= reputation.sell_price_factor(location_id)
         return max(1, round(value.amount * SELL_FACTOR * factor))

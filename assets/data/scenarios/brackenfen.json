@@ -103,13 +103,15 @@
    "health_potion": 14,
    "leather_armor": 8,
    "iron_sword": 1,
-   "venison": 2
+   "venison": 2,
+   "iron_ore": 10
   },
   "rates_per_day": {
    "health_potion": 3,
    "leather_armor": 1,
    "iron_sword": -0.5,
-   "venison": -1.5
+   "venison": -1.5,
+   "iron_ore": 2
   }
  },
  "biome": "swamp"
