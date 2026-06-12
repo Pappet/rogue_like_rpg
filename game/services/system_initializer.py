@@ -29,7 +29,7 @@ from game_context import Systems
 def build_systems(world_clock: WorldClockService, map_container: MapContainer) -> Systems:
     """Create all logic systems and wire their dependencies."""
     turn_system = TurnSystem(world_clock)
-    visibility_system = VisibilitySystem(turn_system)
+    visibility_system = VisibilitySystem(turn_system, world_clock)
     action_system = ActionSystem(turn_system)
     movement_system = MovementSystem(action_system)
     combat_system = CombatSystem(action_system)

@@ -40,7 +40,8 @@
       4
      ]
     }
-   ]
+   ],
+   "style": "home"
   },
   {
    "id": "Brackenfen Trading Post",
@@ -65,7 +66,8 @@
       4
      ]
     }
-   ]
+   ],
+   "style": "shop"
   }
  ],
  "village_npcs": [
@@ -130,5 +132,28 @@
    "bread": -1
   }
  },
- "biome": "swamp"
+ "biome": "swamp",
+ "lights": [
+  {
+   "type": "campfire",
+   "pos": [
+    15,
+    15
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    13,
+    28
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    17,
+    28
+   ]
+  }
+ ]
 }

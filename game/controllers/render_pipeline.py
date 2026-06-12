@@ -1,12 +1,17 @@
 """The draw cycle for the gameplay state.
 
-Order: map -> entities -> debug overlay -> day/night tint -> HUD -> windows.
+Order: map -> entities -> debug overlay -> day/night tint -> light glow
+-> HUD -> windows.
 """
 
 import esper
 import pygame
 
-from game.components import Position
+from config import DN_SETTINGS
+from game.components import LightSource, Position
+
+# Tint alpha at which light glow reaches full strength (the night value).
+_MAX_TINT_ALPHA = DN_SETTINGS["night"]["tint"][3]
 
 
 class RenderPipeline:
@@ -48,6 +53,17 @@ class RenderPipeline:
         tint_color = ctx.world_clock.get_interpolated_tint()
         if tint_color and tint_color[3] > 0:  # Only apply if alpha > 0
             ctx.render_service.apply_viewport_tint(surface, tint_color, viewport_rect)
+
+            # 4.5 Warm glow around light sources — the darker the tint, the
+            # stronger the glow, so torches fade in with the dusk.
+            strength = tint_color[3] / _MAX_TINT_ALPHA
+            lights = [
+                (pos.x, pos.y, light.radius)
+                for _ent, (pos, light) in esper.get_components(Position, LightSource)
+                if pos.layer == player_layer
+            ]
+            if lights:
+                ctx.render_service.render_light_glow(surface, camera, lights, strength)
 
         # Reset clip for UI
         surface.set_clip(None)

@@ -41,7 +41,8 @@
       4
      ]
     }
-   ]
+   ],
+   "style": "home"
   },
   {
    "id": "Tavern",
@@ -66,7 +67,8 @@
       7
      ]
     }
-   ]
+   ],
+   "style": "tavern"
   },
   {
    "id": "Shop",
@@ -91,7 +93,8 @@
       5
      ]
     }
-   ]
+   ],
+   "style": "shop"
   }
  ],
  "village_npcs": [
@@ -168,5 +171,28 @@
    "bread": 2
   }
  },
- "biome": "forest"
+ "biome": "forest",
+ "lights": [
+  {
+   "type": "campfire",
+   "pos": [
+    20,
+    10
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    18,
+    38
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    22,
+    38
+   ]
+  }
+ ]
 }

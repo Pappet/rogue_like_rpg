@@ -7,16 +7,29 @@ import esper as _esper
 from config import SpriteLayer
 from core.rng import derive_seed
 from game.components import MapBound, Name, Portal, Position, Renderable
+from game.components import LightSource, MapBound, Name, Portal, Position, Renderable
 from game.content.entity_factory import EntityFactory
 from game.content.item_factory import ItemFactory
 from game.map.map_container import MapContainer
 from game.map.map_generator_utils import draw_rectangle, get_nearest_walkable_tile
 from game.map.map_layer import MapLayer
-from game.map.tile import Tile
+from game.map.tile import Tile, VisibilityState
 from game.services.map_service import MapService
 from game.services.spawn_service import SpawnService
 
 WILDERNESS_SIZE = 40
+
+# House style -> wall material for both the exterior shell and the interior.
+HOUSE_WALL_MATERIAL = {"home": "wall_wood", "tavern": "wall_wood", "shop": "wall_stone"}
+
+# Light props placed by the generator. All burn dusk-to-dawn (night_only):
+# they reveal their surroundings via VisibilitySystem and get a warm glow
+# from the render pipeline once the day/night tint darkens.
+LIGHT_PROPS = {
+    "torch": {"glyph": "†", "color": (255, 190, 110), "radius": 4, "name": "Torch"},
+    "lantern": {"glyph": "¤", "color": (255, 215, 130), "radius": 4, "name": "Lantern"},
+    "campfire": {"glyph": "♨", "color": (255, 150, 60), "radius": 6, "name": "Campfire"},
+}
 
 
 def wilderness_map_id(settlement_id: str) -> str:
@@ -44,6 +57,18 @@ class MapGenerator:
         """Stable per-map sub-seed, or None when running unseeded."""
         return None if self.seed is None else derive_seed(self.seed, map_id)
 
+    @staticmethod
+    def place_light(world, light_type: str, x: int, y: int, layer: int = 0) -> int:
+        """Create a non-blocking light prop entity (torch/lantern/campfire)."""
+        props = LIGHT_PROPS[light_type]
+        return world.create_entity(
+            MapBound(),
+            Position(x, y, layer),
+            Renderable(props["glyph"], SpriteLayer.DECOR_BOTTOM.value, props["color"]),
+            Name(props["name"]),
+            LightSource(radius=props["radius"], night_only=True),
+        )
+
     def apply_terrain_variety(self, layer: MapLayer, chance: float, type_id_choices: list):
         """
         Adds random terrain variety to a MapLayer by randomly reassigning tile types.
@@ -62,7 +87,15 @@ class MapGenerator:
                     tile.set_type(type_id)
 
     def add_house_to_map(
-        self, world, map_container: MapContainer, start_x: int, start_y: int, w: int, h: int, num_layers: int
+        self,
+        world,
+        map_container: MapContainer,
+        start_x: int,
+        start_y: int,
+        w: int,
+        h: int,
+        num_layers: int,
+        style: str = "home",
     ):
         """
         Populates a MapContainer with a house structure.
@@ -73,6 +106,8 @@ class MapGenerator:
             start_x, start_y: Top-left corner of the house.
             w, h: Dimensions of the house.
             num_layers: Number of floors.
+            style: Furnishing style ("home", "tavern" or "shop") — drives
+                wall material, windows and furniture placement.
         """
         # Ensure we have enough layers in the container
         while len(map_container.layers) < num_layers:
@@ -93,12 +128,17 @@ class MapGenerator:
                 map_id = mid
                 break
 
+        wall_id = HOUSE_WALL_MATERIAL.get(style, "wall_wood")
         for z in range(num_layers):
             layer = map_container.layers[z]
-            # 1. Draw floor (filled rectangle with floor_stone)
-            draw_rectangle(layer, start_x, start_y, w, h, "floor_stone", filled=True)
-            # 2. Draw walls (hollow rectangle with wall_stone)
-            draw_rectangle(layer, start_x, start_y, w, h, "wall_stone", filled=False)
+            # 1. Draw floor (filled rectangle of floorboards)
+            draw_rectangle(layer, start_x, start_y, w, h, "floor_wood", filled=True)
+            # 2. Draw walls (hollow rectangle, material per style)
+            draw_rectangle(layer, start_x, start_y, w, h, wall_id, filled=False)
+            self._add_windows(layer, start_x, start_y, w, h)
+            if z == 0:
+                # Front door in the south wall (matches the exterior shell)
+                layer.tiles[start_y + h - 1][start_x + w // 2].set_type("door_wood")
 
             # 3. Place stairs
             # Alternate positions to ensure they never overlap on the same layer
@@ -126,6 +166,90 @@ class MapGenerator:
                     Renderable("v", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                     Name("Stairs Down"),
                 )
+
+        self._furnish_house(map_container, start_x, start_y, w, h, num_layers, style)
+
+    @staticmethod
+    def _add_windows(layer: MapLayer, start_x: int, start_y: int, w: int, h: int) -> None:
+        """Cut windows into the north, west and east walls (every 3rd tile)."""
+        for x in range(start_x + 2, start_x + w - 2, 3):
+            layer.tiles[start_y][x].set_type("wall_window")
+        for y in range(start_y + 2, start_y + h - 2, 3):
+            layer.tiles[y][start_x].set_type("wall_window")
+            layer.tiles[y][start_x + w - 1].set_type("wall_window")
+
+    @staticmethod
+    def _furnish_house(
+        map_container: MapContainer, start_x: int, start_y: int, w: int, h: int, num_layers: int, style: str
+    ) -> None:
+        """Place furniture tiles according to the house style.
+
+        Both stair corners and the entry tile in front of the door are
+        reserved (including their orthogonal neighbors) so portals always
+        stay reachable; placement silently skips reserved or non-floor
+        tiles, which keeps small houses from being overstuffed.
+        """
+        anchors = [
+            (start_x + w - 2, start_y + 2),
+            (start_x + 2, start_y + 2),
+            (start_x + w // 2, start_y + h - 2),
+        ]
+        reserved = set()
+        for ax, ay in anchors:
+            reserved.update({(ax, ay), (ax + 1, ay), (ax - 1, ay), (ax, ay + 1), (ax, ay - 1)})
+
+        def place(layer, x, y, type_id):
+            if (x, y) in reserved:
+                return
+            if not (start_x < x < start_x + w - 1 and start_y < y < start_y + h - 1):
+                return
+            tile = layer.tiles[y][x]
+            if tile.walkable and tile._type_id == "floor_wood":
+                tile.set_type(type_id)
+
+        def table_with_chairs(layer, x, y):
+            place(layer, x, y, "furniture_table")
+            place(layer, x - 1, y, "furniture_chair")
+            place(layer, x + 1, y, "furniture_chair")
+
+        cx, cy = start_x + w // 2, start_y + h // 2
+        for z in range(num_layers):
+            layer = map_container.layers[z]
+            if z == 0:
+                if style == "tavern":
+                    # Bar counter along the north side, barrels behind it
+                    for x in range(start_x + 3, min(start_x + 7, start_x + w - 3)):
+                        place(layer, x, start_y + 2, "furniture_counter")
+                    place(layer, start_x + 1, start_y + 1, "furniture_barrel")
+                    place(layer, start_x + 1, start_y + 3, "furniture_barrel")
+                    table_with_chairs(layer, cx, cy)
+                    table_with_chairs(layer, start_x + 4, cy + 2)
+                    table_with_chairs(layer, start_x + w - 4, cy + 2)
+                elif style == "shop":
+                    # Sales counter mid-room, stocked shelves along the north wall
+                    for x in range(cx - 2, cx + 2):
+                        place(layer, x, cy, "furniture_counter")
+                    for x in range(start_x + 2, start_x + w - 2, 2):
+                        place(layer, x, start_y + 1, "furniture_shelf")
+                    place(layer, start_x + 1, start_y + h - 3, "furniture_barrel")
+                    place(layer, start_x + w - 2, start_y + h - 3, "furniture_barrel")
+                else:  # home
+                    place(layer, start_x + 1, start_y + 1, "furniture_bed")
+                    place(layer, cx, start_y + 1, "fireplace")
+                    table_with_chairs(layer, cx, cy)
+                    place(layer, start_x + 1, cy, "furniture_shelf")
+            else:
+                if style == "tavern":
+                    # Guest rooms: a row of beds under the north windows
+                    for x in range(start_x + 2, start_x + w - 2, 3):
+                        place(layer, x, start_y + 1, "furniture_bed")
+                elif style == "shop":
+                    # Storage floor
+                    for x in range(start_x + 2, start_x + w - 2, 2):
+                        place(layer, x, start_y + 1, "furniture_barrel")
+                else:
+                    place(layer, cx, start_y + 1, "furniture_bed")
+                    place(layer, cx + 1, start_y + 1, "furniture_shelf")
 
     def create_world(self, world, world_graph) -> None:
         """Build a map for every location on the world graph, then activate
@@ -209,20 +333,45 @@ class MapGenerator:
         for h in config.get("structures", []):
             vx, vy = h["v_pos"]
             vw, vh = h["v_size"]
-            # Draw shell on village (filled completely to prevent spawns inside)
-            draw_rectangle(village_layers[0], vx, vy, vw, vh, "wall_stone", filled=True)
+            style = h.get("style", "home")
+            wall_id = HOUSE_WALL_MATERIAL.get(style, "wall_wood")
+            # Thatched roof over the footprint (non-walkable, so nothing
+            # spawns or walks inside the shell), framed by the house walls.
+            draw_rectangle(village_layers[0], vx, vy, vw, vh, "roof_thatch", filled=True)
+            draw_rectangle(village_layers[0], vx, vy, vw, vh, wall_id, filled=False)
 
-            # Door position on village (reference for portal, but wall stays intact)
+            # You can see a house's roof from the street even though FOV
+            # never reaches behind its walls: start the footprint SHROUDED
+            # so houses read as buildings instead of black holes.
+            for ry in range(vy, vy + vh):
+                for rx in range(vx, vx + vw):
+                    village_layers[0].tiles[ry][rx].visibility_state = VisibilityState.SHROUDED
+
+            # Front door in the south wall, a window on either side
             door_vx, door_vy = vx + vw // 2, vy + vh - 1
+            village_layers[0].tiles[door_vy][door_vx].set_type("door_wood")
+            for wx in (door_vx - 2, door_vx + 2):
+                if vx < wx < vx + vw - 1:
+                    village_layers[0].tiles[door_vy][wx].set_type("wall_window")
 
-            # Portal to house (placed one tile south of the wall)
+            # Portal into the house sits on the doorstep
             world.create_entity(
                 MapBound(),
-                Position(door_vx, door_vy + 1, 0),
+                Position(door_vx, door_vy, 0),
                 Portal(h["id"], h["h_size"][0] // 2, h["h_size"][1] - 2, 0, f"Enter {h['id']}", travel_ticks=1),
                 Renderable(">", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                 Name(f"Portal to {h['id']}"),
             )
+
+            # A torch burns beside every front door after dark
+            tx, ty = get_nearest_walkable_tile(village_layers[0], door_vx + 1, door_vy + 1)
+            self.place_light(world, "torch", tx, ty)
+
+        # Scenario-authored lights (village squares, gates, campfires)
+        for light in config.get("lights", []):
+            lx, ly = light["pos"]
+            lx, ly = get_nearest_walkable_tile(village_layers[0], lx, ly)
+            self.place_light(world, light["type"], lx, ly)
 
         # --- SPAWN VILLAGE NPCS ---
         for npc in config.get("village_npcs", []):
@@ -247,7 +396,7 @@ class MapGenerator:
             self.map_service.register_map(h["id"], h_container)
 
             # Populate house interior
-            self.add_house_to_map(world, h_container, 0, 0, hi, hj, floors)
+            self.add_house_to_map(world, h_container, 0, 0, hi, hj, floors, style=h.get("style", "home"))
 
             # --- SPAWN HOUSE NPCS ---
             for npc in h.get("npcs", []):
@@ -266,6 +415,10 @@ class MapGenerator:
                 Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                 Name(f"Portal to {map_id}"),
             )
+
+            # A lantern on the ground floor keeps the home lit at night
+            # (it lands on the central table/counter where one exists).
+            self.place_light(world, "lantern", hi // 2, hj // 2)
 
             # Houses are people's homes — nothing hostile spawns indoors.
             h_container.freeze(world)
@@ -363,6 +516,9 @@ class MapGenerator:
             Renderable("&", SpriteLayer.DECOR_BOTTOM.value, (200, 180, 80)),
             Name(f"Path back to {settlement_id}"),
         )
+
+        # A hunter's campfire marks the clearing after dark
+        self.place_light(world, "campfire", ax - 2, ay - 1)
 
         # Wildlife per the biome's spawn table
         walkable = [

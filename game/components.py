@@ -170,6 +170,8 @@ class TurnOrder:
 @dataclass
 class LightSource:
     radius: int
+    # Lit only between dusk and dawn (street torches, campfires).
+    night_only: bool = False
 
 
 @dataclass

@@ -1,6 +1,7 @@
 import pygame
 
 from config import (
+    COLOR_LIGHT_GLOW,
     COLOR_TILE_FORGOTTEN,
     COLOR_TILE_FORGOTTEN_BG,
     COLOR_TILE_SHROUD,
@@ -44,6 +45,7 @@ class RenderService:
         self.font = pygame.font.SysFont("monospace", TILE_SIZE)
         self.tint_surface = None
         self._glyph_cache: dict[tuple[str, tuple], pygame.Surface] = {}
+        self._glow_cache: dict[tuple[int, float], pygame.Surface] = {}
 
     def _glyph(self, char: str, color: tuple) -> pygame.Surface:
         """Return a cached rendered glyph surface for a (char, color) pair."""
@@ -66,6 +68,42 @@ class RenderService:
         # Fill with tint color and blit to the main surface
         self.tint_surface.fill(tint_color)
         surface.blit(self.tint_surface, (viewport_rect.x, viewport_rect.y))
+
+    def _glow_surface(self, radius_px: int, strength: float) -> pygame.Surface:
+        """Cached radial gradient for additive light glow (bright core -> dark rim)."""
+        key = (radius_px, strength)
+        glow = self._glow_cache.get(key)
+        if glow is None:
+            glow = pygame.Surface((radius_px * 2, radius_px * 2))
+            center = (radius_px, radius_px)
+            steps = 12
+            for i in range(steps, 0, -1):  # outermost ring first, core last
+                t = i / steps
+                brightness = strength * (1.0 - t) ** 2
+                pygame.draw.circle(glow, _scale(COLOR_LIGHT_GLOW, brightness), center, int(radius_px * t))
+            self._glow_cache[key] = glow
+        return glow
+
+    def render_light_glow(self, surface: pygame.Surface, camera: Camera, lights: list, strength: float) -> None:
+        """Additively blend a warm glow disc around each light source.
+
+        Args:
+            surface: Target surface (viewport clip should already be set).
+            camera: Camera for tile -> screen conversion.
+            lights: Iterable of (tile_x, tile_y, radius_in_tiles).
+            strength: 0..1 — how strongly the glow punches through; scales
+                with the darkness of the current day/night tint.
+        """
+        if strength <= 0:
+            return
+        # Quantize so the gradient cache stays small while dusk fades in
+        strength = min(1.0, round(strength * 10) / 10)
+        for tile_x, tile_y, radius in lights:
+            radius_px = int((radius + 0.5) * TILE_SIZE)
+            glow = self._glow_surface(radius_px, strength)
+            sx, sy = camera.tile_to_screen(tile_x, tile_y)
+            dest = (sx + TILE_SIZE // 2 - radius_px, sy + TILE_SIZE // 2 - radius_px)
+            surface.blit(glow, dest, special_flags=pygame.BLEND_RGB_ADD)
 
     def tile_color(self, tile, x: int, y: int, sprite_layer: SpriteLayer | None = None) -> tuple:
         """Resolve the draw color for a tile based on its visibility state.

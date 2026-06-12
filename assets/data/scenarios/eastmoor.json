@@ -47,7 +47,8 @@
       4
      ]
     }
-   ]
+   ],
+   "style": "tavern"
   },
   {
    "id": "Eastmoor Smithy",
@@ -72,7 +73,8 @@
       5
      ]
     }
-   ]
+   ],
+   "style": "shop"
   },
   {
    "id": "Eastmoor Market Hall",
@@ -104,7 +106,8 @@
       5
      ]
     }
-   ]
+   ],
+   "style": "shop"
   },
   {
    "id": "Eastmoor Manor",
@@ -129,7 +132,8 @@
       7
      ]
     }
-   ]
+   ],
+   "style": "home"
   }
  ],
  "village_npcs": [
@@ -217,5 +221,28 @@
    "bread": -1.5
   }
  },
- "biome": "plains"
+ "biome": "plains",
+ "lights": [
+  {
+   "type": "campfire",
+   "pos": [
+    25,
+    25
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    23,
+    48
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    27,
+    48
+   ]
+  }
+ ]
 }
