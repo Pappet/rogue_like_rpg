@@ -61,7 +61,7 @@
    "floors": 3,
    "npcs": [
     {
-     "type": "shopkeeper",
+     "type": "innkeeper",
      "pos": [
       7,
       7

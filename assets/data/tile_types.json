@@ -212,9 +212,10 @@
  {
   "id": "furniture_bed",
   "name": "Bed",
-  "base_description": "A straw mattress under a woolen blanket.",
+  "base_description": "A straw mattress under a woolen blanket. You could rest here.",
   "walkable": false,
   "transparent": true,
+  "provides_rest": true,
   "sprites": {
    "GROUND": "Θ"
   },

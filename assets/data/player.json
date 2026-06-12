@@ -38,6 +38,9 @@
    "power_multiplier": 2.0
   },
   {
+   "name": "Wait"
+  },
+  {
    "name": "Items"
   }
  ],

@@ -11,6 +11,7 @@ from game.components import (
     Blocker,
     ChaseData,
     Corpse,
+    Innkeeper,
     LootTable,
     Merchant,
     Name,
@@ -75,6 +76,7 @@ class DeathSystem(MapAwareSystem):
             WanderData,
             LootTable,
             Merchant,
+            Innkeeper,
             Skirmisher,
         ]:
             if esper.has_component(entity, component_type):

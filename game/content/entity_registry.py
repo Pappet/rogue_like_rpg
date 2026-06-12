@@ -41,6 +41,7 @@ class EntityTemplate:
     needs: dict | None = None  # {"hunger_rate": float, "eat_threshold": float}
     quest_giver: bool = False
     animal: bool = False
+    innkeeper: bool = False  # bumping offers rest (sleep) instead of dialogue
 
 
 class EntityRegistry(Registry[EntityTemplate]):

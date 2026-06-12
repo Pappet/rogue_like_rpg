@@ -1,10 +1,11 @@
 import esper
 import pygame
 
-from config import UI_MODAL_RECT
+from config import UI_MODAL_RECT, UI_REST_RECT, LogCategory
 from game.controllers.input_controller import InputController
 from game.controllers.render_pipeline import RenderPipeline
 from game.controllers.turn_orchestrator import TurnOrchestrator
+from game.services import rest_service
 from game.services.map_transition_service import MapTransitionService
 from game.services.party_service import PartyService
 from game.states.base import GameState
@@ -12,6 +13,7 @@ from game.systems.debug_render_system import DebugRenderSystem
 from game.systems.render_system import RenderSystem
 from game.systems.ui_system import UISystem
 from game.ui.windows.quests import QuestWindow
+from game.ui.windows.rest import RestWindow
 from game.ui.windows.tooltip import TooltipWindow
 from game.ui.windows.trade import TradeWindow
 
@@ -64,6 +66,7 @@ class GameplayState(GameState):
         esper.set_handler("player_died", self._on_player_died)
         esper.set_handler("trade_requested", self._on_trade_requested)
         esper.set_handler("quests_requested", self._on_quests_requested)
+        esper.set_handler("rest_requested", self._on_rest_requested)
 
     def _on_player_died(self):
         """Handle the player_died event by transitioning to GAME_OVER state."""
@@ -83,6 +86,31 @@ class GameplayState(GameState):
             return
         rect = pygame.Rect(*UI_MODAL_RECT)
         self.ui_stack.push(TradeWindow(rect, self.ctx.player_entity, merchant_entity, self.ctx))
+
+    def _on_rest_requested(self, payload=None):
+        """Open the rest/sleep duration picker (bumping a bed or innkeeper)."""
+        if self.ui_stack.is_active():
+            return
+        options = rest_service.sleep_options(self.ctx.world_clock)
+        rect = pygame.Rect(*UI_REST_RECT)
+        self.ui_stack.push(RestWindow(rect, "Rest", options, self.ctx.input_manager, self.rest))
+
+    def rest(self, ticks, label=None):
+        """Fast-forward game time for a chosen rest/wait duration.
+
+        Used as the RestWindow callback for both the ACTIONS-list 'Wait' and
+        bed/innkeeper sleeping. Reports the new time and any interruption.
+        """
+        result = self.turn_orchestrator.advance_turns(ticks)
+        clock = self.ctx.world_clock
+        if result["elapsed"] <= 0:
+            esper.dispatch_event("log_message", "[color=red]You can't rest right now.[/color]", None, LogCategory.ALERT)
+            return
+        esper.dispatch_event("log_message", f"Time passes... it is now {clock.hour:02d}:{clock.minute:02d}.")
+        if result["interrupted"]:
+            esper.dispatch_event(
+                "log_message", "[color=red]Something interrupts your rest![/color]", None, LogCategory.ALERT
+            )
 
     def get_event(self, event):
         if not self.ctx:

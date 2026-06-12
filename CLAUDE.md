@@ -219,6 +219,7 @@ is neutral constants, usable by both.
     │   ├── reputation_service.py    # Player standing per settlement (price/dialogue)
     │   ├── quest_service.py         # Authored + generated quests, progress, turn-in
     │   ├── rumor_service.py         # Smalltalk rumors from chronicle/offers elsewhere
+    │   ├── rest_service.py          # Wait/sleep duration presets + time math
     │   ├── consumable_service.py    # Item consumption logic
     │   └── equipment_service.py     # Equipment slot logic
     ├── controllers/                 # Gameplay orchestration (driven by states)
@@ -236,6 +237,7 @@ is neutral constants, usable by both.
         ├── character.py             # Character sheet window
         ├── trade.py                 # Merchant buy/sell window
         ├── quests.py                # Quest offers/turn-in + journal window
+        ├── rest.py                  # Wait/sleep duration picker (time skip)
         └── tooltip.py               # Examine/tooltip window
 ```
 
@@ -409,6 +411,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Merchant`        | NPC trades; stock = item template id list    |
 | `Needs`           | Hunger state; preempts schedule via override |
 | `QuestGiver`      | Marker: bump opens the quest window          |
+| `Innkeeper`       | Marker: bump opens the rest/sleep picker     |
 | `Animal`          | Wildlife: bump attacks; hunting costs no rep |
 | `Hidden`          | Concealed until revealed at close range      |
 | `Skirmisher`      | Fights rival-faction Skirmishers, not player |
@@ -488,6 +491,7 @@ class MapAwareSystem:
 - **Economy blocks** in scenarios: `rates_per_day` entries may be a plain number or `{"per_day": N, "requires": {"input_item": amount}}` — production stalls without inputs (supply chains, Phase G3)
 - **World events**: `assets/data/world_events.json` entries may carry `effects` (`stock_delta`, `prosperity_delta`) and `escalation` (`{event_id, delay_hours}`); `weight: 0` templates are escalation-only (Phase G2)
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)
+- **Rest tiles**: a tile with `"provides_rest": true` (e.g. `furniture_bed`) lets the player bump it to sleep. An entity with `"innkeeper": true` offers the same. Both dispatch the `rest_requested` request event; `GameplayState` opens the `RestWindow`, which calls `TurnOrchestrator.advance_turns(ticks)` to fast-forward the world clock (stops early if a hostile starts hunting or the player takes damage). Duration presets come from `rest_service`.
 
 ### AI Behavior
 - Hostile NPCs detect player via shadowcasting FOV → transition to CHASE

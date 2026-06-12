@@ -1,4 +1,12 @@
 {
+ "innkeeper": {
+  "default": [
+   "Weary from the road? I've a bed upstairs whenever you need it.",
+   "Rest as long as you like — the fire stays warm.",
+   "A quiet room and a sound sleep, that's what I offer.",
+   "Sleep here and you'll wake to a brighter day."
+  ]
+ },
  "villager": {
   "default": [
    "Good day, traveler!",
