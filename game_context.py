@@ -19,6 +19,7 @@ from game.services.quest_service import QuestService
 from game.services.render_service import RenderService
 from game.services.reputation_service import ReputationService
 from game.services.rumor_service import RumorService
+from game.services.travel_encounter_service import TravelEncounterService
 from game.services.world_chronicle_service import WorldChronicleService
 from game.services.world_graph_service import WorldGraphService
 from game.systems.action_system import ActionSystem
@@ -98,6 +99,7 @@ class GameContext:
     reputation: ReputationService | None = None
     quests: QuestService | None = None
     rumors: RumorService | None = None
+    travel_encounters: TravelEncounterService | None = None
     debug_flags: DebugFlags = field(default_factory=DebugFlags)
     player_entity: int | None = None
     content: ContentDatabase | None = None

@@ -104,6 +104,7 @@ def test_travel_produces_chronicle_entries():
     ctx = gc.ctx
     # Deterministic rolls with a generous event chance via seeded RNG
     ctx.world_chronicle.rng = random.Random(7)
+    ctx.travel_encounters.templates = []  # deterministic direct travel, no road events
 
     surface = pygame.display.get_surface()
 

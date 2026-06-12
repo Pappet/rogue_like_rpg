@@ -30,6 +30,7 @@ class MapTransitionService:
         ctx = self.ctx
         turn_system = ctx.systems.turn_system
         current_map = ctx.map_service.get_active_map()
+        previous_map_id = ctx.map_service.active_map_id
 
         # Advance world clock
         if ctx.world_clock:
@@ -89,6 +90,13 @@ class MapTransitionService:
         # Update Systems that depend on the map
         for system in ctx.systems.map_aware():
             system.set_map(new_map)
+
+        # Travel encounters: spawn the staged scene when entering a road
+        # map; one-shot road maps are dropped once the player moved on.
+        if ctx.travel_encounters is not None:
+            ctx.travel_encounters.on_map_entered(target_map_id)
+            if previous_map_id is not None:
+                ctx.travel_encounters.on_map_left(previous_map_id)
 
         # Kill-quest causes live in wilderness maps — ensure them on entry
         if ctx.quests is not None:

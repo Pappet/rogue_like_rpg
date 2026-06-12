@@ -18,6 +18,7 @@ from game.components import (
     PathData,
     PlayerTag,
     Position,
+    Skirmisher,
     Stats,
 )
 from game.services.pathfinding_service import PathfindingService
@@ -82,6 +83,12 @@ class AISystem(esper.Processor):
         The match statement then routes to the CHASE case naturally.
         """
         if behavior.state == AIState.SLEEP:
+            return
+
+        # Skirmishers fight their rival faction, not the player (TRVE-01).
+        # Checked before chase detection: a fighter locked in battle does
+        # not break off to hunt a bystander.
+        if esper.has_component(ent, Skirmisher) and self._skirmish(ent, pos, map_container, claimed_tiles):
             return
 
         # Chase detection block (CHAS-01, CHAS-03, CHAS-04)
@@ -214,10 +221,44 @@ class AISystem(esper.Processor):
             # If path failed (blocked), attempt greedy fallback
             self._greedy_step(ent, pos, target_pos, map_container, claimed_tiles)
 
-    def _greedy_step(self, ent, pos, target_pos, map_container, claimed_tiles):
+    def _skirmish(self, ent, pos, map_container, claimed_tiles):
+        """Fight the nearest living Skirmisher of another side (TRVE-01).
+
+        Returns True while the fight is on (the turn is consumed even if
+        the fighter is boxed in — it is busy battling, not wandering).
+        When no opponents remain, the Skirmisher component is removed and
+        normal behavior resumes next dispatch (TRVE-02).
+        """
+        side = esper.component_for_entity(ent, Skirmisher).side
+        nearest = None
+        nearest_dist = None
+        for other, (other_sk, other_pos) in esper.get_components(Skirmisher, Position):
+            if other == ent or other_sk.side == side or other_pos.layer != pos.layer:
+                continue
+            if esper.has_component(other, Corpse):
+                continue
+            dist = abs(other_pos.x - pos.x) + abs(other_pos.y - pos.y)
+            if nearest_dist is None or dist < nearest_dist:
+                nearest = (other, other_pos)
+                nearest_dist = dist
+
+        if nearest is None:
+            esper.remove_component(ent, Skirmisher)
+            return False
+
+        other, other_pos = nearest
+        if nearest_dist == 1:
+            esper.add_component(ent, AttackIntent(target_entity=other))
+        else:
+            self._greedy_step(ent, pos, (other_pos.x, other_pos.y), map_container, claimed_tiles, attack_player=False)
+        return True
+
+    def _greedy_step(self, ent, pos, target_pos, map_container, claimed_tiles, attack_player=True):
         """Move entity one step toward target using greedy Manhattan distance.
 
-        Used as a fallback when pathfinding fails or path is blocked.
+        Used as a fallback when pathfinding fails or path is blocked, and
+        by skirmishers closing in on their opponent (attack_player=False:
+        a blocked skirmisher steps around bystanders instead of hitting them).
         """
         tx, ty = target_pos
         dx = tx - pos.x
@@ -245,7 +286,7 @@ class AISystem(esper.Processor):
                 continue
             blocker_ent = self._get_blocker_at(nx, ny, pos.layer)
             if blocker_ent:
-                if esper.has_component(blocker_ent, PlayerTag):
+                if attack_player and esper.has_component(blocker_ent, PlayerTag):
                     esper.add_component(ent, AttackIntent(target_entity=blocker_ent))
                     return True  # Turn consumed by attack
                 continue

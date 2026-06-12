@@ -148,6 +148,68 @@
   }
  },
  {
+  "id": "traveling_merchant",
+  "name": "Traveling Merchant",
+  "sprite": "H",
+  "color": [
+   255,
+   210,
+   120
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 12,
+  "max_hp": 12,
+  "power": 2,
+  "defense": 1,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 8,
+  "intelligence": 9,
+  "ai": true,
+  "default_state": "idle",
+  "alignment": "neutral",
+  "blocker": true,
+  "description": "A traveling merchant resting beside his cart of rare wares.",
+  "merchant": {
+   "stock": [
+    "circlet",
+    "steel_sword",
+    "chainmail",
+    "iron_ring",
+    "iron_shod_boots",
+    "mana_potion",
+    "mana_potion"
+   ],
+   "gold": 400
+  }
+ },
+ {
+  "id": "caravan_guard",
+  "name": "Caravan Guard",
+  "sprite": "C",
+  "color": [
+   200,
+   170,
+   110
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 16,
+  "max_hp": 16,
+  "power": 4,
+  "defense": 2,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 8,
+  "intelligence": 5,
+  "ai": true,
+  "default_state": "idle",
+  "alignment": "neutral",
+  "blocker": true,
+  "description": "A hired blade guarding the caravans on this road.",
+  "wounded_text": "A battered caravan guard.",
+  "wounded_threshold": 0.5
+ },
+ {
   "id": "goblin",
   "name": "Goblin",
   "sprite": "g",

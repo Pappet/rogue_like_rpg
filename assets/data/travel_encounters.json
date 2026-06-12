@@ -1,0 +1,45 @@
+[
+ {
+  "id": "traveling_merchant",
+  "weight": 2,
+  "message": "You cross paths with a traveling merchant on the road from {destination}. His cart is stacked with rare wares.",
+  "spawns": [
+   {
+    "template": "traveling_merchant",
+    "count": 1,
+    "placement": "mid_road"
+   }
+  ]
+ },
+ {
+  "id": "goblin_ambush",
+  "weight": 3,
+  "message": "Goblins burst from the brush ahead — an ambush!",
+  "spawns": [
+   {
+    "template": "goblin",
+    "count": 3,
+    "placement": "near_player"
+   }
+  ]
+ },
+ {
+  "id": "faction_skirmish",
+  "weight": 2,
+  "message": "Up ahead, caravan guards are locked in battle with goblin raiders over the road.",
+  "spawns": [
+   {
+    "template": "caravan_guard",
+    "count": 2,
+    "placement": "mid_road",
+    "skirmish_side": "guards"
+   },
+   {
+    "template": "goblin",
+    "count": 3,
+    "placement": "mid_road",
+    "skirmish_side": "raiders"
+   }
+  ]
+ }
+]
