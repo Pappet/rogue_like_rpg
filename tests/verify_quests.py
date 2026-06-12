@@ -274,6 +274,7 @@ def test_rumor_leads_to_generated_quest_with_real_cause():
     gc.state = game
     game.startup(gc.ctx)
     ctx = gc.ctx
+    ctx.travel_encounters.templates = []  # deterministic direct travel, no road events
     surface = pygame.display.get_surface()
 
     log: list[str] = []

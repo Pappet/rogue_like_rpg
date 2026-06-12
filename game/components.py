@@ -349,6 +349,18 @@ class Hidden:
 
 
 @dataclass
+class Skirmisher:
+    """Locked in battle with a rival faction (travel encounters).
+
+    AISystem routes entities with this component to skirmish behavior:
+    attack the nearest living Skirmisher of another side instead of
+    reacting to the player. Removed when no opponents remain.
+    """
+
+    side: str = ""
+
+
+@dataclass
 class QuestGiver:
     """Marker: bumping this NPC opens the quest window (ROADMAP Phase E)."""
 

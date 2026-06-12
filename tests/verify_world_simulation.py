@@ -148,6 +148,7 @@ def _frames(gc, n=5, dt=0.016):
 def test_travel_roundtrip_reconciles_village_npcs():
     gc, _game = _boot()
     ctx = gc.ctx
+    ctx.travel_encounters.templates = []  # deterministic direct travel, no road events
     _frames(gc)
 
     # Travel to the first destination and straight back: half a day or more

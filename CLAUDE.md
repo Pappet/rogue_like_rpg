@@ -143,6 +143,7 @@ is neutral constants, usable by both.
 │   ├── player.json                  # Player base stats & actions
 │   ├── world.json                   # World graph: locations + travel routes
 │   ├── world_events.json            # Chronicle event pool (off-screen events)
+│   ├── travel_encounters.json       # Road event pool (merchant, ambush, skirmish)
 │   ├── quests.json                  # Authored quests (generated ones come from the sim)
 │   ├── biomes.json                  # Wilderness biomes: terrain mix + wildlife spawns
 │   ├── schedules.json               # NPC daily routines
@@ -204,6 +205,7 @@ is neutral constants, usable by both.
     │   ├── world_graph_service.py   # World graph: locations, routes, current location
     │   ├── world_simulation_service.py # Off-screen sim: schedule reconciliation on arrival
     │   ├── world_chronicle_service.py  # Per-location event log ("Word around town")
+    │   ├── travel_encounter_service.py # Road events on world travel (one-shot road maps)
     │   ├── save_service.py          # Session snapshot save/load (F9/F10)
     │   ├── save_serialization.py    # Generic dataclass/tile JSON (de)serialization
     │   ├── spawn_service.py         # Monster/NPC spawning
@@ -405,6 +407,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `QuestGiver`      | Marker: bump opens the quest window          |
 | `Animal`          | Wildlife: bump attacks; hunting costs no rep |
 | `Hidden`          | Concealed until revealed at close range      |
+| `Skirmisher`      | Fights rival-faction Skirmishers, not player |
 
 ### Enums
 

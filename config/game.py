@@ -21,6 +21,14 @@ SIM_RECONCILE_MIN_TICKS = 30
 # Chance per location per in-game hour that a chronicle event happens
 SIM_EVENT_CHANCE_PER_HOUR = 0.04
 
+# Travel encounters (events on the road between settlements)
+TRAVEL_ENCOUNTER_CHANCE_PER_HOUR = 0.05  # chance per in-game hour of travel time
+TRAVEL_ENCOUNTER_MAX_CHANCE = 0.6  # even the longest road is not a guaranteed event
+TRAVEL_ENCOUNTER_MIN_PROGRESS = 0.3  # encounter interrupts between 30% ...
+TRAVEL_ENCOUNTER_MAX_PROGRESS = 0.7  # ... and 70% of the journey
+TRAVEL_MERCHANT_RUMOR_CHANCE = 0.5  # meeting the merchant who left your destination
+TRAVEL_MERCHANT_EVENT_MAX_AGE_TICKS = 24 * 60  # merchant_left events expire after a day
+
 # Settlement economy (ROADMAP Phase C)
 ECON_EQUILIBRIUM_STOCK = 5.0  # stock level at which price factor is ~1.0
 ECON_MAX_STOCK = 20.0  # stock cap per good per settlement

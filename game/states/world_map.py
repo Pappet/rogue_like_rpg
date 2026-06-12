@@ -71,22 +71,49 @@ class WorldMapState(GameState):
         target_map = self.ctx.map_service.get_map(destination.id)
         if target_map is None:
             return
-        ax, ay = target_map.arrival_pos or (1, 1)
-        esper.dispatch_event(
-            "map_change_requested",
-            {
-                "target_map_id": destination.id,
-                "target_x": ax,
-                "target_y": ay,
-                "target_layer": 0,
-                "travel_ticks": travel_ticks,
-            },
-        )
         hours = travel_ticks / TICKS_PER_HOUR
-        esper.dispatch_event(
-            "log_message",
-            f"You travel to [color=yellow]{destination.name}[/color] ({hours:.0f}h on the road).",
-        )
+
+        # A road event may interrupt the journey partway (travel encounters):
+        # the player then lands on a one-shot road map whose far portal
+        # carries the remaining travel time.
+        encounters = self.ctx.travel_encounters
+        origin_id = self.ctx.world_graph.current_location_id
+        encounter = encounters.roll_encounter(origin_id, destination.id, travel_ticks) if encounters else None
+
+        if encounter is not None:
+            road_map = self.ctx.map_service.get_map(encounter["map_id"])
+            ax, ay = road_map.arrival_pos
+            esper.dispatch_event(
+                "map_change_requested",
+                {
+                    "target_map_id": encounter["map_id"],
+                    "target_x": ax,
+                    "target_y": ay,
+                    "target_layer": 0,
+                    "travel_ticks": encounter["elapsed_ticks"],
+                },
+            )
+            esper.dispatch_event(
+                "log_message",
+                f"You set out for [color=yellow]{destination.name}[/color] ({hours:.0f}h on the road).",
+            )
+            esper.dispatch_event("log_message", f"[color=orange]{encounter['message']}[/color]")
+        else:
+            ax, ay = target_map.arrival_pos or (1, 1)
+            esper.dispatch_event(
+                "map_change_requested",
+                {
+                    "target_map_id": destination.id,
+                    "target_x": ax,
+                    "target_y": ay,
+                    "target_layer": 0,
+                    "travel_ticks": travel_ticks,
+                },
+            )
+            esper.dispatch_event(
+                "log_message",
+                f"You travel to [color=yellow]{destination.name}[/color] ({hours:.0f}h on the road).",
+            )
         self.done = True
         self.next_state = "GAME"
 

@@ -20,6 +20,7 @@ from game.services.render_service import RenderService
 from game.services.reputation_service import ReputationService
 from game.services.rumor_service import RumorService
 from game.services.system_initializer import build_systems, register_processors
+from game.services.travel_encounter_service import TravelEncounterService
 from game.services.world_chronicle_service import WorldChronicleService
 from game.services.world_graph_service import WorldGraphService
 from game_context import GameContext
@@ -76,6 +77,11 @@ def build_game_context() -> GameContext:
     quests = QuestService(ctx=ctx)
     quests.load_authored(f"{DATA_DIR}/quests.json")
     ctx.quests = quests
+
+    # Travel encounters: road events between settlements, fed by the chronicle
+    travel_encounters = TravelEncounterService(ctx=ctx)
+    travel_encounters.load_templates(f"{DATA_DIR}/travel_encounters.json")
+    ctx.travel_encounters = travel_encounters
 
     # Rumors: smalltalk occasionally points at other settlements
     ctx.rumors = RumorService(ctx=ctx)

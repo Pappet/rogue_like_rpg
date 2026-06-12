@@ -16,6 +16,7 @@ from game.components import (
     PlayerTag,
     Position,
     Renderable,
+    Skirmisher,
     Stats,
     WanderData,
 )
@@ -63,7 +64,17 @@ class DeathSystem(MapAwareSystem):
         # AI: Corpses don't take turns
         # Stats: Corpses don't have health/combat stats (optional, but requested in plan context)
         # Merchant: dead traders no longer trade (their Purse stays lootable-in-spirit)
-        for component_type in [Blocker, AI, Stats, AIBehaviorState, ChaseData, WanderData, LootTable, Merchant]:
+        for component_type in [
+            Blocker,
+            AI,
+            Stats,
+            AIBehaviorState,
+            ChaseData,
+            WanderData,
+            LootTable,
+            Merchant,
+            Skirmisher,
+        ]:
             if esper.has_component(entity, component_type):
                 esper.remove_component(entity, component_type)
 
