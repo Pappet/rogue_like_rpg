@@ -2,12 +2,32 @@
   {
     "id": "wolves_spotted",
     "text": "Wolves were spotted near {location}.",
-    "weight": 3
+    "weight": 3,
+    "escalation": { "event_id": "wolves_attacked_herd", "delay_hours": 36 }
+  },
+  {
+    "id": "wolves_attacked_herd",
+    "text": "Wolves tore into the herds of {location} — meat is getting scarce.",
+    "weight": 0,
+    "effects": { "stock_delta": { "venison": -3 } }
+  },
+  {
+    "id": "bandits_spotted",
+    "text": "Bandits were seen camping on the roads near {location}.",
+    "weight": 2,
+    "escalation": { "event_id": "caravan_raided", "delay_hours": 48 }
+  },
+  {
+    "id": "caravan_raided",
+    "text": "A supply caravan bound for {location} was raided on the road.",
+    "weight": 0,
+    "effects": { "stock_delta": { "health_potion": -2, "iron_sword": -1 } }
   },
   {
     "id": "merchant_arrived",
     "text": "A traveling merchant arrived in {location}.",
-    "weight": 3
+    "weight": 3,
+    "effects": { "stock_delta": { "health_potion": 1 } }
   },
   {
     "id": "merchant_left",
@@ -17,7 +37,38 @@
   {
     "id": "harvest_brought_in",
     "text": "The farmers of {location} brought in a harvest.",
-    "weight": 2
+    "weight": 2,
+    "effects": { "stock_delta": { "venison": 2 } }
+  },
+  {
+    "id": "hunters_returned",
+    "text": "Hunters returned to {location} with full sledges.",
+    "weight": 2,
+    "effects": { "stock_delta": { "venison": 2, "pelt": 2 } }
+  },
+  {
+    "id": "good_fishing",
+    "text": "The catch at {location} was unusually rich this week.",
+    "weight": 2,
+    "effects": { "stock_delta": { "venison": 3 } }
+  },
+  {
+    "id": "sickness_spreads",
+    "text": "A sickness is going around in {location} — remedies sell out fast.",
+    "weight": 1,
+    "effects": { "stock_delta": { "health_potion": -3 } }
+  },
+  {
+    "id": "wedding_feast",
+    "text": "A wedding feast emptied half the larders of {location}.",
+    "weight": 1,
+    "effects": { "stock_delta": { "venison": -2 } }
+  },
+  {
+    "id": "feast_day",
+    "text": "{location} celebrated a small feast day.",
+    "weight": 1,
+    "effects": { "stock_delta": { "venison": -2 } }
   },
   {
     "id": "tavern_brawl",
@@ -27,16 +78,45 @@
   {
     "id": "tools_stolen",
     "text": "Tools went missing in {location} — folk suspect a thief.",
-    "weight": 1
+    "weight": 1,
+    "effects": { "stock_delta": { "iron_sword": -1 } }
   },
   {
-    "id": "feast_day",
-    "text": "{location} celebrated a small feast day.",
-    "weight": 1
+    "id": "smith_surplus",
+    "text": "The forge of {location} ran hot all week — blades pile up.",
+    "weight": 1,
+    "effects": { "stock_delta": { "iron_sword": 1 } }
+  },
+  {
+    "id": "traveling_healer",
+    "text": "A traveling healer passed through {location}, selling tonics.",
+    "weight": 1,
+    "effects": { "stock_delta": { "health_potion": 2 } }
   },
   {
     "id": "strange_lights",
     "text": "Strange lights were seen outside {location} at night.",
     "weight": 1
+  },
+  {
+    "id": "roads_muddy",
+    "text": "Heavy rains turned the roads around {location} to mud.",
+    "weight": 1
+  },
+  {
+    "id": "newcomer_settled",
+    "text": "A newcomer family settled down in {location}.",
+    "weight": 1
+  },
+  {
+    "id": "old_well_dried",
+    "text": "The old well of {location} ran dry; folk haul water from the stream.",
+    "weight": 1
+  },
+  {
+    "id": "cold_snap",
+    "text": "A cold snap has folk in {location} burning through their stores.",
+    "weight": 1,
+    "effects": { "stock_delta": { "venison": -1, "pelt": -1 } }
   }
 ]

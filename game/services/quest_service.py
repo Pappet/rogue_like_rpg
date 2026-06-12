@@ -55,6 +55,7 @@ class Quest:
     state: str = "offered"  # offered | active | completed | turned_in
     progress: int = 0
     source: str = "authored"  # authored | generated
+    cause_event_id: str = ""  # chronicle event that caused this quest (G2)
 
 
 # eq=False keeps identity hashing — esper event handlers live in weakref sets.
@@ -148,6 +149,10 @@ class QuestService:
             purse.gold += quest.reward_gold
         if self.ctx.reputation is not None:
             self.ctx.reputation.adjust(location_id, 5, f"quest '{quest.id}'")
+        # Resolving the cause stops what it would have escalated into (G2):
+        # hunted wolves never reach the herds.
+        if quest.cause_event_id and self.ctx.world_chronicle is not None:
+            self.ctx.world_chronicle.cancel_escalations(quest.giver_location, quest.cause_event_id)
         quest.state = "turned_in"
         esper.dispatch_event(
             "log_message",
@@ -269,6 +274,7 @@ class QuestService:
                         target={"template": "wolf", "count": GEN_KILL_COUNT},
                         reward_gold=GEN_KILL_REWARD,
                         source="generated",
+                        cause_event_id=GEN_WOLF_EVENT_ID,
                     )
                 )
                 logger.info("Generated wolf-hunt quest at %s.", location_id)

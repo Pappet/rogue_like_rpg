@@ -103,6 +103,18 @@ class EconomyService:
         factor = ECON_EQUILIBRIUM_STOCK / (level + 1.0)
         return max(ECON_PRICE_FACTOR_MIN, min(ECON_PRICE_FACTOR_MAX, factor))
 
+    # --- World events (G2) ---------------------------------------------------------
+
+    def apply_stock_delta(self, location_id: str, item_id: str, delta: float) -> None:
+        """Chronicle event consequence: shift a settlement's stock level.
+
+        Creates the stock entry if the settlement didn't track the good yet
+        (a raided caravan can empty shelves the scenario never listed).
+        """
+        stock = self.stocks.setdefault(location_id, {})
+        level = stock.get(item_id, 0.0) + delta
+        stock[item_id] = max(0.0, min(ECON_MAX_STOCK, level))
+
     # --- Player feedback ---------------------------------------------------------
 
     def record_purchase(self, location_id: str | None, item_id: str) -> None:
