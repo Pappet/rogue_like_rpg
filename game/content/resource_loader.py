@@ -117,9 +117,11 @@ class ResourceLoader:
                         f"Unknown sprite layer '{layer_name}' in tile '{item['id']}' — skipping that sprite entry."
                     )
 
-            # --- build color tuple ---
+            # --- build color tuples ---
             raw_color = item.get("color", [255, 255, 255])
             color = tuple(raw_color)
+            raw_bg = item.get("bg_color")
+            bg_color = tuple(raw_bg) if raw_bg is not None else None
 
             tile_type = TileType(
                 id=item["id"],
@@ -130,6 +132,7 @@ class ResourceLoader:
                 color=color,
                 base_description=item.get("base_description", ""),
                 occludes_below=bool(item.get("occludes_below", False)),
+                bg_color=bg_color,
             )
 
             registry.register(tile_type)

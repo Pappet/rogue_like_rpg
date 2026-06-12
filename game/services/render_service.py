@@ -1,6 +1,13 @@
 import pygame
 
-from config import COLOR_TILE_FORGOTTEN, COLOR_TILE_SHROUD, TILE_SIZE, SpriteLayer
+from config import (
+    COLOR_TILE_FORGOTTEN,
+    COLOR_TILE_FORGOTTEN_BG,
+    COLOR_TILE_SHROUD,
+    COLOR_TILE_SHROUD_BG,
+    TILE_SIZE,
+    SpriteLayer,
+)
 from core.camera import Camera
 from game.map.map_container import MapContainer
 from game.map.tile import VisibilityState
@@ -73,6 +80,21 @@ class RenderService:
             return COLOR_TILE_FORGOTTEN
         return _scale(tile.color, _variation_factor(x, y))
 
+    def tile_bg_color(self, tile, x: int, y: int) -> tuple | None:
+        """Resolve the background fill color for a tile, or None if it has none.
+
+        Follows the same visibility treatment as the glyph color so terrain
+        backgrounds dim consistently in SHROUDED/FORGOTTEN memory states.
+        """
+        bg = getattr(tile, "bg_color", None)
+        if bg is None:
+            return None
+        if tile.visibility_state == VisibilityState.SHROUDED:
+            return _blend(bg, COLOR_TILE_SHROUD_BG, SHROUD_COLOR_KEEP)
+        if tile.visibility_state == VisibilityState.FORGOTTEN:
+            return COLOR_TILE_FORGOTTEN_BG
+        return _scale(bg, _variation_factor(x, y))
+
     def render_map(self, surface: pygame.Surface, map_container: MapContainer, camera: Camera, player_layer: int = 0):
         """Renders the layered map tiles with ground occlusion."""
         if not map_container.layers:
@@ -113,10 +135,17 @@ class RenderService:
                     screen_x, screen_y = camera.apply_to_pos(pixel_x, pixel_y)
 
                     color = self.tile_color(tile, x, y)
+                    bg_color = self.tile_bg_color(tile, x, y)
 
                     # Apply depth darkening
                     if depth_factor < 1.0:
                         color = _scale(color, depth_factor)
+                        if bg_color is not None:
+                            bg_color = _scale(bg_color, depth_factor)
+
+                    # Fill the cell background before drawing glyphs
+                    if bg_color is not None:
+                        surface.fill(bg_color, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
 
                     # Sort sprites by layer order
                     sorted_layers = sorted(tile.sprites.keys(), key=lambda l: l.value)
@@ -131,4 +160,8 @@ class RenderService:
                                 elif sprite_char == "#":
                                     char_to_render = "?"
 
-                            surface.blit(self._glyph(char_to_render, color), (screen_x, screen_y))
+                            glyph = self._glyph(char_to_render, color)
+                            # Center the glyph in its cell so it sits nicely on the background
+                            offset_x = (TILE_SIZE - glyph.get_width()) // 2
+                            offset_y = (TILE_SIZE - glyph.get_height()) // 2
+                            surface.blit(glyph, (screen_x + offset_x, screen_y + offset_y))

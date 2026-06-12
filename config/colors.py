@@ -13,6 +13,8 @@ COLOR_GOLD = (255, 215, 0)
 # Tile Rendering Colors (map viewport)
 COLOR_TILE_SHROUD = (70, 75, 110)  # memory tint blended over explored-but-unseen tiles
 COLOR_TILE_FORGOTTEN = (40, 40, 52)  # tiles nearly faded from memory
+COLOR_TILE_SHROUD_BG = (28, 30, 46)  # background tint for explored-but-unseen tiles
+COLOR_TILE_FORGOTTEN_BG = (14, 14, 20)  # background for tiles nearly faded from memory
 
 # UI Colors
 UI_COLOR_BG_HEADER = (30, 30, 30)
