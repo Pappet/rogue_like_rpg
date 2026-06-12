@@ -6,7 +6,6 @@ import esper as _esper
 
 from config import SpriteLayer
 from core.rng import derive_seed
-from game.components import MapBound, Name, Portal, Position, Renderable
 from game.components import LightSource, MapBound, Name, Portal, Position, Renderable
 from game.content.entity_factory import EntityFactory
 from game.content.item_factory import ItemFactory
