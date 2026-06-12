@@ -114,5 +114,28 @@
    "venison": -1.5
   }
  },
- "biome": "swamp"
+ "biome": "swamp",
+ "lights": [
+  {
+   "type": "campfire",
+   "pos": [
+    15,
+    15
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    13,
+    28
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    17,
+    28
+   ]
+  }
+ ]
 }

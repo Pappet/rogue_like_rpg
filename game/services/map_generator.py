@@ -5,7 +5,7 @@ import random
 import esper as _esper
 
 from config import SpriteLayer
-from game.components import MapBound, Name, Portal, Position, Renderable
+from game.components import LightSource, MapBound, Name, Portal, Position, Renderable
 from game.content.entity_factory import EntityFactory
 from game.content.item_factory import ItemFactory
 from game.map.map_container import MapContainer
@@ -19,6 +19,15 @@ WILDERNESS_SIZE = 40
 
 # House style -> wall material for both the exterior shell and the interior.
 HOUSE_WALL_MATERIAL = {"home": "wall_wood", "tavern": "wall_wood", "shop": "wall_stone"}
+
+# Light props placed by the generator. All burn dusk-to-dawn (night_only):
+# they reveal their surroundings via VisibilitySystem and get a warm glow
+# from the render pipeline once the day/night tint darkens.
+LIGHT_PROPS = {
+    "torch": {"glyph": "†", "color": (255, 190, 110), "radius": 4, "name": "Torch"},
+    "lantern": {"glyph": "¤", "color": (255, 215, 130), "radius": 4, "name": "Lantern"},
+    "campfire": {"glyph": "♨", "color": (255, 150, 60), "radius": 6, "name": "Campfire"},
+}
 
 
 def wilderness_map_id(settlement_id: str) -> str:
@@ -34,6 +43,18 @@ def wilderness_arrival_pos() -> tuple[int, int]:
 class MapGenerator:
     def __init__(self, map_service: MapService):
         self.map_service = map_service
+
+    @staticmethod
+    def place_light(world, light_type: str, x: int, y: int, layer: int = 0) -> int:
+        """Create a non-blocking light prop entity (torch/lantern/campfire)."""
+        props = LIGHT_PROPS[light_type]
+        return world.create_entity(
+            MapBound(),
+            Position(x, y, layer),
+            Renderable(props["glyph"], SpriteLayer.DECOR_BOTTOM.value, props["color"]),
+            Name(props["name"]),
+            LightSource(radius=props["radius"], night_only=True),
+        )
 
     def apply_terrain_variety(self, layer: MapLayer, chance: float, type_id_choices: list):
         """
@@ -329,6 +350,16 @@ class MapGenerator:
                 Name(f"Portal to {h['id']}"),
             )
 
+            # A torch burns beside every front door after dark
+            tx, ty = get_nearest_walkable_tile(village_layers[0], door_vx + 1, door_vy + 1)
+            self.place_light(world, "torch", tx, ty)
+
+        # Scenario-authored lights (village squares, gates, campfires)
+        for light in config.get("lights", []):
+            lx, ly = light["pos"]
+            lx, ly = get_nearest_walkable_tile(village_layers[0], lx, ly)
+            self.place_light(world, light["type"], lx, ly)
+
         # --- SPAWN VILLAGE NPCS ---
         for npc in config.get("village_npcs", []):
             nx, ny = get_nearest_walkable_tile(village_layers[0], npc["pos"][0], npc["pos"][1])
@@ -371,6 +402,10 @@ class MapGenerator:
                 Renderable("<", SpriteLayer.DECOR_BOTTOM.value, (255, 255, 0)),
                 Name(f"Portal to {map_id}"),
             )
+
+            # A lantern on the ground floor keeps the home lit at night
+            # (it lands on the central table/counter where one exists).
+            self.place_light(world, "lantern", hi // 2, hj // 2)
 
             # Houses are people's homes — nothing hostile spawns indoors.
             h_container.freeze(world)
@@ -462,6 +497,9 @@ class MapGenerator:
             Renderable("&", SpriteLayer.DECOR_BOTTOM.value, (200, 180, 80)),
             Name(f"Path back to {settlement_id}"),
         )
+
+        # A hunter's campfire marks the clearing after dark
+        self.place_light(world, "campfire", ax - 2, ay - 1)
 
         # Wildlife per the biome's spawn table
         walkable = [

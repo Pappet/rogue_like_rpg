@@ -15,6 +15,7 @@ COLOR_TILE_SHROUD = (70, 75, 110)  # memory tint blended over explored-but-unsee
 COLOR_TILE_FORGOTTEN = (40, 40, 52)  # tiles nearly faded from memory
 COLOR_TILE_SHROUD_BG = (28, 30, 46)  # background tint for explored-but-unseen tiles
 COLOR_TILE_FORGOTTEN_BG = (14, 14, 20)  # background for tiles nearly faded from memory
+COLOR_LIGHT_GLOW = (110, 70, 28)  # additive warm glow around lit light sources (max at strength 1)
 
 # UI Colors
 UI_COLOR_BG_HEADER = (30, 30, 30)

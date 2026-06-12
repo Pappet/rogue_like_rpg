@@ -155,5 +155,28 @@
    "venison": -1.5
   }
  },
- "biome": "forest"
+ "biome": "forest",
+ "lights": [
+  {
+   "type": "campfire",
+   "pos": [
+    20,
+    10
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    18,
+    38
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    22,
+    38
+   ]
+  }
+ ]
 }
