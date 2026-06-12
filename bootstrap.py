@@ -10,6 +10,7 @@ import esper
 
 from config import HEADER_HEIGHT, LOG_HEIGHT, SCREEN_HEIGHT, SCREEN_WIDTH, SIDEBAR_WIDTH
 from core.camera import Camera
+from core.ecs import apply_esper_compat_patches
 from core.input_manager import InputManager
 from core.rng import derive_seed
 from core.ui.stack_manager import UIStack
@@ -40,6 +41,9 @@ def build_game_context(seed: int | None = None) -> GameContext:
             economy jitter — derives from it, so the same seed reproduces
             the same world. None picks a random seed.
     """
+    # Work around an esper 3.7 query bug before any entities are created.
+    apply_esper_compat_patches()
+
     world_seed = seed if seed is not None else random.SystemRandom().randrange(2**31)
 
     content = default_content.load(DATA_DIR)
