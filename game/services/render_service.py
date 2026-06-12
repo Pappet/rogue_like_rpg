@@ -1,9 +1,34 @@
 import pygame
 
-from config import TILE_SIZE, SpriteLayer
+from config import COLOR_TILE_FORGOTTEN, COLOR_TILE_SHROUD, TILE_SIZE, SpriteLayer
 from core.camera import Camera
 from game.map.map_container import MapContainer
 from game.map.tile import VisibilityState
+
+# How much of the tile's own hue survives in the SHROUDED memory state
+# (the rest is blended toward COLOR_TILE_SHROUD).
+SHROUD_COLOR_KEEP = 0.35
+
+# Deterministic per-tile brightness variation so large terrain patches
+# (grass, dirt, sand) read as textured instead of flat. Quantized to a few
+# levels to keep the glyph cache small.
+BRIGHTNESS_VARIATION = (0.88, 0.94, 1.0, 1.06)
+
+
+def _blend(color_a: tuple, color_b: tuple, keep_a: float) -> tuple:
+    """Linear blend of two RGB colors, keeping `keep_a` of color_a."""
+    return tuple(int(a * keep_a + b * (1.0 - keep_a)) for a, b in zip(color_a, color_b, strict=True))
+
+
+def _scale(color: tuple, factor: float) -> tuple:
+    """Scale an RGB color by a brightness factor, clamped to 0-255."""
+    return tuple(min(255, max(0, int(c * factor))) for c in color)
+
+
+def _variation_factor(x: int, y: int) -> float:
+    """Deterministic brightness factor for a tile position."""
+    h = (x * 92837111) ^ (y * 689287499)
+    return BRIGHTNESS_VARIATION[(h ^ (h >> 7)) % len(BRIGHTNESS_VARIATION)]
 
 
 class RenderService:
@@ -11,6 +36,16 @@ class RenderService:
         pygame.font.init()
         self.font = pygame.font.SysFont("monospace", TILE_SIZE)
         self.tint_surface = None
+        self._glyph_cache: dict[tuple[str, tuple], pygame.Surface] = {}
+
+    def _glyph(self, char: str, color: tuple) -> pygame.Surface:
+        """Return a cached rendered glyph surface for a (char, color) pair."""
+        key = (char, color)
+        glyph = self._glyph_cache.get(key)
+        if glyph is None:
+            glyph = self.font.render(char, True, color)
+            self._glyph_cache[key] = glyph
+        return glyph
 
     def apply_viewport_tint(self, surface: pygame.Surface, tint_color: tuple, viewport_rect: pygame.Rect):
         """Applies a semi-transparent color tint to the specified viewport area."""
@@ -24,6 +59,19 @@ class RenderService:
         # Fill with tint color and blit to the main surface
         self.tint_surface.fill(tint_color)
         surface.blit(self.tint_surface, (viewport_rect.x, viewport_rect.y))
+
+    def tile_color(self, tile, x: int, y: int) -> tuple:
+        """Resolve the draw color for a tile based on its visibility state.
+
+        VISIBLE tiles use their own registry color with a subtle positional
+        brightness variation; SHROUDED tiles keep a dimmed hint of their hue;
+        FORGOTTEN tiles collapse to a uniform near-dark tone.
+        """
+        if tile.visibility_state == VisibilityState.SHROUDED:
+            return _blend(tile.color, COLOR_TILE_SHROUD, SHROUD_COLOR_KEEP)
+        if tile.visibility_state == VisibilityState.FORGOTTEN:
+            return COLOR_TILE_FORGOTTEN
+        return _scale(tile.color, _variation_factor(x, y))
 
     def render_map(self, surface: pygame.Surface, map_container: MapContainer, camera: Camera, player_layer: int = 0):
         """Renders the layered map tiles with ground occlusion."""
@@ -64,16 +112,11 @@ class RenderService:
                     pixel_y = y * TILE_SIZE
                     screen_x, screen_y = camera.apply_to_pos(pixel_x, pixel_y)
 
-                    base_color = (255, 255, 255)
-                    if tile.visibility_state == VisibilityState.SHROUDED:
-                        base_color = (80, 80, 100)
-                    elif tile.visibility_state == VisibilityState.FORGOTTEN:
-                        base_color = (40, 40, 50)
+                    color = self.tile_color(tile, x, y)
 
                     # Apply depth darkening
-                    color = base_color
                     if depth_factor < 1.0:
-                        color = tuple(max(0, int(c * depth_factor)) for c in base_color)
+                        color = _scale(color, depth_factor)
 
                     # Sort sprites by layer order
                     sorted_layers = sorted(tile.sprites.keys(), key=lambda l: l.value)
@@ -88,5 +131,4 @@ class RenderService:
                                 elif sprite_char == "#":
                                     char_to_render = "?"
 
-                            text_surface = self.font.render(char_to_render, True, color)
-                            surface.blit(text_surface, (screen_x, screen_y))
+                            surface.blit(self._glyph(char_to_render, color), (screen_x, screen_y))

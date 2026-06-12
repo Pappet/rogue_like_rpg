@@ -38,7 +38,7 @@
   "walkable": true,
   "transparent": true,
   "sprites": {
-   "GROUND": "."
+   "GROUND": "+"
   },
   "color": [
    140,

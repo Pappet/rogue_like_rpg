@@ -49,9 +49,9 @@ def test_place_door():
     tiles = [[Tile(transparent=False, sprites={SpriteLayer.GROUND: "#"}) for _ in range(10)] for _ in range(10)]
     layer = MapLayer(tiles)
 
-    # place_door uses 'door_stone' by default (sprite '.', transparent True)
+    # place_door uses 'door_stone' by default (sprite '+', transparent True)
     place_door(layer, 5, 5)
-    assert layer.tiles[5][5].sprites[SpriteLayer.GROUND] == "."
+    assert layer.tiles[5][5].sprites[SpriteLayer.GROUND] == "+"
     assert layer.tiles[5][5].transparent is True
 
     print("test_place_door passed")
