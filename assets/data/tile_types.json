@@ -66,22 +66,253 @@
   "id": "roof_thatch",
   "name": "Thatched Roof",
   "base_description": "A dried straw roof that keeps out the rain.",
+  "walkable": false,
+  "transparent": false,
+  "sprites": {
+   "GROUND": "▒"
+  },
+  "color": [
+   188,
+   150,
+   82
+  ],
+  "bg_color": [
+   100,
+   74,
+   38
+  ],
+  "occludes_below": true
+ },
+ {
+  "id": "floor_wood",
+  "name": "Wooden Floor",
+  "base_description": "Worn wooden floorboards that creak underfoot.",
   "walkable": true,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "."
+  },
+  "color": [
+   150,
+   115,
+   75
+  ],
+  "bg_color": [
+   54,
+   41,
+   26
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "wall_wood",
+  "name": "Wooden Wall",
+  "base_description": "A wall of rough timber planks.",
+  "walkable": false,
   "transparent": false,
   "sprites": {
    "GROUND": "#"
   },
   "color": [
+   140,
+   102,
+   58
+  ],
+  "bg_color": [
+   62,
+   45,
+   26
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "wall_window",
+  "name": "Window",
+  "base_description": "A small window set into the wall.",
+  "walkable": false,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "□"
+  },
+  "color": [
+   170,
+   205,
+   225
+  ],
+  "bg_color": [
+   62,
+   45,
+   26
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "door_wood",
+  "name": "Wooden Door",
+  "base_description": "A sturdy wooden door.",
+  "walkable": true,
+  "transparent": false,
+  "sprites": {
+   "GROUND": "+"
+  },
+  "color": [
    200,
    155,
+   95
+  ],
+  "bg_color": [
+   70,
+   50,
+   28
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "furniture_table",
+  "name": "Table",
+  "base_description": "A plain wooden table.",
+  "walkable": false,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "┬"
+  },
+  "color": [
+   175,
+   135,
    85
   ],
   "bg_color": [
-   106,
-   76,
+   54,
+   41,
+   26
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "furniture_chair",
+  "name": "Chair",
+  "base_description": "A simple wooden chair.",
+  "walkable": false,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "π"
+  },
+  "color": [
+   160,
+   125,
+   80
+  ],
+  "bg_color": [
+   54,
+   41,
+   26
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "furniture_bed",
+  "name": "Bed",
+  "base_description": "A straw mattress under a woolen blanket.",
+  "walkable": false,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "Θ"
+  },
+  "color": [
+   185,
+   175,
+   205
+  ],
+  "bg_color": [
+   54,
+   41,
+   26
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "furniture_counter",
+  "name": "Counter",
+  "base_description": "A long counter, polished by years of trade.",
+  "walkable": false,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "▬"
+  },
+  "color": [
+   190,
+   145,
+   90
+  ],
+  "bg_color": [
+   54,
+   41,
+   26
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "furniture_shelf",
+  "name": "Shelf",
+  "base_description": "Shelves stacked with goods and oddments.",
+  "walkable": false,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "≡"
+  },
+  "color": [
+   175,
+   140,
+   95
+  ],
+  "bg_color": [
+   54,
+   41,
+   26
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "furniture_barrel",
+  "name": "Barrel",
+  "base_description": "A heavy oak barrel.",
+  "walkable": false,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "o"
+  },
+  "color": [
+   150,
+   110,
+   65
+  ],
+  "bg_color": [
+   54,
+   41,
+   26
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "fireplace",
+  "name": "Fireplace",
+  "base_description": "A stone hearth with a low, crackling fire.",
+  "walkable": false,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "∩"
+  },
+  "color": [
+   240,
+   145,
+   60
+  ],
+  "bg_color": [
+   46,
+   40,
    38
   ],
-  "occludes_below": true
+  "occludes_below": false
  },
  {
   "id": "floor_grass",

@@ -41,7 +41,8 @@
       4
      ]
     }
-   ]
+   ],
+   "style": "home"
   },
   {
    "id": "Tavern",
@@ -66,7 +67,8 @@
       7
      ]
     }
-   ]
+   ],
+   "style": "tavern"
   },
   {
    "id": "Shop",
@@ -91,7 +93,8 @@
       5
      ]
     }
-   ]
+   ],
+   "style": "shop"
   }
  ],
  "village_npcs": [
