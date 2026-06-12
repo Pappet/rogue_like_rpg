@@ -40,6 +40,7 @@ class TurnOrchestrator:
         # Phase systems run during the enemy turn
         if ctx.systems.turn_system.current_state == GameStates.ENEMY_TURN:
             player_layer = self._player_layer()
+            ctx.systems.status_effect_system.process()
             ctx.systems.schedule_system.process(ctx.world_clock, ctx.map_container)
             ctx.systems.needs_system.process(ctx.map_container)
             ctx.systems.ai_system.process(ctx.systems.turn_system, ctx.map_container, player_layer, ctx.player_entity)

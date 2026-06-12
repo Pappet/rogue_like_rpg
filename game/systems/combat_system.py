@@ -2,11 +2,18 @@ import random
 
 import esper
 
-from config import LogCategory
+from config import (
+    BLEED_DAMAGE_PER_TURN,
+    BLEED_TURNS,
+    COMBAT_CRIT_CHANCE,
+    COMBAT_CRIT_MULTIPLIER,
+    LogCategory,
+)
 from game.components import (
     FCT,
     AIBehaviorState,
     AttackIntent,
+    Bleeding,
     EffectiveStats,
     MapBound,
     Name,
@@ -17,9 +24,11 @@ from game.components import (
 
 
 class CombatSystem(esper.Processor):
-    def __init__(self, action_system=None):
+    def __init__(self, action_system=None, rng: random.Random | None = None):
         super().__init__()
         self.action_system = action_system
+        # Injectable for deterministic tests; bootstrap leaves the default.
+        self.rng = rng or random.Random()
 
     def process(self, *args, **kwargs):
         for attacker, intent in list(esper.get_component(AttackIntent)):
@@ -33,8 +42,16 @@ class CombatSystem(esper.Processor):
                 attacker_eff = esper.try_component(attacker, EffectiveStats) or attacker_stats
                 target_eff = esper.try_component(target, EffectiveStats) or target_stats
 
-                # Calculate damage using effective values
-                damage = max(0, attacker_eff.power - target_eff.defense)
+                # Calculate damage using effective values; abilities may
+                # scale the attacker's power (G5)
+                attack_power = round(attacker_eff.power * intent.power_multiplier)
+                damage = max(0, attack_power - target_eff.defense)
+
+                # Critical hit: double damage and an open, bleeding wound
+                is_crit = damage > 0 and self.rng.random() < COMBAT_CRIT_CHANCE
+                if is_crit:
+                    damage *= COMBAT_CRIT_MULTIPLIER
+                    esper.add_component(target, Bleeding(damage_per_turn=BLEED_DAMAGE_PER_TURN, turns_left=BLEED_TURNS))
 
                 # Subtract HP from the base stats
                 target_stats.hp -= damage
@@ -59,7 +76,15 @@ class CombatSystem(esper.Processor):
                     category = LogCategory.DAMAGE_RECEIVED
 
                 # Dispatch log message
-                if damage > 0:
+                if is_crit:
+                    esper.dispatch_event(
+                        "log_message",
+                        f"{attacker_name} lands a critical hit on {target_name} for {damage} damage — it bleeds!",
+                        None,
+                        category,
+                    )
+                    self._spawn_fct(target, f"{damage}!", (255, 160, 0))
+                elif damage > 0:
                     esper.dispatch_event(
                         "log_message", f"{attacker_name} hits {target_name} for {damage} damage.", None, category
                     )

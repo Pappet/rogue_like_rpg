@@ -181,6 +181,18 @@ class MovementRequest:
 @dataclass
 class AttackIntent:
     target_entity: int
+    power_multiplier: float = 1.0  # abilities hit harder than a plain bump
+
+
+@dataclass
+class Bleeding:
+    """Status effect: loses HP at the end of each round (ROADMAP Phase G5).
+
+    Applied by critical hits; ticked once per round by StatusEffectSystem.
+    """
+
+    damage_per_turn: int = 1
+    turns_left: int = 3
 
 
 @dataclass
@@ -191,6 +203,7 @@ class Action:
     range: int = 0
     requires_targeting: bool = False
     targeting_mode: str = "auto"  # "auto" or "manual"
+    power_multiplier: float = 1.0  # damage scale for attack abilities
 
 
 @dataclass

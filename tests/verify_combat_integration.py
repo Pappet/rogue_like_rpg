@@ -1,3 +1,4 @@
+import random
 from unittest.mock import MagicMock
 
 import esper
@@ -13,7 +14,11 @@ def test_combat_with_equipment():
     esper.clear_database()
     # Order: Equipment before Combat
     esper.add_processor(EquipmentSystem(MagicMock()))
-    esper.add_processor(CombatSystem())
+
+    # Pin the crit roll: this test asserts exact damage numbers
+    no_crit_rng = random.Random()
+    no_crit_rng.random = lambda: 0.99
+    esper.add_processor(CombatSystem(rng=no_crit_rng))
 
     # Create attacker (player)
     attacker = esper.create_entity()

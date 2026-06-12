@@ -7,6 +7,7 @@ from config import LogCategory, SpriteLayer
 from game.components import (
     AI,
     AIBehaviorState,
+    Bleeding,
     Blocker,
     ChaseData,
     Corpse,
@@ -69,6 +70,7 @@ class DeathSystem(MapAwareSystem):
             AI,
             Stats,
             AIBehaviorState,
+            Bleeding,
             ChaseData,
             WanderData,
             LootTable,

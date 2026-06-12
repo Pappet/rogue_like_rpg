@@ -20,6 +20,7 @@ from game.systems.fct_system import FCTSystem
 from game.systems.movement_system import MovementSystem
 from game.systems.needs_system import NeedsSystem
 from game.systems.schedule_system import ScheduleSystem
+from game.systems.status_effect_system import StatusEffectSystem
 from game.systems.turn_system import TurnSystem
 from game.systems.visibility_system import VisibilitySystem
 from game_context import Systems
@@ -46,6 +47,7 @@ def build_systems(world_clock: WorldClockService, map_container: MapContainer) -
         ai_system=AISystem(),
         schedule_system=ScheduleSystem(),
         needs_system=NeedsSystem(),
+        status_effect_system=StatusEffectSystem(),
     )
 
     for system in systems.map_aware():

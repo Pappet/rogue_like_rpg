@@ -37,6 +37,7 @@ def _build_action(data: dict) -> Action:
         range=data.get("range", 0),
         requires_targeting=data.get("requires_targeting", False),
         targeting_mode=data.get("targeting_mode", "auto"),
+        power_multiplier=data.get("power_multiplier", 1.0),
     )
 
 

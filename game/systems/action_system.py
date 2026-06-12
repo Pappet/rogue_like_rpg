@@ -7,6 +7,7 @@ from config import GameStates, LogCategory
 from game.components import (
     AIBehaviorState,
     AIState,
+    AttackIntent,
     Description,
     EffectiveStats,
     ItemMaterial,
@@ -136,6 +137,14 @@ class ActionSystem(esper.Processor, MapAwareSystem):
         self.turn_system.current_state = GameStates.TARGETING
         return True
 
+    @staticmethod
+    def _target_with_stats(source_entity, x, y):
+        """The attackable entity on a tile (has Stats), or None."""
+        for ent, (pos, _stats) in esper.get_components(Position, Stats):
+            if ent != source_entity and pos.x == x and pos.y == y:
+                return ent
+        return None
+
     def find_potential_targets(self, source_entity, x, y, range_limit):
         targets = []
         for ent, (pos, rend) in esper.get_components(Position, Renderable):
@@ -228,6 +237,16 @@ class ActionSystem(esper.Processor, MapAwareSystem):
             if tile_visibility != VisibilityState.VISIBLE:
                 return False
 
+        # Attack abilities need a living target on the tile — a strike
+        # into empty air costs neither mana nor the turn (G5)
+        attack_target = None
+        if targeting.action.targeting_mode != "inspect":
+            attack_target = self._target_with_stats(entity, targeting.target_x, targeting.target_y)
+            if attack_target is None:
+                esper.dispatch_event("log_message", "No target there.", None, LogCategory.ALERT)
+                self.cancel_targeting(entity)
+                return False
+
         # Final resource check using effective stats
         eff = esper.try_component(entity, EffectiveStats) or esper.component_for_entity(entity, Stats)
         if targeting.action.cost_mana > eff.mana:
@@ -279,7 +298,13 @@ class ActionSystem(esper.Processor, MapAwareSystem):
                     if detailed_desc:
                         esper.dispatch_event("log_message", detailed_desc)
         else:
-            # Execute action logic (for now just print and end turn)
+            # Attack ability: hand the hit to the CombatSystem with the
+            # action's power multiplier (G5)
+            esper.add_component(
+                entity,
+                AttackIntent(target_entity=attack_target, power_multiplier=targeting.action.power_multiplier),
+            )
+            self.wake_up(attack_target)
             logger.debug(f"Executed {targeting.action.name} at ({targeting.target_x}, {targeting.target_y})")
 
         mode = targeting.action.targeting_mode
