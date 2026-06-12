@@ -49,13 +49,24 @@ def place_door(layer: MapLayer, x: int, y: int, type_id: str = "door_stone"):
         layer.tiles[y][x].set_type(type_id)
 
 
-def get_nearest_walkable_tile(layer: MapLayer, start_x: int, start_y: int, max_radius: int = 5) -> tuple[int, int]:
+def get_nearest_walkable_tile(
+    layer: MapLayer,
+    start_x: int,
+    start_y: int,
+    max_radius: int = 5,
+    excluded_positions: set[tuple[int, int]] | None = None,
+    avoid_type_ids: set[str] | None = None,
+) -> tuple[int, int]:
     """Find the nearest walkable tile to the start coordinates using a spiral search.
 
     Args:
         layer: The MapLayer to search.
         start_x, start_y: The starting coordinates.
         max_radius: The maximum search radius in tiles.
+        excluded_positions: Positions to skip regardless (e.g. already-occupied tiles).
+        avoid_type_ids: Tile type IDs to avoid in the first pass (e.g. door tiles).
+            If no other candidate exists within max_radius, falls back to accepting
+            tiles with these type IDs (but still honours excluded_positions).
 
     Returns:
         A tuple (x, y) of the nearest walkable tile, or the original coordinates if none found.
@@ -65,15 +76,29 @@ def get_nearest_walkable_tile(layer: MapLayer, start_x: int, start_y: int, max_r
         return start_x, start_y
     cols = len(layer.tiles[0])
 
-    if 0 <= start_y < rows and 0 <= start_x < cols and layer.tiles[start_y][start_x].walkable:
-        return start_x, start_y
+    def is_candidate(nx: int, ny: int, strict: bool = True) -> bool:
+        if not (0 <= ny < rows and 0 <= nx < cols):
+            return False
+        tile = layer.tiles[ny][nx]
+        if not tile.walkable:
+            return False
+        if excluded_positions and (nx, ny) in excluded_positions:
+            return False
+        return not (strict and avoid_type_ids and tile.type_id in avoid_type_ids)
 
-    for r in range(1, max_radius + 1):
-        for dx in range(-r, r + 1):
-            for dy in range(-r, r + 1):
-                if abs(dx) == r or abs(dy) == r:
-                    nx, ny = start_x + dx, start_y + dy
-                    if 0 <= ny < rows and 0 <= nx < cols and layer.tiles[ny][nx].walkable:
-                        return nx, ny
+    def spiral_search(strict: bool = True) -> tuple[int, int] | None:
+        if is_candidate(start_x, start_y, strict):
+            return start_x, start_y
+        for r in range(1, max_radius + 1):
+            for dx in range(-r, r + 1):
+                for dy in range(-r, r + 1):
+                    if abs(dx) == r or abs(dy) == r:
+                        nx, ny = start_x + dx, start_y + dy
+                        if is_candidate(nx, ny, strict):
+                            return nx, ny
+        return None
 
-    return start_x, start_y
+    result = spiral_search(strict=True)
+    if result is None and avoid_type_ids:
+        result = spiral_search(strict=False)
+    return result if result is not None else (start_x, start_y)

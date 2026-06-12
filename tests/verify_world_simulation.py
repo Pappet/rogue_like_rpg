@@ -101,6 +101,42 @@ def test_stale_paths_are_cleared():
     assert not esper.has_component(smith, PathData)
 
 
+def test_two_npcs_same_target_do_not_stack():
+    """SIM-NOCOL: Reconciliation must not place two NPCs on the same tile."""
+    container = _open_map()
+    _register_smith_schedule()
+    smith1 = _spawn_smith(x=2, y=2)
+    smith2 = _spawn_smith(x=3, y=3)
+
+    WorldSimulationService.reconcile_arrivals(esper, container, hour=14, elapsed_ticks=720)
+
+    pos1 = esper.component_for_entity(smith1, Position)
+    pos2 = esper.component_for_entity(smith2, Position)
+    assert (pos1.x, pos1.y) != (pos2.x, pos2.y), (
+        "Two NPCs with the same schedule target must not be placed on the same tile"
+    )
+
+
+def test_npc_not_placed_on_door_tile():
+    """SIM-NODOOR: Reconciliation must not place an NPC directly on a door tile."""
+    ResourceLoader.load_tiles("assets/data/tile_types.json")
+    size = 20
+    tiles = [[Tile(type_id="floor_stone") for _ in range(size)] for _ in range(size)]
+    # Make the exact work target (15, 15) a door tile
+    tiles[15][15] = Tile(type_id="door_stone")
+    container = MapContainer([MapLayer(tiles)])
+    _register_smith_schedule()
+    smith = _spawn_smith(x=2, y=2)
+
+    WorldSimulationService.reconcile_arrivals(esper, container, hour=14, elapsed_ticks=720)
+
+    pos = esper.component_for_entity(smith, Position)
+    placed_tile = container.layers[0].tiles[pos.y][pos.x]
+    assert placed_tile.type_id not in {"door_stone", "door_wood"}, (
+        "NPC must not be placed directly on a door tile when floor tiles are available nearby"
+    )
+
+
 def test_home_meta_without_home_pos_keeps_position():
     container = _open_map()
     _register_smith_schedule()

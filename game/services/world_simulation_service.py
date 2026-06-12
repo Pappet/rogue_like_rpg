@@ -56,6 +56,8 @@ class WorldSimulationService:
             return 0
 
         moved = 0
+        # Tracks positions already assigned this pass to prevent NPC stacking (SIM-NOCOL).
+        claimed: set[tuple[int, int]] = set()
         for _ent, (sched, ai_state, activity, pos) in world.get_components(
             Schedule, AIBehaviorState, Activity, Position
         ):
@@ -79,11 +81,20 @@ class WorldSimulationService:
                 needs.hunger = 0.0
                 needs.eating_ticks_left = 0
 
-            # Place the NPC where its day plan says it should be by now
+            # Place the NPC where its day plan says it should be by now.
+            # Door tiles and already-claimed positions are avoided so NPCs
+            # never block entrances or stack on each other (SIM-NOCOL, SIM-NODOOR).
             if target is not None:
-                layer = map_container.layers[pos.layer] if pos.layer < len(map_container.layers) else None
-                if layer is not None:
-                    nx, ny = get_nearest_walkable_tile(layer, target[0], target[1])
+                layer_obj = map_container.layers[pos.layer] if pos.layer < len(map_container.layers) else None
+                if layer_obj is not None:
+                    nx, ny = get_nearest_walkable_tile(
+                        layer_obj,
+                        target[0],
+                        target[1],
+                        excluded_positions=claimed,
+                        avoid_type_ids={"door_stone", "door_wood"},
+                    )
+                    claimed.add((nx, ny))
                     if (nx, ny) != (pos.x, pos.y):
                         pos.x, pos.y = nx, ny
                         moved += 1

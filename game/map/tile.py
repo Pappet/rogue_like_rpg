@@ -78,6 +78,11 @@ class Tile:
         self.sprite_colors = dict(tile_type.sprite_colors)
 
     @property
+    def type_id(self) -> str | None:
+        """Registry type ID for this tile, or None for legacy tiles."""
+        return self._type_id
+
+    @property
     def walkable(self) -> bool:
         """Return the walkable flag.
 
