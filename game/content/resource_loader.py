@@ -117,6 +117,16 @@ class ResourceLoader:
                         f"Unknown sprite layer '{layer_name}' in tile '{item['id']}' — skipping that sprite entry."
                     )
 
+            # --- per-sprite-layer foreground colors (optional) ---
+            sprite_colors: dict = {}
+            for layer_name, raw in item.get("sprite_colors", {}).items():
+                try:
+                    sprite_colors[SpriteLayer[layer_name]] = tuple(raw)
+                except KeyError:
+                    logger.warning(
+                        f"Unknown sprite layer '{layer_name}' in sprite_colors of tile '{item['id']}' — skipping."
+                    )
+
             # --- build color tuples ---
             raw_color = item.get("color", [255, 255, 255])
             color = tuple(raw_color)
@@ -133,6 +143,7 @@ class ResourceLoader:
                 base_description=item.get("base_description", ""),
                 occludes_below=bool(item.get("occludes_below", False)),
                 bg_color=bg_color,
+                sprite_colors=sprite_colors,
             )
 
             registry.register(tile_type)

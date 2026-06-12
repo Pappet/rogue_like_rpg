@@ -327,6 +327,10 @@ class MapGenerator:
                         tiles[y][x].set_type(type_id)
                         break
 
+        # Big trees: 3x3 stamps with a blocking trunk and a walkable,
+        # view-blocking canopy ring (count comes from the biome data).
+        self._stamp_big_trees(tiles, biome.get("big_trees", 0), rng, (ax, ay))
+
         container = MapContainer([layer], arrival_pos=(ax, ay))
         map_id = wilderness_map_id(settlement_id)
         if self.map_service.get_map(map_id) is not None:
@@ -361,6 +365,34 @@ class MapGenerator:
 
         container.freeze(world)
         return container
+
+    @staticmethod
+    def _stamp_big_trees(tiles: list, count: int, rng: random.Random, clearing: tuple[int, int]) -> None:
+        """Stamp up to `count` 3x3 trees onto a wilderness tile grid.
+
+        Each tree is a blocking tree_trunk surrounded by eight tree_canopy
+        tiles (walkable, but they block line of sight — forests cast real
+        view shadows). Stamps only go onto fully walkable ground, never
+        into the arrival clearing, and never overlap each other.
+        """
+        size = len(tiles)
+        ax, ay = clearing
+        placed = 0
+        attempts = count * 20
+        while placed < count and attempts > 0:
+            attempts -= 1
+            cx = rng.randint(1, size - 2)
+            cy = rng.randint(1, size - 2)
+            # Keep the arrival/return clearing (and one tile of margin) open
+            if abs(cx - ax) <= 3 and abs(cy - ay) <= 3:
+                continue
+            area = [(cx + dx, cy + dy) for dy in (-1, 0, 1) for dx in (-1, 0, 1)]
+            if not all(tiles[y][x].walkable and tiles[y][x]._type_id != "tree_canopy" for x, y in area):
+                continue
+            for x, y in area:
+                tiles[y][x].set_type("tree_canopy")
+            tiles[cy][cx].set_type("tree_trunk")
+            placed += 1
 
     def create_dungeon(
         self,

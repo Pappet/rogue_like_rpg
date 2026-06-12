@@ -168,6 +168,77 @@
   "occludes_below": false
  },
  {
+  "id": "tree_trunk",
+  "name": "Tree Trunk",
+  "base_description": "The massive trunk of an old tree.",
+  "walkable": false,
+  "transparent": false,
+  "sprites": {
+   "GROUND": "O"
+  },
+  "color": [
+   160,
+   115,
+   70
+  ],
+  "bg_color": [
+   20,
+   42,
+   22
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "tree_canopy",
+  "name": "Tree Canopy",
+  "base_description": "Dense leaves overhead. You can pass beneath, but you cannot see far.",
+  "walkable": true,
+  "transparent": false,
+  "sprites": {
+   "GROUND": ",",
+   "DECOR_TOP": "♣"
+  },
+  "color": [
+   70,
+   140,
+   65
+  ],
+  "sprite_colors": {
+   "DECOR_TOP": [
+    115,
+    185,
+    95
+   ]
+  },
+  "bg_color": [
+   24,
+   52,
+   26
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "tree_sapling",
+  "name": "Sapling",
+  "base_description": "A young tree, barely taller than you.",
+  "walkable": false,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "↑"
+  },
+  "color": [
+   140,
+   200,
+   110
+  ],
+  "bg_color": [
+   28,
+   60,
+   30
+  ],
+  "occludes_below": false
+ },
+ {
   "id": "water_shallow",
   "name": "Shallow Water",
   "base_description": "Murky standing water.",
