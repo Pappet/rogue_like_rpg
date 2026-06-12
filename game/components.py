@@ -383,6 +383,13 @@ class QuestGiver:
 
 
 @dataclass
+class Innkeeper:
+    """Marker: bumping this NPC opens the rest/sleep duration picker."""
+
+    pass
+
+
+@dataclass
 class Needs:
     """Physical needs that can preempt an NPC's schedule (ROADMAP Phase D).
 

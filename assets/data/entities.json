@@ -150,6 +150,41 @@
   }
  },
  {
+  "id": "innkeeper",
+  "name": "Innkeeper",
+  "sprite": "I",
+  "color": [
+   235,
+   200,
+   120
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 12,
+  "max_hp": 12,
+  "power": 2,
+  "defense": 1,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 8,
+  "intelligence": 8,
+  "ai": true,
+  "default_state": "wander",
+  "alignment": "neutral",
+  "blocker": true,
+  "description": "The keeper of the tavern. A room for the night is yours for the asking.",
+  "schedule_id": "shopkeeper_routine",
+  "home_pos": [
+   2,
+   2
+  ],
+  "innkeeper": true,
+  "needs": {
+   "hunger_rate": 3.0,
+   "eat_threshold": 70.0,
+   "eat_duration_ticks": 30
+  }
+ },
+ {
   "id": "traveling_merchant",
   "name": "Traveling Merchant",
   "sprite": "H",

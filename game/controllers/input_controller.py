@@ -9,13 +9,15 @@ import logging
 
 import pygame
 
-from config import UI_MODAL_RECT, GameStates
+from config import UI_MODAL_RECT, UI_REST_RECT, GameStates
 from core.input_manager import InputCommand
+from game.services import rest_service
 from game.services.player_action_service import PlayerActionService
 from game.services.save_service import SaveService
 from game.ui.windows.character import CharacterWindow
 from game.ui.windows.inventory import InventoryWindow
 from game.ui.windows.quests import QuestWindow
+from game.ui.windows.rest import RestWindow
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +55,12 @@ class InputController:
     def _open_character_sheet(self):
         rect = pygame.Rect(*UI_MODAL_RECT)
         self.ui_stack.push(CharacterWindow(rect, self.ctx.player_entity, self.ctx.input_manager))
+
+    def _open_wait(self, game_instance):
+        """Open the duration picker for a short on-the-spot wait."""
+        rect = pygame.Rect(*UI_REST_RECT)
+        options = rest_service.wait_options()
+        self.ui_stack.push(RestWindow(rect, "Wait", options, self.ctx.input_manager, game_instance.rest))
 
     def handle_event(self, command, game_instance) -> None:
         """Main routing function for input commands.
@@ -152,6 +160,8 @@ class InputController:
             selected = self.actions.get_selected_action()
             if selected is not None and selected.name == "Items":
                 self._open_inventory()
+            elif selected is not None and selected.name == "Wait":
+                self._open_wait(game_instance)
             else:
                 self.actions.confirm_selected_action()
             return

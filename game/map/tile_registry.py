@@ -23,6 +23,8 @@ class TileType:
     color: tuple[int, int, int]
     base_description: str = ""
     occludes_below: bool = False
+    # Bumping into this (non-walkable) tile offers rest — e.g. a bed.
+    provides_rest: bool = False
     bg_color: tuple[int, int, int] | None = None
     # Per-sprite-layer foreground colors; layers not listed fall back to `color`.
     sprite_colors: dict[SpriteLayer, tuple[int, int, int]] = field(default_factory=dict)

@@ -7,6 +7,7 @@ from game.components import (
     Alignment,
     Animal,
     AttackIntent,
+    Innkeeper,
     Merchant,
     Name,
     QuestGiver,
@@ -23,6 +24,7 @@ class InteractionType(Enum):
     TALK = auto()
     TRADE = auto()
     QUESTS = auto()
+    REST = auto()
 
 
 class InteractionResolver:
@@ -43,6 +45,10 @@ class InteractionResolver:
             # Animals don't talk — bumping wildlife is a hunting strike
             if world.has_component(target_ent, Animal):
                 return InteractionType.ATTACK
+
+            # Non-hostile innkeepers offer a room (rest)
+            if world.has_component(target_ent, Innkeeper):
+                return InteractionType.REST
 
             # Non-hostile merchants open their shop
             if world.has_component(target_ent, Merchant):
@@ -94,6 +100,12 @@ class InteractionResolver:
         elif interaction == InteractionType.QUESTS:
             InteractionResolver._say_line(world, target_ent)
             world.dispatch_event("quests_requested", target_ent)
+
+        elif interaction == InteractionType.REST:
+            InteractionResolver._say_line(world, target_ent)
+            # Sanctioned request: the movement layer must not know about UI —
+            # the gameplay state opens the rest window.
+            world.dispatch_event("rest_requested", {"source": "innkeeper"})
 
     @staticmethod
     def _say_line(world, target_ent: int) -> None:

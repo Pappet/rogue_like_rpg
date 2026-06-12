@@ -95,3 +95,13 @@ class Tile:
         if SpriteLayer.GROUND not in self.sprites:
             return False
         return self.sprites[SpriteLayer.GROUND] != "#"
+
+    @property
+    def provides_rest(self) -> bool:
+        """Whether bumping this tile offers rest (e.g. a bed). Registry-backed."""
+        if self._type_id is None:
+            return False
+        from game.map.tile_registry import tile_registry
+
+        tile_type = tile_registry.get(self._type_id)
+        return bool(tile_type and tile_type.provides_rest)

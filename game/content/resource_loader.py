@@ -142,6 +142,7 @@ class ResourceLoader:
                 color=color,
                 base_description=item.get("base_description", ""),
                 occludes_below=bool(item.get("occludes_below", False)),
+                provides_rest=bool(item.get("provides_rest", False)),
                 bg_color=bg_color,
                 sprite_colors=sprite_colors,
             )
@@ -259,6 +260,7 @@ class ResourceLoader:
                 needs=item.get("needs"),
                 quest_giver=bool(item.get("quest_giver", False)),
                 animal=bool(item.get("animal", False)),
+                innkeeper=bool(item.get("innkeeper", False)),
             )
 
             registry.register(template)

@@ -1,6 +1,6 @@
 import esper
 
-from game.components import Blocker, MovementRequest, Position
+from game.components import Blocker, MovementRequest, PlayerTag, Position
 from game.services.interaction_resolver import InteractionResolver, InteractionType
 from game.systems.map_aware_system import MapAwareSystem
 
@@ -29,6 +29,13 @@ class MovementSystem(esper.Processor, MapAwareSystem):
                     esper.remove_component(ent, MovementRequest)
                     continue
 
+            # Bumping a bed (a non-walkable "rest" tile) offers sleep — but
+            # only for the player; NPCs just treat it as a wall.
+            if not blocker_ent and self._provides_rest(new_x, new_y, pos.layer) and esper.has_component(ent, PlayerTag):
+                esper.dispatch_event("rest_requested", {"source": "bed"})
+                esper.remove_component(ent, MovementRequest)
+                continue
+
             if self._is_walkable(new_x, new_y, pos.layer) and not blocker_ent:
                 pos.x = new_x
                 pos.y = new_y
@@ -41,6 +48,12 @@ class MovementSystem(esper.Processor, MapAwareSystem):
             return False
         tile = self._map_container.get_tile(x, y, layer_idx)
         return tile.walkable if tile else False
+
+    def _provides_rest(self, x, y, layer_idx):
+        if not self._map_container:
+            return False
+        tile = self._map_container.get_tile(x, y, layer_idx)
+        return bool(tile and tile.provides_rest)
 
     def _get_blocker_at(self, x, y, layer_idx):
         for ent, (pos, blocker) in esper.get_components(Position, Blocker):

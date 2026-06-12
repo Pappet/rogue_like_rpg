@@ -14,6 +14,7 @@ from game.components import (
     Animal,
     Blocker,
     Description,
+    Innkeeper,
     LootTable,
     MapBound,
     Merchant,
@@ -126,6 +127,9 @@ class EntityFactory:
 
         if template.animal:
             components.append(Animal())
+
+        if template.innkeeper:
+            components.append(Innkeeper())
 
         if template.needs:
             components.append(

@@ -14,3 +14,5 @@ UI_ACTION_HEIGHT = 30
 UI_ACTION_HIGHLIGHT_HEIGHT = 25
 # Default rect (x, y, w, h) for modal windows (inventory, character sheet)
 UI_MODAL_RECT = (140, 100, 1000, 500)
+# Compact, centered rect for the small rest/wait duration picker
+UI_REST_RECT = (380, 170, 520, 380)
