@@ -8,10 +8,11 @@ from game.systems.map_aware_system import MapAwareSystem
 
 
 class VisibilitySystem(esper.Processor, MapAwareSystem):
-    def __init__(self, turn_system):
+    def __init__(self, turn_system, world_clock=None):
         esper.Processor.__init__(self)
         MapAwareSystem.__init__(self)
         self.turn_system = turn_system
+        self.world_clock = world_clock
         self.last_round = turn_system.round_counter
 
     def process(self, *args, **kwargs):
@@ -89,8 +90,14 @@ class VisibilitySystem(esper.Processor, MapAwareSystem):
                 VisibilityService.compute_visibility((pos.x, pos.y), radius, get_is_transparent(pos.layer))
             )
 
+        # Standalone light props (torches, campfires) reveal their surroundings.
+        # night_only lights burn from dusk to dawn; without a clock they are
+        # treated as always lit (unit tests, bare setups).
+        night_lights_lit = self.world_clock is None or self.world_clock.phase != "day"
         for ent, (pos, light) in esper.get_components(Position, LightSource):
             if not esper.has_component(ent, Stats):
+                if light.night_only and not night_lights_lit:
+                    continue
                 visible_coords.update(
                     VisibilityService.compute_visibility((pos.x, pos.y), light.radius, get_is_transparent(pos.layer))
                 )

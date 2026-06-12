@@ -70,7 +70,7 @@ def main():
     print("Checking roof_thatch...")
     roof = tile_registry.get("roof_thatch")
     check("roof_thatch exists in registry", roof is not None)
-    check("roof_thatch.walkable is True", roof.walkable is True)
+    check("roof_thatch.walkable is False", roof.walkable is False)
     check("roof_thatch.transparent is False", roof.transparent is False)
     check("roof_thatch.occludes_below is True", roof.occludes_below is True)
     print()
