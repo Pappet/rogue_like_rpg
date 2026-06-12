@@ -35,6 +35,11 @@ ECON_MAX_STOCK = 20.0  # stock cap per good per settlement
 ECON_PRICE_FACTOR_MIN = 0.5  # abundant goods bottom out at half value
 ECON_PRICE_FACTOR_MAX = 2.0  # scarce goods top out at double value
 
+# Per-run world variation (ROADMAP Phase G1) — seeded jitter applied once
+# at world build so every run starts with a different economic situation.
+ECON_STOCK_JITTER = 0.5  # start stocks vary by +-50%
+ECON_RATE_JITTER = 0.3  # produce/consume rates vary by +-30%
+
 # Day/Night Settings
 DN_SETTINGS = {
     "day": {"tint": (0, 0, 0, 0), "light": 1.0, "perception": 1.0},

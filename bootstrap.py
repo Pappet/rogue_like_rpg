@@ -4,11 +4,14 @@ All content loading, service construction and system wiring happens here.
 Nothing else in the codebase should construct services or systems.
 """
 
+import random
+
 import esper
 
 from config import HEADER_HEIGHT, LOG_HEIGHT, SCREEN_HEIGHT, SCREEN_WIDTH, SIDEBAR_WIDTH
 from core.camera import Camera
 from core.input_manager import InputManager
+from core.rng import derive_seed
 from core.ui.stack_manager import UIStack
 from core.world_clock_service import WorldClockService
 from game.content.content_database import default_content
@@ -28,8 +31,17 @@ from game_context import GameContext
 DATA_DIR = "assets/data"
 
 
-def build_game_context() -> GameContext:
-    """Load content, create services and systems, generate the start map."""
+def build_game_context(seed: int | None = None) -> GameContext:
+    """Load content, create services and systems, generate the start map.
+
+    Args:
+        seed: World seed for this run (Phase G1). Every seeded source of
+            run variation — wilderness/dungeon layout, chronicle rolls,
+            economy jitter — derives from it, so the same seed reproduces
+            the same world. None picks a random seed.
+    """
+    world_seed = seed if seed is not None else random.SystemRandom().randrange(2**31)
+
     content = default_content.load(DATA_DIR)
 
     map_service = MapService()
@@ -41,7 +53,7 @@ def build_game_context() -> GameContext:
     viewport_height = SCREEN_HEIGHT - HEADER_HEIGHT - LOG_HEIGHT
     camera = Camera(viewport_width, viewport_height, 0, HEADER_HEIGHT)
 
-    MapGenerator(map_service).create_world(esper, world_graph)
+    MapGenerator(map_service, seed=derive_seed(world_seed, "maps")).create_world(esper, world_graph)
 
     systems = build_systems(world_clock, map_service.get_active_map())
     register_processors(systems)
@@ -56,10 +68,12 @@ def build_game_context() -> GameContext:
         systems=systems,
         world_graph=world_graph,
         content=content,
+        world_seed=world_seed,
     )
 
     # World chronicle: generates off-screen events as game hours pass
     chronicle = WorldChronicleService(ctx=ctx)
+    chronicle.rng.seed(derive_seed(world_seed, "chronicle"))
     chronicle.load_templates(f"{DATA_DIR}/world_events.json")
     ctx.world_chronicle = chronicle
     esper.set_handler("clock_tick", chronicle.on_clock_tick)
@@ -67,6 +81,7 @@ def build_game_context() -> GameContext:
     # Settlement economy: stock levels drift hourly and drive local prices
     economy = EconomyService()
     economy.load_from_world(world_graph, f"{DATA_DIR}/scenarios")
+    economy.apply_variation(random.Random(derive_seed(world_seed, "economy")))
     ctx.economy = economy
     esper.set_handler("clock_tick", economy.on_clock_tick)
 
@@ -75,11 +90,13 @@ def build_game_context() -> GameContext:
 
     # Quests: authored from JSON, generated ones appear on arrival
     quests = QuestService(ctx=ctx)
+    quests.rng.seed(derive_seed(world_seed, "quests"))
     quests.load_authored(f"{DATA_DIR}/quests.json")
     ctx.quests = quests
 
     # Travel encounters: road events between settlements, fed by the chronicle
     travel_encounters = TravelEncounterService(ctx=ctx)
+    travel_encounters.rng.seed(derive_seed(world_seed, "travel"))
     travel_encounters.load_templates(f"{DATA_DIR}/travel_encounters.json")
     ctx.travel_encounters = travel_encounters
 

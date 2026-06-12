@@ -5,6 +5,7 @@ import random
 import esper as _esper
 
 from config import SpriteLayer
+from core.rng import derive_seed
 from game.components import MapBound, Name, Portal, Position, Renderable
 from game.content.entity_factory import EntityFactory
 from game.content.item_factory import ItemFactory
@@ -29,8 +30,19 @@ def wilderness_arrival_pos() -> tuple[int, int]:
 
 
 class MapGenerator:
-    def __init__(self, map_service: MapService):
+    def __init__(self, map_service: MapService, seed: int | None = None):
+        """Args:
+        map_service: The map registry to register generated maps with.
+        seed: World seed for deterministic generation. None keeps the
+            legacy behavior (unseeded global randomness per call).
+        """
         self.map_service = map_service
+        self.seed = seed
+        self._rng = random.Random(seed)
+
+    def _map_seed(self, map_id: str) -> int | None:
+        """Stable per-map sub-seed, or None when running unseeded."""
+        return None if self.seed is None else derive_seed(self.seed, map_id)
 
     def apply_terrain_variety(self, layer: MapLayer, chance: float, type_id_choices: list):
         """
@@ -45,8 +57,8 @@ class MapGenerator:
             for x in range(layer.width):
                 tile = layer.tiles[y][x]
                 # Only apply to walkable ground tiles (floor_stone equivalent).
-                if tile.walkable and random.random() < chance:
-                    type_id = random.choice(type_id_choices)
+                if tile.walkable and self._rng.random() < chance:
+                    type_id = self._rng.choice(type_id_choices)
                     tile.set_type(type_id)
 
     def add_house_to_map(
@@ -128,7 +140,7 @@ class MapGenerator:
                 scenario_path = f"assets/data/scenarios/{location.scenario}.json"
                 self.create_scenario(world, scenario_path, map_id=location.id)
             elif location.type == "poi":
-                self.create_dungeon(world, map_id=location.id)
+                self.create_dungeon(world, map_id=location.id, seed=self._map_seed(location.id))
 
         start_id = world_graph.start_location_id
         self.map_service.set_active_map(start_id)
@@ -260,7 +272,13 @@ class MapGenerator:
 
         # 3. The surrounding wilderness, flavored by the settlement's biome
         if config.get("biome") and wild_portal_pos is not None:
-            self.create_wilderness(world, settlement_id=map_id, biome_id=config["biome"], return_pos=wild_portal_pos)
+            self.create_wilderness(
+                world,
+                settlement_id=map_id,
+                biome_id=config["biome"],
+                return_pos=wild_portal_pos,
+                seed=self._map_seed(wilderness_map_id(map_id)),
+            )
 
         return village_container
 

@@ -103,6 +103,7 @@ class GameContext:
     debug_flags: DebugFlags = field(default_factory=DebugFlags)
     player_entity: int | None = None
     content: ContentDatabase | None = None
+    world_seed: int = 0
 
     @property
     def map_container(self) -> MapContainer | None:

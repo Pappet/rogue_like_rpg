@@ -18,6 +18,7 @@ moves both markets.
 import json
 import logging
 import os
+import random
 from dataclasses import dataclass, field
 
 from config import (
@@ -25,6 +26,8 @@ from config import (
     ECON_MAX_STOCK,
     ECON_PRICE_FACTOR_MAX,
     ECON_PRICE_FACTOR_MIN,
+    ECON_RATE_JITTER,
+    ECON_STOCK_JITTER,
     TICKS_PER_HOUR,
 )
 
@@ -54,6 +57,24 @@ class EconomyService:
             self.stocks[location.id] = {k: float(v) for k, v in economy.get("stock", {}).items()}
             self.rates_per_day[location.id] = {k: float(v) for k, v in economy.get("rates_per_day", {}).items()}
         logger.info("Economy loaded for %d settlements.", len(self.stocks))
+
+    def apply_variation(self, rng: random.Random) -> None:
+        """Jitter start stocks and drift rates per run (world-seed driven).
+
+        Every run gets a different economic starting position: which goods
+        are scarce where, and how fast markets move, varies — so the
+        profitable trade routes and generated delivery requests differ
+        between runs. Signs of rates never flip: a producer stays a
+        producer, a consumer stays a consumer.
+        """
+        for stock in self.stocks.values():
+            for item_id, level in stock.items():
+                stock[item_id] = max(
+                    0.0, min(ECON_MAX_STOCK, level * rng.uniform(1 - ECON_STOCK_JITTER, 1 + ECON_STOCK_JITTER))
+                )
+        for rates in self.rates_per_day.values():
+            for item_id, per_day in rates.items():
+                rates[item_id] = per_day * rng.uniform(1 - ECON_RATE_JITTER, 1 + ECON_RATE_JITTER)
 
     # --- Simulation -----------------------------------------------------------
 

@@ -52,6 +52,7 @@ class SaveService:
             party = [{"old_id": ent, "components": encode_components_of(esper, ent)} for ent in closure]
             data = {
                 "version": SAVE_VERSION,
+                "world_seed": ctx.world_seed,
                 "clock_ticks": ctx.world_clock.total_ticks,
                 "round_counter": ctx.systems.turn_system.round_counter,
                 "active_map_id": ctx.map_service.active_map_id,
@@ -107,6 +108,9 @@ class SaveService:
                 location.discovered = location.id in wg.get("discovered", [])
             if wg.get("current_location_id"):
                 ctx.world_graph.set_current_location(wg["current_location_id"])
+
+        # World seed (older saves predate it — keep the session's seed)
+        ctx.world_seed = data.get("world_seed", ctx.world_seed)
 
         # Clock & turn flow
         ctx.world_clock.total_ticks = data["clock_ticks"]
