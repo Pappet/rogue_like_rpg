@@ -199,12 +199,48 @@ Deviation from the plan: the secret reveal is proximity/perception-based
 rather than requiring the manual Investigate mode — less friction, same
 perception payoff.
 
+### Phase G — Replayability & Living Consequences ✅ (done)
+
+*Two runs must feel different, and the simulation must bite: events have
+consequences the player can profit from, suffer under, or prevent.*
+
+- **G1 Run seed & world variation:** one world seed per run
+  (`--seed` CLI flag, stored in the save) fans out via `core/rng.py`
+  into wilderness/dungeon layouts, chronicle/quest/travel RNGs and a
+  seeded economy jitter (start stocks ±50%, rates ±30%) — which trade
+  routes pay and which shortages appear differs per run.
+- **G2 Consequential chronicle:** event templates carry `effects`
+  (stock deltas) and `escalation` chains (`wolves_spotted` →
+  `wolves_attacked_herd`, `bandits_spotted` → `caravan_raided`).
+  Resolving the cause (quest turn-in, clearing the road) cancels the
+  escalation. Pool grown 8 → 21 templates.
+- **G3 Supply chains & prosperity:** production may `require` input
+  goods (Eastmoor forges swords from Brackenfen's bog iron); input
+  shortages stall production and post generated delivery requests.
+  Per-settlement prosperity (0..100) drifts with shortages/plenty,
+  reacts to events and quests, shifts the price baseline and shows in
+  dialogue and the arrival log.
+- **G4 Bandit road activity:** spotted bandits hold the road to their
+  settlement (biased `bandit_ambush` encounter); wiping them out
+  cancels the caravan raid — threats are resolvable outside quests.
+- **G5 Combat depth:** critical hits (double damage + Bleeding status,
+  ticked per round by `StatusEffectSystem`), `power_multiplier` on
+  actions and the first player ability (Power Strike, 8 mana, 2x).
+- **G6 Content breadth:** new NPCs (hunter, farmer, herbalist,
+  ore digger, bandits), new goods (iron ore, bread, salve, cloak,
+  charm), road encounters (wolf pack) and dialogue pools.
+
+Verified by `tests/verify_world_seed.py`,
+`verify_chronicle_consequences.py`, `verify_supply_chains.py`,
+`verify_bandit_activity.py` and `verify_combat_depth.py`.
+
 ---
 
-**All six phases of this roadmap are complete.** Candidates for the next
-planning round: multiple save slots, NPC↔NPC relationships (deferred from
-Phase D), deeper dungeon levels with stairs, quest chains, settlement
-growth/decline driven by the economy, and a walkable overworld.
+**All seven phases of this roadmap are complete.** Candidates for the
+next planning round: multiple save slots, NPC↔NPC relationships
+(deferred from Phase D), a real faction model (relations matrix,
+faction reputation), deeper dungeon levels with stairs, quest chains,
+character progression (learn-by-doing skills), and a walkable overworld.
 
 ## 4. Recommended order & why
 

@@ -30,6 +30,25 @@
    },
    {
     "when": {
+     "prosperity": "struggling"
+    },
+    "lines": [
+     "Hard times, traveler. The larders are thin.",
+     "If things don't turn around soon, folk will start leaving.",
+     "We could use any help we can get."
+    ]
+   },
+   {
+    "when": {
+     "prosperity": "thriving"
+    },
+    "lines": [
+     "Never seen the village do so well!",
+     "Good times — the stalls are full and so are the bellies."
+    ]
+   },
+   {
+    "when": {
      "phase": "night"
     },
     "lines": [
@@ -42,7 +61,7 @@
      "activity": "WORK"
     },
     "lines": [
-     "Can't chat long \u2014 work to do.",
+     "Can't chat long — work to do.",
      "These fields won't tend themselves."
     ]
    }
@@ -64,6 +83,15 @@
    "Trade keeps the village alive."
   ],
   "conditional": [
+   {
+    "when": {
+     "prosperity": "struggling"
+    },
+    "lines": [
+     "Shelves are half empty — deliveries keep getting raided.",
+     "Business is terrible. Bring me goods and I'll pay fairly."
+    ]
+   },
    {
     "when": {
      "rep": "beloved"
@@ -102,5 +130,54 @@
   "...",
   "They nod at you.",
   "They don't seem interested in talking."
+ ],
+ "hunter": {
+  "default": [
+   "Tracks everywhere this season. Wolves, mostly.",
+   "A clean shot and a quiet step — that's all the trade needs.",
+   "The wilds give to those who respect them."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "phase": "night"
+    },
+    "lines": [
+     "Night hunts are for owls, not people."
+    ]
+   }
+  ]
+ },
+ "farmer": [
+  "The fields don't wait for anyone.",
+  "Rain when we need sun, sun when we need rain. Always the way.",
+  "Buy local, stranger. Keeps us all fed."
+ ],
+ "herbalist": {
+  "default": [
+   "Sage for the lungs, yarrow for the blood.",
+   "Fresh salves, just stirred. Better than any town potion.",
+   "If it grows in the swamp, I can brew with it."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "prosperity": "struggling"
+    },
+    "lines": [
+     "Half my customers can't pay — I trade for eggs now."
+    ]
+   }
+  ]
+ },
+ "ore_digger": [
+  "Bog iron's good iron, whatever the city smiths say.",
+  "Knee-deep in the mire all day — someone has to be.",
+  "The smithy in Eastmoor buys every lump we haul."
+ ],
+ "traveling_merchant": [
+  "Roads are long, purses are short. Let's fix one of those.",
+  "Everything you see is for sale. Almost everything.",
+  "I hear all sorts of things on the road, friend."
  ]
 }

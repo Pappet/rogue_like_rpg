@@ -82,7 +82,7 @@ The ECS logic is separated into four distinct categories:
 1. **FRAME-PROCESSORS**: Registered once with `esper.add_processor()` (via `register_processors()` in the bootstrap) and run every frame by `TurnOrchestrator.update()` via `esper.process()`.
    - `TurnSystem`, `EquipmentSystem`, `VisibilitySystem`, `MovementSystem`, `CombatSystem`, `FCTSystem`
 2. **PHASE-SYSTEMS**: Called by `TurnOrchestrator` during specific game phases (like enemy turn).
-   - `AISystem` (`ENEMY_TURN`), `ScheduleSystem` (`ENEMY_TURN`), `NeedsSystem` (`ENEMY_TURN`, after ScheduleSystem)
+   - `StatusEffectSystem` (`ENEMY_TURN`, first), `AISystem` (`ENEMY_TURN`), `ScheduleSystem` (`ENEMY_TURN`), `NeedsSystem` (`ENEMY_TURN`, after ScheduleSystem)
 3. **RENDER-SYSTEMS**: Called by `RenderPipeline` during the `draw()` cycle. (Re)created in `GameplayState.startup()`.
    - `RenderSystem`, `UISystem`, `DebugRenderSystem`
 4. **EVENT-SYSTEMS**: React exclusively to events (callbacks set up in `__init__` via `esper.set_handler()`), without a `process()` loop and therefore *not* added as an `esper.Processor`.
@@ -177,6 +177,7 @@ is neutral constants, usable by both.
     │   ├── ai_system.py             # AISystem (phase system)
     │   ├── schedule_system.py       # ScheduleSystem (phase system)
     │   ├── needs_system.py          # NeedsSystem (phase system; needs preempt schedules)
+    │   ├── status_effect_system.py  # StatusEffectSystem (phase system; bleeding ticks)
     │   ├── death_system.py          # DeathSystem (event system)
     │   ├── render_system.py         # RenderSystem (render system)
     │   ├── ui_system.py             # UISystem (render system)
@@ -248,6 +249,9 @@ there is no string-keyed `persist` dict anymore:
 - `ctx.content` — `ContentDatabase` (all template registries)
 - `ctx.debug_flags` — `DebugFlags` dataclass (F3-F7 toggles)
 - `ctx.player_entity`, `ctx.camera`, `ctx.ui_stack`, `ctx.world_clock`, ...
+- `ctx.world_seed` — the run's world seed (Phase G1). All run-scoped
+  randomness derives from it via `core/rng.py::derive_seed(seed, label)`;
+  `bootstrap.build_game_context(seed=...)` accepts it, `--seed` sets it.
 
 `bootstrap.build_game_context()` is the only place that constructs services
 and systems. States receive the context via `startup(ctx)`.
@@ -408,6 +412,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Animal`          | Wildlife: bump attacks; hunting costs no rep |
 | `Hidden`          | Concealed until revealed at close range      |
 | `Skirmisher`      | Fights rival-faction Skirmishers, not player |
+| `Bleeding`        | Status effect: HP loss per round (from crits)|
 
 ### Enums
 
@@ -480,6 +485,8 @@ class MapAwareSystem:
 - **Player stats**: `assets/data/player.json` → base stats and actions loaded by `PartyService`
 - **Dialogues**: `assets/data/dialogues.json` → NPC dialogue lines keyed by template_id, loaded by `DialogueService`
 - **Map scenarios**: `assets/data/scenarios/*.json` → data-driven map layouts loaded by `MapGenerator`; a `"biome"` key gives the settlement a generated wilderness map (entered via portal, not a world-graph node)
+- **Economy blocks** in scenarios: `rates_per_day` entries may be a plain number or `{"per_day": N, "requires": {"input_item": amount}}` — production stalls without inputs (supply chains, Phase G3)
+- **World events**: `assets/data/world_events.json` entries may carry `effects` (`stock_delta`, `prosperity_delta`) and `escalation` (`{event_id, delay_hours}`); `weight: 0` templates are escalation-only (Phase G2)
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)
 
 ### AI Behavior

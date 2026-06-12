@@ -41,5 +41,34 @@
     "skirmish_side": "raiders"
    }
   ]
+ },
+ {
+  "id": "bandit_ambush",
+  "weight": 2,
+  "message": "Armed figures step onto the road ahead — bandits, and they want your purse!",
+  "spawns": [
+   {
+    "template": "bandit",
+    "count": 2,
+    "placement": "near_player"
+   },
+   {
+    "template": "bandit_leader",
+    "count": 1,
+    "placement": "near_player"
+   }
+  ]
+ },
+ {
+  "id": "wolf_pack",
+  "weight": 2,
+  "message": "Yellow eyes flash between the trees — a wolf pack stalks the road.",
+  "spawns": [
+   {
+    "template": "wolf",
+    "count": 3,
+    "placement": "near_player"
+   }
+  ]
  }
 ]

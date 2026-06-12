@@ -137,7 +137,9 @@
     "health_potion",
     "iron_sword",
     "leather_armor",
-    "dagger"
+    "dagger",
+    "iron_ore",
+    "iron_ore"
    ],
    "gold": 200
   },
@@ -442,5 +444,229 @@
     1.0
    ]
   ]
+ },
+ {
+  "id": "bandit",
+  "name": "Bandit",
+  "sprite": "b",
+  "color": [
+   170,
+   60,
+   60
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 10,
+  "max_hp": 10,
+  "power": 3,
+  "defense": 1,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 7,
+  "intelligence": 4,
+  "ai": true,
+  "default_state": "wander",
+  "alignment": "hostile",
+  "blocker": true,
+  "description": "A road bandit with a hungry look and a worn blade.",
+  "wounded_text": "A bleeding bandit, still snarling.",
+  "wounded_threshold": 0.5,
+  "loot_table": [
+   [
+    "dagger",
+    0.6
+   ],
+   [
+    "health_potion",
+    0.3
+   ]
+  ]
+ },
+ {
+  "id": "bandit_leader",
+  "name": "Bandit Leader",
+  "sprite": "B",
+  "color": [
+   200,
+   50,
+   50
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 18,
+  "max_hp": 18,
+  "power": 5,
+  "defense": 2,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 8,
+  "intelligence": 6,
+  "ai": true,
+  "default_state": "wander",
+  "alignment": "hostile",
+  "blocker": true,
+  "description": "The one giving orders — better armed and meaner than the rest.",
+  "wounded_text": "The bandit leader staggers, cursing.",
+  "wounded_threshold": 0.5,
+  "loot_table": [
+   [
+    "iron_sword",
+    0.8
+   ],
+   [
+    "health_potion",
+    0.5
+   ]
+  ]
+ },
+ {
+  "id": "hunter",
+  "name": "Hunter",
+  "sprite": "h",
+  "color": [
+   120,
+   180,
+   90
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 9,
+  "max_hp": 9,
+  "power": 3,
+  "defense": 1,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 10,
+  "intelligence": 6,
+  "ai": true,
+  "default_state": "wander",
+  "alignment": "neutral",
+  "blocker": true,
+  "description": "A weathered hunter, bow stave on the back and pelts at the belt.",
+  "schedule_id": "villager_routine",
+  "home_pos": [
+   10,
+   10
+  ],
+  "needs": {
+   "hunger_rate": 3.0,
+   "eat_threshold": 70.0,
+   "eat_duration_ticks": 30
+  },
+  "loot_table": [
+   [
+    "pelt",
+    0.6
+   ]
+  ]
+ },
+ {
+  "id": "farmer",
+  "name": "Farmer",
+  "sprite": "f",
+  "color": [
+   200,
+   180,
+   110
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 6,
+  "max_hp": 6,
+  "power": 1,
+  "defense": 0,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 5,
+  "intelligence": 5,
+  "ai": true,
+  "default_state": "wander",
+  "alignment": "neutral",
+  "blocker": true,
+  "description": "A farmer with dirt under the nails and weather in the face.",
+  "schedule_id": "villager_routine",
+  "home_pos": [
+   10,
+   10
+  ],
+  "needs": {
+   "hunger_rate": 3.0,
+   "eat_threshold": 70.0,
+   "eat_duration_ticks": 30
+  }
+ },
+ {
+  "id": "herbalist",
+  "name": "Herbalist",
+  "sprite": "e",
+  "color": [
+   110,
+   200,
+   140
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 7,
+  "max_hp": 7,
+  "power": 1,
+  "defense": 0,
+  "mana": 10,
+  "max_mana": 10,
+  "perception": 9,
+  "intelligence": 9,
+  "ai": true,
+  "default_state": "wander",
+  "alignment": "neutral",
+  "blocker": true,
+  "description": "An herbalist who smells of dried sage and bitter roots.",
+  "schedule_id": "shopkeeper_routine",
+  "home_pos": [
+   4,
+   4
+  ],
+  "needs": {
+   "hunger_rate": 3.0,
+   "eat_threshold": 70.0,
+   "eat_duration_ticks": 30
+  },
+  "merchant": {
+   "stock": [
+    "health_potion",
+    "health_potion",
+    "healing_salve",
+    "healing_salve",
+    "bread"
+   ],
+   "gold": 120
+  }
+ },
+ {
+  "id": "ore_digger",
+  "name": "Ore Digger",
+  "sprite": "d",
+  "color": [
+   150,
+   130,
+   110
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 11,
+  "max_hp": 11,
+  "power": 3,
+  "defense": 1,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 6,
+  "intelligence": 4,
+  "ai": true,
+  "default_state": "wander",
+  "alignment": "neutral",
+  "blocker": true,
+  "description": "A bog-iron digger, mud to the knees and proud of it.",
+  "schedule_id": "blacksmith_routine",
+  "home_pos": [
+   8,
+   8
+  ],
+  "needs": {
+   "hunger_rate": 3.0,
+   "eat_threshold": 70.0,
+   "eat_duration_ticks": 30
+  }
  }
 ]

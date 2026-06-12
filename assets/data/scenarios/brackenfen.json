@@ -98,6 +98,20 @@
     14,
     14
    ]
+  },
+  {
+   "type": "ore_digger",
+   "pos": [
+    10,
+    18
+   ]
+  },
+  {
+   "type": "hunter",
+   "pos": [
+    20,
+    12
+   ]
   }
  ],
  "economy": {
@@ -105,13 +119,17 @@
    "health_potion": 14,
    "leather_armor": 8,
    "iron_sword": 1,
-   "venison": 2
+   "venison": 2,
+   "iron_ore": 10,
+   "bread": 2
   },
   "rates_per_day": {
    "health_potion": 3,
    "leather_armor": 1,
    "iron_sword": -0.5,
-   "venison": -1.5
+   "venison": -1.5,
+   "iron_ore": 2,
+   "bread": -1
   }
  },
  "biome": "swamp",

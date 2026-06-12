@@ -195,6 +195,10 @@ def test_confirm_action_calls_end_turn_for_combat():
         make_stats(),
         ActionList(actions=[Action(name="Ranged", range=5, requires_targeting=True, targeting_mode="auto")]),
     )
+    # Combat abilities need a living target on the tile (G5)
+    from game.components import AttackIntent, Renderable
+
+    target = esper.create_entity(Position(3, 2), make_stats(), Renderable("o", 5))
 
     action_system = ActionSystem(turn_system)
     action_system.set_map(map_container)
@@ -208,6 +212,31 @@ def test_confirm_action_calls_end_turn_for_combat():
     assert turn_system.end_turn_called is True, (
         "end_player_turn() was NOT called for combat targeting — combat must consume a turn"
     )
+    intent = esper.try_component(player, AttackIntent)
+    assert intent is not None and intent.target_entity == target, "the ability must hand its hit to the CombatSystem"
+
+
+def test_confirm_action_into_empty_air_costs_nothing():
+    """A combat ability without a target neither fires nor ends the turn."""
+    reset_world()
+
+    map_container = make_visible_map(width=5, height=5)
+    turn_system = MockTurnSystem()
+
+    player = esper.create_entity(
+        Position(2, 2),
+        make_stats(),
+        ActionList(actions=[Action(name="Ranged", range=5, requires_targeting=True, targeting_mode="auto")]),
+    )
+    action_system = ActionSystem(turn_system)
+    action_system.set_map(map_container)
+
+    ranged = Action(name="Ranged", range=5, requires_targeting=True, targeting_mode="auto")
+    assert action_system.start_targeting(player, ranged)
+
+    result = action_system.confirm_action(player)
+    assert result is False, "striking empty air must fail"
+    assert turn_system.end_turn_called is False, "a failed strike must not consume the turn"
 
 
 # ---------------------------------------------------------------------------

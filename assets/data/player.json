@@ -30,6 +30,14 @@
    "targeting_mode": "inspect"
   },
   {
+   "name": "Power Strike",
+   "cost_mana": 8,
+   "range": 1,
+   "requires_targeting": true,
+   "targeting_mode": "auto",
+   "power_multiplier": 2.0
+  },
+  {
    "name": "Items"
   }
  ],

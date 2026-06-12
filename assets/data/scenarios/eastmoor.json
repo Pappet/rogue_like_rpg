@@ -185,6 +185,13 @@
     33,
     38
    ]
+  },
+  {
+   "type": "farmer",
+   "pos": [
+    18,
+    40
+   ]
   }
  ],
  "economy": {
@@ -192,13 +199,26 @@
    "iron_sword": 12,
    "steel_sword": 6,
    "health_potion": 1,
-   "venison": 2
+   "venison": 2,
+   "iron_ore": 6,
+   "bread": 4
   },
   "rates_per_day": {
-   "iron_sword": 2,
-   "steel_sword": 0.5,
+   "iron_sword": {
+    "per_day": 2,
+    "requires": {
+     "iron_ore": 1
+    }
+   },
+   "steel_sword": {
+    "per_day": 0.5,
+    "requires": {
+     "iron_ore": 2
+    }
+   },
    "health_potion": -3,
-   "venison": -1.5
+   "venison": -1.5,
+   "bread": -1.5
   }
  },
  "biome": "plains",

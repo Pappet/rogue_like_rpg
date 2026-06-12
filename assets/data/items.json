@@ -304,5 +304,99 @@
   "description": "A soft deer pelt, prized by tanners.",
   "stats": {},
   "value": 14
+ },
+ {
+  "id": "iron_ore",
+  "name": "Iron Ore",
+  "sprite": "*",
+  "color": [
+   140,
+   110,
+   90
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 4.0,
+  "material": "iron",
+  "description": "A heavy lump of bog iron. Smithies pay well for it.",
+  "stats": {},
+  "value": 8
+ },
+ {
+  "id": "bread",
+  "name": "Loaf of Bread",
+  "sprite": "n",
+  "color": [
+   210,
+   170,
+   110
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.5,
+  "material": "grain",
+  "description": "A crusty loaf, still faintly warm.",
+  "stats": {},
+  "value": 4,
+  "consumable": {
+   "effect_type": "heal_hp",
+   "amount": 2
+  }
+ },
+ {
+  "id": "healing_salve",
+  "name": "Healing Salve",
+  "sprite": "!",
+  "color": [
+   120,
+   220,
+   120
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.3,
+  "material": "herb",
+  "description": "A pungent herbal paste that closes small wounds.",
+  "stats": {},
+  "value": 18,
+  "consumable": {
+   "effect_type": "heal_hp",
+   "amount": 8
+  }
+ },
+ {
+  "id": "fur_cloak",
+  "name": "Fur Cloak",
+  "sprite": "(",
+  "color": [
+   150,
+   110,
+   70
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 2.0,
+  "material": "leather",
+  "description": "A heavy cloak of stitched pelts. Keeps out cold and claws alike.",
+  "slot": "body",
+  "stats": {
+   "defense": 1
+  },
+  "value": 26
+ },
+ {
+  "id": "lucky_charm",
+  "name": "Lucky Charm",
+  "sprite": "?",
+  "color": [
+   230,
+   200,
+   90
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.1,
+  "material": "bone",
+  "description": "A carved bone trinket. The seller swore by it.",
+  "slot": "accessory",
+  "stats": {
+   "perception": 1
+  },
+  "value": 22
  }
 ]

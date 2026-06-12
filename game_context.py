@@ -31,6 +31,7 @@ from game.systems.fct_system import FCTSystem
 from game.systems.movement_system import MovementSystem
 from game.systems.needs_system import NeedsSystem
 from game.systems.schedule_system import ScheduleSystem
+from game.systems.status_effect_system import StatusEffectSystem
 from game.systems.turn_system import TurnSystem
 from game.systems.visibility_system import VisibilitySystem
 
@@ -65,6 +66,7 @@ class Systems:
     ai_system: AISystem
     schedule_system: ScheduleSystem
     needs_system: NeedsSystem = field(default_factory=NeedsSystem)
+    status_effect_system: StatusEffectSystem = field(default_factory=StatusEffectSystem)
     render_system: object | None = None
     debug_render_system: object | None = None
     ui_system: object | None = None
@@ -103,6 +105,7 @@ class GameContext:
     debug_flags: DebugFlags = field(default_factory=DebugFlags)
     player_entity: int | None = None
     content: ContentDatabase | None = None
+    world_seed: int = 0
 
     @property
     def map_container(self) -> MapContainer | None:

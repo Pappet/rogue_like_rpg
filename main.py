@@ -1,3 +1,4 @@
+import argparse
 import logging
 import sys
 
@@ -11,12 +12,13 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 
 
 class GameController:
-    def __init__(self):
+    def __init__(self, seed: int | None = None):
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(SCREEN_TITLE)
         self.clock = pygame.time.Clock()
 
-        self.ctx = build_game_context()
+        self.ctx = build_game_context(seed=seed)
+        logging.getLogger(__name__).info("World seed: %d", self.ctx.world_seed)
 
         self.states = {
             "TITLE": TitleScreen(),
@@ -53,8 +55,12 @@ class GameController:
 
 
 def main():
+    parser = argparse.ArgumentParser(description=SCREEN_TITLE)
+    parser.add_argument("--seed", type=int, default=None, help="World seed for a reproducible run")
+    args = parser.parse_args()
+
     pygame.init()
-    game = GameController()
+    game = GameController(seed=args.seed)
     game.run()
 
 
