@@ -28,7 +28,7 @@ from dataclasses import asdict, dataclass, field
 import esper
 
 from config import LogCategory
-from game.components import Inventory, PlayerTag, Position, Purse, TemplateId
+from game.components import Equipment, Inventory, PlayerTag, Position, Purse, TemplateId
 from game.content.item_registry import item_registry
 
 logger = logging.getLogger(__name__)
@@ -318,8 +318,12 @@ class QuestService:
         inventory = esper.try_component(self.ctx.player_entity, Inventory) if self.ctx else None
         if inventory is None:
             return []
+        equipment = esper.try_component(self.ctx.player_entity, Equipment) if self.ctx else None
+        equipped_ids: set[int] = set(equipment.slots.values()) if equipment else set()
         result = []
         for item_ent in inventory.items:
+            if item_ent in equipped_ids:
+                continue
             tid = esper.try_component(item_ent, TemplateId)
             if tid is not None and tid.id == template_id:
                 result.append(item_ent)
