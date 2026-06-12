@@ -40,6 +40,7 @@ class EntityTemplate:
     merchant: dict | None = None  # {"stock": [item ids], "gold": int}
     needs: dict | None = None  # {"hunger_rate": float, "eat_threshold": float}
     quest_giver: bool = False
+    animal: bool = False
 
 
 class EntityRegistry(Registry[EntityTemplate]):

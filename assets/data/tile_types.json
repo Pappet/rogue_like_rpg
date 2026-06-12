@@ -1,114 +1,162 @@
 [
-  {
-    "id": "floor_stone",
-    "name": "Stone Floor",
-    "base_description": "A cold, uneven stone floor.",
-    "walkable": true,
-    "transparent": true,
-    "sprites": {
-      "GROUND": "."
-    },
-    "color": [
-      200,
-      200,
-      200
-    ],
-    "occludes_below": false
+ {
+  "id": "floor_stone",
+  "name": "Stone Floor",
+  "base_description": "A cold, uneven stone floor.",
+  "walkable": true,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "."
   },
-  {
-    "id": "wall_stone",
-    "name": "Stone Wall",
-    "base_description": "A solid wall of rough-hewn stone.",
-    "walkable": false,
-    "transparent": false,
-    "sprites": {
-      "GROUND": "#"
-    },
-    "color": [
-      100,
-      100,
-      100
-    ],
-    "occludes_below": false
+  "color": [
+   200,
+   200,
+   200
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "wall_stone",
+  "name": "Stone Wall",
+  "base_description": "A solid wall of rough-hewn stone.",
+  "walkable": false,
+  "transparent": false,
+  "sprites": {
+   "GROUND": "#"
   },
-  {
-    "id": "door_stone",
-    "name": "Stone Door",
-    "base_description": "A heavy stone door, slightly ajar.",
-    "walkable": true,
-    "transparent": true,
-    "sprites": {
-      "GROUND": "."
-    },
-    "color": [
-      140,
-      120,
-      80
-    ],
-    "occludes_below": false
+  "color": [
+   100,
+   100,
+   100
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "door_stone",
+  "name": "Stone Door",
+  "base_description": "A heavy stone door, slightly ajar.",
+  "walkable": true,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "."
   },
-  {
-    "id": "roof_thatch",
-    "name": "Thatched Roof",
-    "base_description": "A dried straw roof that keeps out the rain.",
-    "walkable": true,
-    "transparent": false,
-    "sprites": {
-      "GROUND": "#"
-    },
-    "color": [
-      150,
-      110,
-      50
-    ],
-    "occludes_below": true
+  "color": [
+   140,
+   120,
+   80
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "roof_thatch",
+  "name": "Thatched Roof",
+  "base_description": "A dried straw roof that keeps out the rain.",
+  "walkable": true,
+  "transparent": false,
+  "sprites": {
+   "GROUND": "#"
   },
-  {
-    "id": "floor_grass",
-    "name": "Grass",
-    "base_description": "Soft green grass.",
-    "walkable": true,
-    "transparent": true,
-    "sprites": {
-      "GROUND": ","
-    },
-    "color": [
-      34,
-      139,
-      34
-    ],
-    "occludes_below": false
+  "color": [
+   150,
+   110,
+   50
+  ],
+  "occludes_below": true
+ },
+ {
+  "id": "floor_grass",
+  "name": "Grass",
+  "base_description": "Soft green grass.",
+  "walkable": true,
+  "transparent": true,
+  "sprites": {
+   "GROUND": ","
   },
-  {
-    "id": "floor_dirt",
-    "name": "Dirt Path",
-    "base_description": "Packed brown dirt.",
-    "walkable": true,
-    "transparent": true,
-    "sprites": {
-      "GROUND": "."
-    },
-    "color": [
-      139,
-      69,
-      19
-    ],
-    "occludes_below": false
+  "color": [
+   34,
+   139,
+   34
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "floor_dirt",
+  "name": "Dirt Path",
+  "base_description": "Packed brown dirt.",
+  "walkable": true,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "."
   },
-  {
-    "id": "floor_sand",
-    "name": "Sand",
-    "base_description": "Loose yellowish sand.",
-    "walkable": true,
-    "transparent": true,
-    "sprites": {
-      "GROUND": "~"
-    },
-    "color": [
-      237,
-      201,
-      175
-    ],
-    "occludes_below": false
-  }
+  "color": [
+   139,
+   69,
+   19
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "floor_sand",
+  "name": "Sand",
+  "base_description": "Loose yellowish sand.",
+  "walkable": true,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "~"
+  },
+  "color": [
+   237,
+   201,
+   175
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "tree",
+  "name": "Tree",
+  "base_description": "A sturdy tree, its crown blocking the view.",
+  "walkable": false,
+  "transparent": false,
+  "sprites": {
+   "GROUND": "T"
+  },
+  "color": [
+   20,
+   110,
+   20
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "water_shallow",
+  "name": "Shallow Water",
+  "base_description": "Murky standing water.",
+  "walkable": false,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "~"
+  },
+  "color": [
+   50,
+   90,
+   160
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "floor_mud",
+  "name": "Mud",
+  "base_description": "Soft, wet mud that squelches underfoot.",
+  "walkable": true,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "."
+  },
+  "color": [
+   100,
+   80,
+   50
+  ],
+  "occludes_below": false
+ }
 ]

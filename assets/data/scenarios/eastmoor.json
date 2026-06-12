@@ -187,12 +187,15 @@
   "stock": {
    "iron_sword": 12,
    "steel_sword": 6,
-   "health_potion": 1
+   "health_potion": 1,
+   "venison": 2
   },
   "rates_per_day": {
    "iron_sword": 2,
    "steel_sword": 0.5,
-   "health_potion": -3
+   "health_potion": -3,
+   "venison": -1.5
   }
- }
+ },
+ "biome": "plains"
 }

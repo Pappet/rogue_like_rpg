@@ -11,6 +11,7 @@ from game.components import (
     AIBehaviorState,
     AIState,
     Alignment,
+    Animal,
     Blocker,
     Description,
     LootTable,
@@ -122,6 +123,9 @@ class EntityFactory:
 
         if template.quest_giver:
             components.append(QuestGiver())
+
+        if template.animal:
+            components.append(Animal())
 
         if template.needs:
             components.append(

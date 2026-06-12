@@ -329,6 +329,14 @@ class Merchant:
 
 
 @dataclass
+class Animal:
+    """Marker: wildlife. Bumping attacks (no dialogue), and hunting
+    neutral animals never costs reputation."""
+
+    pass
+
+
+@dataclass
 class Hidden:
     """Marker: entity is concealed until revealed (ROADMAP Phase F).
 

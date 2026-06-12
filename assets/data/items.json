@@ -268,5 +268,41 @@
    "hp": 5
   },
   "value": 35
+ },
+ {
+  "id": "venison",
+  "name": "Venison",
+  "sprite": "%",
+  "color": [
+   180,
+   60,
+   60
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 1.5,
+  "material": "meat",
+  "description": "Fresh game meat. Worth good coin in town.",
+  "stats": {},
+  "value": 10,
+  "consumable": {
+   "effect_type": "heal_hp",
+   "amount": 4
+  }
+ },
+ {
+  "id": "pelt",
+  "name": "Deer Pelt",
+  "sprite": "=",
+  "color": [
+   160,
+   120,
+   80
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 1.0,
+  "material": "leather",
+  "description": "A soft deer pelt, prized by tanners.",
+  "stats": {},
+  "value": 14
  }
 ]

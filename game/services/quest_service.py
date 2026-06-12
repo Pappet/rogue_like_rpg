@@ -200,7 +200,6 @@ class QuestService:
                     LogCategory.LOOT,
                 )
 
-        self._ensure_kill_targets(location_id)
         # Generate offers for EVERY settlement (economy and chronicle are
         # global state) so rumors can point at requests before the player
         # has ever been there.
@@ -264,7 +263,7 @@ class QuestService:
                         id=quest_id,
                         title=f"Wolves near {location_id}",
                         description=f"Wolves have been spotted around {location_id}. "
-                        f"Hunt down {GEN_KILL_COUNT} of them.",
+                        f"Hunt down {GEN_KILL_COUNT} of them in the wilds.",
                         quest_type="kill",
                         giver_location=location_id,
                         target={"template": "wolf", "count": GEN_KILL_COUNT},
@@ -274,36 +273,44 @@ class QuestService:
                 )
                 logger.info("Generated wolf-hunt quest at %s.", location_id)
 
-    def _ensure_kill_targets(self, location_id: str) -> None:
-        """The cause must exist: spawn missing kill targets on arrival."""
+    def on_map_entered(self, map_id: str) -> None:
+        """Any-map-transition hook: kill-quest targets live in the giver
+        settlement's wilderness — entering it spawns whatever is missing."""
+        from game.services.map_generator import wilderness_map_id
+
+        for quest in self.quests:
+            if (
+                quest.state == "active"
+                and quest.quest_type == "kill"
+                and wilderness_map_id(quest.giver_location) == map_id
+            ):
+                self._ensure_kill_targets(quest)
+
+    def _ensure_kill_targets(self, quest) -> None:
+        """The cause must exist: spawn missing kill targets on this map."""
         if self.ctx is None:
             return
         from game.content.entity_factory import EntityFactory
         from game.map.map_generator_utils import get_nearest_walkable_tile
 
-        for quest in self.quests:
-            if quest.state != "active" or quest.quest_type != "kill":
-                continue
-            if quest.giver_location != location_id:
-                continue
-            template = quest.target.get("template")
-            needed = quest.target["count"] - quest.progress
-            alive = sum(
-                1
-                for _ent, (tid,) in esper.get_components(TemplateId)
-                if tid.id == template and esper.has_component(_ent, Position)
-            )
-            missing = needed - alive
-            if missing <= 0:
-                continue
-            container = self.ctx.map_service.get_active_map()
-            layer = container.layers[0]
-            for _ in range(missing):
-                x = self.rng.randint(2, container.width - 3)
-                y = self.rng.randint(2, container.height - 3)
-                nx, ny = get_nearest_walkable_tile(layer, x, y)
-                EntityFactory.create(esper, template, nx, ny)
-            logger.info("Spawned %d %s(s) at %s for quest '%s'.", missing, template, location_id, quest.id)
+        template = quest.target.get("template")
+        needed = quest.target["count"] - quest.progress
+        alive = sum(
+            1
+            for _ent, (tid,) in esper.get_components(TemplateId)
+            if tid.id == template and esper.has_component(_ent, Position)
+        )
+        missing = needed - alive
+        if missing <= 0:
+            return
+        container = self.ctx.map_service.get_active_map()
+        layer = container.layers[0]
+        for _ in range(missing):
+            x = self.rng.randint(2, container.width - 3)
+            y = self.rng.randint(2, container.height - 3)
+            nx, ny = get_nearest_walkable_tile(layer, x, y)
+            EntityFactory.create(esper, template, nx, ny)
+        logger.info("Spawned %d %s(s) for quest '%s'.", missing, template, quest.id)
 
     # --- Player inventory helpers ---------------------------------------------------
 

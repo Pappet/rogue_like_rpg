@@ -90,6 +90,10 @@ class MapTransitionService:
         for system in ctx.systems.map_aware():
             system.set_map(new_map)
 
+        # Kill-quest causes live in wilderness maps — ensure them on entry
+        if ctx.quests is not None:
+            ctx.quests.on_map_entered(target_map_id)
+
         # Keep the world graph's current location in sync (only location maps
         # are graph nodes; interior maps like "Tavern" are not).
         if ctx.world_graph is not None and ctx.world_graph.get_location(target_map_id) is not None:

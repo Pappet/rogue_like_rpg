@@ -5,6 +5,7 @@ from game.components import (
     AIBehaviorState,
     AIState,
     Alignment,
+    Animal,
     AttackIntent,
     Merchant,
     Name,
@@ -37,6 +38,10 @@ class InteractionResolver:
 
             # Hostile entities are attacked
             if behavior.alignment == Alignment.HOSTILE:
+                return InteractionType.ATTACK
+
+            # Animals don't talk — bumping wildlife is a hunting strike
+            if world.has_component(target_ent, Animal):
                 return InteractionType.ATTACK
 
             # Non-hostile merchants open their shop

@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 
 import esper
 
-from game.components import AIBehaviorState, Alignment, PlayerTag
+from game.components import AIBehaviorState, Alignment, Animal, PlayerTag
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +97,8 @@ class ReputationService:
         behavior = esper.try_component(entity, AIBehaviorState)
         if behavior is None or behavior.alignment == Alignment.HOSTILE:
             return
+        if esper.has_component(entity, Animal):
+            return  # hunting is honest work, not a crime
         self.adjust(self.ctx.world_graph.current_location_id, REP_KILL_PENALTY, "killed a citizen")
 
     # --- Persistence ------------------------------------------------------------

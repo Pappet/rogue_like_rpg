@@ -339,8 +339,23 @@ def test_rumor_leads_to_generated_quest_with_real_cause():
     quest = offers[0]
     ctx.quests.accept(quest)
 
-    # 4) The cause genuinely exists: wolves are (spawned) on this map
-    ctx.quests._ensure_kill_targets("Brackenfen")
+    # 4) The cause genuinely exists — in Brackenfen's wilderness. Take the
+    # path into the wilds; entering spawns the missing wolves.
+    from game.components import Portal
+
+    wild_portal = next(
+        (pos, portal)
+        for _e, (pos, portal) in esper.get_components(Position, Portal)
+        if portal.target_map_id == "Brackenfen Wilderness"
+    )
+    player_pos = esper.component_for_entity(ctx.player_entity, Position)
+    player_pos.x, player_pos.y = wild_portal[0].x, wild_portal[0].y
+    frames(2)
+    key(pygame.K_g)
+    frames()
+    assert ctx.map_service.active_map_id == "Brackenfen Wilderness"
+    assert ctx.world_graph.current_location_id == "Brackenfen", "wilderness is not a world-graph node"
+
     wolves = [
         ent
         for ent, (tid,) in esper.get_components(TemplateId)
@@ -348,11 +363,24 @@ def test_rumor_leads_to_generated_quest_with_real_cause():
     ]
     assert len(wolves) >= quest.target["count"]
 
-    # 5) Resolve it: kill the wolves, report back, collect the reward
+    # 5) Resolve it: hunt the wolves in the wilds, return, collect the reward
     gold_before = esper.component_for_entity(ctx.player_entity, Purse).gold
     for wolf in wolves[: quest.target["count"]]:
         ctx.quests.on_entity_died(wolf, attacker=ctx.player_entity)
     assert quest.state == "completed"
+
+    back_portal = next(
+        (pos, portal)
+        for _e, (pos, portal) in esper.get_components(Position, Portal)
+        if portal.target_map_id == "Brackenfen"
+    )
+    player_pos = esper.component_for_entity(ctx.player_entity, Position)
+    player_pos.x, player_pos.y = back_portal[0].x, back_portal[0].y
+    frames(2)
+    key(pygame.K_g)
+    frames()
+    assert ctx.map_service.active_map_id == "Brackenfen", "the return path leads back where you came from"
+
     assert ctx.quests.turn_in(quest) is True
     assert esper.component_for_entity(ctx.player_entity, Purse).gold == gold_before + quest.reward_gold
 
