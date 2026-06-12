@@ -116,6 +116,29 @@ def test_biomes_produce_different_terrain():
     assert "floor_mud" in swamp and "floor_mud" not in forest, "biome terrain must differ per settlement"
 
 
+def test_forest_wilderness_grows_big_trees():
+    _load_content()
+    map_service, _ = _build_world()
+
+    wild = map_service.get_map(wilderness_map_id("Village"))
+    tiles = wild.layers[0].tiles
+    size = len(tiles)
+    trunks = [(x, y) for y in range(size) for x in range(size) if tiles[y][x]._type_id == "tree_trunk"]
+    assert trunks, "a forest wilderness should contain at least one big tree"
+
+    for cx, cy in trunks:
+        # The trunk blocks movement, the canopy ring around it does not —
+        # but the canopy blocks line of sight.
+        assert not tiles[cy][cx].walkable
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                if dx == 0 and dy == 0:
+                    continue
+                neighbor = tiles[cy + dy][cx + dx]
+                assert neighbor._type_id == "tree_canopy", f"trunk at ({cx},{cy}) missing canopy at ({dx},{dy})"
+                assert neighbor.walkable and not neighbor.transparent
+
+
 def test_settlement_has_portal_into_the_wilds():
     _load_content()
     map_service, graph = _build_world()

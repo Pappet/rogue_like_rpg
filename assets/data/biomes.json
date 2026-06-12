@@ -11,9 +11,14 @@
   "features": [
    [
     "tree",
-    0.14
+    0.09
+   ],
+   [
+    "tree_sapling",
+    0.04
    ]
   ],
+  "big_trees": 6,
   "spawns": [
    [
     "deer",
@@ -45,9 +50,14 @@
    ],
    [
     "tree",
-    0.05
+    0.04
+   ],
+   [
+    "tree_sapling",
+    0.02
    ]
   ],
+  "big_trees": 2,
   "spawns": [
    [
     "boar",
@@ -75,9 +85,14 @@
   "features": [
    [
     "tree",
-    0.03
+    0.02
+   ],
+   [
+    "tree_sapling",
+    0.02
    ]
   ],
+  "big_trees": 1,
   "spawns": [
    [
     "deer",

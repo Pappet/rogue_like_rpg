@@ -45,6 +45,7 @@ class Tile:
             self._walkable: bool | None = tile_type.walkable
             self.color = tile_type.color
             self.bg_color = tile_type.bg_color
+            self.sprite_colors = dict(tile_type.sprite_colors)
             self.dark = dark
         else:
             # Legacy construction – explicit properties.
@@ -55,6 +56,7 @@ class Tile:
             self._walkable = None  # computed from sprites (legacy behaviour)
             self.color = (200, 200, 200)
             self.bg_color = None
+            self.sprite_colors = {}
 
         # Per-instance mutable state.
         self.visibility_state = VisibilityState.UNEXPLORED
@@ -73,6 +75,7 @@ class Tile:
         self._walkable = tile_type.walkable
         self.color = tile_type.color
         self.bg_color = tile_type.bg_color
+        self.sprite_colors = dict(tile_type.sprite_colors)
 
     @property
     def walkable(self) -> bool:

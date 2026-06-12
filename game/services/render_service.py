@@ -67,18 +67,23 @@ class RenderService:
         self.tint_surface.fill(tint_color)
         surface.blit(self.tint_surface, (viewport_rect.x, viewport_rect.y))
 
-    def tile_color(self, tile, x: int, y: int) -> tuple:
+    def tile_color(self, tile, x: int, y: int, sprite_layer: SpriteLayer | None = None) -> tuple:
         """Resolve the draw color for a tile based on its visibility state.
 
         VISIBLE tiles use their own registry color with a subtle positional
         brightness variation; SHROUDED tiles keep a dimmed hint of their hue;
-        FORGOTTEN tiles collapse to a uniform near-dark tone.
+        FORGOTTEN tiles collapse to a uniform near-dark tone. If a
+        sprite_layer is given and the tile defines a per-layer color for it,
+        that color is used as the base (e.g. a green canopy over brown ground).
         """
+        base = tile.color
+        if sprite_layer is not None:
+            base = getattr(tile, "sprite_colors", {}).get(sprite_layer, tile.color)
         if tile.visibility_state == VisibilityState.SHROUDED:
-            return _blend(tile.color, COLOR_TILE_SHROUD, SHROUD_COLOR_KEEP)
+            return _blend(base, COLOR_TILE_SHROUD, SHROUD_COLOR_KEEP)
         if tile.visibility_state == VisibilityState.FORGOTTEN:
             return COLOR_TILE_FORGOTTEN
-        return _scale(tile.color, _variation_factor(x, y))
+        return _scale(base, _variation_factor(x, y))
 
     def tile_bg_color(self, tile, x: int, y: int) -> tuple | None:
         """Resolve the background fill color for a tile, or None if it has none.
@@ -160,7 +165,13 @@ class RenderService:
                                 elif sprite_char == "#":
                                     char_to_render = "?"
 
-                            glyph = self._glyph(char_to_render, color)
+                            layer_color = color
+                            if slayer in getattr(tile, "sprite_colors", {}):
+                                layer_color = self.tile_color(tile, x, y, slayer)
+                                if depth_factor < 1.0:
+                                    layer_color = _scale(layer_color, depth_factor)
+
+                            glyph = self._glyph(char_to_render, layer_color)
                             # Center the glyph in its cell so it sits nicely on the background
                             offset_x = (TILE_SIZE - glyph.get_width()) // 2
                             offset_y = (TILE_SIZE - glyph.get_height()) // 2

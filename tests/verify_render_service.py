@@ -119,6 +119,22 @@ def test_shrouded_and_forgotten_bg_colors():
     assert service.tile_bg_color(grass_forgotten, 0, 0) == COLOR_TILE_FORGOTTEN_BG
 
 
+def test_sprite_layer_specific_color():
+    """Tiles can define per-sprite-layer colors (e.g. canopy over ground)."""
+    ResourceLoader.load_tiles(TILE_FILE)
+    service = RenderService()
+    canopy = _make_tile("tree_canopy", VisibilityState.VISIBLE)
+
+    ground_color = service.tile_color(canopy, 5, 5, SpriteLayer.GROUND)
+    canopy_color = service.tile_color(canopy, 5, 5, SpriteLayer.DECOR_TOP)
+
+    # GROUND has no per-layer override and falls back to tile.color.
+    assert ground_color == service.tile_color(canopy, 5, 5)
+    # DECOR_TOP uses the brighter canopy green from sprite_colors.
+    assert canopy_color != ground_color
+    assert canopy_color[1] > canopy_color[0] and canopy_color[1] > canopy_color[2]
+
+
 def test_glyph_cache_reuses_surfaces():
     service = RenderService()
 
