@@ -27,15 +27,18 @@ import esper
 
 from config import (
     TICKS_PER_HOUR,
+    TRAVEL_BANDIT_AMBUSH_CHANCE,
+    TRAVEL_BANDIT_EVENT_MAX_AGE_TICKS,
     TRAVEL_ENCOUNTER_CHANCE_PER_HOUR,
     TRAVEL_ENCOUNTER_MAX_CHANCE,
     TRAVEL_ENCOUNTER_MAX_PROGRESS,
     TRAVEL_ENCOUNTER_MIN_PROGRESS,
     TRAVEL_MERCHANT_EVENT_MAX_AGE_TICKS,
     TRAVEL_MERCHANT_RUMOR_CHANCE,
+    LogCategory,
     SpriteLayer,
 )
-from game.components import MapBound, Name, Portal, Position, Renderable, Skirmisher
+from game.components import AI, MapBound, Name, Portal, Position, Renderable, Skirmisher, TemplateId
 from game.content.entity_factory import EntityFactory
 from game.map.map_container import MapContainer
 from game.map.map_generator_utils import get_nearest_walkable_tile
@@ -50,6 +53,9 @@ ROAD_HEIGHT = 11
 ROAD_TREE_CHANCE = 0.15
 MERCHANT_ENCOUNTER_ID = "traveling_merchant"
 MERCHANT_LEFT_EVENT_ID = "merchant_left"
+BANDIT_ENCOUNTER_ID = "bandit_ambush"
+BANDITS_SPOTTED_EVENT_ID = "bandits_spotted"
+BANDIT_TEMPLATES = ("bandit", "bandit_leader")
 
 
 def road_map_id(origin_id: str, destination_id: str) -> str:
@@ -84,6 +90,10 @@ class TravelEncounterService:
         self.rng = random.Random()
         # Scene staged by roll_encounter(), consumed by on_map_entered().
         self._pending: dict | None = None
+        # Active chronicle-caused bandit ambush: clearing it makes the
+        # road safe again (cancels the caravan_raided escalation, G4).
+        self._bandit_hunt: dict | None = None
+        esper.set_handler("entity_died", self.on_entity_died)
 
     def load_templates(self, filepath: str) -> None:
         """Load the encounter pool from a JSON file."""
@@ -151,8 +161,9 @@ class TravelEncounterService:
         }
 
     def _pick_template(self, destination_id: str, travel_ticks: int) -> EncounterTemplate | None:
-        """Pick an encounter or None. A merchant who recently left the
-        destination is on this very road — meeting him gets its own roll."""
+        """Pick an encounter or None. Recent chronicle events at the
+        destination feed the road: a merchant who left is on it, spotted
+        bandits hold it — each gets its own roll before the generic pool."""
         if not self.templates:
             return None
 
@@ -164,6 +175,14 @@ class TravelEncounterService:
         ):
             return merchant
 
+        bandits = next((t for t in self.templates if t.id == BANDIT_ENCOUNTER_ID), None)
+        if (
+            bandits is not None
+            and self._bandits_spotted_near(destination_id)
+            and self.rng.random() < TRAVEL_BANDIT_AMBUSH_CHANCE
+        ):
+            return bandits
+
         if self.rng.random() >= self.encounter_chance(travel_ticks):
             return None
         return self.rng.choices(self.templates, weights=[t.weight for t in self.templates])[0]
@@ -171,12 +190,20 @@ class TravelEncounterService:
     def _merchant_left_destination(self, destination_id: str) -> bool:
         """True if the chronicle has a recent merchant_left event at the
         destination — that merchant travels this road toward the player."""
+        return self._recent_event(destination_id, MERCHANT_LEFT_EVENT_ID, TRAVEL_MERCHANT_EVENT_MAX_AGE_TICKS)
+
+    def _bandits_spotted_near(self, destination_id: str) -> bool:
+        """True if bandits were recently spotted at the destination — they
+        are camped on this very road (and can be cleared out, G4)."""
+        return self._recent_event(destination_id, BANDITS_SPOTTED_EVENT_ID, TRAVEL_BANDIT_EVENT_MAX_AGE_TICKS)
+
+    def _recent_event(self, location_id: str, event_id: str, max_age_ticks: int) -> bool:
         chronicle = self.ctx.world_chronicle
         clock = self.ctx.world_clock
         if chronicle is None or clock is None:
             return False
-        since = clock.total_ticks - TRAVEL_MERCHANT_EVENT_MAX_AGE_TICKS
-        return any(e.event_id == MERCHANT_LEFT_EVENT_ID for e in chronicle.events_for(destination_id, since_tick=since))
+        since = clock.total_ticks - max_age_ticks
+        return any(e.event_id == event_id for e in chronicle.events_for(location_id, since_tick=since))
 
     # --- Road map -------------------------------------------------------------
 
@@ -205,11 +232,43 @@ class TravelEncounterService:
         self._create_portals(pending, container, cy)
         self._spawn_groups(pending["template"], container, cy)
 
+        # These are THE spotted bandits: clearing them out protects the
+        # destination's caravans (cancels the escalation, G4).
+        if pending["template"].id == BANDIT_ENCOUNTER_ID and self._bandits_spotted_near(pending["destination_id"]):
+            self._bandit_hunt = {"map_id": map_id, "destination_id": pending["destination_id"]}
+
     def on_map_left(self, map_id: str) -> None:
         """Road maps are one-shot: drop them once the player has moved on."""
         if is_road_map(map_id) and self.ctx.map_service.active_map_id != map_id:
             self.ctx.map_service.maps.pop(map_id, None)
             logger.info("Dropped one-shot road map '%s'.", map_id)
+            if self._bandit_hunt is not None and self._bandit_hunt["map_id"] == map_id:
+                self._bandit_hunt = None  # rode past them — the threat stands
+
+    def on_entity_died(self, entity, attacker=None) -> None:
+        """esper handler: clearing a chronicle-caused ambush resolves it."""
+        if self._bandit_hunt is None or self.ctx.map_service.active_map_id != self._bandit_hunt["map_id"]:
+            return
+        tid = esper.try_component(entity, TemplateId)
+        if tid is None or tid.id not in BANDIT_TEMPLATES:
+            return
+        survivors = [
+            ent
+            for ent, (other_tid, _ai) in esper.get_components(TemplateId, AI)
+            if other_tid.id in BANDIT_TEMPLATES and ent != entity
+        ]
+        if survivors:
+            return
+        hunt, self._bandit_hunt = self._bandit_hunt, None
+        chronicle = self.ctx.world_chronicle
+        if chronicle is not None:
+            chronicle.cancel_escalations(hunt["destination_id"], BANDITS_SPOTTED_EVENT_ID)
+        esper.dispatch_event(
+            "log_message",
+            f"The road to {hunt['destination_id']} is safe again — its caravans will get through.",
+            None,
+            LogCategory.SYSTEM,
+        )
 
     def _create_portals(self, pending: dict, container: MapContainer, cy: int) -> None:
         """Continue-portal (remaining travel time) and turn-back portal."""

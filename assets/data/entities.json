@@ -444,5 +444,77 @@
     1.0
    ]
   ]
+ },
+ {
+  "id": "bandit",
+  "name": "Bandit",
+  "sprite": "b",
+  "color": [
+   170,
+   60,
+   60
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 10,
+  "max_hp": 10,
+  "power": 3,
+  "defense": 1,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 7,
+  "intelligence": 4,
+  "ai": true,
+  "default_state": "wander",
+  "alignment": "hostile",
+  "blocker": true,
+  "description": "A road bandit with a hungry look and a worn blade.",
+  "wounded_text": "A bleeding bandit, still snarling.",
+  "wounded_threshold": 0.5,
+  "loot_table": [
+   [
+    "dagger",
+    0.6
+   ],
+   [
+    "health_potion",
+    0.3
+   ]
+  ]
+ },
+ {
+  "id": "bandit_leader",
+  "name": "Bandit Leader",
+  "sprite": "B",
+  "color": [
+   200,
+   50,
+   50
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 18,
+  "max_hp": 18,
+  "power": 5,
+  "defense": 2,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 8,
+  "intelligence": 6,
+  "ai": true,
+  "default_state": "wander",
+  "alignment": "hostile",
+  "blocker": true,
+  "description": "The one giving orders — better armed and meaner than the rest.",
+  "wounded_text": "The bandit leader staggers, cursing.",
+  "wounded_threshold": 0.5,
+  "loot_table": [
+   [
+    "iron_sword",
+    0.8
+   ],
+   [
+    "health_potion",
+    0.5
+   ]
+  ]
  }
 ]

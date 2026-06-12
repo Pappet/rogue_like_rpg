@@ -28,6 +28,10 @@ TRAVEL_ENCOUNTER_MIN_PROGRESS = 0.3  # encounter interrupts between 30% ...
 TRAVEL_ENCOUNTER_MAX_PROGRESS = 0.7  # ... and 70% of the journey
 TRAVEL_MERCHANT_RUMOR_CHANCE = 0.5  # meeting the merchant who left your destination
 TRAVEL_MERCHANT_EVENT_MAX_AGE_TICKS = 24 * 60  # merchant_left events expire after a day
+# Bandit activity (G4): a bandits_spotted event near the destination makes
+# the road dangerous — clearing the ambush makes it safe again.
+TRAVEL_BANDIT_AMBUSH_CHANCE = 0.6  # chance the spotted bandits hold this road
+TRAVEL_BANDIT_EVENT_MAX_AGE_TICKS = 48 * 60  # matches the caravan_raided escalation window
 
 # Settlement economy (ROADMAP Phase C)
 ECON_EQUILIBRIUM_STOCK = 5.0  # stock level at which price factor is ~1.0
