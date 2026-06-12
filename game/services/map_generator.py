@@ -15,6 +15,18 @@ from game.map.tile import Tile
 from game.services.map_service import MapService
 from game.services.spawn_service import SpawnService
 
+WILDERNESS_SIZE = 40
+
+
+def wilderness_map_id(settlement_id: str) -> str:
+    """Map id of a settlement's surrounding wilderness."""
+    return f"{settlement_id} Wilderness"
+
+
+def wilderness_arrival_pos() -> tuple[int, int]:
+    """Where the player enters the wilderness (kept clear of features)."""
+    return (WILDERNESS_SIZE // 2, WILDERNESS_SIZE - 3)
+
 
 class MapGenerator:
     def __init__(self, map_service: MapService):
@@ -205,8 +217,11 @@ class MapGenerator:
             nx, ny = get_nearest_walkable_tile(village_layers[0], npc["pos"][0], npc["pos"][1])
             EntityFactory.create(world, npc["type"], nx, ny)
 
-        # Generate generic monsters for the village map
-        SpawnService.spawn_monsters(world, village_container, density=0.005)
+        # Settlements are civilized ground: no random monster spawns here.
+        # Wildlife and monsters live in the settlement's wilderness map.
+        wild_portal_pos = None
+        if config.get("biome"):
+            wild_portal_pos = self._add_wilderness_portal(world, village_container, map_id)
 
         village_container.freeze(world)
 
@@ -240,12 +255,112 @@ class MapGenerator:
                 Name(f"Portal to {map_id}"),
             )
 
-            # Generate generic monsters for the house map (higher density for interiors)
-            SpawnService.spawn_monsters(world, h_container, density=0.03)
-
+            # Houses are people's homes — nothing hostile spawns indoors.
             h_container.freeze(world)
 
+        # 3. The surrounding wilderness, flavored by the settlement's biome
+        if config.get("biome") and wild_portal_pos is not None:
+            self.create_wilderness(world, settlement_id=map_id, biome_id=config["biome"], return_pos=wild_portal_pos)
+
         return village_container
+
+    def _add_wilderness_portal(self, world, container: MapContainer, settlement_id: str) -> tuple[int, int]:
+        """Place the 'into the wilds' portal near the settlement's arrival
+        spot and return its position (the wilderness return target)."""
+        ax, ay = container.arrival_pos or (1, 1)
+        px, py = get_nearest_walkable_tile(container.layers[0], ax + 2, ay)
+        wx, wy = wilderness_arrival_pos()
+        world.create_entity(
+            MapBound(),
+            Position(px, py, 0),
+            Portal(wilderness_map_id(settlement_id), wx, wy, 0, "Into the wilds", travel_ticks=10),
+            Renderable("&", SpriteLayer.DECOR_BOTTOM.value, (60, 180, 60)),
+            Name("Path into the wilds"),
+        )
+        return (px, py)
+
+    def create_wilderness(
+        self,
+        world,
+        settlement_id: str,
+        biome_id: str,
+        return_pos: tuple[int, int],
+        seed: int | None = None,
+    ) -> MapContainer:
+        """Generate the biome-flavored wilderness surrounding a settlement.
+
+        Not a world-graph node: entered and left through portals at the
+        settlement edge. Terrain, features (trees, water) and wildlife all
+        come from assets/data/biomes.json. A clearing around the arrival
+        spot stays free so the return portal is always reachable.
+
+        Must be called AFTER the settlement maps are frozen — freeze()
+        collects every live MapBound entity.
+        """
+        with open("assets/data/biomes.json") as f:
+            biome = json.load(f)[biome_id]
+        rng = random.Random(seed)
+        size = WILDERNESS_SIZE
+        ax, ay = wilderness_arrival_pos()
+
+        tiles = [[Tile(type_id=biome["base"]) for _ in range(size)] for _ in range(size)]
+        layer = MapLayer(tiles)
+        for y in range(size):
+            for x in range(size):
+                # Keep a clearing around the arrival/return spot
+                if abs(x - ax) <= 2 and abs(y - ay) <= 2:
+                    continue
+                roll = rng.random()
+                threshold = 0.0
+                placed = False
+                for type_id, chance in biome.get("features", []):
+                    threshold += chance
+                    if roll < threshold:
+                        tiles[y][x].set_type(type_id)
+                        placed = True
+                        break
+                if placed:
+                    continue
+                for type_id, chance in biome.get("patches", []):
+                    threshold += chance
+                    if roll < threshold:
+                        tiles[y][x].set_type(type_id)
+                        break
+
+        container = MapContainer([layer], arrival_pos=(ax, ay))
+        map_id = wilderness_map_id(settlement_id)
+        if self.map_service.get_map(map_id) is not None:
+            raise ValueError(f"Map id '{map_id}' is already registered.")
+        self.map_service.register_map(map_id, container)
+
+        # Return portal one step south of the arrival spot
+        world.create_entity(
+            MapBound(),
+            Position(ax, ay + 1, 0),
+            Portal(settlement_id, return_pos[0], return_pos[1], 0, f"Back to {settlement_id}", travel_ticks=10),
+            Renderable("&", SpriteLayer.DECOR_BOTTOM.value, (200, 180, 80)),
+            Name(f"Path back to {settlement_id}"),
+        )
+
+        # Wildlife per the biome's spawn table
+        walkable = [
+            (x, y)
+            for y in range(size)
+            for x in range(size)
+            if tiles[y][x].walkable and not (abs(x - ax) <= 2 and abs(y - ay) <= 2)
+        ]
+        rng.shuffle(walkable)
+        cursor = 0
+        for template_id, count in biome.get("spawns", []):
+            for _ in range(count):
+                if cursor >= len(walkable):
+                    break
+                x, y = walkable[cursor]
+                cursor += 1
+                EntityFactory.create(world, template_id, x, y)
+
+        container.freeze(world)
+        return container
 
     def create_dungeon(
         self,

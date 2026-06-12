@@ -244,6 +244,7 @@ class ResourceLoader:
                 merchant=item.get("merchant"),
                 needs=item.get("needs"),
                 quest_giver=bool(item.get("quest_giver", False)),
+                animal=bool(item.get("animal", False)),
             )
 
             registry.register(template)

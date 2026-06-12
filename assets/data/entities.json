@@ -310,5 +310,75 @@
   "wounded_text": "A limping grey wolf.",
   "wounded_threshold": 0.5,
   "loot_table": []
+ },
+ {
+  "id": "deer",
+  "name": "Deer",
+  "sprite": "d",
+  "color": [
+   170,
+   130,
+   80
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 5,
+  "max_hp": 5,
+  "power": 0,
+  "defense": 0,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 8,
+  "intelligence": 1,
+  "ai": true,
+  "default_state": "wander",
+  "alignment": "neutral",
+  "blocker": true,
+  "animal": true,
+  "description": "A skittish deer grazing in the undergrowth.",
+  "wounded_text": "A wounded deer, panicked.",
+  "wounded_threshold": 0.5,
+  "loot_table": [
+   [
+    "venison",
+    1.0
+   ],
+   [
+    "pelt",
+    0.6
+   ]
+  ]
+ },
+ {
+  "id": "boar",
+  "name": "Wild Boar",
+  "sprite": "b",
+  "color": [
+   120,
+   90,
+   60
+  ],
+  "sprite_layer": "ENTITIES",
+  "hp": 9,
+  "max_hp": 9,
+  "power": 3,
+  "defense": 1,
+  "mana": 0,
+  "max_mana": 0,
+  "perception": 6,
+  "intelligence": 1,
+  "ai": true,
+  "default_state": "wander",
+  "alignment": "hostile",
+  "blocker": true,
+  "animal": true,
+  "description": "A bristling wild boar with sharp tusks.",
+  "wounded_text": "A furious, bleeding boar.",
+  "wounded_threshold": 0.5,
+  "loot_table": [
+   [
+    "venison",
+    1.0
+   ]
+  ]
  }
 ]

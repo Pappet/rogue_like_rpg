@@ -144,6 +144,7 @@ is neutral constants, usable by both.
 │   ├── world.json                   # World graph: locations + travel routes
 │   ├── world_events.json            # Chronicle event pool (off-screen events)
 │   ├── quests.json                  # Authored quests (generated ones come from the sim)
+│   ├── biomes.json                  # Wilderness biomes: terrain mix + wildlife spawns
 │   ├── schedules.json               # NPC daily routines
 │   ├── dialogues.json               # NPC dialogue lines by template_id
 │   ├── prefabs/                     # Prefab room layouts
@@ -402,6 +403,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Merchant`        | NPC trades; stock = item template id list    |
 | `Needs`           | Hunger state; preempts schedule via override |
 | `QuestGiver`      | Marker: bump opens the quest window          |
+| `Animal`          | Wildlife: bump attacks; hunting costs no rep |
 | `Hidden`          | Concealed until revealed at close range      |
 
 ### Enums
@@ -474,7 +476,7 @@ class MapAwareSystem:
 - **Add new schedules**: `assets/data/schedules.json` → assign via `schedule_id` in entity template
 - **Player stats**: `assets/data/player.json` → base stats and actions loaded by `PartyService`
 - **Dialogues**: `assets/data/dialogues.json` → NPC dialogue lines keyed by template_id, loaded by `DialogueService`
-- **Map scenarios**: `assets/data/scenarios/*.json` → data-driven map layouts loaded by `MapGenerator`
+- **Map scenarios**: `assets/data/scenarios/*.json` → data-driven map layouts loaded by `MapGenerator`; a `"biome"` key gives the settlement a generated wilderness map (entered via portal, not a world-graph node)
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)
 
 ### AI Behavior

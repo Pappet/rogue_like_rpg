@@ -1,0 +1,92 @@
+{
+ "forest": {
+  "name": "Forest",
+  "base": "floor_grass",
+  "patches": [
+   [
+    "floor_dirt",
+    0.12
+   ]
+  ],
+  "features": [
+   [
+    "tree",
+    0.14
+   ]
+  ],
+  "spawns": [
+   [
+    "deer",
+    4
+   ],
+   [
+    "boar",
+    2
+   ],
+   [
+    "wolf",
+    2
+   ]
+  ]
+ },
+ "swamp": {
+  "name": "Swamp",
+  "base": "floor_mud",
+  "patches": [
+   [
+    "floor_grass",
+    0.18
+   ]
+  ],
+  "features": [
+   [
+    "water_shallow",
+    0.16
+   ],
+   [
+    "tree",
+    0.05
+   ]
+  ],
+  "spawns": [
+   [
+    "boar",
+    3
+   ],
+   [
+    "wolf",
+    3
+   ]
+  ]
+ },
+ "plains": {
+  "name": "Plains",
+  "base": "floor_grass",
+  "patches": [
+   [
+    "floor_dirt",
+    0.25
+   ],
+   [
+    "floor_sand",
+    0.05
+   ]
+  ],
+  "features": [
+   [
+    "tree",
+    0.03
+   ]
+  ],
+  "spawns": [
+   [
+    "deer",
+    5
+   ],
+   [
+    "wolf",
+    2
+   ]
+  ]
+ }
+}
