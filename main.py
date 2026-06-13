@@ -6,6 +6,7 @@ import pygame
 
 from bootstrap import build_game_context
 from config import SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH
+from core.ecs import reset_world
 from game.states import GameOver, GameplayState, TitleScreen, WorldMapState
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -17,6 +18,10 @@ class GameController:
         pygame.display.set_caption(SCREEN_TITLE)
         self.clock = pygame.time.Clock()
 
+        # Original seed request (None = random per run); preserved so a fixed
+        # --seed stays reproducible across new games while a random run gets a
+        # fresh world each time.
+        self._seed = seed
         self.ctx = build_game_context(seed=seed)
         logging.getLogger(__name__).info("World seed: %d", self.ctx.world_seed)
 
@@ -49,9 +54,20 @@ class GameController:
     def flip_state(self):
         next_state = self.state.next_state
         self.state.done = False
+        # Returning to the title screen (only reached after a game ends) means
+        # the current run is over. Tear down its world and build a fresh one so
+        # the next "New Game" never resumes the dead player or stale state.
+        if next_state == "TITLE":
+            self._start_new_run()
         self.state_name = next_state
         self.state = self.states[self.state_name]
         self.state.startup(self.ctx)
+
+    def _start_new_run(self):
+        """Discard the current run's world and build a fresh GameContext."""
+        reset_world()
+        self.ctx = build_game_context(seed=self._seed)
+        logging.getLogger(__name__).info("World seed: %d", self.ctx.world_seed)
 
 
 def main():

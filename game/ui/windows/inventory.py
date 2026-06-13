@@ -158,20 +158,22 @@ class InventoryWindow(UIWindow):
                 port = self.world.try_component(item_id, Portable)
                 if port:
                     cur_w += port.weight
+        # Two compact right-aligned lines within the title band, kept clear of
+        # the divider below (small header font so they never spill across it).
         right_x = box_x + box_width - pad - 6
         theme.draw_text(
             surface,
             f"Gold: {gold}",
-            self.font,
+            self.small_font,
             UI_THEME_COIN,
-            (right_x, box_y + 14),
+            (right_x, box_y + 16),
             shadow=False,
             anchor="topright",
         )
         theme.draw_text(
             surface,
             f"Weight: {cur_w:.1f}/{max_w:.1f} kg",
-            self.font,
+            self.small_font,
             UI_THEME_INK_DIM,
             (right_x, box_y + 38),
             shadow=False,
