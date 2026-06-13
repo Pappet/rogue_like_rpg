@@ -56,6 +56,14 @@ PROSPERITY_SHORTAGE_LEVEL = 0.5  # stock at/below this counts as a shortage
 PROSPERITY_QUEST_GAIN = 2.0  # turning in a quest helps the whole settlement
 PROSPERITY_PRICE_SPAN = 0.2  # price baseline 0.9x (destitute) .. 1.1x (rich)
 
+# NPC ambient behavior (Living Village)
+# When a scheduled NPC has arrived at its WORK/SOCIALIZE anchor it does not
+# freeze: it mills about within AI_LOITER_RADIUS tiles of the anchor, taking
+# a small step only AI_LOITER_MOVE_CHANCE of the time so a crowd drifts
+# instead of twitching. This is what breaks the "blob standing still" look.
+AI_LOITER_RADIUS = 3
+AI_LOITER_MOVE_CHANCE = 0.5
+
 # Combat depth (ROADMAP Phase G5)
 COMBAT_CRIT_CHANCE = 0.1  # chance any damaging hit is a critical
 COMBAT_CRIT_MULTIPLIER = 2  # critical hits deal double damage

@@ -2,10 +2,11 @@ import random
 
 import esper
 
-from config import GameStates, LogCategory, SpriteLayer
+from config import AI_LOITER_MOVE_CHANCE, AI_LOITER_RADIUS, GameStates, LogCategory, SpriteLayer
 from core.visibility_service import VisibilityService
 from game.components import (
     AI,
+    Activity,
     AIBehaviorState,
     AIState,
     Alignment,
@@ -129,8 +130,14 @@ class AISystem(esper.Processor):
                 self._chase(ent, behavior, pos, map_container, claimed_tiles, player_pos)
             case AIState.TALK:
                 pass  # Stub: talk behavior implemented later
-            case AIState.WORK | AIState.PATROL | AIState.SOCIALIZE | AIState.SLEEP:
-                pass  # Handled by ScheduleSystem + PathData Priority
+            case AIState.WORK | AIState.SOCIALIZE:
+                # Arrived at the work/social anchor (PathData drained): mill
+                # about instead of freezing into a blob.
+                activity = esper.try_component(ent, Activity)
+                if activity is not None:
+                    self._loiter(pos, activity, map_container, claimed_tiles)
+            case AIState.PATROL | AIState.SLEEP:
+                pass  # PATROL advanced by ScheduleSystem; SLEEP stays put
 
     def _wander(self, ent, pos, map_container, claimed_tiles):
         """Move entity randomly to a walkable, unoccupied adjacent cardinal tile.
@@ -156,6 +163,45 @@ class AISystem(esper.Processor):
             pos.y = ny
             return
         # WNDR-03: No valid tile — entity skips turn silently
+
+    def _loiter(self, pos, activity, map_container, claimed_tiles):
+        """Mill about within AI_LOITER_RADIUS of the activity anchor.
+
+        Scheduled NPCs reach their WORK/SOCIALIZE target and then, instead of
+        standing frozen (the "blob" look), drift around it: they step back
+        toward the anchor if they have wandered too far, otherwise take an
+        occasional small random step that keeps them in range. This is what
+        spreads a daytime work crowd out and makes the evening fire feel alive.
+        """
+        anchor = activity.target_pos
+        if anchor is None:
+            return
+        ax, ay = anchor
+
+        # Drifted out of range — ease back toward the anchor.
+        if abs(pos.x - ax) + abs(pos.y - ay) > AI_LOITER_RADIUS:
+            self._greedy_step(None, pos, (ax, ay), map_container, claimed_tiles, attack_player=False)
+            return
+
+        # In range: usually linger, occasionally shuffle a tile.
+        if random.random() > AI_LOITER_MOVE_CHANCE:
+            return
+        dirs = CARDINAL_DIRS[:]
+        random.shuffle(dirs)
+        for dx, dy in dirs:
+            nx, ny = pos.x + dx, pos.y + dy
+            if abs(nx - ax) + abs(ny - ay) > AI_LOITER_RADIUS:
+                continue
+            if (nx, ny) in claimed_tiles:
+                continue
+            if not self._is_walkable(nx, ny, pos.layer, map_container):
+                continue
+            if self._get_blocker_at(nx, ny, pos.layer):
+                continue
+            claimed_tiles.add((nx, ny))
+            pos.x = nx
+            pos.y = ny
+            return
 
     def _chase(self, ent, behavior, pos, map_container, claimed_tiles, player_pos):
         """Move NPC toward last known player position using PathfindingService (A*).

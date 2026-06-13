@@ -303,6 +303,35 @@ class Schedule:
 
 
 @dataclass
+class PatrolRoute:
+    """A guard's looping beat. Assigned by ScheduleSystem the first time a
+    PATROL entry with a `route` is encountered. `index` is staggered per
+    entity so guards sharing a route walk it out of phase instead of marching
+    as one pack. Recomputed on thaw, so it is treated as transient state."""
+
+    waypoints: list[tuple[int, int]] = field(default_factory=list)
+    index: int = 0
+
+
+@dataclass
+class Residence:
+    """Where an NPC belongs in town, assigned once at village build by
+    HousingService (capacity-based housing).
+
+    - `hearth_pos`: the settlement's social centre (campfire, else tavern).
+      SOCIALIZE entries with `target_meta: "hearth"` head here, so evening
+      gatherings happen at the *real* fire of whichever village the NPC is in.
+    - `housed`: True if the NPC owns a bed; it sleeps at home_pos. When False
+      the NPC has no bed and instead drifts to `gather_pos` at night.
+    - `gather_pos`: the campfire/tavern spot a bedless NPC (or a guard on the
+      night watch) mills about after dark instead of sleeping."""
+
+    hearth_pos: tuple[int, int] | None = None
+    housed: bool = True
+    gather_pos: tuple[int, int] | None = None
+
+
+@dataclass
 class FCT:
     text: str
     color: tuple[int, int, int]

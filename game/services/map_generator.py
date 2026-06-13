@@ -13,6 +13,7 @@ from game.map.map_container import MapContainer
 from game.map.map_generator_utils import draw_rectangle, get_nearest_walkable_tile
 from game.map.map_layer import MapLayer
 from game.map.tile import Tile, VisibilityState
+from game.services.housing_service import HousingService
 from game.services.map_service import MapService
 from game.services.spawn_service import SpawnService
 
@@ -376,6 +377,11 @@ class MapGenerator:
         for npc in config.get("village_npcs", []):
             nx, ny = get_nearest_walkable_tile(village_layers[0], npc["pos"][0], npc["pos"][1])
             EntityFactory.create(world, npc["type"], nx, ny)
+
+        # Capacity-based housing: hand out beds, send the rest to the hearth,
+        # and tell everyone where the village's social centre is (Living
+        # Village). Only this scenario's exterior NPCs are live right now.
+        HousingService.assign(world, config, village_layers[0])
 
         # Settlements are civilized ground: no random monster spawns here.
         # Wildlife and monsters live in the settlement's wilderness map.
