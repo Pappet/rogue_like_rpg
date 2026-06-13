@@ -70,16 +70,20 @@ class QuestWindow(UIWindow):
     def handle_event(self, event):
         command = self.input_manager.handle_event(event, GameStates.INVENTORY)
 
-        if command == InputCommand.CANCEL:
+        if command == InputCommand.CANCEL or command == InputCommand.OPEN_JOURNAL:
             self.wants_to_close = True
             return True
+
         entries = self._entries()
+
         if command == InputCommand.MOVE_UP and entries:
             self.selected_idx = (self.selected_idx - 1) % len(entries)
             return True
+
         if command == InputCommand.MOVE_DOWN and entries:
             self.selected_idx = (self.selected_idx + 1) % len(entries)
             return True
+
         if command == InputCommand.CONFIRM and self.mode == "giver" and entries:
             kind, quest = entries[min(self.selected_idx, len(entries) - 1)]
             if kind == "offer":
