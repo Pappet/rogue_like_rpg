@@ -7,6 +7,8 @@ from config import (
     BLEED_TURNS,
     COMBAT_CRIT_CHANCE,
     COMBAT_CRIT_MULTIPLIER,
+    COMBAT_DAMAGE_VARIANCE,
+    COMBAT_MIN_DAMAGE,
     LogCategory,
 )
 from game.components import (
@@ -43,9 +45,17 @@ class CombatSystem(esper.Processor):
                 target_eff = esper.try_component(target, EffectiveStats) or target_stats
 
                 # Calculate damage using effective values; abilities may
-                # scale the attacker's power (G5)
+                # scale the attacker's power (G5). A connecting hit (power > 0)
+                # rolls +-COMBAT_DAMAGE_VARIANCE and always chips at least
+                # COMBAT_MIN_DAMAGE so defense never produces a stalemate turn.
                 attack_power = round(attacker_eff.power * intent.power_multiplier)
-                damage = max(0, attack_power - target_eff.defense)
+                if attack_power > 0:
+                    # r in [0,1]; r == 0.5 -> factor 1.0
+                    factor = 1.0 + COMBAT_DAMAGE_VARIANCE * (2 * self.rng.random() - 1)
+                    raw = round(attack_power * factor) - target_eff.defense
+                    damage = max(COMBAT_MIN_DAMAGE, raw)
+                else:
+                    damage = 0  # power-0 attackers (e.g. Deer) still deal nothing
 
                 # Critical hit: double damage and an open, bleeding wound
                 is_crit = damage > 0 and self.rng.random() < COMBAT_CRIT_CHANCE

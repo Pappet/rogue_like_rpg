@@ -62,6 +62,10 @@ COMBAT_CRIT_MULTIPLIER = 2  # critical hits deal double damage
 BLEED_DAMAGE_PER_TURN = 1  # criticals open a wound that bleeds...
 BLEED_TURNS = 3  # ...for this many rounds
 
+# Combat balance (tense-but-fair retune)
+COMBAT_MIN_DAMAGE = 1  # a connecting hit (power > 0) always chips at least this
+COMBAT_DAMAGE_VARIANCE = 0.2  # +-20% roll on each hit for unpredictability
+
 # Day/Night Settings
 DN_SETTINGS = {
     "day": {"tint": (0, 0, 0, 0), "light": 1.0, "perception": 1.0},

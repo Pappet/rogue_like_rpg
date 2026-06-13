@@ -9,10 +9,10 @@
    0
   ],
   "sprite_layer": "ENTITIES",
-  "hp": 10,
-  "max_hp": 10,
-  "power": 3,
-  "defense": 0,
+  "hp": 12,
+  "max_hp": 12,
+  "power": 4,
+  "defense": 1,
   "mana": 0,
   "max_mana": 0,
   "perception": 5,
@@ -83,9 +83,9 @@
    255
   ],
   "sprite_layer": "ENTITIES",
-  "hp": 20,
-  "max_hp": 20,
-  "power": 5,
+  "hp": 24,
+  "max_hp": 24,
+  "power": 6,
   "defense": 2,
   "mana": 0,
   "max_mana": 0,
@@ -230,9 +230,9 @@
    110
   ],
   "sprite_layer": "ENTITIES",
-  "hp": 16,
-  "max_hp": 16,
-  "power": 4,
+  "hp": 18,
+  "max_hp": 18,
+  "power": 5,
   "defense": 2,
   "mana": 0,
   "max_mana": 0,
@@ -256,9 +256,9 @@
    50
   ],
   "sprite_layer": "ENTITIES",
-  "hp": 5,
-  "max_hp": 5,
-  "power": 2,
+  "hp": 6,
+  "max_hp": 6,
+  "power": 3,
   "defense": 0,
   "mana": 0,
   "max_mana": 0,
@@ -292,9 +292,9 @@
    100
   ],
   "sprite_layer": "ENTITIES",
-  "hp": 30,
-  "max_hp": 30,
-  "power": 8,
+  "hp": 36,
+  "max_hp": 36,
+  "power": 9,
   "defense": 3,
   "mana": 0,
   "max_mana": 0,
@@ -393,9 +393,9 @@
    160
   ],
   "sprite_layer": "ENTITIES",
-  "hp": 6,
-  "max_hp": 6,
-  "power": 2,
+  "hp": 7,
+  "max_hp": 7,
+  "power": 3,
   "defense": 0,
   "mana": 0,
   "max_mana": 0,
@@ -408,7 +408,12 @@
   "description": "A lean grey wolf.",
   "wounded_text": "A limping grey wolf.",
   "wounded_threshold": 0.5,
-  "loot_table": []
+  "loot_table": [
+   [
+    "pelt",
+    0.5
+   ]
+  ]
  },
  {
   "id": "deer",
@@ -457,9 +462,9 @@
    60
   ],
   "sprite_layer": "ENTITIES",
-  "hp": 9,
-  "max_hp": 9,
-  "power": 3,
+  "hp": 10,
+  "max_hp": 10,
+  "power": 4,
   "defense": 1,
   "mana": 0,
   "max_mana": 0,
@@ -490,9 +495,9 @@
    60
   ],
   "sprite_layer": "ENTITIES",
-  "hp": 10,
-  "max_hp": 10,
-  "power": 3,
+  "hp": 12,
+  "max_hp": 12,
+  "power": 4,
   "defense": 1,
   "mana": 0,
   "max_mana": 0,
@@ -526,9 +531,9 @@
    50
   ],
   "sprite_layer": "ENTITIES",
-  "hp": 18,
-  "max_hp": 18,
-  "power": 5,
+  "hp": 20,
+  "max_hp": 20,
+  "power": 6,
   "defense": 2,
   "mana": 0,
   "max_mana": 0,
