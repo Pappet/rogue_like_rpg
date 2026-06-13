@@ -18,12 +18,6 @@
  "max_carry_weight": 20.0,
  "actions": [
   {
-   "name": "Move"
-  },
-  {
-   "name": "Enter Portal"
-  },
-  {
    "name": "Investigate",
    "range": 10,
    "requires_targeting": true,
@@ -39,9 +33,6 @@
   },
   {
    "name": "Wait"
-  },
-  {
-   "name": "Items"
   }
  ],
  "gold": 50
