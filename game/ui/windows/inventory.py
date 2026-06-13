@@ -21,7 +21,7 @@ from config import (
 )
 from core.input_manager import InputCommand
 from core.ui.window_base import UIWindow
-from game.components import Equipment, Inventory, Name, Position, Renderable
+from game.components import Equipment, Inventory, Name, Portable, Position, Purse, Renderable, Stats
 from game.systems.action_system import ActionSystem
 
 
@@ -160,6 +160,23 @@ class InventoryWindow(UIWindow):
         title_text = self.title_font.render("Inventory", True, UI_COLOR_WINDOW_TITLE)
         surface.blit(title_text, (box_x + UI_SPACING_X, box_y + UI_SPACING_X))
 
+        purse = self.world.try_component(self.player_entity, Purse)
+        gold = purse.gold if purse else 0
+        stats = self.world.try_component(self.player_entity, Stats)
+        max_w = stats.max_carry_weight if stats else 0
+        cur_w = 0.0
+        inv_comp = self.world.try_component(self.player_entity, Inventory)
+        if inv_comp:
+            for item_id in inv_comp.items:
+                port = self.world.try_component(item_id, Portable)
+                if port:
+                    cur_w += port.weight
+
+        info_str = f"Gold: {gold}  |  Weight: {cur_w:.1f}/{max_w:.1f} kg"
+        info_text = self.font.render(info_str, True, UI_COLOR_WINDOW_TEXT_DIM)
+        info_x = separator_x - UI_SPACING_X - info_text.get_width()
+        surface.blit(info_text, (info_x, box_y + UI_SPACING_X + 12))
+
         # Draw Details label
         details_label = self.title_font.render("Details", True, UI_COLOR_WINDOW_TITLE)
         surface.blit(details_label, (separator_x + UI_SPACING_X, box_y + UI_SPACING_X))
@@ -225,3 +242,7 @@ class InventoryWindow(UIWindow):
         except KeyError:
             empty_text = self.font.render("No inventory found.", True, UI_COLOR_WINDOW_TEXT_DIM)
             surface.blit(empty_text, (box_x + 20, box_y + 80))
+
+        # Global footer hint
+        hint_text = self.font.render("[ESC/I] Close", True, UI_COLOR_WINDOW_HINT)
+        surface.blit(hint_text, (box_x + UI_SPACING_X, box_y + box_height - 40))
