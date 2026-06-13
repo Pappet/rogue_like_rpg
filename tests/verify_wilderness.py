@@ -224,6 +224,11 @@ def test_hunting_trip_roundtrip():
     ctx = gc.ctx
     surface = pygame.display.get_surface()
 
+    # Pin combat damage variance (0.5 -> factor 1.0) so the 5-power player
+    # one-shots the 5-HP deer; otherwise a low variance roll lets it survive
+    # and flee, making this roundtrip test flaky.
+    ctx.systems.combat_system.rng.random = lambda: 0.5
+
     def key(k):
         game.get_event(pygame.event.Event(pygame.KEYDOWN, key=k, mod=0, unicode=""))
 
