@@ -8,6 +8,7 @@ import esper
 import pygame
 
 from config import DN_SETTINGS
+from core.ui import theme
 from game.components import LightSource, Position
 
 # Tint alpha at which light glow reaches full strength (the night value).
@@ -64,6 +65,9 @@ class RenderPipeline:
             ]
             if lights:
                 ctx.render_service.render_light_glow(surface, camera, lights, strength)
+
+        # 4.6 Subtle permanent vignette framing the play area for atmosphere.
+        theme.draw_vignette(surface, viewport_rect, color=(0, 0, 0), max_alpha=55)
 
         # Reset clip for UI
         surface.set_clip(None)

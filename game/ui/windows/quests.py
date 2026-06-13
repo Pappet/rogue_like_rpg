@@ -12,20 +12,25 @@ import esper
 import pygame
 
 from config import (
-    UI_COLOR_WINDOW_BG,
-    UI_COLOR_WINDOW_BORDER,
-    UI_COLOR_WINDOW_HIGHLIGHT,
-    UI_COLOR_WINDOW_HINT,
-    UI_COLOR_WINDOW_SELECTED,
-    UI_COLOR_WINDOW_TEXT,
-    UI_COLOR_WINDOW_TEXT_DIM,
-    UI_COLOR_WINDOW_TITLE,
-    UI_PADDING,
     UI_SPACING_X,
+    UI_THEME_COIN,
+    UI_THEME_GOLD,
+    UI_THEME_INK,
+    UI_THEME_INK_DIM,
+    UI_THEME_INK_MUTED,
+    UI_THEME_XP,
     GameStates,
 )
 from core.input_manager import InputCommand
+from core.ui import theme
 from core.ui.window_base import UIWindow
+
+# Badge label + colour per row kind.
+_BADGE = {
+    "offer": ("NEW", (216, 172, 88)),
+    "turn_in": ("READY", (118, 186, 94)),
+    "active": ("ACTIVE", (160, 144, 118)),
+}
 
 
 class QuestWindow(UIWindow):
@@ -36,9 +41,10 @@ class QuestWindow(UIWindow):
         self.input_manager = ctx.input_manager
         self.world = esper
         self.selected_idx = 0
-        self.font = pygame.font.Font(None, 30)
-        self.small_font = pygame.font.Font(None, 24)
-        self.title_font = pygame.font.Font(None, 44)
+        self.title_font = theme.get_font(34, display=True)
+        self.font = theme.get_font(25)
+        self.small_font = theme.get_font(20)
+        self.badge_font = theme.get_font(16, bold=True)
         self.wants_to_close = False
 
     # --- Data ----------------------------------------------------------------
@@ -92,47 +98,102 @@ class QuestWindow(UIWindow):
 
     def draw(self, surface):
         box_x, box_y, box_width, box_height = self.rect
-        pygame.draw.rect(surface, UI_COLOR_WINDOW_BG, self.rect)
-        pygame.draw.rect(surface, UI_COLOR_WINDOW_BORDER, self.rect, 2)
+        pad = UI_SPACING_X
 
-        title = "Quests" if self.mode == "giver" else "Journal"
-        surface.blit(
-            self.title_font.render(title, True, UI_COLOR_WINDOW_TITLE), (box_x + UI_SPACING_X, box_y + UI_SPACING_X)
+        theme.draw_panel(surface, self.rect)
+        title = "Quest Board" if self.mode == "giver" else "Journal"
+        theme.draw_text(surface, title, self.title_font, UI_THEME_GOLD, (box_x + pad + 4, box_y + 14))
+        header_bottom = box_y + 58
+        theme.draw_divider(surface, box_x + pad, box_x + box_width - pad, header_bottom)
+
+        body = pygame.Rect(
+            box_x + pad, header_bottom + 10, box_width - 2 * pad, box_height - (header_bottom - box_y) - 24
         )
+        theme.draw_inset(surface, body)
 
         entries = self._entries()
-        y = box_y + 70
         if not entries:
             empty = "No quests here right now." if self.mode == "giver" else "Your journal is empty."
-            surface.blit(self.font.render(empty, True, UI_COLOR_WINDOW_TEXT_DIM), (box_x + UI_SPACING_X, y))
-        for i, (kind, quest) in enumerate(entries):
-            selected = i == self.selected_idx and self.mode == "giver"
-            color = UI_COLOR_WINDOW_SELECTED if selected else UI_COLOR_WINDOW_TEXT
-            if selected:
-                highlight = pygame.Rect(box_x + UI_PADDING, y - 4, box_width - 2 * UI_PADDING, 26)
-                pygame.draw.rect(surface, UI_COLOR_WINDOW_HIGHLIGHT, highlight)
+            theme.draw_text(surface, empty, self.font, UI_THEME_INK_MUTED, (body.x + 14, body.y + 14))
+        else:
+            y = body.y + 12
+            for i, (kind, quest) in enumerate(entries):
+                if y + 78 > body.bottom:
+                    break
+                selected = i == self.selected_idx and self.mode == "giver"
+                card = pygame.Rect(body.x + 8, y, body.width - 16, 74)
+                if selected:
+                    theme.draw_selection(surface, card)
 
-            prefix = {"offer": "[NEW] ", "turn_in": "[DONE] ", "active": ""}[kind]
-            label = f"{prefix}{quest.title}"
-            if quest.quest_type == "kill" and kind == "active":
-                label += f"  ({quest.progress}/{quest.target['count']})"
-            if kind == "active" and quest.state == "completed":
-                label += "  — report to " + quest.giver_location
-            surface.blit(self.font.render(label, True, color), (box_x + UI_SPACING_X, y))
-            y += 26
-            surface.blit(
-                self.small_font.render(quest.description, True, UI_COLOR_WINDOW_TEXT_DIM),
-                (box_x + UI_SPACING_X + 16, y),
-            )
-            y += 24
-            surface.blit(
-                self.small_font.render(f"Reward: {quest.reward_gold} gold", True, UI_COLOR_WINDOW_HINT),
-                (box_x + UI_SPACING_X + 16, y),
-            )
-            y += 30
+                # Status badge
+                badge_text, badge_color = _BADGE[kind]
+                self._draw_badge(surface, badge_text, badge_color, (card.x + 8, card.y + 8))
 
-        hint = "[UP/DOWN] Select  [ENTER] Accept / Turn in  [ESC] Leave" if self.mode == "giver" else "[ESC] Close"
-        surface.blit(
-            self.small_font.render(hint, True, UI_COLOR_WINDOW_HINT),
-            (box_x + UI_SPACING_X, box_y + box_height - 34),
+                # Title + reward coin
+                title_color = UI_THEME_GOLD if selected else UI_THEME_INK
+                theme.draw_text(
+                    surface, quest.title, self.font, title_color, (card.x + 78, card.y + 6), shadow=selected
+                )
+                rect = theme.draw_text(
+                    surface,
+                    "●",
+                    self.small_font,
+                    UI_THEME_COIN,
+                    (card.right - 8, card.y + 8),
+                    anchor="topright",
+                    shadow=False,
+                )
+                theme.draw_text(
+                    surface,
+                    f"{quest.reward_gold}g ",
+                    self.small_font,
+                    UI_THEME_COIN,
+                    (rect.left, card.y + 8),
+                    anchor="topright",
+                    shadow=False,
+                )
+
+                # Description
+                theme.draw_text(
+                    surface,
+                    quest.description,
+                    self.small_font,
+                    UI_THEME_INK_DIM,
+                    (card.x + 78, card.y + 32),
+                    shadow=False,
+                )
+
+                # Kill-quest progress bar / completion note
+                if quest.quest_type == "kill" and kind == "active":
+                    target = max(1, quest.target["count"])
+                    theme.draw_bar(
+                        surface,
+                        (card.x + 78, card.y + 54, 220, 12),
+                        quest.progress / target,
+                        UI_THEME_XP,
+                        hi_color=theme.lighten(UI_THEME_XP, 0.4),
+                        label=f"{quest.progress}/{target}",
+                        font=self.badge_font,
+                    )
+                if kind == "active" and quest.state == "completed":
+                    theme.draw_text(
+                        surface,
+                        f"Report to {quest.giver_location}",
+                        self.small_font,
+                        UI_THEME_GOLD,
+                        (card.x + 78, card.y + 52),
+                        shadow=False,
+                    )
+                y += 80
+
+        hint = "[↑/↓] Select   [Enter] Accept / Turn in   [Esc] Leave" if self.mode == "giver" else "[Esc] Close"
+        theme.draw_text(
+            surface, hint, self.small_font, UI_THEME_INK_MUTED, (box_x + pad + 4, box_y + box_height - 30), shadow=False
         )
+
+    def _draw_badge(self, surface, text, color, pos):
+        surf = self.badge_font.render(text, True, (16, 12, 9))
+        rect = pygame.Rect(pos[0], pos[1], surf.get_width() + 12, surf.get_height() + 6)
+        pygame.draw.rect(surface, color, rect, border_radius=3)
+        surface.blit(surf, (rect.x + 6, rect.y + 3))
+        return rect

@@ -10,21 +10,17 @@ import esper
 import pygame
 
 from config import (
-    UI_COLOR_WINDOW_BG,
-    UI_COLOR_WINDOW_BORDER,
-    UI_COLOR_WINDOW_HIGHLIGHT,
-    UI_COLOR_WINDOW_HINT,
-    UI_COLOR_WINDOW_SELECTED,
-    UI_COLOR_WINDOW_SEPARATOR,
-    UI_COLOR_WINDOW_TEXT,
-    UI_COLOR_WINDOW_TEXT_DIM,
-    UI_COLOR_WINDOW_TITLE,
-    UI_PADDING,
-    UI_SECTION_SPACING,
     UI_SPACING_X,
+    UI_THEME_COIN,
+    UI_THEME_GOLD,
+    UI_THEME_INK,
+    UI_THEME_INK_DIM,
+    UI_THEME_INK_MUTED,
+    UI_THEME_SELECT_EDGE,
     GameStates,
 )
 from core.input_manager import InputCommand
+from core.ui import theme
 from core.ui.window_base import UIWindow
 from game.components import Equipment, Inventory, Merchant, Name, Purse
 from game.content.item_registry import item_registry
@@ -41,9 +37,9 @@ class TradeWindow(UIWindow):
         self.world = esper
         self.selected_idx = 0
         self.active_pane = 0  # 0 = merchant (buy), 1 = player (sell)
-        self.font = pygame.font.Font(None, 32)
-        self.small_font = pygame.font.Font(None, 26)
-        self.title_font = pygame.font.Font(None, 48)
+        self.title_font = theme.get_font(34, display=True)
+        self.font = theme.get_font(25)
+        self.small_font = theme.get_font(20)
         self.wants_to_close = False
 
     # --- Data access -----------------------------------------------------
@@ -147,17 +143,9 @@ class TradeWindow(UIWindow):
 
     def draw(self, surface):
         box_x, box_y, box_width, box_height = self.rect
-        pygame.draw.rect(surface, UI_COLOR_WINDOW_BG, self.rect)
-        pygame.draw.rect(surface, UI_COLOR_WINDOW_BORDER, self.rect, 2)
+        pad = UI_SPACING_X
 
-        separator_x = box_x + box_width // 2
-        pygame.draw.line(
-            surface,
-            UI_COLOR_WINDOW_SEPARATOR,
-            (separator_x, box_y + UI_SPACING_X),
-            (separator_x, box_y + box_height - UI_SPACING_X),
-            1,
-        )
+        theme.draw_panel(surface, self.rect)
 
         merchant_name = (
             self.world.component_for_entity(self.merchant_entity, Name).name
@@ -165,25 +153,29 @@ class TradeWindow(UIWindow):
             else "Merchant"
         )
 
-        buy_title = self.title_font.render(merchant_name, True, UI_COLOR_WINDOW_TITLE)
-        surface.blit(buy_title, (box_x + UI_SPACING_X, box_y + UI_SPACING_X))
-        sell_title = self.title_font.render("Your goods", True, UI_COLOR_WINDOW_TITLE)
-        surface.blit(sell_title, (separator_x + UI_SPACING_X, box_y + UI_SPACING_X))
+        col_split = box_x + box_width // 2
+        pane_top = box_y + 86
+        pane_bottom = box_y + box_height - 44
+        left = pygame.Rect(box_x + pad, pane_top, col_split - box_x - pad - 8, pane_bottom - pane_top)
+        right = pygame.Rect(col_split + 8, pane_top, box_x + box_width - pad - col_split - 8, pane_bottom - pane_top)
 
-        gold_line = self.small_font.render(
-            f"Merchant gold: {self._gold_of(self.merchant_entity)}", True, UI_COLOR_WINDOW_TEXT_DIM
-        )
-        surface.blit(gold_line, (box_x + UI_SPACING_X, box_y + 52))
-        player_gold = self.small_font.render(
-            f"Your gold: {self._gold_of(self.player_entity)}", True, UI_COLOR_WINDOW_TEXT_DIM
-        )
-        surface.blit(player_gold, (separator_x + UI_SPACING_X, box_y + 52))
+        # Headings + coin counters
+        theme.draw_text(surface, merchant_name, self.title_font, UI_THEME_GOLD, (box_x + pad + 4, box_y + 14))
+        theme.draw_text(surface, "Your Goods", self.title_font, UI_THEME_GOLD, (col_split + pad, box_y + 14))
+        self._draw_coin(surface, f"{self._gold_of(self.merchant_entity)}", (box_x + pad + 4, box_y + 56))
+        self._draw_coin(surface, f"{self._gold_of(self.player_entity)}", (col_split + pad, box_y + 56))
+
+        # Active-pane frame glow
+        theme.draw_inset(surface, left)
+        theme.draw_inset(surface, right)
+        active_rect = left if self.active_pane == 0 else right
+        pygame.draw.rect(surface, UI_THEME_SELECT_EDGE, active_rect, 2)
 
         self._draw_list(
             surface,
-            x=box_x + UI_SPACING_X,
-            y=box_y + 86,
-            width=(box_width // 2) - UI_SPACING_X,
+            left,
+            pane=0,
+            empty_text="Sold out.",
             entries=[
                 (
                     item_registry.get(tid).name if item_registry.get(tid) else tid,
@@ -191,14 +183,12 @@ class TradeWindow(UIWindow):
                 )
                 for tid in self._merchant_stock()
             ],
-            pane=0,
-            empty_text="Sold out.",
         )
         self._draw_list(
             surface,
-            x=separator_x + UI_SPACING_X,
-            y=box_y + 86,
-            width=(box_width // 2) - UI_SPACING_X,
+            right,
+            pane=1,
+            empty_text="Nothing to sell.",
             entries=[
                 (
                     self.world.component_for_entity(ent, Name).name
@@ -208,23 +198,43 @@ class TradeWindow(UIWindow):
                 )
                 for ent in self._player_items()
             ],
-            pane=1,
-            empty_text="Nothing to sell.",
         )
 
-        hint = self.small_font.render(
-            "[←/→] Switch  [↑/↓] Select  [ENTER] Buy/Sell  [ESC] Leave", True, UI_COLOR_WINDOW_HINT
+        theme.draw_text(
+            surface,
+            "[←/→] Switch   [↑/↓] Select   [Enter] Buy/Sell   [Esc] Leave",
+            self.small_font,
+            UI_THEME_INK_MUTED,
+            (box_x + pad + 4, box_y + box_height - 30),
+            shadow=False,
         )
-        surface.blit(hint, (box_x + UI_SPACING_X, box_y + box_height - 36))
 
-    def _draw_list(self, surface, x, y, width, entries, pane, empty_text):
+    def _draw_coin(self, surface, amount, pos):
+        rect = theme.draw_text(surface, "●", self.small_font, UI_THEME_COIN, pos, shadow=False)
+        theme.draw_text(
+            surface, f"{amount} gold", self.small_font, UI_THEME_INK_DIM, (rect.right + 6, pos[1]), shadow=False
+        )
+
+    def _draw_list(self, surface, rect, entries, pane, empty_text):
         if not entries:
-            surface.blit(self.font.render(empty_text, True, UI_COLOR_WINDOW_TEXT_DIM), (x, y))
+            theme.draw_text(surface, empty_text, self.font, UI_THEME_INK_MUTED, (rect.x + 12, rect.y + 12))
             return
+        row_h = 28
         for i, (name, price) in enumerate(entries):
+            row_y = rect.y + 8 + i * row_h
+            if row_y + row_h > rect.bottom - 4:
+                break
             selected = pane == self.active_pane and i == self.selected_idx
-            color = UI_COLOR_WINDOW_SELECTED if selected else UI_COLOR_WINDOW_TEXT
             if selected:
-                highlight = pygame.Rect(x - UI_PADDING // 2, y + i * UI_SECTION_SPACING - 4, width, 30)
-                pygame.draw.rect(surface, UI_COLOR_WINDOW_HIGHLIGHT, highlight)
-            surface.blit(self.font.render(f"{name}  ({price}g)", True, color), (x, y + i * UI_SECTION_SPACING))
+                theme.draw_selection(surface, (rect.x + 3, row_y - 2, rect.width - 6, row_h - 2))
+            name_color = UI_THEME_GOLD if selected else UI_THEME_INK
+            theme.draw_text(surface, name, self.font, name_color, (rect.x + 12, row_y), shadow=selected)
+            theme.draw_text(
+                surface,
+                f"{price}g",
+                self.font,
+                UI_THEME_COIN,
+                (rect.right - 10, row_y),
+                anchor="topright",
+                shadow=False,
+            )

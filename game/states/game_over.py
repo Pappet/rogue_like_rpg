@@ -1,7 +1,14 @@
-import pygame
-
-from config import SCREEN_HEIGHT, SCREEN_WIDTH
+from config import (
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    UI_THEME_BORDER,
+    UI_THEME_DANGER,
+    UI_THEME_INK,
+    UI_THEME_INK_DIM,
+    UI_THEME_INK_MUTED,
+)
 from core.input_manager import InputCommand
+from core.ui import theme
 from game.states.base import GameState
 
 
@@ -10,14 +17,14 @@ class GameOver(GameState):
 
     def __init__(self):
         super().__init__()
-        self.font_large = pygame.font.Font(None, 74)
-        self.font_small = pygame.font.Font(None, 36)
-        self.title_text = self.font_large.render("GAME OVER", True, (200, 0, 0))
-        self.title_rect = self.title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3))
-        self.subtitle_text = self.font_small.render("You have been slain.", True, (180, 180, 180))
-        self.subtitle_rect = self.subtitle_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3 + 60))
-        self.restart_text = self.font_small.render("Press ENTER to return to title", True, (255, 255, 255))
-        self.restart_rect = self.restart_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 40))
+        self.title_font = theme.get_font(86, display=True, bold=True)
+        self.subtitle_font = theme.get_font(30, italic=True)
+        self.small_font = theme.get_font(24)
+
+    def startup(self, ctx):
+        super().startup(ctx)
+        clock = getattr(ctx, "world_clock", None)
+        self.days_survived = clock.day if clock else None
 
     def get_event(self, event):
         command = self.input_manager.handle_event(event)
@@ -29,7 +36,43 @@ class GameOver(GameState):
         pass
 
     def draw(self, surface):
-        surface.fill((10, 0, 0))
-        surface.blit(self.title_text, self.title_rect)
-        surface.blit(self.subtitle_text, self.subtitle_rect)
-        surface.blit(self.restart_text, self.restart_rect)
+        # Bleed to black with a heavy blood-red vignette.
+        theme.fill_vertical_gradient(surface, surface.get_rect(), (28, 6, 6), (4, 0, 0))
+        theme.draw_vignette(surface, surface.get_rect(), color=(120, 0, 0), max_alpha=210)
+
+        cx = SCREEN_WIDTH // 2
+        theme.draw_text(
+            surface, "YOU DIED", self.title_font, UI_THEME_DANGER, (cx, SCREEN_HEIGHT // 3), anchor="center"
+        )
+        theme.draw_divider(surface, cx - 200, cx + 200, SCREEN_HEIGHT // 3 + 56, color=UI_THEME_BORDER)
+        theme.draw_text(
+            surface,
+            "Your tale ends here, slain in the dark.",
+            self.subtitle_font,
+            UI_THEME_INK_DIM,
+            (cx, SCREEN_HEIGHT // 3 + 90),
+            anchor="center",
+            shadow=False,
+        )
+
+        if self.days_survived is not None:
+            survived = f"You endured {self.days_survived} day{'s' if self.days_survived != 1 else ''}."
+            theme.draw_text(
+                surface,
+                survived,
+                self.small_font,
+                UI_THEME_INK,
+                (cx, SCREEN_HEIGHT // 2 + 20),
+                anchor="center",
+                shadow=False,
+            )
+
+        theme.draw_text(
+            surface,
+            "Press Enter to return to the title",
+            self.small_font,
+            UI_THEME_INK_MUTED,
+            (cx, SCREEN_HEIGHT // 2 + 80),
+            anchor="center",
+            shadow=False,
+        )

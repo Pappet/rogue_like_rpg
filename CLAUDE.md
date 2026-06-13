@@ -161,6 +161,7 @@ is neutral constants, usable by both.
 │   └── ui/
 │       ├── stack_manager.py         # UIStack for modal windows
 │       ├── message_log.py           # Rich text [color=x] message log
+│       ├── theme.py                 # Immersive UI toolkit (panels, bars, fonts, vignettes)
 │       └── window_base.py           # UIWindow base class
 │
 └── game/                            # GAME layer (may use core/)
@@ -345,6 +346,15 @@ The chain is always: key → `InputCommand` → `InputController` →
    `config/ui.py` (add a new rect constant there if the size differs).
 3. The window consumes events through `UIStack` — no game logic inside
    the window; call services for rules.
+4. Draw with the `core/ui/theme.py` toolkit, not bare `pygame.draw` rects:
+   `theme.draw_panel()` for the frame, `theme.draw_inset()` for reading
+   areas, `theme.draw_text()` (serif fonts via `theme.get_font()`),
+   `theme.draw_bar()` for HP/MP/progress, `theme.draw_selection()` for the
+   highlighted row, and the `UI_THEME_*` colours from `config/colors.py`.
+   This keeps every window on the shared "aged tome" look. Cached
+   fonts/surfaces are invalidated per test by `theme.reset_caches()` in
+   `tests/conftest.py` — never create module-level `Font` objects that
+   outlive a `pygame.quit()`.
 
 #### Recipe G — New game state (screen)
 
