@@ -54,20 +54,33 @@ class VisibilitySystem(esper.Processor, MapAwareSystem):
         # 2. Find all entities that provide vision (Position + Stats/LightSource)
         visible_coords = set()
 
+        # Cache transparency functions per layer during the frame
+        transparency_funcs = {}
+
         def get_is_transparent(layer_index):
+            if layer_index in transparency_funcs:
+                return transparency_funcs[layer_index]
+
+            if not (0 <= layer_index < len(self._map_container.layers)):
+                return lambda x, y: False
+
+            tiles = self._map_container.layers[layer_index].tiles
+
             def is_transparent(x, y):
-                if 0 <= layer_index < len(self._map_container.layers):
-                    layer = self._map_container.layers[layer_index]
-                    if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
-                        tile = layer.tiles[y][x]
-                        # Custom logic for transparency:
-                        if not tile.transparent:
-                            return False
+                if x < 0 or y < 0:
+                    return False
+                try:
+                    tile = tiles[y][x]
+                    # Custom logic for transparency:
+                    if not tile.transparent:
+                        return False
 
-                        # Also check for '#' in GROUND layer as a fallback/convention
-                        return tile.sprites.get(SpriteLayer.GROUND) != "#"
-                return False
+                    # Also check for '#' in GROUND layer as a fallback/convention
+                    return tile.sprites.get(SpriteLayer.GROUND) != "#"
+                except IndexError:
+                    return False
 
+            transparency_funcs[layer_index] = is_transparent
             return is_transparent
 
         # Get entities providing vision
