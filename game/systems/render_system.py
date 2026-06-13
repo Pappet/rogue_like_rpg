@@ -115,7 +115,12 @@ class RenderSystem(esper.Processor, MapAwareSystem):
                 # Alpha calculation
                 alpha = int(255 * max(0, fct.ttl / fct.max_ttl))
 
-                # Render FCT
+                # Render FCT with a dark outline so it stays legible over any
+                # terrain colour.
+                outline = self.fct_font.render(fct.text, True, (10, 8, 6))
+                outline.set_alpha(alpha)
+                for ox, oy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                    surface.blit(outline, (screen_x + ox, screen_y + oy))
                 fct_surface = self.fct_font.render(fct.text, True, fct.color)
                 fct_surface.set_alpha(alpha)
                 surface.blit(fct_surface, (screen_x, screen_y))
@@ -160,7 +165,7 @@ class RenderSystem(esper.Processor, MapAwareSystem):
                         s.fill(range_color)
                         surface.blit(s, (screen_x, screen_y))
 
-        # Draw cursor
+        # Draw cursor as a pulsing corner-bracket reticle
         pixel_x = targeting.target_x * TILE_SIZE
         pixel_y = targeting.target_y * TILE_SIZE
         screen_x, screen_y = self.camera.apply_to_pos(pixel_x, pixel_y)
@@ -169,5 +174,10 @@ class RenderSystem(esper.Processor, MapAwareSystem):
             self.camera.offset_x <= screen_x < self.camera.offset_x + self.camera.width
             and self.camera.offset_y <= screen_y < self.camera.offset_y + self.camera.height
         ):
-            # Draw a thick box for the cursor
-            pygame.draw.rect(surface, cursor_color, (screen_x, screen_y, TILE_SIZE, TILE_SIZE), 2)
+            pulse = 0.6 + 0.4 * math.sin(pygame.time.get_ticks() / 150)
+            color = tuple(int(c * pulse) for c in cursor_color)
+            seg = TILE_SIZE // 3
+            x0, y0, x1, y1 = screen_x, screen_y, screen_x + TILE_SIZE, screen_y + TILE_SIZE
+            for cx, cy, dx, dy in ((x0, y0, 1, 1), (x1, y0, -1, 1), (x0, y1, 1, -1), (x1, y1, -1, -1)):
+                pygame.draw.line(surface, color, (cx, cy), (cx + dx * seg, cy), 2)
+                pygame.draw.line(surface, color, (cx, cy), (cx, cy + dy * seg), 2)
