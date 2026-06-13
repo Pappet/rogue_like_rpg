@@ -62,6 +62,14 @@ class ResourceLoader:
                 if "target_pos" in entry_data and entry_data["target_pos"] is not None:
                     target_pos = tuple(entry_data["target_pos"])
 
+                target_pool = None
+                if entry_data.get("target_pool"):
+                    target_pool = [tuple(p) for p in entry_data["target_pool"]]
+
+                route = None
+                if entry_data.get("route"):
+                    route = [tuple(p) for p in entry_data["route"]]
+
                 entries.append(
                     ScheduleEntry(
                         start=int(entry_data["start"]),
@@ -69,6 +77,8 @@ class ResourceLoader:
                         activity=entry_data["activity"],
                         target_pos=target_pos,
                         target_meta=entry_data.get("target_meta"),
+                        target_pool=target_pool,
+                        route=route,
                     )
                 )
 

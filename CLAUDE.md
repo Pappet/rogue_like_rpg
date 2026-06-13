@@ -210,6 +210,7 @@ is neutral constants, usable by both.
     │   ├── save_service.py          # Session snapshot save/load (F9/F10)
     │   ├── save_serialization.py    # Generic dataclass/tile JSON (de)serialization
     │   ├── spawn_service.py         # Monster/NPC spawning
+    │   ├── housing_service.py       # Capacity-based night housing (beds vs hearth)
     │   ├── party_service.py         # Player party creation
     │   ├── render_service.py        # Map rendering + viewport tint
     │   ├── pathfinding_service.py   # A* pathfinding wrapper
@@ -390,6 +391,8 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `AIBehaviorState` | Current `AIState` + `Alignment`              |
 | `Activity`        | Schedule-driven activity + target position   |
 | `Schedule`        | Links entity to a `schedule_id`              |
+| `PatrolRoute`     | A guard's looping beat + current waypoint idx|
+| `Residence`       | Hearth + bed/gather plan (HousingService)    |
 | `PathData`        | A* path + destination for NPC movement       |
 | `ChaseData`       | Chase state: last known player pos, timeout  |
 | `WanderData`      | Stub component for wander state              |
@@ -499,6 +502,32 @@ class MapAwareSystem:
 - NPCs lose chase after `LOSE_SIGHT_TURNS` (3) without line of sight
 - Scheduled NPCs follow `PathData` priority unless in CHASE state
 - Sleeping NPCs skip all behavior; woken by bump or combat
+
+#### Living Village (ambient townsfolk behavior)
+- **Loitering**: once a scheduled NPC reaches its WORK/SOCIALIZE anchor and
+  `PathData` drains, `AISystem._loiter` makes it mill about within
+  `AI_LOITER_RADIUS` of the anchor (stepping back if it drifts out, an
+  occasional small step otherwise). This is what breaks the "crowd frozen in
+  a blob" look — daytime work crowds and the evening fire now stay in motion.
+- **Patrol routes**: a `PATROL` schedule entry may carry a `route` (waypoint
+  list). `ScheduleSystem._update_patrol` cycles a guard through it via a
+  `PatrolRoute` component whose start index is staggered per entity
+  (`entity_id % len`), so guards sharing a route walk it out of phase instead
+  of marching as a pack.
+- **Target pools / hearth**: a schedule entry may use `target_pool` (each NPC
+  deterministically picks `pool[entity_id % len]`, fanning a shared schedule
+  across several spots) or `target_meta: "hearth"` (resolves to the NPC's
+  `Residence.hearth_pos` — the village's *real* campfire/tavern, so evening
+  gatherings center on the correct fire in every settlement).
+- **Capacity-based housing** (`HousingService`, run once at village build,
+  before freeze): counts beds in `home` structures (default one bed per floor,
+  override with a scenario `"beds"` field), seats common folk into them, and
+  gives everyone a `Residence`. The surplus and guards (bedless) get a
+  `gather_pos` and spend the night milling at the hearth/tavern instead of
+  sleeping; notables (merchants, innkeeper, the quest-giving mayor) keep their
+  authored home. A bedless NPC's `SLEEP` entry is redirected to its gather
+  spot (state `SOCIALIZE`) while the activity key stays `"SLEEP"` so the
+  schedule invariant holds (`current_activity` always matches the entry).
 
 ### Input Handling
 - `InputManager` (core) maps `pygame.KEYDOWN` → `InputCommand` enum, context-aware by `GameStates`

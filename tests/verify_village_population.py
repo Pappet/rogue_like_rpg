@@ -8,7 +8,7 @@ import esper
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from core.ecs import reset_world
-from game.components import Activity, AIBehaviorState, AIState, Alignment, Name, Position, Schedule
+from game.components import Activity, AIBehaviorState, AIState, Alignment, Name, Position, Residence, Schedule
 from game.content.resource_loader import ResourceLoader
 from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
@@ -97,17 +97,35 @@ def test_village_population():
     assert activity.current_activity == "SOCIALIZE"
     assert ai_state.state == AIState.SOCIALIZE
 
-    # Test 02:00 (SLEEP)
-    clock_mock.hour = 2
-    # Reset position to home to trigger SLEEP state
-    pos = world.component_for_entity(guard_ent, Position)
-    pos.x, pos.y = activity.home_pos
+    # Test 02:00 (night watch): a guard has no bed, so HousingService marks
+    # it bedless and at night it keeps watch at the hearth/gate instead of
+    # sleeping. The activity stays "SLEEP" (schedule invariant) but the AI
+    # state is SOCIALIZE so it mills about the fire.
+    residence = world.component_for_entity(guard_ent, Residence)
+    assert residence.housed is False, "Guards take the night watch, not a bed"
+    assert residence.gather_pos is not None
 
+    clock_mock.hour = 2
     schedule_system.process(clock_mock, village_map)
 
-    print(f"Guard activity at 02:00: {activity.current_activity}")
+    print(f"Guard activity at 02:00: {activity.current_activity}, state={ai_state.state}")
     assert activity.current_activity == "SLEEP"
-    assert ai_state.state == AIState.SLEEP
+    assert ai_state.state == AIState.SOCIALIZE
+    assert activity.target_pos == residence.gather_pos
+
+    # A housed villager, by contrast, sleeps at its assigned bed at night.
+    housed_villager = None
+    for ent, (name, res) in world.get_components(Name, Residence):
+        if "Villager" in name.name and res.housed:
+            housed_villager = ent
+            break
+    if housed_villager is not None:
+        v_activity = world.component_for_entity(housed_villager, Activity)
+        v_state = world.component_for_entity(housed_villager, AIBehaviorState)
+        v_pos = world.component_for_entity(housed_villager, Position)
+        v_pos.x, v_pos.y = v_activity.home_pos
+        schedule_system.process(clock_mock, village_map)
+        assert v_state.state == AIState.SLEEP, "A housed villager sleeps in its bed at night"
 
     print("ScheduleSystem verification PASSED")
 

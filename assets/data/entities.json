@@ -649,10 +649,10 @@
   "alignment": "neutral",
   "blocker": true,
   "description": "An herbalist who smells of dried sage and bitter roots.",
-  "schedule_id": "shopkeeper_routine",
+  "schedule_id": "vendor_routine",
   "home_pos": [
-   4,
-   4
+   12,
+   24
   ],
   "needs": {
    "hunger_rate": 3.0,

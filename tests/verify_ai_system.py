@@ -143,3 +143,74 @@ def test_ai_system_empty_world():
     assert turn.current_state == GameStates.PLAYER_TURN, (
         "AISystem must call end_enemy_turn() even when no AI entities exist"
     )
+
+
+# --- Loitering (Living Village) ---------------------------------------------
+
+
+def _open_container(size=20):
+    from game.content.resource_loader import ResourceLoader
+    from game.map.map_container import MapContainer
+    from game.map.map_layer import MapLayer
+    from game.map.tile import Tile
+
+    ResourceLoader.load_tiles("assets/data/tile_types.json")
+    tiles = [[Tile(type_id="floor_stone") for _ in range(size)] for _ in range(size)]
+    return MapContainer([MapLayer(tiles)])
+
+
+def test_work_npc_loiters_near_anchor():
+    """A scheduled NPC at its anchor mills about within the loiter radius
+    instead of standing frozen, and never drifts out of range."""
+    import random
+
+    from config import AI_LOITER_RADIUS
+    from game.components import Activity
+
+    random.seed(1234)
+    reset_world()
+    container = _open_container()
+    anchor = (10, 10)
+    ent = esper.create_entity(
+        AI(),
+        AIBehaviorState(state=AIState.WORK, alignment=Alignment.NEUTRAL),
+        Position(x=10, y=10, layer=0),
+        Activity(current_activity="WORK", target_pos=anchor),
+    )
+
+    ai_sys = AISystem()
+    visited = set()
+    for _ in range(40):
+        turn = TurnSystem()
+        turn.end_player_turn()
+        ai_sys.process(turn, container, player_layer=0)
+        pos = esper.component_for_entity(ent, Position)
+        visited.add((pos.x, pos.y))
+        assert abs(pos.x - anchor[0]) + abs(pos.y - anchor[1]) <= AI_LOITER_RADIUS
+
+    assert len(visited) > 1, "a loitering NPC should drift around, not freeze on one tile"
+
+
+def test_far_npc_returns_toward_anchor():
+    """An NPC that finds itself outside the loiter radius steps back toward
+    its anchor rather than wandering away."""
+    from game.components import Activity
+
+    reset_world()
+    container = _open_container()
+    anchor = (15, 15)
+    ent = esper.create_entity(
+        AI(),
+        AIBehaviorState(state=AIState.SOCIALIZE, alignment=Alignment.NEUTRAL),
+        Position(x=2, y=2, layer=0),
+        Activity(current_activity="SOCIALIZE", target_pos=anchor),
+    )
+
+    ai_sys = AISystem()
+    start_dist = abs(2 - 15) + abs(2 - 15)
+    for _ in range(5):
+        turn = TurnSystem()
+        turn.end_player_turn()
+        ai_sys.process(turn, container, player_layer=0)
+    pos = esper.component_for_entity(ent, Position)
+    assert abs(pos.x - anchor[0]) + abs(pos.y - anchor[1]) < start_dist, "NPC should close in on its anchor"
