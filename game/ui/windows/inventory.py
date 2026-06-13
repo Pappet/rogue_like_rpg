@@ -5,6 +5,7 @@ import game.services.consumable_service as consumable_service
 import game.services.equipment_service as equipment_service
 from config import (
     UI_SPACING_X,
+    UI_THEME_COIN,
     UI_THEME_GOLD,
     UI_THEME_INK,
     UI_THEME_INK_DIM,
@@ -16,7 +17,7 @@ from config import (
 from core.input_manager import InputCommand
 from core.ui import theme
 from core.ui.window_base import UIWindow
-from game.components import Equipment, Inventory, Name, Position, Renderable
+from game.components import Equipment, Inventory, Name, Portable, Position, Purse, Renderable, Stats
 from game.systems.action_system import ActionSystem
 
 
@@ -144,6 +145,39 @@ class InventoryWindow(UIWindow):
 
         # Title band
         theme.draw_text(surface, "Inventory", self.title_font, UI_THEME_GOLD, (box_x + pad + 6, box_y + 14))
+
+        # Gold and weight display (top-right of header)
+        purse = self.world.try_component(self.player_entity, Purse)
+        gold = purse.gold if purse else 0
+        stats = self.world.try_component(self.player_entity, Stats)
+        max_w = stats.max_carry_weight if stats else 0.0
+        cur_w = 0.0
+        inv_header = self.world.try_component(self.player_entity, Inventory)
+        if inv_header:
+            for item_id in inv_header.items:
+                port = self.world.try_component(item_id, Portable)
+                if port:
+                    cur_w += port.weight
+        right_x = box_x + box_width - pad - 6
+        theme.draw_text(
+            surface,
+            f"Gold: {gold}",
+            self.font,
+            UI_THEME_COIN,
+            (right_x, box_y + 14),
+            shadow=False,
+            anchor="topright",
+        )
+        theme.draw_text(
+            surface,
+            f"Weight: {cur_w:.1f}/{max_w:.1f} kg",
+            self.font,
+            UI_THEME_INK_DIM,
+            (right_x, box_y + 38),
+            shadow=False,
+            anchor="topright",
+        )
+
         header_bottom = box_y + 60
         col_split = box_x + int(box_width * 0.46)
         theme.draw_divider(surface, box_x + pad, box_x + box_width - pad, header_bottom, ornament=True)
