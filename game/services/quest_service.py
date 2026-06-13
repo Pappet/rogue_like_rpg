@@ -38,7 +38,7 @@ GEN_STOCK_THRESHOLD = 2.0  # consumed goods below this stock trigger a request
 GEN_DELIVER_COUNT = 2
 GEN_DELIVER_REWARD_FACTOR = 2.0  # reward = item value * count * factor
 GEN_KILL_COUNT = 2
-GEN_KILL_REWARD = 40
+GEN_KILL_REWARD = 50
 GEN_WOLF_EVENT_ID = "wolves_spotted"
 GEN_EVENT_MAX_AGE_TICKS = 3 * 24 * 60  # wolf sightings older than 3 days expire
 

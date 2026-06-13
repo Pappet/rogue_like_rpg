@@ -17,7 +17,11 @@ from game.systems.status_effect_system import StatusEffectSystem
 
 
 class _Rng:
-    """Stub rng with a scripted random() sequence."""
+    """Stub rng with a scripted random() sequence.
+
+    CombatSystem consumes random() twice per damaging hit: first the damage
+    variance roll (0.5 -> factor 1.0, i.e. no variance), then the crit roll.
+    """
 
     def __init__(self, *values):
         self.values = list(values)
@@ -43,7 +47,7 @@ def test_normal_hit_unchanged_without_crit():
     attacker, target = _fighter(power=5), _fighter(defense=1)
     esper.add_component(attacker, AttackIntent(target_entity=target))
 
-    CombatSystem(rng=_Rng(0.99)).process()
+    CombatSystem(rng=_Rng(0.5, 0.99)).process()  # no variance, no crit
 
     assert esper.component_for_entity(target, Stats).hp == 16  # 5 - 1 = 4
     assert not esper.has_component(target, Bleeding)
@@ -53,7 +57,7 @@ def test_critical_hit_doubles_damage_and_causes_bleeding():
     attacker, target = _fighter(power=5), _fighter(defense=1)
     esper.add_component(attacker, AttackIntent(target_entity=target))
 
-    CombatSystem(rng=_Rng(0.0)).process()  # crit roll passes
+    CombatSystem(rng=_Rng(0.5, 0.0)).process()  # no variance, crit roll passes
 
     assert esper.component_for_entity(target, Stats).hp == 12  # (5-1)*2 = 8
     assert esper.has_component(target, Bleeding)
@@ -63,16 +67,28 @@ def test_power_multiplier_scales_the_hit():
     attacker, target = _fighter(power=5), _fighter(defense=1)
     esper.add_component(attacker, AttackIntent(target_entity=target, power_multiplier=2.0))
 
-    CombatSystem(rng=_Rng(0.99)).process()
+    CombatSystem(rng=_Rng(0.5, 0.99)).process()  # no variance, no crit
 
     assert esper.component_for_entity(target, Stats).hp == 11  # 5*2 - 1 = 9
 
 
-def test_zero_damage_hits_cannot_crit():
+def test_min_damage_floor_prevents_stalemate():
+    # A weak hit fully absorbed by defense still chips the minimum.
     attacker, target = _fighter(power=1), _fighter(defense=5)
     esper.add_component(attacker, AttackIntent(target_entity=target))
 
-    CombatSystem(rng=_Rng(0.0)).process()
+    CombatSystem(rng=_Rng(0.5, 0.99)).process()  # no variance, no crit
+
+    assert esper.component_for_entity(target, Stats).hp == 19  # max(1, 1 - 5) = 1
+    assert not esper.has_component(target, Bleeding)
+
+
+def test_power_zero_attacker_deals_no_damage():
+    # Power-0 attackers (e.g. Deer) never deal damage and never crit.
+    attacker, target = _fighter(power=0), _fighter(defense=0)
+    esper.add_component(attacker, AttackIntent(target_entity=target))
+
+    CombatSystem(rng=_Rng(0.0)).process()  # crit roll would pass, but damage is 0
 
     assert esper.component_for_entity(target, Stats).hp == 20
     assert not esper.has_component(target, Bleeding)
