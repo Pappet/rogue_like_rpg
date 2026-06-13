@@ -174,7 +174,24 @@ class UISystem(esper.Processor):
         theme.draw_text(surface, label, self.turn_font, color, pill.center, anchor="center")
 
     def _draw_actions_list(self, surface):
-        """Draws the actions list panel on the bottom-left of the screen."""
+        """Draws the actions list panel on the bottom-left of the screen.
+
+        The panel is anchored to the bottom-left and grows *upward* to fit
+        every action, so longer action lists are never silently clipped. It
+        is clamped to stay below the header.
+        """
+        action_list = esper.try_component(self.player_entity, ActionList)
+        actions = action_list.actions if action_list else []
+
+        # Fixed vertical zones: title band (34) + gap (8) above the rows and
+        # the key-hint footer (28) below them.
+        line_height = self.font.get_linesize() + 6
+        content_height = len(actions) * line_height
+        needed = 34 + 8 + content_height + 28
+        height = max(LOG_HEIGHT, needed)
+        top = max(HEADER_HEIGHT, SCREEN_HEIGHT - height)
+        self.actions_rect = pygame.Rect(0, top, self.actions_width, SCREEN_HEIGHT - top)
+
         theme.fill_vertical_gradient(surface, self.actions_rect, UI_THEME_PANEL_TOP, UI_THEME_PANEL_BOTTOM)
         pygame.draw.line(
             surface,
@@ -220,18 +237,13 @@ class UISystem(esper.Processor):
             shadow=False,
         )
 
-        action_list = esper.try_component(self.player_entity, ActionList)
-        if not action_list or not action_list.actions:
+        if not actions:
             return
 
         start_y = title_bottom + 8
-        line_height = self.font.get_linesize() + 6
 
-        for i, action in enumerate(action_list.actions):
+        for i, action in enumerate(actions):
             item_y = start_y + i * line_height
-            if item_y + line_height > self.actions_rect.bottom - 4:
-                break
-
             is_selected = i == action_list.selected_idx
             x = self.actions_rect.x + 14
             if is_selected:
