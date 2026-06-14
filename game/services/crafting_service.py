@@ -2,7 +2,7 @@
 (ROADMAP Phase H).
 
 The player carries materials in their ``Inventory``; bumping a crafting-station
-tile (forge, mill, oven, tannery, herbalist) opens the CraftWindow, which lists
+tile (forge, mill, oven, tannery, herbalist, jeweler) opens the CraftWindow, which lists
 the recipes for that station. A craft consumes the input item entities and
 creates the output via ``ItemFactory`` — the same input→output conversion the
 settlement economy runs abstractly (EconomyService), but driven by the player.

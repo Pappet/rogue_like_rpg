@@ -621,5 +621,27 @@
    30
   ],
   "occludes_below": false
+ },
+ {
+  "id": "station_jeweler",
+  "name": "Jeweler's Bench",
+  "base_description": "A bench of tiny files, silver and loose gems. You could set jewelry here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "jeweler",
+  "sprites": {
+   "GROUND": "✦"
+  },
+  "color": [
+   220,
+   220,
+   235
+  ],
+  "bg_color": [
+   34,
+   34,
+   46
+  ],
+  "occludes_below": false
  }
 ]

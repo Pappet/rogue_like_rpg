@@ -1,7 +1,7 @@
 """Crafting bench window (ROADMAP Phase H).
 
 Opened by GameplayState in response to a ``craft_requested`` event (bumping a
-forge / mill / oven / tannery / herbalist tile). Lists the recipes for that
+forge / mill / oven / tannery / herbalist / jeweler tile). Lists the recipes for that
 station; recipes the player can't afford are greyed out. UP/DOWN select,
 ENTER crafts (and the clock advances by the recipe's time), ESC closes.
 
@@ -33,6 +33,7 @@ STATION_TITLES = {
     "oven": "Oven",
     "tannery": "Tannery",
     "herbalist": "Herbalist's Table",
+    "jeweler": "Jeweler's Bench",
 }
 
 

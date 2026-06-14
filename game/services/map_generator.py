@@ -29,6 +29,7 @@ STATION_TILES = {
     "oven": "station_oven",
     "tannery": "station_tannery",
     "herbalist": "station_herbalist",
+    "jeweler": "station_jeweler",
 }
 
 # Light props placed by the generator. All burn dusk-to-dawn (night_only):

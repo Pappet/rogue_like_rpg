@@ -110,5 +110,21 @@
   "output": "health_potion",
   "output_qty": 1,
   "ticks": 30
+ },
+ {
+  "id": "cast_amulet_of_vigor",
+  "station": "jeweler",
+  "inputs": {"silver_ingot": 1},
+  "output": "amulet_of_vigor",
+  "output_qty": 1,
+  "ticks": 40
+ },
+ {
+  "id": "set_gemmed_circlet",
+  "station": "jeweler",
+  "inputs": {"silver_ingot": 1, "gemstone": 1},
+  "output": "circlet",
+  "output_qty": 1,
+  "ticks": 50
  }
 ]
