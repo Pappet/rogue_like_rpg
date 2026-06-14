@@ -376,7 +376,7 @@ class MapGenerator:
         # --- SPAWN VILLAGE NPCS ---
         for npc in config.get("village_npcs", []):
             nx, ny = get_nearest_walkable_tile(village_layers[0], npc["pos"][0], npc["pos"][1])
-            EntityFactory.create(world, npc["type"], nx, ny)
+            EntityFactory.create(world, npc["type"], nx, ny, merchant_override=npc.get("merchant"))
 
         # Capacity-based housing: hand out beds, send the rest to the hearth,
         # and tell everyone where the village's social centre is (Living
@@ -406,7 +406,7 @@ class MapGenerator:
             # --- SPAWN HOUSE NPCS ---
             for npc in h.get("npcs", []):
                 nx, ny = get_nearest_walkable_tile(h_container.layers[0], npc["pos"][0], npc["pos"][1])
-                EntityFactory.create(world, npc["type"], nx, ny)
+                EntityFactory.create(world, npc["type"], nx, ny, merchant_override=npc.get("merchant"))
 
             # Portal back to Village
             vx, vy = h["v_pos"]
