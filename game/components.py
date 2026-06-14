@@ -123,6 +123,18 @@ class StatModifiers:
 
 
 @dataclass
+class Skills:
+    """Learn-by-doing character progression (ROADMAP Phase I).
+
+    Accumulated XP per skill id (e.g. "smithing", "combat"). Level is derived
+    from XP via SkillService — no stored level — so the component stays a flat,
+    trivially-serializable dict. SkillService is the only writer.
+    """
+
+    xp: dict[str, int] = field(default_factory=dict)
+
+
+@dataclass
 class Portable:
     weight: float  # kg
 

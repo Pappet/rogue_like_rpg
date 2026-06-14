@@ -18,7 +18,8 @@ from config import (
 from core.input_manager import InputCommand
 from core.ui import theme
 from core.ui.window_base import UIWindow
-from game.components import EffectiveStats, Equipment, Name, SlotType, Stats
+from game.components import EffectiveStats, Equipment, Name, Skills, SlotType, Stats
+from game.services.skill_service import SKILLS, level_for_xp, progress_into_level
 
 # Glyph shown for each equipment slot in the right-hand column.
 SLOT_GLYPHS = {
@@ -90,6 +91,7 @@ class CharacterWindow(UIWindow):
 
         self._draw_stats(surface, stats_rect)
         self._draw_equipment(surface, equip_rect)
+        self._draw_skills(surface, stats_rect)
 
         theme.draw_text(
             surface,
@@ -175,6 +177,49 @@ class CharacterWindow(UIWindow):
             (x, y + 10),
             shadow=False,
         )
+
+    def _draw_skills(self, surface, rect):
+        """Trained skills with level + progress, in the lower stats column."""
+        y = rect.y + 320
+        theme.draw_text(surface, "Skills", theme.get_font(22, bold=True), UI_THEME_INK_DIM, (rect.x + 14, y))
+        y += 30
+
+        skills = self.world.try_component(self.player_entity, Skills)
+        trained = [(sid, name) for sid, name in SKILLS.items() if skills and skills.xp.get(sid, 0) > 0]
+        if not trained:
+            theme.draw_text(
+                surface,
+                "Practice a trade or fight to earn skills.",
+                self.small_font,
+                UI_THEME_INK_MUTED,
+                (rect.x + 16, y),
+                shadow=False,
+            )
+            return
+
+        x = rect.x + 16
+        bar_w = rect.width - 32
+        for sid, name in trained:
+            if y + 28 > rect.bottom - 6:
+                break
+            xp = skills.xp.get(sid, 0)
+            level = level_for_xp(xp)
+            into, needed = progress_into_level(xp)
+            theme.draw_text(surface, name, self.small_font, UI_THEME_INK, (x, y), shadow=False)
+            theme.draw_text(
+                surface,
+                f"Lv {level}",
+                self.small_font,
+                UI_THEME_GOLD,
+                (rect.right - 16, y),
+                anchor="topright",
+                shadow=False,
+            )
+            fill = (into / needed) if needed else 1.0
+            theme.draw_bar(
+                surface, (x, y + 20, bar_w, 6), fill, UI_THEME_GOLD, hi_color=theme.lighten(UI_THEME_GOLD, 0.4)
+            )
+            y += 32
 
     def _draw_equipment(self, surface, rect):
         theme.draw_text(

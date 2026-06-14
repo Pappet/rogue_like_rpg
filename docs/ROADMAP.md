@@ -234,13 +234,37 @@ Verified by `tests/verify_world_seed.py`,
 `verify_chronicle_consequences.py`, `verify_supply_chains.py`,
 `verify_bandit_activity.py` and `verify_combat_depth.py`.
 
+### Phase H — Crafting ✅ (done)
+
+*The player joins the supply chain instead of only trading along it.*
+
+Bumping a crafting-station tile opens a recipe window; a craft consumes
+input item entities and creates the output (`ItemFactory`), costing in-game
+time. Stations are placed per settlement by profile and metalwork is split
+forge (smelt ore→ingot, Brackenfen) / anvil (smith ingot→arms, Eastmoor),
+mirroring the cross-settlement economy chain. Shipped as `RecipeRegistry` +
+`recipes.json`, `CraftingService`, `CraftWindow` and the `craft_requested`
+flow (mirror of rest tiles). Verified by `tests/verify_crafting.py`.
+
+### Phase I — Character Progression ✅ (done)
+
+*The character grows: foundation for crafting quality tiers and combat depth.*
+
+Learn-by-doing skills — a `Skills` component accumulates XP per skill, level
+derived from a rising curve (`SkillService`). Crafting trains the station's
+skill, slaying foes trains `combat`; level-ups log and emit `skill_increased`.
+Shown on the character sheet. Skill levels are read-only for now — the next
+phase makes them *matter* (crafting quality, combat scaling). Verified by
+`tests/verify_skills.py`.
+
 ---
 
-**All seven phases of this roadmap are complete.** Candidates for the
-next planning round: multiple save slots, NPC↔NPC relationships
-(deferred from Phase D), a real faction model (relations matrix,
-faction reputation), deeper dungeon levels with stairs, quest chains,
-character progression (learn-by-doing skills), and a walkable overworld.
+**All seven roadmap phases plus Phase H (crafting) and Phase I (progression)
+are complete.** Candidates for the next planning round: **crafting quality
+tiers driven by skill level** (the natural follow-on to Phase I), multiple
+save slots, NPC↔NPC relationships (deferred from Phase D), a real faction
+model (relations matrix, faction reputation), deeper dungeon levels with
+stairs, quest chains, and a walkable overworld.
 
 ## 4. Recommended order & why
 

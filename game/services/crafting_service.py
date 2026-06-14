@@ -20,6 +20,7 @@ from game.components import Equipment, Inventory, Portable, Stats, TemplateId
 from game.content.item_factory import ItemFactory
 from game.content.item_registry import item_registry
 from game.content.recipe_registry import Recipe, recipe_registry
+from game.services.skill_service import STATION_SKILL, SkillService
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +95,12 @@ class CraftingService:
         out_name = template.name if template else recipe.output
         qty_suffix = f" ×{recipe.output_qty}" if recipe.output_qty > 1 else ""
         world.dispatch_event("log_message", f"You craft {out_name}{qty_suffix}.", None, LogCategory.LOOT)
+
+        # Learn-by-doing: the craft trains the station's skill (Phase I). The
+        # longer the work, the more it teaches.
+        skill = STATION_SKILL.get(recipe.station)
+        if skill:
+            SkillService.grant(world, player_entity, skill, recipe.ticks)
         return True
 
     @staticmethod
