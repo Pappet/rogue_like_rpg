@@ -219,6 +219,8 @@ is neutral constants, usable by both.
     │   ├── interaction_resolver.py  # Bump interaction resolution
     │   ├── trade_service.py         # Buy/sell rules between player and merchants
     │   ├── crafting_service.py      # Player crafting: recipe inputs -> output item
+    │   ├── crafting_quality.py      # Skill -> craft quality tier / quantity bonus
+    │   ├── skill_service.py         # Learn-by-doing skill XP/levels (progression)
     │   ├── economy_service.py       # Per-settlement stock levels -> local prices
     │   ├── reputation_service.py    # Player standing per settlement (price/dialogue)
     │   ├── quest_service.py         # Authored + generated quests, progress, turn-in
@@ -432,6 +434,8 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Hidden`          | Concealed until revealed at close range      |
 | `Skirmisher`      | Fights rival-faction Skirmishers, not player |
 | `Bleeding`        | Status effect: HP loss per round (from crits)|
+| `Skills`          | Learn-by-doing XP per skill id (progression)  |
+| `Quality`         | Crafted-item grade tier (named, scales stats) |
 
 ### Enums
 
@@ -520,6 +524,39 @@ class MapAwareSystem:
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)
 - **Rest tiles**: a tile with `"provides_rest": true` (e.g. `furniture_bed`) lets the player bump it to sleep. An entity with `"innkeeper": true` offers the same. Both dispatch the `rest_requested` request event; `GameplayState` opens the `RestWindow`, which calls `TurnOrchestrator.advance_turns(ticks)` to fast-forward the world clock (stops early if a hostile starts hunting or the player takes damage). Duration presets come from `rest_service`.
 - **Crafting stations** (Phase H): a tile with `"crafting_station": "<type>"` (e.g. `station_forge`, `station_anvil`, `station_mill`) lets the player bump it to open the `CraftWindow`. `MovementSystem` dispatches the `craft_requested` request event (player only, mirror of `rest_requested`); `GameplayState` opens the window and on confirm runs `CraftingService.craft()` then `advance_turns(recipe.ticks)` — crafting costs in-game time. Stations are placed per settlement via a scenario top-level `"stations": [{"type", "pos"}]` list (mirrors `"lights"`); `MapGenerator` stamps the matching tile (`STATION_TILES`). Recipes group by `station` type. The chain key→station→window mirrors the rest-tile flow exactly. Metalworking is split across two stations to mirror the cross-settlement supply chain: the **forge** only smelts ore into ingots (`iron_ore`/`silver_ore` → ingot, sited in Brackenfen the mining town) and the **anvil** only works ingots into arms/armor (sited in Eastmoor the smithy) — `tests/verify_crafting.py::test_forge_smelts_anvil_smiths` guards the split. Distribution by settlement profile: Village (mill/oven/herbalist, a farming village), Brackenfen (forge/tannery), Eastmoor (anvil/jeweler).
+
+### Character Progression (Phase I)
+
+- **Learn-by-doing skills**: the player's `Skills` component holds accumulated
+  XP per skill id; level is *derived* from XP via `SkillService` (rising curve,
+  `SKILL_*` constants in `config/game.py`) — no stored level, so the component
+  serializes for free. `SkillService.grant()` is the sole writer; a level-up
+  logs and dispatches the `skill_increased` fact event.
+- **XP sources**: crafting trains the station's skill (`CraftingService.craft`
+  → `STATION_SKILL[recipe.station]`, XP = `recipe.ticks`); slaying a foe trains
+  `combat` (`DeathSystem` hook when `attacker` has `PlayerTag`, XP scaled by the
+  foe's max HP). Adding a new XP source = one `SkillService.grant()` call; new
+  skills go in `SkillService.SKILLS`. Skill levels are read-only for now — the
+  intended payoff (crafting quality tiers, combat scaling) reads them next.
+- The character sheet (`CharacterWindow`) shows trained skills with level + bar.
+
+### Crafting Quality & Quantity (Phase J)
+
+- Skill shapes the *result* of a craft, split by output type (derived from the
+  item template's `slot`), in `game/services/crafting_quality.py`:
+  - **Equippable** output (weapon/armor/jewelry) rolls a named **quality**
+    tier — *Crude / (standard) / Fine / Masterwork* (`QUALITY_TIERS`).
+    `apply_quality()` renames the instance ("Masterwork Iron Sword"), scales
+    its `StatModifiers` and `Value`, and tags it with a `Quality` component.
+    Immersion rule: the grade lives in the **name**, never a "+N" suffix.
+    `roll_quality()` = skill level ± `CRAFT_QUALITY_SWING`, so higher skill
+    trends to better tiers.
+  - **Non-equippable** output (bread, potions, ingots, leather) scales in
+    **quantity** instead: `quantity_bonus()` adds one unit per
+    `CRAFT_QUANTITY_LEVELS_PER_BONUS` skill levels.
+- `CraftingService.craft(..., rng)` applies this; `GameplayState` passes a
+  run-seeded RNG (`derive_seed(world_seed, "crafting")`) so a world reproduces
+  its craft outcomes. Verified by `tests/verify_crafting_quality.py`.
 
 ### AI Behavior
 

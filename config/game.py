@@ -74,6 +74,22 @@ BLEED_TURNS = 3  # ...for this many rounds
 COMBAT_MIN_DAMAGE = 1  # a connecting hit (power > 0) always chips at least this
 COMBAT_DAMAGE_VARIANCE = 0.2  # +-20% roll on each hit for unpredictability
 
+# Character progression (ROADMAP Phase I): learn-by-doing skill XP curve.
+# A skill starts at level 1; reaching the next level costs SKILL_BASE_XP at
+# first and SKILL_XP_GROWTH more for each level after, up to SKILL_MAX_LEVEL.
+SKILL_BASE_XP = 100  # XP from level 1 to level 2
+SKILL_XP_GROWTH = 1.4  # each level needs 40% more than the previous one
+SKILL_MAX_LEVEL = 10
+COMBAT_XP_PER_KILL_BASE = 10  # flat combat XP per kill, plus the foe's max HP
+
+# Crafting quality & quantity scaling by skill (ROADMAP Phase J).
+# Equippable crafts roll a named quality tier; the roll is the skill level
+# plus a random swing of +-CRAFT_QUALITY_SWING levels. Non-equippable crafts
+# (food, potions, ingots, leather) instead yield one extra unit per
+# CRAFT_QUANTITY_LEVELS_PER_BONUS skill levels above the first.
+CRAFT_QUALITY_SWING = 1.5
+CRAFT_QUANTITY_LEVELS_PER_BONUS = 3
+
 # Day/Night Settings
 DN_SETTINGS = {
     "day": {"tint": (0, 0, 0, 0), "light": 1.0, "perception": 1.0},

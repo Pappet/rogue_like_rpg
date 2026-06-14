@@ -123,6 +123,31 @@ class StatModifiers:
 
 
 @dataclass
+class Skills:
+    """Learn-by-doing character progression (ROADMAP Phase I).
+
+    Accumulated XP per skill id (e.g. "smithing", "combat"). Level is derived
+    from XP via SkillService — no stored level — so the component stays a flat,
+    trivially-serializable dict. SkillService is the only writer.
+    """
+
+    xp: dict[str, int] = field(default_factory=dict)
+
+
+@dataclass
+class Quality:
+    """Crafted-item grade (ROADMAP Phase J).
+
+    Tier indexes ``crafting_quality.QUALITY_TIERS`` (1 == standard). Equippable
+    crafts carry one; the grade is reflected immersively in the item's Name
+    ("Masterwork Iron Sword") and baked into its StatModifiers/Value, so no
+    numeric "+N" suffix is shown.
+    """
+
+    tier: int = 1
+
+
+@dataclass
 class Portable:
     weight: float  # kg
 

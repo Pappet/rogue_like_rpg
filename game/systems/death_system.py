@@ -3,7 +3,7 @@ import random
 
 import esper
 
-from config import LogCategory, SpriteLayer
+from config import COMBAT_XP_PER_KILL_BASE, LogCategory, SpriteLayer
 from game.components import (
     AI,
     AIBehaviorState,
@@ -24,6 +24,7 @@ from game.components import (
     WanderData,
 )
 from game.content.item_factory import ItemFactory
+from game.services.skill_service import SkillService
 from game.systems.map_aware_system import MapAwareSystem
 
 logger = logging.getLogger(__name__)
@@ -42,6 +43,13 @@ class DeathSystem(MapAwareSystem):
             esper.dispatch_event("log_message", "[color=red]You have been slain![/color]")
             esper.dispatch_event("player_died")
             return
+
+        # Learn-by-doing: a foe slain by the player trains Combat (Phase I).
+        # Tougher quarry teaches more. Read max_hp before Stats is stripped.
+        if attacker is not None and esper.has_component(attacker, PlayerTag):
+            foe_stats = esper.try_component(entity, Stats)
+            kill_xp = COMBAT_XP_PER_KILL_BASE + (foe_stats.max_hp if foe_stats else 0)
+            SkillService.grant(esper, attacker, "combat", kill_xp)
 
         name_comp = esper.try_component(entity, Name)
         if name_comp:
