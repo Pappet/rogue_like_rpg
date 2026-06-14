@@ -346,8 +346,8 @@
   "description": "The leader of the village",
   "schedule_id": "mayor_routine",
   "home_pos": [
-   20,
-   20
+   5,
+   5
   ],
   "needs": {
    "hunger_rate": 3.0,
