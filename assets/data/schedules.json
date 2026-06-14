@@ -93,21 +93,19 @@
     "name": "Mayor Routine",
     "entries": [
       { "start": 0, "end": 8, "activity": "SLEEP", "target_meta": "home" },
-      { "start": 8, "end": 12, "activity": "WORK", "target_pos": [20, 20] },
+      { "start": 8, "end": 12, "activity": "WORK", "target_pos": [5, 5] },
       {
         "start": 12,
         "end": 14,
         "activity": "SOCIALIZE",
-        "target_meta": "hearth",
-        "target_pos": [20, 20]
+        "target_pos": [6, 6]
       },
-      { "start": 14, "end": 18, "activity": "WORK", "target_pos": [20, 20] },
+      { "start": 14, "end": 18, "activity": "WORK", "target_pos": [5, 5] },
       {
         "start": 18,
         "end": 22,
         "activity": "SOCIALIZE",
-        "target_meta": "hearth",
-        "target_pos": [20, 20]
+        "target_pos": [6, 6]
       },
       { "start": 22, "end": 24, "activity": "SLEEP", "target_meta": "home" }
     ]
