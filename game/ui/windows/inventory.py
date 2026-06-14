@@ -17,7 +17,18 @@ from config import (
 from core.input_manager import InputCommand
 from core.ui import theme
 from core.ui.window_base import UIWindow
-from game.components import Equipment, Inventory, Name, Portable, Position, Purse, Renderable, Stats
+from game.components import (
+    Consumable,
+    Equipment,
+    Equippable,
+    Inventory,
+    Name,
+    Portable,
+    Position,
+    Purse,
+    Renderable,
+    Stats,
+)
 from game.systems.action_system import ActionSystem
 
 
@@ -62,7 +73,7 @@ class InventoryWindow(UIWindow):
                     selected_item_id = inventory.items[self.selected_idx]
                     equipment_service.equip_item(self.world, self.player_entity, selected_item_id)
                 return True
-            elif command == InputCommand.USE_ITEM or command == InputCommand.CONFIRM:
+            elif command == InputCommand.USE_ITEM:
                 if inventory.items and self.selected_idx < len(inventory.items):
                     selected_item_id = inventory.items[self.selected_idx]
                     if consumable_service.ConsumableService.use_item(self.world, self.player_entity, selected_item_id):
@@ -72,6 +83,21 @@ class InventoryWindow(UIWindow):
                             self.selected_idx = 0
                         elif self.selected_idx >= len(inventory.items):
                             self.selected_idx = len(inventory.items) - 1
+                return True
+            elif command == InputCommand.CONFIRM:
+                if inventory.items and self.selected_idx < len(inventory.items):
+                    selected_item_id = inventory.items[self.selected_idx]
+
+                    if self.world.has_component(selected_item_id, Consumable):
+                        if consumable_service.ConsumableService.use_item(self.world, self.player_entity, selected_item_id):
+                            if self.turn_system:
+                                self.turn_system.end_player_turn()
+                            if len(inventory.items) == 0:
+                                self.selected_idx = 0
+                            elif self.selected_idx >= len(inventory.items):
+                                self.selected_idx = len(inventory.items) - 1
+                    elif self.world.has_component(selected_item_id, Equippable):
+                        equipment_service.equip_item(self.world, self.player_entity, selected_item_id)
                 return True
         except KeyError:
             pass
@@ -266,9 +292,25 @@ class InventoryWindow(UIWindow):
                     dy += 26
 
         # Footer hint band
+        hint_text = "[Enter] Select   [D] Drop   [Esc/I] Close"
+
+        try:
+            inventory = self.world.component_for_entity(self.player_entity, Inventory)
+            if inventory.items and self.selected_idx < len(inventory.items):
+                selected_item_id = inventory.items[self.selected_idx]
+
+                if self.world.has_component(selected_item_id, Consumable):
+                    hint_text = "[Enter/U] Use   [D] Drop   [Esc/I] Close"
+                elif self.world.has_component(selected_item_id, Equippable):
+                    is_equipped = selected_item_id in self._equipped_ids()
+                    action = "Unequip" if is_equipped else "Equip"
+                    hint_text = f"[Enter/E] {action}   [D] Drop   [Esc/I] Close"
+        except KeyError:
+            pass
+
         theme.draw_text(
             surface,
-            "[Enter/U] Use   [E] Equip   [D] Drop   [Esc] Close",
+            hint_text,
             self.small_font,
             UI_THEME_INK_MUTED,
             (box_x + pad + 4, box_y + box_height - 30),
