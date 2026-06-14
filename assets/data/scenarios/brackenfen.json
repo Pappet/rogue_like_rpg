@@ -165,6 +165,22 @@
   }
  },
  "biome": "swamp",
+ "stations": [
+  {
+   "type": "tannery",
+   "pos": [
+    10,
+    22
+   ]
+  },
+  {
+   "type": "forge",
+   "pos": [
+    20,
+    24
+   ]
+  }
+ ],
  "lights": [
   {
    "type": "campfire",

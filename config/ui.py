@@ -16,3 +16,5 @@ UI_ACTION_HIGHLIGHT_HEIGHT = 25
 UI_MODAL_RECT = (140, 100, 1000, 500)
 # Compact, centered rect for the small rest/wait duration picker
 UI_REST_RECT = (380, 170, 520, 380)
+# Rect for the crafting bench window (recipe list + detail)
+UI_CRAFT_RECT = (240, 110, 800, 480)

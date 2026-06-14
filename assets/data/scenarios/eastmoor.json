@@ -264,6 +264,22 @@
   }
  },
  "biome": "plains",
+ "stations": [
+  {
+   "type": "forge",
+   "pos": [
+    33,
+    18
+   ]
+  },
+  {
+   "type": "oven",
+   "pos": [
+    22,
+    20
+   ]
+  }
+ ],
  "lights": [
   {
    "type": "campfire",

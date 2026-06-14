@@ -36,6 +36,14 @@ class MovementSystem(esper.Processor, MapAwareSystem):
                 esper.remove_component(ent, MovementRequest)
                 continue
 
+            # Bumping a crafting station (forge, mill, ...) opens its bench —
+            # player only; to NPCs the station is just a wall.
+            station = self._crafting_station(new_x, new_y, pos.layer)
+            if not blocker_ent and station and esper.has_component(ent, PlayerTag):
+                esper.dispatch_event("craft_requested", {"station": station})
+                esper.remove_component(ent, MovementRequest)
+                continue
+
             if self._is_walkable(new_x, new_y, pos.layer) and not blocker_ent:
                 pos.x = new_x
                 pos.y = new_y
@@ -54,6 +62,12 @@ class MovementSystem(esper.Processor, MapAwareSystem):
             return False
         tile = self._map_container.get_tile(x, y, layer_idx)
         return bool(tile and tile.provides_rest)
+
+    def _crafting_station(self, x, y, layer_idx):
+        if not self._map_container:
+            return ""
+        tile = self._map_container.get_tile(x, y, layer_idx)
+        return tile.crafting_station if tile else ""
 
     def _get_blocker_at(self, x, y, layer_idx):
         for ent, (pos, blocker) in esper.get_components(Position, Blocker):

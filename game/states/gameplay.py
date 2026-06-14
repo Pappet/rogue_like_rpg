@@ -1,17 +1,19 @@
 import esper
 import pygame
 
-from config import UI_MODAL_RECT, UI_REST_RECT, LogCategory
+from config import UI_CRAFT_RECT, UI_MODAL_RECT, UI_REST_RECT, LogCategory
 from game.controllers.input_controller import InputController
 from game.controllers.render_pipeline import RenderPipeline
 from game.controllers.turn_orchestrator import TurnOrchestrator
 from game.services import rest_service
+from game.services.crafting_service import CraftingService
 from game.services.map_transition_service import MapTransitionService
 from game.services.party_service import PartyService
 from game.states.base import GameState
 from game.systems.debug_render_system import DebugRenderSystem
 from game.systems.render_system import RenderSystem
 from game.systems.ui_system import UISystem
+from game.ui.windows.crafting import CraftWindow
 from game.ui.windows.quests import QuestWindow
 from game.ui.windows.rest import RestWindow
 from game.ui.windows.tooltip import TooltipWindow
@@ -67,6 +69,7 @@ class GameplayState(GameState):
         esper.set_handler("trade_requested", self._on_trade_requested)
         esper.set_handler("quests_requested", self._on_quests_requested)
         esper.set_handler("rest_requested", self._on_rest_requested)
+        esper.set_handler("craft_requested", self._on_craft_requested)
 
     def _on_player_died(self):
         """Handle the player_died event by transitioning to GAME_OVER state."""
@@ -94,6 +97,23 @@ class GameplayState(GameState):
         options = rest_service.sleep_options(self.ctx.world_clock)
         rect = pygame.Rect(*UI_REST_RECT)
         self.ui_stack.push(RestWindow(rect, "Rest", options, self.ctx.input_manager, self.rest))
+
+    def _on_craft_requested(self, payload=None):
+        """Open the crafting bench after bumping a station tile (forge, mill...)."""
+        if self.ui_stack.is_active():
+            return
+        station = (payload or {}).get("station", "")
+        rect = pygame.Rect(*UI_CRAFT_RECT)
+        self.ui_stack.push(CraftWindow(rect, self.ctx.player_entity, station, self.ctx, self._craft))
+
+    def _craft(self, recipe):
+        """CraftWindow callback: perform the craft, then fast-forward the clock.
+
+        Crafting costs in-game time (like resting); the world keeps simulating
+        for the duration so a forge session is not free.
+        """
+        if CraftingService.craft(esper, self.ctx.player_entity, recipe):
+            self.turn_orchestrator.advance_turns(recipe.ticks)
 
     def rest(self, ticks, label=None):
         """Fast-forward game time for a chosen rest/wait duration.

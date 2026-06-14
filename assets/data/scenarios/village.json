@@ -217,6 +217,36 @@
   }
  },
  "biome": "forest",
+ "stations": [
+  {
+   "type": "forge",
+   "pos": [
+    8,
+    16
+   ]
+  },
+  {
+   "type": "mill",
+   "pos": [
+    32,
+    16
+   ]
+  },
+  {
+   "type": "oven",
+   "pos": [
+    34,
+    16
+   ]
+  },
+  {
+   "type": "herbalist",
+   "pos": [
+    10,
+    22
+   ]
+  }
+ ],
  "lights": [
   {
    "type": "campfire",

@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from game.content.dialogue_service import DialogueService, dialogue_service
 from game.content.entity_registry import EntityRegistry, entity_registry
 from game.content.item_registry import ItemRegistry, item_registry
+from game.content.recipe_registry import RecipeRegistry, recipe_registry
 from game.content.resource_loader import ResourceLoader
 from game.content.schedule_registry import ScheduleRegistry, schedule_registry
 from game.map.tile_registry import TileRegistry, tile_registry
@@ -21,6 +22,7 @@ class ContentDatabase:
     tiles: TileRegistry = field(default_factory=lambda: tile_registry)
     entities: EntityRegistry = field(default_factory=lambda: entity_registry)
     items: ItemRegistry = field(default_factory=lambda: item_registry)
+    recipes: RecipeRegistry = field(default_factory=lambda: recipe_registry)
     schedules: ScheduleRegistry = field(default_factory=lambda: schedule_registry)
     dialogues: DialogueService = field(default_factory=lambda: dialogue_service)
 
@@ -30,6 +32,7 @@ class ContentDatabase:
         ResourceLoader.load_tiles(f"{data_dir}/tile_types.json", self.tiles)
         ResourceLoader.load_entities(f"{data_dir}/entities.json", self.entities)
         ResourceLoader.load_items(f"{data_dir}/items.json", self.items)
+        ResourceLoader.load_recipes(f"{data_dir}/recipes.json", self.recipes)
         self.dialogues.load(f"{data_dir}/dialogues.json")
         return self
 
@@ -38,6 +41,7 @@ class ContentDatabase:
         self.tiles.clear()
         self.entities.clear()
         self.items.clear()
+        self.recipes.clear()
         self.schedules.clear()
         self.dialogues.clear()
 
