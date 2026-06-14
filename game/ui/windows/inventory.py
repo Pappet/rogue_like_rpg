@@ -89,7 +89,9 @@ class InventoryWindow(UIWindow):
                     selected_item_id = inventory.items[self.selected_idx]
 
                     if self.world.has_component(selected_item_id, Consumable):
-                        if consumable_service.ConsumableService.use_item(self.world, self.player_entity, selected_item_id):
+                        if consumable_service.ConsumableService.use_item(
+                            self.world, self.player_entity, selected_item_id
+                        ):
                             if self.turn_system:
                                 self.turn_system.end_player_turn()
                             if len(inventory.items) == 0:
