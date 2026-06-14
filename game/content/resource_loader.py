@@ -354,9 +354,7 @@ class ResourceLoader:
             raise ValueError(f"Malformed JSON in recipe resource file '{filepath}': {exc}") from exc
 
         if not isinstance(data, list):
-            raise ValueError(
-                f"Recipe resource file '{filepath}' must contain a JSON array, got {type(data).__name__}."
-            )
+            raise ValueError(f"Recipe resource file '{filepath}' must contain a JSON array, got {type(data).__name__}.")
 
         for item in data:
             for required_field in ("id", "station", "output", "inputs"):
