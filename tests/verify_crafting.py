@@ -86,6 +86,32 @@ def test_for_station_filters():
     assert recipe_registry.for_station("nonexistent") == []
 
 
+def test_forge_smelts_anvil_smiths():
+    """Conceptual split: the forge only smelts ore into ingots; the anvil
+    only works ingots into finished arms/armor."""
+    _load_content()
+    # Every forge recipe turns raw ore into an ingot.
+    for recipe in recipe_registry.for_station("forge"):
+        assert recipe.output.endswith("_ingot"), f"{recipe.id}: forge should smelt ingots"
+        assert all(item_id.endswith("_ore") for item_id in recipe.inputs), f"{recipe.id}: forge consumes ore"
+    # Every anvil recipe consumes an ingot (no raw ore at the anvil).
+    anvil = recipe_registry.for_station("anvil")
+    assert anvil, "the anvil must have smithing recipes"
+    for recipe in anvil:
+        assert any(item_id.endswith("_ingot") for item_id in recipe.inputs), f"{recipe.id}: anvil works ingots"
+
+
+def test_silver_ore_smelts_to_silver_ingot():
+    _load_content()
+    player = _player()
+    _give(player, "silver_ore", 2)
+    recipe = recipe_registry.get("smelt_silver_ingot")
+    assert CraftingService.craft(esper, player, recipe) is True
+    counts = CraftingService.inventory_counts(esper, player)
+    assert counts.get("silver_ore", 0) == 0
+    assert counts.get("silver_ingot", 0) == 1
+
+
 # --- Tile property -----------------------------------------------------------
 
 
@@ -127,7 +153,7 @@ def test_craft_fails_without_materials():
     _load_content()
     player = _player()
     _give(player, "grain", 1)  # not enough for a 3-ingot sword
-    recipe = recipe_registry.get("forge_iron_sword")
+    recipe = recipe_registry.get("smith_iron_sword")
 
     before = list(esper.component_for_entity(player, Inventory).items)
     assert CraftingService.craft(esper, player, recipe) is False
@@ -139,7 +165,7 @@ def test_craft_consumes_only_required_count():
     _load_content()
     player = _player()
     _give(player, "iron_ingot", 5)
-    recipe = recipe_registry.get("forge_iron_sword")  # needs 3
+    recipe = recipe_registry.get("smith_iron_sword")  # needs 3
 
     assert CraftingService.craft(esper, player, recipe) is True
     counts = CraftingService.inventory_counts(esper, player)

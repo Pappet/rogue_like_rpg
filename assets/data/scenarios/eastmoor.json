@@ -266,7 +266,7 @@
  "biome": "plains",
  "stations": [
   {
-   "type": "forge",
+   "type": "anvil",
    "pos": [
     33,
     18

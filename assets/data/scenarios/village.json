@@ -219,13 +219,6 @@
  "biome": "forest",
  "stations": [
   {
-   "type": "forge",
-   "pos": [
-    8,
-    16
-   ]
-  },
-  {
    "type": "mill",
    "pos": [
     32,

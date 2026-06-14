@@ -69,6 +69,8 @@
       "stock": [
        "iron_ore",
        "iron_ore",
+       "silver_ore",
+       "silver_ore",
        "hide",
        "hide",
        "leather",
@@ -137,6 +139,7 @@
    "iron_sword": 1,
    "venison": 2,
    "iron_ore": 10,
+   "silver_ore": 5,
    "bread": 2,
    "hide": 8,
    "leather": 4,
@@ -147,6 +150,7 @@
    "iron_sword": -0.5,
    "venison": -1.5,
    "iron_ore": 2,
+   "silver_ore": 1,
    "bread": -1,
    "hide": 1.5,
    "leather": {

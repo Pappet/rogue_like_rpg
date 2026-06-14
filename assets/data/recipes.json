@@ -8,40 +8,48 @@
   "ticks": 20
  },
  {
-  "id": "forge_dagger",
+  "id": "smelt_silver_ingot",
   "station": "forge",
+  "inputs": {"silver_ore": 2},
+  "output": "silver_ingot",
+  "output_qty": 1,
+  "ticks": 25
+ },
+ {
+  "id": "smith_dagger",
+  "station": "anvil",
   "inputs": {"iron_ingot": 1},
   "output": "dagger",
   "output_qty": 1,
   "ticks": 25
  },
  {
-  "id": "forge_short_sword",
-  "station": "forge",
+  "id": "smith_short_sword",
+  "station": "anvil",
   "inputs": {"iron_ingot": 2},
   "output": "short_sword",
   "output_qty": 1,
   "ticks": 35
  },
  {
-  "id": "forge_iron_sword",
-  "station": "forge",
+  "id": "smith_iron_sword",
+  "station": "anvil",
   "inputs": {"iron_ingot": 3},
   "output": "iron_sword",
   "output_qty": 1,
   "ticks": 45
  },
  {
-  "id": "forge_iron_helm",
-  "station": "forge",
+  "id": "smith_iron_helm",
+  "station": "anvil",
   "inputs": {"iron_ingot": 2},
   "output": "iron_helm",
   "output_qty": 1,
   "ticks": 40
  },
  {
-  "id": "forge_chainmail",
-  "station": "forge",
+  "id": "smith_chainmail",
+  "station": "anvil",
   "inputs": {"iron_ingot": 4},
   "output": "chainmail",
   "output_qty": 1,

@@ -514,23 +514,45 @@
  },
  {
   "id": "station_forge",
-  "name": "Forge & Anvil",
-  "base_description": "A blacksmith's forge with a heavy iron anvil. You could work metal here.",
+  "name": "Smelting Forge",
+  "base_description": "A roaring forge with a crucible. You could smelt ore into ingots here.",
   "walkable": false,
   "transparent": true,
   "crafting_station": "forge",
   "sprites": {
+   "GROUND": "♨"
+  },
+  "color": [
+   230,
+   130,
+   60
+  ],
+  "bg_color": [
+   52,
+   28,
+   20
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "station_anvil",
+  "name": "Anvil",
+  "base_description": "A heavy iron anvil and a smith's hammer. You could work ingots into arms and armor here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "anvil",
+  "sprites": {
    "GROUND": "⚒"
   },
   "color": [
-   200,
-   120,
-   70
+   190,
+   190,
+   200
   ],
   "bg_color": [
-   48,
-   30,
-   24
+   40,
+   38,
+   40
   ],
   "occludes_below": false
  },

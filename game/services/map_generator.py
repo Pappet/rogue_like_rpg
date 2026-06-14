@@ -25,6 +25,7 @@ HOUSE_WALL_MATERIAL = {"home": "wall_wood", "tavern": "wall_wood", "shop": "wall
 # Crafting-station type -> the tile id stamped onto the map (ROADMAP Phase H).
 STATION_TILES = {
     "forge": "station_forge",
+    "anvil": "station_anvil",
     "mill": "station_mill",
     "oven": "station_oven",
     "tannery": "station_tannery",

@@ -1,7 +1,7 @@
 """Crafting bench window (ROADMAP Phase H).
 
 Opened by GameplayState in response to a ``craft_requested`` event (bumping a
-forge / mill / oven / tannery / herbalist / jeweler tile). Lists the recipes for that
+forge / anvil / mill / oven / tannery / herbalist / jeweler tile). Lists the recipes for that
 station; recipes the player can't afford are greyed out. UP/DOWN select,
 ENTER crafts (and the clock advances by the recipe's time), ESC closes.
 
@@ -28,7 +28,8 @@ from game.services.crafting_service import CraftingService
 
 # Station type -> the heading shown at the top of the bench window.
 STATION_TITLES = {
-    "forge": "Forge",
+    "forge": "Smelting Forge",
+    "anvil": "Anvil",
     "mill": "Mill",
     "oven": "Oven",
     "tannery": "Tannery",
