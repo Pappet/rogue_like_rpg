@@ -64,7 +64,23 @@
      "pos": [
       5,
       4
-     ]
+     ],
+     "merchant": {
+      "stock": [
+       "iron_ore",
+       "iron_ore",
+       "hide",
+       "hide",
+       "leather",
+       "leather_cap",
+       "pelt",
+       "fur_cloak",
+       "leather_armor",
+       "health_potion",
+       "bread"
+      ],
+      "gold": 180
+     }
     }
    ],
    "style": "shop"
@@ -121,15 +137,31 @@
    "iron_sword": 1,
    "venison": 2,
    "iron_ore": 10,
-   "bread": 2
+   "bread": 2,
+   "hide": 8,
+   "leather": 4,
+   "pelt": 6
   },
   "rates_per_day": {
    "health_potion": 3,
-   "leather_armor": 1,
    "iron_sword": -0.5,
    "venison": -1.5,
    "iron_ore": 2,
-   "bread": -1
+   "bread": -1,
+   "hide": 1.5,
+   "leather": {
+    "per_day": 1,
+    "requires": {
+     "hide": 1
+    }
+   },
+   "leather_armor": {
+    "per_day": 0.5,
+    "requires": {
+     "leather": 2
+    }
+   },
+   "pelt": 1
   }
  },
  "biome": "swamp",

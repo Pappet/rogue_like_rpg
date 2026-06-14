@@ -398,5 +398,409 @@
    "perception": 1
   },
   "value": 22
+ },
+ {
+  "id": "grain",
+  "name": "Sack of Grain",
+  "sprite": ",",
+  "color": [
+   210,
+   190,
+   90
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 2.0,
+  "material": "grain",
+  "description": "Threshed grain from the fields. Mills it into flour.",
+  "stats": {},
+  "value": 2
+ },
+ {
+  "id": "flour",
+  "name": "Bag of Flour",
+  "sprite": ".",
+  "color": [
+   225,
+   215,
+   185
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 1.0,
+  "material": "grain",
+  "description": "Finely milled flour, ready for the baker's oven.",
+  "stats": {},
+  "value": 3
+ },
+ {
+  "id": "hide",
+  "name": "Raw Hide",
+  "sprite": "u",
+  "color": [
+   150,
+   110,
+   70
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 2.0,
+  "material": "leather",
+  "description": "An untanned animal hide. A tanner can turn it into leather.",
+  "stats": {},
+  "value": 6
+ },
+ {
+  "id": "leather",
+  "name": "Tanned Leather",
+  "sprite": "u",
+  "color": [
+   120,
+   80,
+   50
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 1.5,
+  "material": "leather",
+  "description": "Supple tanned leather. The stuff of armor and boots.",
+  "stats": {},
+  "value": 11
+ },
+ {
+  "id": "iron_ingot",
+  "name": "Iron Ingot",
+  "sprite": "=",
+  "color": [
+   150,
+   150,
+   160
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 3.0,
+  "material": "iron",
+  "description": "A smelted bar of iron. A smith's raw stock.",
+  "stats": {},
+  "value": 16
+ },
+ {
+  "id": "herbs",
+  "name": "Bundle of Herbs",
+  "sprite": "*",
+  "color": [
+   90,
+   180,
+   110
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.3,
+  "material": "herb",
+  "description": "Fresh-cut medicinal herbs. Ground into salves and tonics.",
+  "stats": {},
+  "value": 5
+ },
+ {
+  "id": "wool",
+  "name": "Raw Wool",
+  "sprite": "o",
+  "color": [
+   230,
+   230,
+   220
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 1.0,
+  "material": "cloth",
+  "description": "A fleece of raw wool, waiting to be spun and woven.",
+  "stats": {},
+  "value": 4
+ },
+ {
+  "id": "cloth",
+  "name": "Bolt of Cloth",
+  "sprite": "=",
+  "color": [
+   200,
+   190,
+   170
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.8,
+  "material": "cloth",
+  "description": "A bolt of woven cloth for garments and bandages.",
+  "stats": {},
+  "value": 9
+ },
+ {
+  "id": "salt",
+  "name": "Pouch of Salt",
+  "sprite": ".",
+  "color": [
+   240,
+   240,
+   245
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.5,
+  "material": "mineral",
+  "description": "Precious salt. Light to carry, dear in every market.",
+  "stats": {},
+  "value": 12
+ },
+ {
+  "id": "spices",
+  "name": "Box of Spices",
+  "sprite": "*",
+  "color": [
+   200,
+   120,
+   40
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.3,
+  "material": "spice",
+  "description": "Fragrant spices from far roads. A luxury trade good.",
+  "stats": {},
+  "value": 28
+ },
+ {
+  "id": "silver_ingot",
+  "name": "Silver Ingot",
+  "sprite": "=",
+  "color": [
+   220,
+   220,
+   230
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 1.0,
+  "material": "silver",
+  "description": "A bar of bright silver. Coin, jewelry, and bribes.",
+  "stats": {},
+  "value": 32
+ },
+ {
+  "id": "gemstone",
+  "name": "Cut Gemstone",
+  "sprite": "*",
+  "color": [
+   120,
+   200,
+   230
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.1,
+  "material": "gem",
+  "description": "A faceted gemstone that scatters the light. Worth a fortune.",
+  "stats": {},
+  "value": 55
+ },
+ {
+  "id": "cheese",
+  "name": "Wheel of Cheese",
+  "sprite": "%",
+  "color": [
+   230,
+   210,
+   90
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.8,
+  "material": "food",
+  "description": "A firm wheel of farmhouse cheese.",
+  "stats": {},
+  "value": 5,
+  "consumable": {
+   "effect_type": "heal_hp",
+   "amount": 3
+  }
+ },
+ {
+  "id": "dried_meat",
+  "name": "Dried Meat",
+  "sprite": "%",
+  "color": [
+   150,
+   80,
+   50
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.6,
+  "material": "meat",
+  "description": "Salt-cured travel rations that keep for the road.",
+  "stats": {},
+  "value": 7,
+  "consumable": {
+   "effect_type": "heal_hp",
+   "amount": 5
+  }
+ },
+ {
+  "id": "bandage",
+  "name": "Linen Bandage",
+  "sprite": "~",
+  "color": [
+   230,
+   230,
+   210
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.2,
+  "material": "cloth",
+  "description": "Clean linen strips that staunch bleeding and bind wounds.",
+  "stats": {},
+  "value": 9,
+  "consumable": {
+   "effect_type": "heal_hp",
+   "amount": 6
+  }
+ },
+ {
+  "id": "short_sword",
+  "name": "Short Sword",
+  "sprite": "/",
+  "color": [
+   190,
+   190,
+   190
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 1.8,
+  "material": "iron",
+  "description": "A light, quick blade favored by townsfolk and scouts.",
+  "slot": "main_hand",
+  "stats": {
+   "power": 4
+  },
+  "value": 20
+ },
+ {
+  "id": "spear",
+  "name": "Spear",
+  "sprite": "|",
+  "color": [
+   180,
+   150,
+   110
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 2.5,
+  "material": "iron",
+  "description": "A long ash-shafted spear with an iron head.",
+  "slot": "main_hand",
+  "stats": {
+   "power": 6
+  },
+  "value": 34
+ },
+ {
+  "id": "mace",
+  "name": "Iron Mace",
+  "sprite": "\\",
+  "color": [
+   170,
+   170,
+   180
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 4.0,
+  "material": "iron",
+  "description": "A brutal flanged mace that caves in armor.",
+  "slot": "main_hand",
+  "stats": {
+   "power": 7
+  },
+  "value": 46
+ },
+ {
+  "id": "leather_cap",
+  "name": "Leather Cap",
+  "sprite": "^",
+  "color": [
+   139,
+   90,
+   50
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.6,
+  "material": "leather",
+  "description": "A simple boiled-leather cap.",
+  "slot": "head",
+  "stats": {
+   "defense": 1
+  },
+  "value": 14
+ },
+ {
+  "id": "iron_helm",
+  "name": "Iron Helm",
+  "sprite": "^",
+  "color": [
+   170,
+   170,
+   175
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 3.0,
+  "material": "iron",
+  "description": "A heavy iron helm with a riveted nasal guard.",
+  "slot": "head",
+  "stats": {
+   "defense": 3
+  },
+  "value": 40
+ },
+ {
+  "id": "tower_shield",
+  "name": "Tower Shield",
+  "sprite": ")",
+  "color": [
+   150,
+   120,
+   80
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 6.0,
+  "material": "wood",
+  "description": "A tall reinforced shield you can shelter behind.",
+  "slot": "off_hand",
+  "stats": {
+   "defense": 4
+  },
+  "value": 42
+ },
+ {
+  "id": "iron_greaves",
+  "name": "Iron Greaves",
+  "sprite": "\"",
+  "color": [
+   165,
+   165,
+   170
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 4.0,
+  "material": "iron",
+  "description": "Plated iron greaves that guard shin and foot.",
+  "slot": "feet",
+  "stats": {
+   "defense": 3
+  },
+  "value": 32
+ },
+ {
+  "id": "amulet_of_vigor",
+  "name": "Amulet of Vigor",
+  "sprite": "*",
+  "color": [
+   220,
+   220,
+   235
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.2,
+  "material": "silver",
+  "description": "A silver amulet that quickens the blood and toughens the body.",
+  "slot": "accessory",
+  "stats": {
+   "hp": 8
+  },
+  "value": 45
  }
 ]
