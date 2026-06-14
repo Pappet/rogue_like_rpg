@@ -1,7 +1,10 @@
+import random
+
 import esper
 import pygame
 
 from config import UI_CRAFT_RECT, UI_MODAL_RECT, UI_REST_RECT, LogCategory
+from core.rng import derive_seed
 from game.controllers.input_controller import InputController
 from game.controllers.render_pipeline import RenderPipeline
 from game.controllers.turn_orchestrator import TurnOrchestrator
@@ -62,6 +65,8 @@ class GameplayState(GameState):
         self.input_controller = InputController(ctx)
         self.turn_orchestrator = TurnOrchestrator(ctx)
         self.render_pipeline = RenderPipeline(ctx)
+        # Run-seeded RNG for crafting quality rolls (reproducible per world).
+        self._craft_rng = random.Random(derive_seed(ctx.world_seed, "crafting"))
 
         # Event subscriptions (facts/requests dispatched by lower layers)
         esper.set_handler("map_change_requested", self.map_transition_service.transition)
@@ -110,9 +115,10 @@ class GameplayState(GameState):
         """CraftWindow callback: perform the craft, then fast-forward the clock.
 
         Crafting costs in-game time (like resting); the world keeps simulating
-        for the duration so a forge session is not free.
+        for the duration so a forge session is not free. Quality rolls draw
+        from a run-seeded RNG so a given world reproduces the same outcomes.
         """
-        if CraftingService.craft(esper, self.ctx.player_entity, recipe):
+        if CraftingService.craft(esper, self.ctx.player_entity, recipe, rng=self._craft_rng):
             self.turn_orchestrator.advance_turns(recipe.ticks)
 
     def rest(self, ticks, label=None):

@@ -253,18 +253,29 @@ flow (mirror of rest tiles). Verified by `tests/verify_crafting.py`.
 Learn-by-doing skills — a `Skills` component accumulates XP per skill, level
 derived from a rising curve (`SkillService`). Crafting trains the station's
 skill, slaying foes trains `combat`; level-ups log and emit `skill_increased`.
-Shown on the character sheet. Skill levels are read-only for now — the next
-phase makes them *matter* (crafting quality, combat scaling). Verified by
-`tests/verify_skills.py`.
+Shown on the character sheet. Verified by `tests/verify_skills.py`.
+
+### Phase J — Crafting Quality & Quantity ✅ (done)
+
+*Skill finally pays off at the workbench.*
+
+Higher skill makes a better craft, split by what the recipe makes
+(`crafting_quality.py`): **equippable** output rolls a named **quality** tier
+(*Crude/Fine/Masterwork* — immersive, the grade is in the name, no "+N"),
+scaling the instance's stats and value; **non-equippable** output (food,
+potions, ingots, leather) scales in **quantity** — a master baker pulls more
+loaves from the same flour, making the supply chain pay as you improve. Quality
+rolls draw from a run-seeded RNG. Verified by
+`tests/verify_crafting_quality.py`.
 
 ---
 
-**All seven roadmap phases plus Phase H (crafting) and Phase I (progression)
-are complete.** Candidates for the next planning round: **crafting quality
-tiers driven by skill level** (the natural follow-on to Phase I), multiple
-save slots, NPC↔NPC relationships (deferred from Phase D), a real faction
-model (relations matrix, faction reputation), deeper dungeon levels with
-stairs, quest chains, and a walkable overworld.
+**All seven roadmap phases plus crafting (H), progression (I) and
+craft quality/quantity (J) are complete.** Candidates for the next planning
+round: combat scaling from the `combat` skill (the matching follow-on to J),
+multiple save slots, NPC↔NPC relationships (deferred from Phase D), a real
+faction model (relations matrix, faction reputation), deeper dungeon levels
+with stairs, quest chains, and a walkable overworld.
 
 ## 4. Recommended order & why
 

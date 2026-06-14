@@ -219,6 +219,7 @@ is neutral constants, usable by both.
     │   ├── interaction_resolver.py  # Bump interaction resolution
     │   ├── trade_service.py         # Buy/sell rules between player and merchants
     │   ├── crafting_service.py      # Player crafting: recipe inputs -> output item
+    │   ├── crafting_quality.py      # Skill -> craft quality tier / quantity bonus
     │   ├── skill_service.py         # Learn-by-doing skill XP/levels (progression)
     │   ├── economy_service.py       # Per-settlement stock levels -> local prices
     │   ├── reputation_service.py    # Player standing per settlement (price/dialogue)
@@ -434,6 +435,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Skirmisher`      | Fights rival-faction Skirmishers, not player |
 | `Bleeding`        | Status effect: HP loss per round (from crits)|
 | `Skills`          | Learn-by-doing XP per skill id (progression)  |
+| `Quality`         | Crafted-item grade tier (named, scales stats) |
 
 ### Enums
 
@@ -537,6 +539,24 @@ class MapAwareSystem:
   skills go in `SkillService.SKILLS`. Skill levels are read-only for now — the
   intended payoff (crafting quality tiers, combat scaling) reads them next.
 - The character sheet (`CharacterWindow`) shows trained skills with level + bar.
+
+### Crafting Quality & Quantity (Phase J)
+
+- Skill shapes the *result* of a craft, split by output type (derived from the
+  item template's `slot`), in `game/services/crafting_quality.py`:
+  - **Equippable** output (weapon/armor/jewelry) rolls a named **quality**
+    tier — *Crude / (standard) / Fine / Masterwork* (`QUALITY_TIERS`).
+    `apply_quality()` renames the instance ("Masterwork Iron Sword"), scales
+    its `StatModifiers` and `Value`, and tags it with a `Quality` component.
+    Immersion rule: the grade lives in the **name**, never a "+N" suffix.
+    `roll_quality()` = skill level ± `CRAFT_QUALITY_SWING`, so higher skill
+    trends to better tiers.
+  - **Non-equippable** output (bread, potions, ingots, leather) scales in
+    **quantity** instead: `quantity_bonus()` adds one unit per
+    `CRAFT_QUANTITY_LEVELS_PER_BONUS` skill levels.
+- `CraftingService.craft(..., rng)` applies this; `GameplayState` passes a
+  run-seeded RNG (`derive_seed(world_seed, "crafting")`) so a world reproduces
+  its craft outcomes. Verified by `tests/verify_crafting_quality.py`.
 
 ### AI Behavior
 

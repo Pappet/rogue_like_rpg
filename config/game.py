@@ -82,6 +82,14 @@ SKILL_XP_GROWTH = 1.4  # each level needs 40% more than the previous one
 SKILL_MAX_LEVEL = 10
 COMBAT_XP_PER_KILL_BASE = 10  # flat combat XP per kill, plus the foe's max HP
 
+# Crafting quality & quantity scaling by skill (ROADMAP Phase J).
+# Equippable crafts roll a named quality tier; the roll is the skill level
+# plus a random swing of +-CRAFT_QUALITY_SWING levels. Non-equippable crafts
+# (food, potions, ingots, leather) instead yield one extra unit per
+# CRAFT_QUANTITY_LEVELS_PER_BONUS skill levels above the first.
+CRAFT_QUALITY_SWING = 1.5
+CRAFT_QUANTITY_LEVELS_PER_BONUS = 3
+
 # Day/Night Settings
 DN_SETTINGS = {
     "day": {"tint": (0, 0, 0, 0), "light": 1.0, "perception": 1.0},

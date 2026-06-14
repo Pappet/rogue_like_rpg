@@ -14,12 +14,14 @@ input, and GameplayState advances the clock by ``recipe.ticks`` on success
 
 import contextlib
 import logging
+import random
 
 from config import LogCategory
-from game.components import Equipment, Inventory, Portable, Stats, TemplateId
+from game.components import Equipment, Inventory, Name, Portable, Stats, TemplateId
 from game.content.item_factory import ItemFactory
 from game.content.item_registry import item_registry
 from game.content.recipe_registry import Recipe, recipe_registry
+from game.services.crafting_quality import apply_quality, quantity_bonus, roll_quality
 from game.services.skill_service import STATION_SKILL, SkillService
 
 logger = logging.getLogger(__name__)
@@ -60,13 +62,16 @@ class CraftingService:
         return all(counts.get(item_id, 0) >= qty for item_id, qty in recipe.inputs.items())
 
     @staticmethod
-    def craft(world, player_entity, recipe: Recipe) -> bool:
+    def craft(world, player_entity, recipe: Recipe, rng: random.Random | None = None) -> bool:
         """Consume the recipe inputs and create its output in the inventory.
 
-        Returns True on success (inputs were present and were converted),
-        False if the player lacked materials. Does NOT advance the clock —
-        the caller does that on success.
+        Skill shapes the result (Phase J): equippable output rolls a named
+        quality tier (better stats + value), non-equippable output yields extra
+        units. Returns True on success (inputs were present and were
+        converted), False if the player lacked materials. Does NOT advance the
+        clock — the caller does that on success.
         """
+        rng = rng or random
         inventory = world.try_component(player_entity, Inventory)
         if inventory is None or not CraftingService.can_craft(world, player_entity, recipe):
             world.dispatch_event("log_message", "You lack the materials for that.", None, LogCategory.ALERT)
@@ -87,18 +92,31 @@ class CraftingService:
                         world.delete_entity(ent, immediate=True)
                     removed += 1
 
-        # Create the output(s) and place them in the inventory.
-        for _ in range(recipe.output_qty):
-            inventory.items.append(ItemFactory.create(world, recipe.output))
+        skill = STATION_SKILL.get(recipe.station)
+        level = SkillService.level(world, player_entity, skill) if skill else 1
 
         template = item_registry.get(recipe.output)
-        out_name = template.name if template else recipe.output
-        qty_suffix = f" ×{recipe.output_qty}" if recipe.output_qty > 1 else ""
-        world.dispatch_event("log_message", f"You craft {out_name}{qty_suffix}.", None, LogCategory.LOOT)
+        equippable = bool(template and template.slot)
+        count = recipe.output_qty if equippable else recipe.output_qty + quantity_bonus(level)
+
+        crafted_names = []
+        for _ in range(count):
+            ent = ItemFactory.create(world, recipe.output)
+            if equippable:
+                apply_quality(world, ent, roll_quality(level, rng))
+            inventory.items.append(ent)
+            crafted_names.append(world.component_for_entity(ent, Name).name)
+
+        if equippable:
+            message = "You craft " + ", ".join(crafted_names) + "."
+        else:
+            out_name = template.name if template else recipe.output
+            qty_suffix = f" ×{count}" if count > 1 else ""
+            message = f"You craft {out_name}{qty_suffix}."
+        world.dispatch_event("log_message", message, None, LogCategory.LOOT)
 
         # Learn-by-doing: the craft trains the station's skill (Phase I). The
         # longer the work, the more it teaches.
-        skill = STATION_SKILL.get(recipe.station)
         if skill:
             SkillService.grant(world, player_entity, skill, recipe.ticks)
         return True

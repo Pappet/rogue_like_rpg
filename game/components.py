@@ -135,6 +135,19 @@ class Skills:
 
 
 @dataclass
+class Quality:
+    """Crafted-item grade (ROADMAP Phase J).
+
+    Tier indexes ``crafting_quality.QUALITY_TIERS`` (1 == standard). Equippable
+    crafts carry one; the grade is reflected immersively in the item's Name
+    ("Masterwork Iron Sword") and baked into its StatModifiers/Value, so no
+    numeric "+N" suffix is shown.
+    """
+
+    tier: int = 1
+
+
+@dataclass
 class Portable:
     weight: float  # kg
 
