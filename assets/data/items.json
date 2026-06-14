@@ -802,5 +802,21 @@
    "hp": 8
   },
   "value": 45
+ },
+ {
+  "id": "silver_ore",
+  "name": "Silver Ore",
+  "sprite": "*",
+  "color": [
+   190,
+   190,
+   205
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 3.0,
+  "material": "silver",
+  "description": "A glittering chunk of raw silver ore. A forge can smelt it into pure silver.",
+  "stats": {},
+  "value": 14
  }
 ]

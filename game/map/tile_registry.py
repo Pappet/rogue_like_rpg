@@ -25,6 +25,9 @@ class TileType:
     occludes_below: bool = False
     # Bumping into this (non-walkable) tile offers rest — e.g. a bed.
     provides_rest: bool = False
+    # Bumping into this (non-walkable) tile opens a crafting station of this
+    # type (e.g. "forge", "mill"). Empty string means it is not a station.
+    crafting_station: str = ""
     bg_color: tuple[int, int, int] | None = None
     # Per-sprite-layer foreground colors; layers not listed fall back to `color`.
     sprite_colors: dict[SpriteLayer, tuple[int, int, int]] = field(default_factory=dict)

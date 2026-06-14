@@ -105,3 +105,17 @@ class Tile:
 
         tile_type = tile_registry.get(self._type_id)
         return bool(tile_type and tile_type.provides_rest)
+
+    @property
+    def crafting_station(self) -> str:
+        """Station type if bumping this tile opens a crafting bench, else "".
+
+        Registry-backed (e.g. "forge", "mill"). Empty string for ordinary
+        tiles.
+        """
+        if self._type_id is None:
+            return ""
+        from game.map.tile_registry import tile_registry
+
+        tile_type = tile_registry.get(self._type_id)
+        return tile_type.crafting_station if tile_type else ""

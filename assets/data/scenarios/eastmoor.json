@@ -264,6 +264,22 @@
   }
  },
  "biome": "plains",
+ "stations": [
+  {
+   "type": "anvil",
+   "pos": [
+    33,
+    18
+   ]
+  },
+  {
+   "type": "jeweler",
+   "pos": [
+    22,
+    20
+   ]
+  }
+ ],
  "lights": [
   {
    "type": "campfire",

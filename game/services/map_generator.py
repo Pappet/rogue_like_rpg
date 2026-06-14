@@ -22,6 +22,17 @@ WILDERNESS_SIZE = 40
 # House style -> wall material for both the exterior shell and the interior.
 HOUSE_WALL_MATERIAL = {"home": "wall_wood", "tavern": "wall_wood", "shop": "wall_stone"}
 
+# Crafting-station type -> the tile id stamped onto the map (ROADMAP Phase H).
+STATION_TILES = {
+    "forge": "station_forge",
+    "anvil": "station_anvil",
+    "mill": "station_mill",
+    "oven": "station_oven",
+    "tannery": "station_tannery",
+    "herbalist": "station_herbalist",
+    "jeweler": "station_jeweler",
+}
+
 # Light props placed by the generator. All burn dusk-to-dawn (night_only):
 # they reveal their surroundings via VisibilitySystem and get a warm glow
 # from the render pipeline once the day/night tint darkens.
@@ -372,6 +383,12 @@ class MapGenerator:
             lx, ly = light["pos"]
             lx, ly = get_nearest_walkable_tile(village_layers[0], lx, ly)
             self.place_light(world, light["type"], lx, ly)
+
+        # Scenario-authored crafting stations (forge, mill, oven, ...): the
+        # player bumps the (non-walkable) station tile to open its bench.
+        for station in config.get("stations", []):
+            sx, sy = get_nearest_walkable_tile(village_layers[0], station["pos"][0], station["pos"][1])
+            village_layers[0].tiles[sy][sx].set_type(STATION_TILES.get(station["type"], "station_forge"))
 
         # --- SPAWN VILLAGE NPCS ---
         for npc in config.get("village_npcs", []):

@@ -188,6 +188,7 @@ is neutral constants, usable by both.
     │   ├── resource_loader.py       # JSON data loading orchestration
     │   ├── entity_registry.py       # EntityRegistry + entity_registry default instance
     │   ├── item_registry.py         # ItemRegistry + item_registry default instance
+    │   ├── recipe_registry.py       # RecipeRegistry + recipe_registry default instance
     │   ├── schedule_registry.py     # ScheduleRegistry + schedule_registry default instance
     │   ├── dialogue_service.py      # DialogueService + dialogue_service default instance
     │   ├── entity_factory.py        # Creates ECS entities from registry templates
@@ -217,6 +218,7 @@ is neutral constants, usable by both.
     │   ├── pathfinding_service.py   # A* pathfinding wrapper
     │   ├── interaction_resolver.py  # Bump interaction resolution
     │   ├── trade_service.py         # Buy/sell rules between player and merchants
+    │   ├── crafting_service.py      # Player crafting: recipe inputs -> output item
     │   ├── economy_service.py       # Per-settlement stock levels -> local prices
     │   ├── reputation_service.py    # Player standing per settlement (price/dialogue)
     │   ├── quest_service.py         # Authored + generated quests, progress, turn-in
@@ -238,6 +240,7 @@ is neutral constants, usable by both.
         ├── inventory.py             # Inventory window
         ├── character.py             # Character sheet window
         ├── trade.py                 # Merchant buy/sell window
+        ├── crafting.py              # Crafting bench (recipe list, bump a station)
         ├── quests.py                # Quest offers/turn-in + journal window
         ├── rest.py                  # Wait/sleep duration picker (time skip)
         └── tooltip.py               # Examine/tooltip window
@@ -506,6 +509,7 @@ class MapAwareSystem:
 - **Add new tiles**: `assets/data/tile_types.json` → automatically available via `TileRegistry`
 - **Add new entities**: `assets/data/entities.json` → spawn with `EntityFactory.create(world, "id", x, y)`
 - **Add new items**: `assets/data/items.json` → create with `ItemFactory.create(world, "id")`
+- **Add new recipes**: `assets/data/recipes.json` → `{id, station, inputs:{item:qty}, output, output_qty, ticks}`, loaded into `RecipeRegistry`. Inputs/outputs must be real item ids and the `station` must map to a station tile — both guarded by `tests/verify_crafting.py`
 - **Add new schedules**: `assets/data/schedules.json` → assign via `schedule_id` in entity template
 - **Player stats**: `assets/data/player.json` → base stats and actions loaded by `PartyService`
 - **Dialogues**: `assets/data/dialogues.json` → NPC dialogue lines keyed by template_id, loaded by `DialogueService`
@@ -515,6 +519,7 @@ class MapAwareSystem:
 - **World events**: `assets/data/world_events.json` entries may carry `effects` (`stock_delta`, `prosperity_delta`) and `escalation` (`{event_id, delay_hours}`); `weight: 0` templates are escalation-only (Phase G2)
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)
 - **Rest tiles**: a tile with `"provides_rest": true` (e.g. `furniture_bed`) lets the player bump it to sleep. An entity with `"innkeeper": true` offers the same. Both dispatch the `rest_requested` request event; `GameplayState` opens the `RestWindow`, which calls `TurnOrchestrator.advance_turns(ticks)` to fast-forward the world clock (stops early if a hostile starts hunting or the player takes damage). Duration presets come from `rest_service`.
+- **Crafting stations** (Phase H): a tile with `"crafting_station": "<type>"` (e.g. `station_forge`, `station_anvil`, `station_mill`) lets the player bump it to open the `CraftWindow`. `MovementSystem` dispatches the `craft_requested` request event (player only, mirror of `rest_requested`); `GameplayState` opens the window and on confirm runs `CraftingService.craft()` then `advance_turns(recipe.ticks)` — crafting costs in-game time. Stations are placed per settlement via a scenario top-level `"stations": [{"type", "pos"}]` list (mirrors `"lights"`); `MapGenerator` stamps the matching tile (`STATION_TILES`). Recipes group by `station` type. The chain key→station→window mirrors the rest-tile flow exactly. Metalworking is split across two stations to mirror the cross-settlement supply chain: the **forge** only smelts ore into ingots (`iron_ore`/`silver_ore` → ingot, sited in Brackenfen the mining town) and the **anvil** only works ingots into arms/armor (sited in Eastmoor the smithy) — `tests/verify_crafting.py::test_forge_smelts_anvil_smiths` guards the split. Distribution by settlement profile: Village (mill/oven/herbalist, a farming village), Brackenfen (forge/tannery), Eastmoor (anvil/jeweler).
 
 ### AI Behavior
 
