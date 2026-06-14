@@ -391,7 +391,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `PlayerTag`       | Marker for the player entity                 |
 | `AI`              | Marker for AI-controlled entities            |
 | `Blocker`         | Marker for movement-blocking entities        |
-| `Position`        | x, y, layer (map layer index)               |
+| `Position`        | x, y, layer (map layer index)                |
 | `Renderable`      | sprite char, SpriteLayer value, color        |
 | `Name`            | Entity display name                          |
 | `Description`     | Entity description; optional wounded variant |
@@ -433,19 +433,23 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 ### Enums
 
 **`config/enums.py`:**
+
 - **`SpriteLayer`**: GROUND(0) → DECOR_BOTTOM(1) → TRAPS(2) → ITEMS(3) → CORPSES(4) → ENTITIES(5) → DECOR_TOP(6) → EFFECTS(7)
 - **`GameStates`**: PLAYER_TURN, ENEMY_TURN, TARGETING, WORLD_MAP, INVENTORY, MENU, EXAMINE, GAME_OVER
 - **`LogCategory`**: DAMAGE_DEALT, DAMAGE_RECEIVED, HEALING, LOOT, SYSTEM, ALERT
 
 **`game/components.py`:**
+
 - **`AIState`**: IDLE, WANDER, CHASE, TALK, WORK, PATROL, SOCIALIZE, SLEEP
 - **`Alignment`**: HOSTILE, NEUTRAL, FRIENDLY
 - **`SlotType`**: HEAD, BODY, MAIN_HAND, OFF_HAND, FEET, ACCESSORY
 
 **`game/map/tile.py`:**
+
 - **`VisibilityState`**: UNEXPLORED, VISIBLE, SHROUDED, FORGOTTEN
 
 **`core/input_manager.py`:**
+
 - **`InputCommand`**: Full enum of 40+ mapped player actions (movement, interact, UI, debug, etc.)
 
 ### MapAwareSystem Mixin
@@ -468,9 +472,11 @@ class MapAwareSystem:
 ## Conventions & Rules
 
 ### AI Assistant Rules
+
 - **Committing:** ALWAYS create a git commit after every completed task (e.g. a `ROADMAP.md` phase task or a `task.md` checklist item). Do not wait until the entire phase is complete to commit.
 
 ### Code Style
+
 - Dataclass components, no inheritance on components
 - Type hints on function signatures
 - Docstrings on public methods (Google style or descriptive)
@@ -479,6 +485,7 @@ class MapAwareSystem:
 - **Logging:** Use Python `logging` module — `logging.getLogger(__name__)` per module. `main.py` configures `logging.basicConfig()`. No `print()` in production code.
 
 ### ECS Rules
+
 - **Never store `World` instances** — use the `esper` module directly
 - **Components are plain dataclasses** — no methods with side effects
 - **Systems do not hold entity references** — query via `esper.get_components()` each frame
@@ -488,12 +495,14 @@ class MapAwareSystem:
 - When adding new components: add to `game/components.py`, update `DeathSystem` cleanup list if relevant
 
 ### Map System Rules
+
 - Maps are `MapContainer` with multiple `MapLayer`s (vertical layers, not separate maps)
 - `freeze()` / `thaw()` serializes entities when switching maps — player party excluded via `get_entity_closure()`
 - Tile types come from `TileRegistry` — use `Tile(type_id="floor_stone")`, never hardcode tile properties
 - Prefabs are JSON files stamped onto existing layers via `MapService.load_prefab()`
 
 ### Data-Driven Content
+
 - **Add new tiles**: `assets/data/tile_types.json` → automatically available via `TileRegistry`
 - **Add new entities**: `assets/data/entities.json` → spawn with `EntityFactory.create(world, "id", x, y)`
 - **Add new items**: `assets/data/items.json` → create with `ItemFactory.create(world, "id")`
@@ -508,6 +517,7 @@ class MapAwareSystem:
 - **Rest tiles**: a tile with `"provides_rest": true` (e.g. `furniture_bed`) lets the player bump it to sleep. An entity with `"innkeeper": true` offers the same. Both dispatch the `rest_requested` request event; `GameplayState` opens the `RestWindow`, which calls `TurnOrchestrator.advance_turns(ticks)` to fast-forward the world clock (stops early if a hostile starts hunting or the player takes damage). Duration presets come from `rest_service`.
 
 ### AI Behavior
+
 - Hostile NPCs detect player via shadowcasting FOV → transition to CHASE
 - CHASE uses A* pathfinding with greedy Manhattan fallback
 - NPCs lose chase after `LOSE_SIGHT_TURNS` (3) without line of sight
@@ -515,6 +525,7 @@ class MapAwareSystem:
 - Sleeping NPCs skip all behavior; woken by bump or combat
 
 #### Living Village (ambient townsfolk behavior)
+
 - **Loitering**: once a scheduled NPC reaches its WORK/SOCIALIZE anchor and
   `PathData` drains, `AISystem._loiter` makes it mill about within
   `AI_LOITER_RADIUS` of the anchor (stepping back if it drifts out, an
@@ -541,6 +552,7 @@ class MapAwareSystem:
   schedule invariant holds (`current_activity` always matches the entry).
 
 ### Input Handling
+
 - `InputManager` (core) maps `pygame.KEYDOWN` → `InputCommand` enum, context-aware by `GameStates`
 - `InputController` (game/controllers) translates commands into `PlayerActionService` calls or UI window pushes — it must stay esper-free
 - `PlayerActionService` (game/services) executes the actual game rules
@@ -549,15 +561,15 @@ class MapAwareSystem:
 
 ## Debug Controls
 
-| Key | Action |
-|-----|--------|
-| F3  | Toggle debug master |
-| F4  | Toggle player FOV overlay |
-| F5  | Toggle NPC FOV overlay |
-| F6  | Toggle chase target lines |
-| F7  | Toggle AI state labels |
-| F9  | Save game (saves/save.json) |
-| F10 | Load game |
+| Key | Action                         |
+|-----|--------------------------------|
+| F3  | Toggle debug master            |
+| F4  | Toggle player FOV overlay      |
+| F5  | Toggle NPC FOV overlay         |
+| F6  | Toggle chase target lines      |
+| F7  | Toggle AI state labels         |
+| F9  | Save game (saves/save.json)    |
+| F10 | Load game                      |
 
 ## Common Pitfalls
 

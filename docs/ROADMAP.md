@@ -29,15 +29,15 @@ does not wait for the player."
 
 ## 2. What we already have (the foundation this builds on)
 
-| Building block | Status | Reused for |
-|---|---|---|
-| World clock, day/night, 1 tick per turn | done | global simulation time |
-| NPC schedules (`schedules.json`, target_meta "home") | done | abstract off-screen activity |
-| AI states (WORK/SLEEP/SOCIALIZE/PATROL/CHASE...) | done | needs-driven behavior |
-| Multi-map + portals + freeze/thaw, `travel_ticks` | done | settlements & travel time |
-| Data-driven scenarios (`scenarios/village.json`) | done | more settlements |
-| Items/equipment/consumables, loot, bump-dialogue | done | trade & quest rewards |
-| `WorldMapState` (currently: minimap of active map) | stub | overworld travel screen |
+| Building block                                                         | Status | Reused for                         |
+|------------------------------------------------------------------------|--------|------------------------------------|
+| World clock, day/night, 1 tick per turn                                | done   | global simulation time             |
+| NPC schedules (`schedules.json`, target_meta "home")                   | done   | abstract off-screen activity       |
+| AI states (WORK/SLEEP/SOCIALIZE/PATROL/CHASE...)                       | done   | needs-driven behavior              |
+| Multi-map + portals + freeze/thaw, `travel_ticks`                      | done   | settlements & travel time          |
+| Data-driven scenarios (`scenarios/village.json`)                       | done   | more settlements                   |
+| Items/equipment/consumables, loot, bump-dialogue                       | done   | trade & quest rewards              |
+| `WorldMapState` (currently: minimap of active map)                     | stub   | overworld travel screen            |
 
 ## 3. Phases
 
