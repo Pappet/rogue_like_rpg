@@ -90,6 +90,12 @@ COMBAT_XP_PER_KILL_BASE = 10  # flat combat XP per kill, plus the foe's max HP
 CRAFT_QUALITY_SWING = 1.5
 CRAFT_QUANTITY_LEVELS_PER_BONUS = 3
 
+# Resource gathering & merchant restock (ROADMAP Phase K).
+GATHER_XP_PER_HARVEST = 12  # gathering-skill XP each time a node is harvested
+# Shops refill their stock toward the starting menu, one unit per good per hour,
+# but only for goods the settlement still has in abstract stock (scarcity bites).
+RESTOCK_MIN_ECON_STOCK = 1.0
+
 # Day/Night Settings
 DN_SETTINGS = {
     "day": {"tint": (0, 0, 0, 0), "light": 1.0, "perception": 1.0},

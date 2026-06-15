@@ -220,6 +220,8 @@ is neutral constants, usable by both.
     │   ├── trade_service.py         # Buy/sell rules between player and merchants
     │   ├── crafting_service.py      # Player crafting: recipe inputs -> output item
     │   ├── crafting_quality.py      # Skill -> craft quality tier / quantity bonus
+    │   ├── gather_service.py        # Harvest resource nodes -> raw materials
+    │   ├── merchant_restock_service.py # Shops refill stock toward base menu
     │   ├── skill_service.py         # Learn-by-doing skill XP/levels (progression)
     │   ├── economy_service.py       # Per-settlement stock levels -> local prices
     │   ├── reputation_service.py    # Player standing per settlement (price/dialogue)
@@ -436,6 +438,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Bleeding`        | Status effect: HP loss per round (from crits)|
 | `Skills`          | Learn-by-doing XP per skill id (progression)  |
 | `Quality`         | Crafted-item grade tier (named, scales stats) |
+| `ResourceNode`    | Harvestable raw-material node (bump to gather) |
 
 ### Enums
 
@@ -557,6 +560,26 @@ class MapAwareSystem:
 - `CraftingService.craft(..., rng)` applies this; `GameplayState` passes a
   run-seeded RNG (`derive_seed(world_seed, "crafting")`) so a world reproduces
   its craft outcomes. Verified by `tests/verify_crafting_quality.py`.
+
+### Raw-material Supply (Phase K)
+
+- **Resource nodes**: a `ResourceNode` entity (herb patch, ore vein, grain
+  field — catalogue `gather_service.RESOURCE_NODES`) is a `Blocker` the player
+  bumps to harvest. The bump → `harvest_requested` request event →
+  `GatherService.harvest(ctx, node)` chain mirrors crafting stations/rest
+  tiles. Harvest yields the raw item, trains the node's gathering skill
+  (`foraging`/`mining`/`farming`), and spends the node until `ready_at` (a
+  world tick); skill raises the yield via the same `quantity_bonus`. Placement
+  is data-driven: biomes scatter node *kinds* (`biomes.json` → `resources`,
+  e.g. swamp = bog `iron_vein`), scenarios pin them at positions
+  (`scenario["resources"]`, like `stations`). Nodes are created before
+  freeze so they serialize with the map.
+- **Merchant restock**: shops deplete as you buy (`Merchant.stock.pop`); each
+  hour `MerchantRestockService` (subscribed to `clock_tick`) refills every live
+  merchant's `stock` toward its `Merchant.base_stock` menu — one unit per good
+  per hour — but only while the settlement still has the good in abstract
+  economy stock (`RESTOCK_MIN_ECON_STOCK`), so shortages keep shelves bare.
+  Verified by `tests/verify_gathering.py` and `tests/verify_restock.py`.
 
 ### AI Behavior
 

@@ -185,6 +185,22 @@
    ]
   }
  ],
+ "resources": [
+  {
+   "kind": "iron_vein",
+   "pos": [
+    25,
+    7
+   ]
+  },
+  {
+   "kind": "silver_vein",
+   "pos": [
+    27,
+    8
+   ]
+  }
+ ],
  "lights": [
   {
    "type": "campfire",
