@@ -392,10 +392,7 @@ class AISystem(esper.Processor):
             if 0 <= layer_idx < len(map_container.layers):
                 layer = map_container.layers[layer_idx]
                 if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
-                    tile = layer.tiles[y][x]
-                    if not tile.transparent:
-                        return False
-                    return tile.sprites.get(SpriteLayer.GROUND) != "#"
+                    return layer.tiles[y][x].transparent
             return False
 
         return is_transparent

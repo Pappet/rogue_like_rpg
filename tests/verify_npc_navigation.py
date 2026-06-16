@@ -17,7 +17,7 @@ from game.systems.ai_system import AISystem
 def create_mock_tile(walkable=True):
     tile = Tile(transparent=True)
     # Manually set walkable for testing since we don't want to load TileRegistry
-    tile._walkable = walkable
+    tile.walkable = walkable
     return tile
 
 

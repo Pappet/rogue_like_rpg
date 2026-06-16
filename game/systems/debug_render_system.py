@@ -27,16 +27,15 @@ class DebugRenderSystem(MapAwareSystem):
         self.overlay = pygame.Surface((camera.width, camera.height), pygame.SRCALPHA)
 
     def _is_transparent(self, x, y, layer):
-        """Helper to determine if a tile is transparent, handling '#' wall fallback."""
+        """Helper to determine if a tile is transparent."""
         if not self._map_container:
             return False
 
         tile = self._map_container.get_tile(x, y, layer)
-        if tile is None or not tile.transparent:
+        if tile is None:
             return False
 
-        # Fallback for old tile systems where '#' character indicates a wall
-        return tile.sprites.get(SpriteLayer.GROUND) != "#"
+        return tile.transparent
 
     def process(self, surface, flags, player_layer):
         """Render the enabled debug overlays.

@@ -41,22 +41,29 @@ class Tile:
             self._type_id: str | None = type_id
             # Copy the sprite dict so mutations are per-instance.
             self.sprites: dict = dict(tile_type.sprites)
-            self.transparent: bool = tile_type.transparent
-            self._walkable: bool | None = tile_type.walkable
             self.color = tile_type.color
             self.bg_color = tile_type.bg_color
             self.sprite_colors = dict(tile_type.sprite_colors)
             self.dark = dark
+
+            # Pre-compute walkable and transparent to avoid dict lookups in hot loops
+            self.walkable = tile_type.walkable if tile_type.walkable is not None else (
+                SpriteLayer.GROUND in self.sprites and self.sprites[SpriteLayer.GROUND] != "#"
+            )
+            self.transparent = tile_type.transparent and (self.sprites.get(SpriteLayer.GROUND) != "#")
         else:
             # Legacy construction – explicit properties.
             self._type_id = None
-            self.transparent = transparent if transparent is not None else True
             self.dark = dark
             self.sprites = sprites if sprites is not None else {}
-            self._walkable = None  # computed from sprites (legacy behaviour)
             self.color = (200, 200, 200)
             self.bg_color = None
             self.sprite_colors = {}
+
+            # Pre-compute walkable and transparent to avoid dict lookups in hot loops
+            self.walkable = SpriteLayer.GROUND in self.sprites and self.sprites[SpriteLayer.GROUND] != "#"
+            _transparent_base = transparent if transparent is not None else True
+            self.transparent = _transparent_base and (self.sprites.get(SpriteLayer.GROUND) != "#")
 
         # Per-instance mutable state.
         self.visibility_state = VisibilityState.UNEXPLORED
@@ -71,30 +78,20 @@ class Tile:
             raise ValueError(f"Tile type '{type_id}' not found in TileRegistry.")
         self._type_id = type_id
         self.sprites = dict(tile_type.sprites)
-        self.transparent = tile_type.transparent
-        self._walkable = tile_type.walkable
         self.color = tile_type.color
         self.bg_color = tile_type.bg_color
         self.sprite_colors = dict(tile_type.sprite_colors)
+
+        # Pre-compute walkable and transparent to avoid dict lookups in hot loops
+        self.walkable = tile_type.walkable if tile_type.walkable is not None else (
+            SpriteLayer.GROUND in self.sprites and self.sprites[SpriteLayer.GROUND] != "#"
+        )
+        self.transparent = tile_type.transparent and (self.sprites.get(SpriteLayer.GROUND) != "#")
 
     @property
     def type_id(self) -> str | None:
         """Registry type ID for this tile, or None for legacy tiles."""
         return self._type_id
-
-    @property
-    def walkable(self) -> bool:
-        """Return the walkable flag.
-
-        For registry-backed tiles this comes directly from the TileType.
-        For legacy tiles it is derived from the GROUND sprite value (old behaviour).
-        """
-        if self._walkable is not None:
-            return self._walkable
-        # Legacy fallback: derive from sprites.
-        if SpriteLayer.GROUND not in self.sprites:
-            return False
-        return self.sprites[SpriteLayer.GROUND] != "#"
 
     @property
     def provides_rest(self) -> bool:
