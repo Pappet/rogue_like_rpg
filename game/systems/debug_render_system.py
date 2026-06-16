@@ -8,7 +8,6 @@ from config import (
     DEBUG_LABEL_COLOR,
     DEBUG_NPC_FOV_COLOR,
     TILE_SIZE,
-    SpriteLayer,
 )
 from core.visibility_service import VisibilityService
 from game.components import AIBehaviorState, AIState, ChaseData, Position, Stats

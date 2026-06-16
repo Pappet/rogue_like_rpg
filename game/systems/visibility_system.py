@@ -1,6 +1,5 @@
 import esper
 
-from config import SpriteLayer
 from core.visibility_service import VisibilityService
 from game.components import EffectiveStats, Hidden, LightSource, Name, PlayerTag, Position, Stats
 from game.map.tile import VisibilityState

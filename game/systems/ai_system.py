@@ -2,7 +2,7 @@ import random
 
 import esper
 
-from config import AI_LOITER_MOVE_CHANCE, AI_LOITER_RADIUS, GameStates, LogCategory, SpriteLayer
+from config import AI_LOITER_MOVE_CHANCE, AI_LOITER_RADIUS, GameStates, LogCategory
 from core.visibility_service import VisibilityService
 from game.components import (
     AI,
