@@ -47,8 +47,10 @@ class Tile:
             self.dark = dark
 
             # Pre-compute walkable and transparent to avoid dict lookups in hot loops
-            self.walkable = tile_type.walkable if tile_type.walkable is not None else (
-                SpriteLayer.GROUND in self.sprites and self.sprites[SpriteLayer.GROUND] != "#"
+            self.walkable = (
+                tile_type.walkable
+                if tile_type.walkable is not None
+                else (SpriteLayer.GROUND in self.sprites and self.sprites[SpriteLayer.GROUND] != "#")
             )
             self.transparent = tile_type.transparent and (self.sprites.get(SpriteLayer.GROUND) != "#")
         else:
@@ -83,8 +85,10 @@ class Tile:
         self.sprite_colors = dict(tile_type.sprite_colors)
 
         # Pre-compute walkable and transparent to avoid dict lookups in hot loops
-        self.walkable = tile_type.walkable if tile_type.walkable is not None else (
-            SpriteLayer.GROUND in self.sprites and self.sprites[SpriteLayer.GROUND] != "#"
+        self.walkable = (
+            tile_type.walkable
+            if tile_type.walkable is not None
+            else (SpriteLayer.GROUND in self.sprites and self.sprites[SpriteLayer.GROUND] != "#")
         )
         self.transparent = tile_type.transparent and (self.sprites.get(SpriteLayer.GROUND) != "#")
 
