@@ -247,6 +247,14 @@ class InventoryWindow(UIWindow):
             theme.draw_text(
                 surface, "Your pack is empty.", self.font, UI_THEME_INK_MUTED, (list_rect.x + 12, list_rect.y + 14)
             )
+            theme.draw_text(
+                surface,
+                "Step on items and press [G] to pick them up.",
+                self.small_font,
+                UI_THEME_INK_DIM,
+                (list_rect.x + 12, list_rect.y + 44),
+                shadow=False,
+            )
         else:
             equipped = self._equipped_ids()
             row_h = 30
@@ -304,14 +312,17 @@ class InventoryWindow(UIWindow):
                     dy += 26
 
         # Footer hint band — contextual to the selected item
-        hint_text = "[Enter] Select   [D] Drop   [Esc/I] Close"
         selected_item_id = self._selected_item_id()
         if selected_item_id is not None:
             if self.world.has_component(selected_item_id, Consumable):
-                hint_text = "[Enter/U] Use   [D] Drop   [Esc/I] Close"
+                hint_text = "[↑/↓] Navigate   [Enter/U] Use   [D] Drop   [Esc/I] Close"
             elif self.world.has_component(selected_item_id, Equippable):
                 action = "Unequip" if selected_item_id in self._equipped_ids() else "Equip"
-                hint_text = f"[Enter/E] {action}   [D] Drop   [Esc/I] Close"
+                hint_text = f"[↑/↓] Navigate   [Enter/E] {action}   [D] Drop   [Esc/I] Close"
+            else:
+                hint_text = "[↑/↓] Navigate   [D] Drop   [Esc/I] Close"
+        else:
+            hint_text = "[Esc/I] Close"
 
         theme.draw_text(
             surface,
