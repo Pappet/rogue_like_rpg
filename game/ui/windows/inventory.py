@@ -6,6 +6,7 @@ import game.services.equipment_service as equipment_service
 from config import (
     UI_SPACING_X,
     UI_THEME_COIN,
+    UI_THEME_DANGER,
     UI_THEME_GOLD,
     UI_THEME_INK,
     UI_THEME_INK_DIM,
@@ -27,9 +28,20 @@ from game.components import (
     Position,
     Purse,
     Renderable,
+    SlotType,
     Stats,
 )
 from game.systems.action_system import ActionSystem
+
+# Glyph shown for each equipment slot in the right-hand column.
+SLOT_GLYPHS = {
+    SlotType.HEAD: "^",
+    SlotType.BODY: "[",
+    SlotType.MAIN_HAND: "/",
+    SlotType.OFF_HAND: ")",
+    SlotType.FEET: "_",
+    SlotType.ACCESSORY: "*",
+}
 
 
 class InventoryWindow(UIWindow):
@@ -40,6 +52,7 @@ class InventoryWindow(UIWindow):
         self.turn_system = turn_system
         self.world = esper
         self.selected_idx = 0
+        self.scroll_offset = 0
         self.title_font = theme.get_font(38, display=True)
         self.font = theme.get_font(26)
         self.icon_font = pygame.font.SysFont("monospace", 24, bold=True)
@@ -222,18 +235,27 @@ class InventoryWindow(UIWindow):
         col_split = box_x + int(box_width * 0.46)
         theme.draw_divider(surface, box_x + pad, box_x + box_width - pad, header_bottom, ornament=True)
 
-        # Two recessed reading panes
+        detail_height = 116
+        detail_top = box_y + box_height - 40 - detail_height
+        pane_bottom = detail_top - 10
+
+        # Reading panes
         list_rect = pygame.Rect(
-            box_x + pad, header_bottom + 10, col_split - box_x - pad - 8, box_height - (header_bottom - box_y) - 24
+            box_x + pad, header_bottom + 10, col_split - box_x - pad - 8, pane_bottom - (header_bottom + 10)
         )
-        detail_rect = pygame.Rect(
+        equip_rect = pygame.Rect(
             col_split + 8,
             header_bottom + 10,
             box_x + box_width - pad - col_split - 8,
-            box_height - (header_bottom - box_y) - 24,
+            pane_bottom - (header_bottom + 10),
         )
+        detail_rect = pygame.Rect(box_x + pad, detail_top, box_width - 2 * pad, detail_height)
+
         theme.draw_inset(surface, list_rect)
+        theme.draw_inset(surface, equip_rect)
         theme.draw_inset(surface, detail_rect)
+
+        self._draw_equipment(surface, equip_rect)
 
         try:
             inventory = self.world.component_for_entity(self.player_entity, Inventory)
@@ -254,10 +276,20 @@ class InventoryWindow(UIWindow):
         else:
             equipped = self._equipped_ids()
             row_h = 30
-            for i, item_id in enumerate(inventory.items):
-                row_y = list_rect.y + 8 + i * row_h
-                if row_y + row_h > list_rect.bottom - 4:
-                    break
+            max_visible = max(1, (list_rect.height - 16) // row_h)
+
+            if self.selected_idx < self.scroll_offset:
+                self.scroll_offset = self.selected_idx
+            elif self.selected_idx >= self.scroll_offset + max_visible:
+                self.scroll_offset = self.selected_idx - max_visible + 1
+
+            max_scroll = max(0, len(inventory.items) - max_visible)
+            self.scroll_offset = max(0, min(self.scroll_offset, max_scroll))
+
+            for i in range(self.scroll_offset, min(len(inventory.items), self.scroll_offset + max_visible)):
+                item_id = inventory.items[i]
+                row_y = list_rect.y + 8 + (i - self.scroll_offset) * row_h
+
                 is_selected = i == self.selected_idx
                 if is_selected:
                     theme.draw_selection(surface, (list_rect.x + 3, row_y - 2, list_rect.width - 6, row_h - 2))
@@ -305,7 +337,7 @@ class InventoryWindow(UIWindow):
                     theme.draw_text(
                         surface, line, self.small_font, UI_THEME_INK_DIM, (detail_rect.x + 14, dy), shadow=False
                     )
-                    dy += 26
+                    dy += 22
 
         # Footer hint band — contextual to the selected item
         if not inventory.items:
@@ -328,3 +360,43 @@ class InventoryWindow(UIWindow):
             (box_x + pad + 4, box_y + box_height - 30),
             shadow=False,
         )
+
+    def _draw_equipment(self, surface, rect):
+        theme.draw_text(
+            surface, "Equipment", theme.get_font(22, bold=True), UI_THEME_INK_DIM, (rect.x + 14, rect.y + 10)
+        )
+        try:
+            equipment = self.world.component_for_entity(self.player_entity, Equipment)
+        except KeyError:
+            theme.draw_text(surface, "Equipment not found.", self.font, UI_THEME_DANGER, (rect.x + 14, rect.y + 44))
+            return
+
+        y = rect.y + 40
+        for slot in SlotType:
+            item_id = equipment.slots.get(slot)
+            glyph = SLOT_GLYPHS.get(slot, "?")
+            # Slot frame + glyph
+            box = pygame.Rect(rect.x + 14, y, 28, 28)
+            theme.draw_inset(surface, box, top=(40, 33, 24), bottom=(28, 22, 16))
+            theme.draw_text(
+                surface,
+                glyph,
+                self.icon_font,
+                UI_THEME_GOLD if item_id else UI_THEME_INK_MUTED,
+                box.center,
+                anchor="center",
+                shadow=False,
+            )
+
+            slot_label = slot.value.replace("_", " ").title()
+            theme.draw_text(surface, slot_label, self.small_font, UI_THEME_INK_DIM, (rect.x + 52, y), shadow=False)
+
+            if item_id:
+                name_comp = self.world.try_component(item_id, Name)
+                item_name = name_comp.name if name_comp else f"Unknown ({item_id})"
+                theme.draw_text(surface, item_name, self.font, UI_THEME_INK, (rect.x + 52, y + 14))
+            else:
+                theme.draw_text(
+                    surface, "— empty —", self.small_font, UI_THEME_INK_MUTED, (rect.x + 52, y + 14), shadow=False
+                )
+            y += 40

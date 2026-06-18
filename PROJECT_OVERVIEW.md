@@ -17,9 +17,10 @@ This project is a grid-based, turn-based roguelike RPG. It features exploration 
 3. **Pure Input Controllers**: Input controller acts as a pure translation layer routing `InputCommands` to state/action services without importing `esper` directly.
 4. **Player-Only Visibility Updates**: Only player entities (or entities with `PlayerTag`) calculate and update the map's `visibility_state`. NPCs calculate their own field-of-view independently for AI/chase logic, preventing the player from seeing the map as revealed by NPCs.
 5. **Indoor-Restricted NPC Scheduling**: NPCs restricted to building interiors (like the Mayor) must have their schedule target positions and template `home_pos` defined using local interior coordinates. They must not use map-level target metadata (like `hearth` or outdoor-only coordinates) that would resolve to out-of-bounds coordinates on their interior maps, which would cause the `reconcile_arrivals` system to teleport them off-grid.
-6. **Pre-computed Tile Properties**: To eliminate hot loop dictionary lookups during pathfinding and visibility calculations, tile properties like `walkable` and `transparent` are pre-computed on the tile instances themselves.
-7. **Actionable Empty States**: UI windows like Inventory, Quests, and Trade implement context-aware empty states with actionable hints rather than just showing a blank window when empty.
-8. **Item Value Context**: Tooltips and descriptions dynamically surface item values to aid player decision making when trading or evaluating inventory.
+6. **Dynamic UI Scrolling**: All list-based UI components (Inventory, Trade, Crafting, Quests) utilize a generalized `scroll_offset` property. This uncouples list sizes from viewport constraints and standardizes infinite scrolling mechanisms across different interactive windows.
+7. **Pre-computed Tile Properties**: To eliminate hot loop dictionary lookups during pathfinding and visibility calculations, tile properties like `walkable` and `transparent` are pre-computed on the tile instances themselves.
+8. **Actionable Empty States**: UI windows like Inventory, Quests, and Trade implement context-aware empty states with actionable hints rather than just showing a blank window when empty.
+9. **Item Value Context**: Tooltips and descriptions dynamically surface item values to aid player decision making when trading or evaluating inventory.
 
 ## Detailed Architecture
 The game loop runs inside `GameController` driving the active `GameState` subclass:

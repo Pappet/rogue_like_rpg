@@ -18,18 +18,9 @@ from config import (
 from core.input_manager import InputCommand
 from core.ui import theme
 from core.ui.window_base import UIWindow
-from game.components import EffectiveStats, Equipment, Name, Skills, SlotType, Stats
+from game.components import EffectiveStats, Skills, Stats
 from game.services.skill_service import SKILLS, level_for_xp, progress_into_level
 
-# Glyph shown for each equipment slot in the right-hand column.
-SLOT_GLYPHS = {
-    SlotType.HEAD: "^",
-    SlotType.BODY: "[",
-    SlotType.MAIN_HAND: "/",
-    SlotType.OFF_HAND: ")",
-    SlotType.FEET: "_",
-    SlotType.ACCESSORY: "*",
-}
 # Reference ceiling for the attribute bars (purely visual scaling).
 ATTR_BAR_MAX = 25
 
@@ -80,18 +71,17 @@ class CharacterWindow(UIWindow):
         stats_rect = pygame.Rect(
             box_x + pad, header_bottom + 10, col_split - box_x - pad - 8, box_height - (header_bottom - box_y) - 24
         )
-        equip_rect = pygame.Rect(
+        skills_rect = pygame.Rect(
             col_split + 8,
             header_bottom + 10,
             box_x + box_width - pad - col_split - 8,
             box_height - (header_bottom - box_y) - 24,
         )
         theme.draw_inset(surface, stats_rect)
-        theme.draw_inset(surface, equip_rect)
+        theme.draw_inset(surface, skills_rect)
 
         self._draw_stats(surface, stats_rect)
-        self._draw_equipment(surface, equip_rect)
-        self._draw_skills(surface, stats_rect)
+        self._draw_skills(surface, skills_rect)
 
         theme.draw_text(
             surface,
@@ -179,10 +169,10 @@ class CharacterWindow(UIWindow):
         )
 
     def _draw_skills(self, surface, rect):
-        """Trained skills with level + progress, in the lower stats column."""
-        y = rect.y + 320
+        """Trained skills with level + progress, in the right column."""
+        y = rect.y + 10
         theme.draw_text(surface, "Skills", theme.get_font(22, bold=True), UI_THEME_INK_DIM, (rect.x + 14, y))
-        y += 30
+        y += 38
 
         skills = self.world.try_component(self.player_entity, Skills)
         trained = [(sid, name) for sid, name in SKILLS.items() if skills and skills.xp.get(sid, 0) > 0]
@@ -220,43 +210,3 @@ class CharacterWindow(UIWindow):
                 surface, (x, y + 20, bar_w, 6), fill, UI_THEME_GOLD, hi_color=theme.lighten(UI_THEME_GOLD, 0.4)
             )
             y += 32
-
-    def _draw_equipment(self, surface, rect):
-        theme.draw_text(
-            surface, "Equipment", theme.get_font(22, bold=True), UI_THEME_INK_DIM, (rect.x + 14, rect.y + 10)
-        )
-        try:
-            equipment = self.world.component_for_entity(self.player_entity, Equipment)
-        except KeyError:
-            theme.draw_text(surface, "Equipment not found.", self.font, UI_THEME_DANGER, (rect.x + 14, rect.y + 44))
-            return
-
-        y = rect.y + 48
-        for slot in SlotType:
-            item_id = equipment.slots.get(slot)
-            glyph = SLOT_GLYPHS.get(slot, "?")
-            # Slot frame + glyph
-            box = pygame.Rect(rect.x + 14, y, 34, 34)
-            theme.draw_inset(surface, box, top=(40, 33, 24), bottom=(28, 22, 16))
-            theme.draw_text(
-                surface,
-                glyph,
-                self.icon_font,
-                UI_THEME_GOLD if item_id else UI_THEME_INK_MUTED,
-                box.center,
-                anchor="center",
-                shadow=False,
-            )
-
-            slot_label = slot.value.replace("_", " ").title()
-            theme.draw_text(surface, slot_label, self.small_font, UI_THEME_INK_DIM, (rect.x + 58, y + 1), shadow=False)
-
-            if item_id:
-                name_comp = self.world.try_component(item_id, Name)
-                item_name = name_comp.name if name_comp else f"Unknown ({item_id})"
-                theme.draw_text(surface, item_name, self.font, UI_THEME_INK, (rect.x + 58, y + 14))
-            else:
-                theme.draw_text(
-                    surface, "— empty —", self.small_font, UI_THEME_INK_MUTED, (rect.x + 58, y + 16), shadow=False
-                )
-            y += 44

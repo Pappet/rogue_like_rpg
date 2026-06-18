@@ -49,6 +49,7 @@ class CraftWindow(UIWindow):
         self.world = esper
         self.recipes = CraftingService.recipes_for_station(station)
         self.selected_idx = 0
+        self.scroll_offset = 0
         self.title_font = theme.get_font(32, display=True)
         self.font = theme.get_font(25)
         self.small_font = theme.get_font(20)
@@ -138,10 +139,19 @@ class CraftWindow(UIWindow):
             return
         counts = CraftingService.inventory_counts(self.world, self.player_entity)
         row_h = 30
-        for i, recipe in enumerate(self.recipes):
-            row_y = rect.y + 8 + i * row_h
-            if row_y + row_h > rect.bottom - 4:
-                break
+        max_visible = max(1, (rect.height - 16) // row_h)
+
+        if self.selected_idx < self.scroll_offset:
+            self.scroll_offset = self.selected_idx
+        elif self.selected_idx >= self.scroll_offset + max_visible:
+            self.scroll_offset = self.selected_idx - max_visible + 1
+
+        max_scroll = max(0, len(self.recipes) - max_visible)
+        self.scroll_offset = max(0, min(self.scroll_offset, max_scroll))
+
+        for i in range(self.scroll_offset, min(len(self.recipes), self.scroll_offset + max_visible)):
+            recipe = self.recipes[i]
+            row_y = rect.y + 8 + (i - self.scroll_offset) * row_h
             craftable = all(counts.get(item_id, 0) >= qty for item_id, qty in recipe.inputs.items())
             selected = i == self.selected_idx
             if selected:

@@ -37,6 +37,7 @@ class TradeWindow(UIWindow):
         self.world = esper
         self.selected_idx = 0
         self.active_pane = 0  # 0 = merchant (buy), 1 = player (sell)
+        self.scroll_offsets = [0, 0]
         self.title_font = theme.get_font(34, display=True)
         self.font = theme.get_font(25)
         self.small_font = theme.get_font(20)
@@ -323,10 +324,22 @@ class TradeWindow(UIWindow):
             theme.draw_text(surface, empty_text, self.font, UI_THEME_INK_MUTED, (rect.x + 12, rect.y + 12))
             return
         row_h = 28
-        for i, (name, price) in enumerate(entries):
-            row_y = rect.y + 8 + i * row_h
-            if row_y + row_h > rect.bottom - 4:
-                break
+        max_visible = max(1, (rect.height - 16) // row_h)
+
+        offset = self.scroll_offsets[pane]
+        if pane == self.active_pane:
+            if self.selected_idx < offset:
+                offset = self.selected_idx
+            elif self.selected_idx >= offset + max_visible:
+                offset = self.selected_idx - max_visible + 1
+
+        max_scroll = max(0, len(entries) - max_visible)
+        offset = max(0, min(offset, max_scroll))
+        self.scroll_offsets[pane] = offset
+
+        for i in range(offset, min(len(entries), offset + max_visible)):
+            name, price = entries[i]
+            row_y = rect.y + 8 + (i - offset) * row_h
             selected = pane == self.active_pane and i == self.selected_idx
             if selected:
                 theme.draw_selection(surface, (rect.x + 3, row_y - 2, rect.width - 6, row_h - 2))
