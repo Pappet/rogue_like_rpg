@@ -163,6 +163,17 @@
   "They nod at you.",
   "They don't seem interested in talking."
  ],
+ "_gossip": [
+  "Have you seen {subject} about? Keeping to themselves lately.",
+  "{subject} swears the harvest will be better next year.",
+  "Don't repeat this, but {subject} still hasn't paid their tab.",
+  "They say {subject} fancies someone across the square.",
+  "Word is {subject} had words with the mayor again.",
+  "Cold nights lately. My old bones feel every one.",
+  "The work's hard, but the roof holds, eh?",
+  "Heard the price of bread again? Robbery, I call it.",
+  "Quiet today. Quiet's good. Quiet means no wolves."
+ ],
  "hunter": {
   "default": [
    "Tracks everywhere this season. Wolves, mostly.",

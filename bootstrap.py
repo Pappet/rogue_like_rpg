@@ -62,6 +62,8 @@ def build_game_context(seed: int | None = None) -> GameContext:
 
     systems = build_systems(world_clock, map_service.get_active_map())
     register_processors(systems)
+    # Reproducible ambient gossip per world seed (Phase L slice 2)
+    systems.gossip_system.rng.seed(derive_seed(world_seed, "gossip"))
 
     ctx = GameContext(
         map_service=map_service,
