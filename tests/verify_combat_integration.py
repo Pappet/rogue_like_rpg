@@ -15,10 +15,12 @@ def test_combat_with_equipment():
     # Order: Equipment before Combat
     esper.add_processor(EquipmentSystem(MagicMock()))
 
-    # Pin the crit roll: this test asserts exact damage numbers
-    no_crit_rng = random.Random()
-    no_crit_rng.random = lambda: 0.99
-    esper.add_processor(CombatSystem(rng=no_crit_rng))
+    # Pin the rolls: this test asserts exact damage numbers. random() drives
+    # both the damage variance (0.5 -> factor 1.0) and the crit roll (0.5 >=
+    # crit chance -> no crit), so 0.5 keeps damage deterministic.
+    neutral_rng = random.Random()
+    neutral_rng.random = lambda: 0.5
+    esper.add_processor(CombatSystem(rng=neutral_rng))
 
     # Create attacker (player)
     attacker = esper.create_entity()

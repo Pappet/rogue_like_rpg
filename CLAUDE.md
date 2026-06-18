@@ -82,7 +82,7 @@ The ECS logic is separated into four distinct categories:
 1. **FRAME-PROCESSORS**: Registered once with `esper.add_processor()` (via `register_processors()` in the bootstrap) and run every frame by `TurnOrchestrator.update()` via `esper.process()`.
    - `TurnSystem`, `EquipmentSystem`, `VisibilitySystem`, `MovementSystem`, `CombatSystem`, `FCTSystem`
 2. **PHASE-SYSTEMS**: Called by `TurnOrchestrator` during specific game phases (like enemy turn).
-   - `StatusEffectSystem` (`ENEMY_TURN`, first), `AISystem` (`ENEMY_TURN`), `ScheduleSystem` (`ENEMY_TURN`), `NeedsSystem` (`ENEMY_TURN`, after ScheduleSystem)
+   - `StatusEffectSystem` (`ENEMY_TURN`, first), `AISystem` (`ENEMY_TURN`), `ScheduleSystem` (`ENEMY_TURN`), `NeedsSystem` (`ENEMY_TURN`, after ScheduleSystem), `GossipSystem` (`ENEMY_TURN`, last; ambient flavour, skipped during fast-forward)
 3. **RENDER-SYSTEMS**: Called by `RenderPipeline` during the `draw()` cycle. (Re)created in `GameplayState.startup()`.
    - `RenderSystem`, `UISystem`, `DebugRenderSystem`
 4. **EVENT-SYSTEMS**: React exclusively to events (callbacks set up in `__init__` via `esper.set_handler()`), without a `process()` loop and therefore *not* added as an `esper.Processor`.
@@ -143,11 +143,13 @@ is neutral constants, usable by both.
 │   ├── player.json                  # Player base stats & actions
 │   ├── world.json                   # World graph: locations + travel routes
 │   ├── world_events.json            # Chronicle event pool (off-screen events)
+│   ├── factions.json                # Faction relations matrix + player start standing
 │   ├── travel_encounters.json       # Road event pool (merchant, ambush, skirmish)
 │   ├── quests.json                  # Authored quests (generated ones come from the sim)
 │   ├── biomes.json                  # Wilderness biomes: terrain mix + wildlife spawns
 │   ├── schedules.json               # NPC daily routines
-│   ├── dialogues.json               # NPC dialogue lines by template_id
+│   ├── dialogues.json               # NPC dialogue lines by template_id (+ _gossip pools)
+│   ├── names.json                   # Given-name pool for townsfolk (SocialService)
 │   ├── prefabs/                     # Prefab room layouts
 │   └── scenarios/                   # Data-driven map scenarios (e.g. village.json)
 │
@@ -161,6 +163,7 @@ is neutral constants, usable by both.
 │   └── ui/
 │       ├── stack_manager.py         # UIStack for modal windows
 │       ├── message_log.py           # Rich text [color=x] message log
+│       ├── theme.py                 # Immersive UI toolkit (panels, bars, fonts, vignettes)
 │       └── window_base.py           # UIWindow base class
 │
 └── game/                            # GAME layer (may use core/)
@@ -178,6 +181,7 @@ is neutral constants, usable by both.
     │   ├── schedule_system.py       # ScheduleSystem (phase system)
     │   ├── needs_system.py          # NeedsSystem (phase system; needs preempt schedules)
     │   ├── status_effect_system.py  # StatusEffectSystem (phase system; bleeding ticks)
+    │   ├── gossip_system.py         # GossipSystem (phase system; ambient NPC<->NPC chatter)
     │   ├── death_system.py          # DeathSystem (event system)
     │   ├── render_system.py         # RenderSystem (render system)
     │   ├── ui_system.py             # UISystem (render system)
@@ -187,6 +191,7 @@ is neutral constants, usable by both.
     │   ├── resource_loader.py       # JSON data loading orchestration
     │   ├── entity_registry.py       # EntityRegistry + entity_registry default instance
     │   ├── item_registry.py         # ItemRegistry + item_registry default instance
+    │   ├── recipe_registry.py       # RecipeRegistry + recipe_registry default instance
     │   ├── schedule_registry.py     # ScheduleRegistry + schedule_registry default instance
     │   ├── dialogue_service.py      # DialogueService + dialogue_service default instance
     │   ├── entity_factory.py        # Creates ECS entities from registry templates
@@ -210,13 +215,21 @@ is neutral constants, usable by both.
     │   ├── save_service.py          # Session snapshot save/load (F9/F10)
     │   ├── save_serialization.py    # Generic dataclass/tile JSON (de)serialization
     │   ├── spawn_service.py         # Monster/NPC spawning
+    │   ├── housing_service.py       # Capacity-based night housing (beds vs hearth)
+    │   ├── social_service.py        # Townsfolk given names + NPC↔NPC relationships
     │   ├── party_service.py         # Player party creation
     │   ├── render_service.py        # Map rendering + viewport tint
     │   ├── pathfinding_service.py   # A* pathfinding wrapper
     │   ├── interaction_resolver.py  # Bump interaction resolution
     │   ├── trade_service.py         # Buy/sell rules between player and merchants
+    │   ├── crafting_service.py      # Player crafting: recipe inputs -> output item
+    │   ├── crafting_quality.py      # Skill -> craft quality tier / quantity bonus
+    │   ├── gather_service.py        # Harvest resource nodes -> raw materials
+    │   ├── merchant_restock_service.py # Shops refill stock toward base menu
+    │   ├── skill_service.py         # Learn-by-doing skill XP/levels (progression)
     │   ├── economy_service.py       # Per-settlement stock levels -> local prices
     │   ├── reputation_service.py    # Player standing per settlement (price/dialogue)
+    │   ├── faction_service.py       # Faction relations matrix + player faction standing
     │   ├── quest_service.py         # Authored + generated quests, progress, turn-in
     │   ├── rumor_service.py         # Smalltalk rumors from chronicle/offers elsewhere
     │   ├── rest_service.py          # Wait/sleep duration presets + time math
@@ -236,6 +249,7 @@ is neutral constants, usable by both.
         ├── inventory.py             # Inventory window
         ├── character.py             # Character sheet window
         ├── trade.py                 # Merchant buy/sell window
+        ├── crafting.py              # Crafting bench (recipe list, bump a station)
         ├── quests.py                # Quest offers/turn-in + journal window
         ├── rest.py                  # Wait/sleep duration picker (time skip)
         └── tooltip.py               # Examine/tooltip window
@@ -345,6 +359,15 @@ The chain is always: key → `InputCommand` → `InputController` →
    `config/ui.py` (add a new rect constant there if the size differs).
 3. The window consumes events through `UIStack` — no game logic inside
    the window; call services for rules.
+4. Draw with the `core/ui/theme.py` toolkit, not bare `pygame.draw` rects:
+   `theme.draw_panel()` for the frame, `theme.draw_inset()` for reading
+   areas, `theme.draw_text()` (serif fonts via `theme.get_font()`),
+   `theme.draw_bar()` for HP/MP/progress, `theme.draw_selection()` for the
+   highlighted row, and the `UI_THEME_*` colours from `config/colors.py`.
+   This keeps every window on the shared "aged tome" look. Cached
+   fonts/surfaces are invalidated per test by `theme.reset_caches()` in
+   `tests/conftest.py` — never create module-level `Font` objects that
+   outlive a `pygame.quit()`.
 
 #### Recipe G — New game state (screen)
 
@@ -380,7 +403,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `PlayerTag`       | Marker for the player entity                 |
 | `AI`              | Marker for AI-controlled entities            |
 | `Blocker`         | Marker for movement-blocking entities        |
-| `Position`        | x, y, layer (map layer index)               |
+| `Position`        | x, y, layer (map layer index)                |
 | `Renderable`      | sprite char, SpriteLayer value, color        |
 | `Name`            | Entity display name                          |
 | `Description`     | Entity description; optional wounded variant |
@@ -390,6 +413,10 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `AIBehaviorState` | Current `AIState` + `Alignment`              |
 | `Activity`        | Schedule-driven activity + target position   |
 | `Schedule`        | Links entity to a `schedule_id`              |
+| `Relationships`   | NPC↔NPC affinity by name (friend/rival)      |
+| `Faction`         | NPC's faction id (FactionService standing)   |
+| `PatrolRoute`     | A guard's looping beat + current waypoint idx|
+| `Residence`       | Hearth + bed/gather plan (HousingService)    |
 | `PathData`        | A* path + destination for NPC movement       |
 | `ChaseData`       | Chase state: last known player pos, timeout  |
 | `WanderData`      | Stub component for wander state              |
@@ -416,23 +443,30 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Hidden`          | Concealed until revealed at close range      |
 | `Skirmisher`      | Fights rival-faction Skirmishers, not player |
 | `Bleeding`        | Status effect: HP loss per round (from crits)|
+| `Skills`          | Learn-by-doing XP per skill id (progression)  |
+| `Quality`         | Crafted-item grade tier (named, scales stats) |
+| `ResourceNode`    | Harvestable raw-material node (bump to gather) |
 
 ### Enums
 
 **`config/enums.py`:**
+
 - **`SpriteLayer`**: GROUND(0) → DECOR_BOTTOM(1) → TRAPS(2) → ITEMS(3) → CORPSES(4) → ENTITIES(5) → DECOR_TOP(6) → EFFECTS(7)
 - **`GameStates`**: PLAYER_TURN, ENEMY_TURN, TARGETING, WORLD_MAP, INVENTORY, MENU, EXAMINE, GAME_OVER
 - **`LogCategory`**: DAMAGE_DEALT, DAMAGE_RECEIVED, HEALING, LOOT, SYSTEM, ALERT
 
 **`game/components.py`:**
+
 - **`AIState`**: IDLE, WANDER, CHASE, TALK, WORK, PATROL, SOCIALIZE, SLEEP
 - **`Alignment`**: HOSTILE, NEUTRAL, FRIENDLY
 - **`SlotType`**: HEAD, BODY, MAIN_HAND, OFF_HAND, FEET, ACCESSORY
 
 **`game/map/tile.py`:**
+
 - **`VisibilityState`**: UNEXPLORED, VISIBLE, SHROUDED, FORGOTTEN
 
 **`core/input_manager.py`:**
+
 - **`InputCommand`**: Full enum of 40+ mapped player actions (movement, interact, UI, debug, etc.)
 
 ### MapAwareSystem Mixin
@@ -455,9 +489,11 @@ class MapAwareSystem:
 ## Conventions & Rules
 
 ### AI Assistant Rules
+
 - **Committing:** ALWAYS create a git commit after every completed task (e.g. a `ROADMAP.md` phase task or a `task.md` checklist item). Do not wait until the entire phase is complete to commit.
 
 ### Code Style
+
 - Dataclass components, no inheritance on components
 - Type hints on function signatures
 - Docstrings on public methods (Google style or descriptive)
@@ -466,6 +502,7 @@ class MapAwareSystem:
 - **Logging:** Use Python `logging` module — `logging.getLogger(__name__)` per module. `main.py` configures `logging.basicConfig()`. No `print()` in production code.
 
 ### ECS Rules
+
 - **Never store `World` instances** — use the `esper` module directly
 - **Components are plain dataclasses** — no methods with side effects
 - **Systems do not hold entity references** — query via `esper.get_components()` each frame
@@ -475,32 +512,158 @@ class MapAwareSystem:
 - When adding new components: add to `game/components.py`, update `DeathSystem` cleanup list if relevant
 
 ### Map System Rules
+
 - Maps are `MapContainer` with multiple `MapLayer`s (vertical layers, not separate maps)
 - `freeze()` / `thaw()` serializes entities when switching maps — player party excluded via `get_entity_closure()`
 - Tile types come from `TileRegistry` — use `Tile(type_id="floor_stone")`, never hardcode tile properties
 - Prefabs are JSON files stamped onto existing layers via `MapService.load_prefab()`
 
 ### Data-Driven Content
+
 - **Add new tiles**: `assets/data/tile_types.json` → automatically available via `TileRegistry`
 - **Add new entities**: `assets/data/entities.json` → spawn with `EntityFactory.create(world, "id", x, y)`
 - **Add new items**: `assets/data/items.json` → create with `ItemFactory.create(world, "id")`
+- **Add new recipes**: `assets/data/recipes.json` → `{id, station, inputs:{item:qty}, output, output_qty, ticks}`, loaded into `RecipeRegistry`. Inputs/outputs must be real item ids and the `station` must map to a station tile — both guarded by `tests/verify_crafting.py`
 - **Add new schedules**: `assets/data/schedules.json` → assign via `schedule_id` in entity template
 - **Player stats**: `assets/data/player.json` → base stats and actions loaded by `PartyService`
-- **Dialogues**: `assets/data/dialogues.json` → NPC dialogue lines keyed by template_id, loaded by `DialogueService`
+- **Dialogues**: `assets/data/dialogues.json` → NPC dialogue lines keyed by template_id, loaded by `DialogueService`. Conditional lines match a context dict assembled per conversation; alongside `rep`/`phase`/`prosperity`/`activity` there is a `quest` key (`"ready"` when a quest can be turned in here, `"active"` when one is in progress for this settlement) so givers react to work the player owes the town. The context is built in `bootstrap._dialogue_context`
+- **Quests & chains**: `assets/data/quests.json` → authored quests loaded by `QuestService`. A quest may carry a `"prerequisites": [quest_id, ...]` list: it stays `offered` but is hidden from `offers_at`/rumors until every listed quest is `turned_in`, so turning in one stage unlocks the next (a chain). Turn-in announces any stage it unlocks. Generated quests (shortage deliver / wolf hunt) have no prerequisites. Verified by `tests/verify_quests.py`
 - **Map scenarios**: `assets/data/scenarios/*.json` → data-driven map layouts loaded by `MapGenerator`; a `"biome"` key gives the settlement a generated wilderness map (entered via portal, not a world-graph node)
-- **Economy blocks** in scenarios: `rates_per_day` entries may be a plain number or `{"per_day": N, "requires": {"input_item": amount}}` — production stalls without inputs (supply chains, Phase G3)
+- **Economy blocks** in scenarios: `rates_per_day` entries may be a plain number or `{"per_day": N, "requires": {"input_item": amount}}` — production stalls without inputs (supply chains, Phase G3). Settlements run real item chains: Village mills `grain`→`flour`→`bread` and grinds `herbs`→`healing_salve`; Brackenfen tans `hide`→`leather`→`leather_armor` and digs `iron_ore`; Eastmoor forges `iron_ore`→`iron_sword`/`steel_sword`. The cross-settlement loop (Brackenfen ore → Eastmoor smithy) is asserted by `tests/verify_supply_chains.py`
+- **Per-settlement merchant override**: a scenario NPC entry (in `village_npcs` or a structure's `npcs`) may carry a `"merchant": {"stock": [...], "gold": N}` block. `EntityFactory.create(..., merchant_override=...)` replaces the *template's* merchant data for that instance, so the same role (`shopkeeper`, `blacksmith`) sells a settlement-specific sortiment without new templates. This is how the market profiles differ (Village=food/grain, Brackenfen=raw materials/leather, Eastmoor=metal/luxury). `tests/verify_item_distribution.py` guards that **every** item in `items.json` is reachable (sold or looted) — add new items to a merchant stock or loot table, not just the item file
 - **World events**: `assets/data/world_events.json` entries may carry `effects` (`stock_delta`, `prosperity_delta`) and `escalation` (`{event_id, delay_hours}`); `weight: 0` templates are escalation-only (Phase G2)
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)
 - **Rest tiles**: a tile with `"provides_rest": true` (e.g. `furniture_bed`) lets the player bump it to sleep. An entity with `"innkeeper": true` offers the same. Both dispatch the `rest_requested` request event; `GameplayState` opens the `RestWindow`, which calls `TurnOrchestrator.advance_turns(ticks)` to fast-forward the world clock (stops early if a hostile starts hunting or the player takes damage). Duration presets come from `rest_service`.
+- **Crafting stations** (Phase H): a tile with `"crafting_station": "<type>"` (e.g. `station_forge`, `station_anvil`, `station_mill`) lets the player bump it to open the `CraftWindow`. `MovementSystem` dispatches the `craft_requested` request event (player only, mirror of `rest_requested`); `GameplayState` opens the window and on confirm runs `CraftingService.craft()` then `advance_turns(recipe.ticks)` — crafting costs in-game time. Stations are placed per settlement via a scenario top-level `"stations": [{"type", "pos"}]` list (mirrors `"lights"`); `MapGenerator` stamps the matching tile (`STATION_TILES`). Recipes group by `station` type. The chain key→station→window mirrors the rest-tile flow exactly. Metalworking is split across two stations to mirror the cross-settlement supply chain: the **forge** only smelts ore into ingots (`iron_ore`/`silver_ore` → ingot, sited in Brackenfen the mining town) and the **anvil** only works ingots into arms/armor (sited in Eastmoor the smithy) — `tests/verify_crafting.py::test_forge_smelts_anvil_smiths` guards the split. Distribution by settlement profile: Village (mill/oven/herbalist, a farming village), Brackenfen (forge/tannery), Eastmoor (anvil/jeweler).
+
+### Character Progression (Phase I)
+
+- **Learn-by-doing skills**: the player's `Skills` component holds accumulated
+  XP per skill id; level is *derived* from XP via `SkillService` (rising curve,
+  `SKILL_*` constants in `config/game.py`) — no stored level, so the component
+  serializes for free. `SkillService.grant()` is the sole writer; a level-up
+  logs and dispatches the `skill_increased` fact event.
+- **XP sources**: crafting trains the station's skill (`CraftingService.craft`
+  → `STATION_SKILL[recipe.station]`, XP = `recipe.ticks`); slaying a foe trains
+  `combat` (`DeathSystem` hook when `attacker` has `PlayerTag`, XP scaled by the
+  foe's max HP). Adding a new XP source = one `SkillService.grant()` call; new
+  skills go in `SkillService.SKILLS`. Skill levels are read-only for now — the
+  intended payoff (crafting quality tiers, combat scaling) reads them next.
+- The character sheet (`CharacterWindow`) shows trained skills with level + bar.
+
+### Crafting Quality & Quantity (Phase J)
+
+- Skill shapes the *result* of a craft, split by output type (derived from the
+  item template's `slot`), in `game/services/crafting_quality.py`:
+  - **Equippable** output (weapon/armor/jewelry) rolls a named **quality**
+    tier — *Crude / (standard) / Fine / Masterwork* (`QUALITY_TIERS`).
+    `apply_quality()` renames the instance ("Masterwork Iron Sword"), scales
+    its `StatModifiers` and `Value`, and tags it with a `Quality` component.
+    Immersion rule: the grade lives in the **name**, never a "+N" suffix.
+    `roll_quality()` = skill level ± `CRAFT_QUALITY_SWING`, so higher skill
+    trends to better tiers.
+  - **Non-equippable** output (bread, potions, ingots, leather) scales in
+    **quantity** instead: `quantity_bonus()` adds one unit per
+    `CRAFT_QUANTITY_LEVELS_PER_BONUS` skill levels.
+- `CraftingService.craft(..., rng)` applies this; `GameplayState` passes a
+  run-seeded RNG (`derive_seed(world_seed, "crafting")`) so a world reproduces
+  its craft outcomes. Verified by `tests/verify_crafting_quality.py`.
+
+### Raw-material Supply (Phase K)
+
+- **Resource nodes**: a `ResourceNode` entity (herb patch, ore vein, grain
+  field — catalogue `gather_service.RESOURCE_NODES`) is a `Blocker` the player
+  bumps to harvest. The bump → `harvest_requested` request event →
+  `GatherService.harvest(ctx, node)` chain mirrors crafting stations/rest
+  tiles. Harvest yields the raw item, trains the node's gathering skill
+  (`foraging`/`mining`/`farming`), and spends the node until `ready_at` (a
+  world tick); skill raises the yield via the same `quantity_bonus`. Placement
+  is data-driven: biomes scatter node *kinds* (`biomes.json` → `resources`,
+  e.g. swamp = bog `iron_vein`), scenarios pin them at positions
+  (`scenario["resources"]`, like `stations`). Nodes are created before
+  freeze so they serialize with the map.
+- **Merchant restock**: shops deplete as you buy (`Merchant.stock.pop`); each
+  hour `MerchantRestockService` (subscribed to `clock_tick`) refills every live
+  merchant's `stock` toward its `Merchant.base_stock` menu — one unit per good
+  per hour — but only while the settlement still has the good in abstract
+  economy stock (`RESTOCK_MIN_ECON_STOCK`), so shortages keep shelves bare.
+  Verified by `tests/verify_gathering.py` and `tests/verify_restock.py`.
 
 ### AI Behavior
+
 - Hostile NPCs detect player via shadowcasting FOV → transition to CHASE
 - CHASE uses A* pathfinding with greedy Manhattan fallback
 - NPCs lose chase after `LOSE_SIGHT_TURNS` (3) without line of sight
 - Scheduled NPCs follow `PathData` priority unless in CHASE state
 - Sleeping NPCs skip all behavior; woken by bump or combat
 
+#### Living Village (ambient townsfolk behavior)
+
+- **Loitering**: once a scheduled NPC reaches its WORK/SOCIALIZE anchor and
+  `PathData` drains, `AISystem._loiter` makes it mill about within
+  `AI_LOITER_RADIUS` of the anchor (stepping back if it drifts out, an
+  occasional small step otherwise). This is what breaks the "crowd frozen in
+  a blob" look — daytime work crowds and the evening fire now stay in motion.
+- **Identity & relationships**: `SocialService` runs once per settlement at
+  village build (after `HousingService`, before freeze; mirrors that pattern).
+  It gives the common crowd (`SocialService.NAMED_TEMPLATES`: villager, farmer,
+  hunter, herbalist, ore_digger, guard) a unique given name from
+  `assets/data/names.json`, and wires each to a few peers as friends
+  (`+affinity`) or a rival (`-affinity`) in a `Relationships` component keyed by
+  name (stable across freeze/thaw). Service NPCs the player finds by role
+  (mayor, innkeeper, merchants) keep their title. Deterministic per
+  `derive_seed(world_seed, <settlement>)`.
+- **Gossip**: `GossipSystem` (phase system, run last in the enemy phase) lets
+  socialising/working townsfolk standing close together exchange a line the
+  nearby player overhears. The speaker usually gossips about someone they
+  actually know — a friend warmly (`_gossip_friend`), a rival sharply
+  (`_gossip_rival`), else a neutral line (`_gossip`) — naming the subject via a
+  `{subject}` placeholder, so the town talks about its own people. Topics may
+  instead come from the local chronicle (real events). Rate-limited by
+  `GOSSIP_*` constants in `config/game.py`; skipped during rest fast-forward.
+  Drawn from a run-seeded RNG (`derive_seed(world_seed, "gossip")`).
+- **Patrol routes**: a `PATROL` schedule entry may carry a `route` (waypoint
+  list). `ScheduleSystem._update_patrol` cycles a guard through it via a
+  `PatrolRoute` component whose start index is staggered per entity
+  (`entity_id % len`), so guards sharing a route walk it out of phase instead
+  of marching as a pack.
+- **Target pools / hearth**: a schedule entry may use `target_pool` (each NPC
+  deterministically picks `pool[entity_id % len]`, fanning a shared schedule
+  across several spots) or `target_meta: "hearth"` (resolves to the NPC's
+  `Residence.hearth_pos` — the village's *real* campfire/tavern, so evening
+  gatherings center on the correct fire in every settlement).
+- **Capacity-based housing** (`HousingService`, run once at village build,
+  before freeze): counts beds in `home` structures (default one bed per floor,
+  override with a scenario `"beds"` field), seats common folk into them, and
+  gives everyone a `Residence`. The surplus and guards (bedless) get a
+  `gather_pos` and spend the night milling at the hearth/tavern instead of
+  sleeping; notables (merchants, innkeeper, the quest-giving mayor) keep their
+  authored home. A bedless NPC's `SLEEP` entry is redirected to its gather
+  spot (state `SOCIALIZE`) while the activity key stays `"SLEEP"` so the
+  schedule invariant holds (`current_activity` always matches the entry).
+
+#### Factions (`FactionService`)
+
+- **Groups & matrix**: every NPC carries a `Faction` component (id from its
+  template's `faction` field: townsfolk, town_guard, bandits, monsters,
+  wildlife). `assets/data/factions.json` defines a symmetric relations matrix
+  (`ally`/`enemy`/`neutral`) and each faction's starting player standing.
+- **Player standing** (-100..100 per faction, saved): `FactionService`
+  subscribes to `entity_died`. Killing a *peaceful* member is a crime (penalty
+  to its faction + allies); killing a *hostile* member is a favour (bonus to
+  that faction's enemies); `Animal` kills are exempt. Tiers (`FACTION_*` in
+  `config/game.py`): trusted / neutral / hostile.
+- **Standing → hostility**: rather than teach the AI about factions,
+  `sync_alignments()` flips a faction's live NPCs' `AIBehaviorState.alignment`
+  to HOSTILE once standing hits `FACTION_HOSTILE` (and restores the template
+  default when it recovers); the existing chase/bump logic does the rest. Run
+  in bootstrap, after each map thaw (`MapTransitionService`), after load, and
+  after every kill. So spill enough blood and the town guard turns on you.
+- **Dialogue**: `_dialogue_context` exposes `guards` = the town_guard tier, so
+  the `guard` template has wary/hostile vs. warm conditional lines.
+
 ### Input Handling
+
 - `InputManager` (core) maps `pygame.KEYDOWN` → `InputCommand` enum, context-aware by `GameStates`
 - `InputController` (game/controllers) translates commands into `PlayerActionService` calls or UI window pushes — it must stay esper-free
 - `PlayerActionService` (game/services) executes the actual game rules
@@ -509,15 +672,15 @@ class MapAwareSystem:
 
 ## Debug Controls
 
-| Key | Action |
-|-----|--------|
-| F3  | Toggle debug master |
-| F4  | Toggle player FOV overlay |
-| F5  | Toggle NPC FOV overlay |
-| F6  | Toggle chase target lines |
-| F7  | Toggle AI state labels |
-| F9  | Save game (saves/save.json) |
-| F10 | Load game |
+| Key | Action                         |
+|-----|--------------------------------|
+| F3  | Toggle debug master            |
+| F4  | Toggle player FOV overlay      |
+| F5  | Toggle NPC FOV overlay         |
+| F6  | Toggle chase target lines      |
+| F7  | Toggle AI state labels         |
+| F9  | Save game (saves/save.json)    |
+| F10 | Load game                      |
 
 ## Common Pitfalls
 

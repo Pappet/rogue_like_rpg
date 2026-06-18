@@ -45,6 +45,21 @@ class ConsumableService:
             category = LogCategory.HEALING if esper.has_component(user_ent, PlayerTag) else LogCategory.SYSTEM
             esper.dispatch_event("log_message", f"You drink the {item_name}. (+{heal_amt} HP)", None, category)
 
+        elif consumable.effect_type == "heal_mana":
+            current_mana = eff.mana if eff else stats.mana
+            max_mana = eff.max_mana if eff else stats.max_mana
+            if current_mana >= max_mana:
+                esper.dispatch_event("log_message", "Your mana is already full.")
+                return False
+
+            restore_amt = min(consumable.amount, max_mana - current_mana)
+            stats.mana += restore_amt
+            if eff:
+                eff.mana = stats.mana
+
+            category = LogCategory.HEALING if esper.has_component(user_ent, PlayerTag) else LogCategory.SYSTEM
+            esper.dispatch_event("log_message", f"You drink the {item_name}. (+{restore_amt} MP)", None, category)
+
         # Add more effect types here as needed
 
         # Consume the item

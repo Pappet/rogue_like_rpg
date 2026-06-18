@@ -12,10 +12,14 @@ from config import (
     COLOR_WHITE,
     COLOR_YELLOW,
     LOG_COLORS,
-    UI_COLOR_LOG_BG,
-    UI_COLOR_LOG_BORDER,
+    UI_THEME_BORDER,
+    UI_THEME_BORDER_DARK,
+    UI_THEME_GOLD,
+    UI_THEME_PANEL_BOTTOM,
+    UI_THEME_PANEL_TOP,
     LogCategory,
 )
+from core.ui import theme
 
 COLOR_MAP = {
     "white": COLOR_WHITE,
@@ -79,21 +83,36 @@ class MessageLog:
             self.messages.pop(0)
 
     def draw(self, surface: pygame.Surface):
-        # Draw background
-        pygame.draw.rect(surface, UI_COLOR_LOG_BG, self.rect)
-        pygame.draw.line(surface, UI_COLOR_LOG_BORDER, (self.rect.x, self.rect.y), (self.rect.right, self.rect.y), 2)
+        # Themed background with a bright accent rule along the top edge.
+        theme.fill_vertical_gradient(surface, self.rect, UI_THEME_PANEL_TOP, UI_THEME_PANEL_BOTTOM)
+        pygame.draw.line(surface, UI_THEME_BORDER_DARK, (self.rect.x, self.rect.y), (self.rect.right, self.rect.y), 3)
+        pygame.draw.line(
+            surface, UI_THEME_BORDER, (self.rect.x, self.rect.y + 2), (self.rect.right, self.rect.y + 2), 1
+        )
 
-        # Draw messages from bottom to top
-        x_start = self.rect.x + 10
-        y_bottom = self.rect.bottom - 5
+        # Heading
+        theme.draw_text(
+            surface,
+            "❧ Chronicle",
+            theme.get_font(16, bold=True),
+            UI_THEME_GOLD,
+            (self.rect.x + 10, self.rect.y + 6),
+            shadow=False,
+        )
+
+        # Messages from bottom to top; older lines fade toward the top.
+        x_start = self.rect.x + 12
+        y_bottom = self.rect.bottom - 6
+        top_limit = self.rect.top + 26
 
         for i, message in enumerate(reversed(self.messages)):
             y_pos = y_bottom - (i + 1) * self.line_height
-            if y_pos < self.rect.top + 5:
+            if y_pos < top_limit:
                 break
-
+            fade = max(0.45, 1.0 - i * 0.07)
             current_x = x_start
             for text_chunk, color in message:
-                surf = self.font.render(text_chunk, True, color)
+                draw_color = tuple(int(c * fade) for c in color) if fade < 1.0 else color
+                surf = self.font.render(text_chunk, True, draw_color)
                 surface.blit(surf, (current_x, y_pos))
                 current_x += surf.get_width()

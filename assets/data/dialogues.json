@@ -75,13 +75,37 @@
    }
   ]
  },
- "guard": [
-  "Move along, citizen.",
-  "Stay out of trouble.",
-  "The roads aren't safe at night.",
-  "I'm keeping watch. No need to worry.",
-  "Report anything suspicious to me."
- ],
+ "guard": {
+  "default": [
+   "Move along, citizen.",
+   "Stay out of trouble.",
+   "The roads aren't safe at night.",
+   "I'm keeping watch. No need to worry.",
+   "Report anything suspicious to me."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "guards": "hostile"
+    },
+    "lines": [
+     "You've a nerve showing your face to the watch.",
+     "Murderer. The next blade you see will be mine.",
+     "Step wrong and I'll cut you down where you stand."
+    ]
+   },
+   {
+    "when": {
+     "guards": "trusted"
+    },
+    "lines": [
+     "The watch is glad to have you, friend.",
+     "You've earned our respect. Walk easy.",
+     "Any trouble, and the guard stands with you."
+    ]
+   }
+  ]
+ },
  "shopkeeper": {
   "default": [
    "Looking to buy something?",
@@ -120,13 +144,37 @@
    }
   ]
  },
- "mayor": [
-  "Welcome to our humble village.",
-  "I try my best to keep the peace around here.",
-  "Please, cause no trouble during your stay.",
-  "The recent monster attacks have been concerning.",
-  "If you can help defend us, you'll be well rewarded."
- ],
+ "mayor": {
+  "default": [
+   "Welcome to our humble village.",
+   "I try my best to keep the peace around here.",
+   "Please, cause no trouble during your stay.",
+   "The recent monster attacks have been concerning.",
+   "If you can help defend us, you'll be well rewarded."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "quest": "ready"
+    },
+    "lines": [
+     "You've done it? Step inside — let's settle what you're owed.",
+     "Back already, and with good news I hope. Come, come.",
+     "Word reached me before you did. The council is grateful."
+    ]
+   },
+   {
+    "when": {
+     "quest": "active"
+    },
+    "lines": [
+     "Any progress on the matter we discussed?",
+     "The task still stands, and folk are counting on you.",
+     "No news yet? The errand won't run itself, traveler."
+    ]
+   }
+  ]
+ },
  "blacksmith": [
   "Need some steel forged?",
   "My blades never dull.",
@@ -138,6 +186,30 @@
   "...",
   "They nod at you.",
   "They don't seem interested in talking."
+ ],
+ "_gossip": [
+  "Have you seen {subject} about? Keeping to themselves lately.",
+  "{subject} swears the harvest will be better next year.",
+  "They say {subject} fancies someone across the square.",
+  "Word is {subject} had words with the mayor again.",
+  "Cold nights lately. My old bones feel every one.",
+  "The work's hard, but the roof holds, eh?",
+  "Heard the price of bread again? Robbery, I call it.",
+  "Quiet today. Quiet's good. Quiet means no wolves."
+ ],
+ "_gossip_friend": [
+  "Good soul, {subject}. Always lends a hand at harvest.",
+  "I'd trust {subject} with my last coin, and gladly.",
+  "{subject} sat with me through the fever last winter. Never forget that.",
+  "If you need help, ask {subject} — kindest in the village.",
+  "{subject} and I go back years. Salt of the earth, that one."
+ ],
+ "_gossip_rival": [
+  "Don't get me started on {subject}. Still owes me for the spring market.",
+  "{subject}? Wouldn't share water in a drought, that one.",
+  "Mark my words, {subject} shorted me on the last trade.",
+  "I've no quarrel with anyone — save {subject}, and they know why.",
+  "Keep your purse shut around {subject}, is all I'll say."
  ],
  "hunter": {
   "default": [

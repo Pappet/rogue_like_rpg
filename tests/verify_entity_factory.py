@@ -48,8 +48,8 @@ def test_entity_registry_load():
     orc = entity_registry.get("orc")
     assert orc is not None, "entity_registry.get('orc') should return a template"
     assert orc.name == "Orc"
-    assert orc.hp == 10
-    assert orc.power == 3
+    assert orc.hp == 12
+    assert orc.power == 4
     assert orc.sprite == "O"
     assert orc.color == (0, 255, 0)
     assert orc.sprite_layer == "ENTITIES"
@@ -71,10 +71,10 @@ def test_entity_factory_create():
 
     # Verify Stats
     stats = world.component_for_entity(entity_id, Stats)
-    assert stats.hp == 10
-    assert stats.max_hp == 10
-    assert stats.power == 3
-    assert stats.defense == 0
+    assert stats.hp == 12
+    assert stats.max_hp == 12
+    assert stats.power == 4
+    assert stats.defense == 1
 
     # Verify Name
     name = world.component_for_entity(entity_id, Name)

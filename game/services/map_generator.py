@@ -13,13 +13,27 @@ from game.map.map_container import MapContainer
 from game.map.map_generator_utils import draw_rectangle, get_nearest_walkable_tile
 from game.map.map_layer import MapLayer
 from game.map.tile import Tile, VisibilityState
+from game.services.gather_service import create_resource_node
+from game.services.housing_service import HousingService
 from game.services.map_service import MapService
+from game.services.social_service import SocialService
 from game.services.spawn_service import SpawnService
 
 WILDERNESS_SIZE = 40
 
 # House style -> wall material for both the exterior shell and the interior.
 HOUSE_WALL_MATERIAL = {"home": "wall_wood", "tavern": "wall_wood", "shop": "wall_stone"}
+
+# Crafting-station type -> the tile id stamped onto the map (ROADMAP Phase H).
+STATION_TILES = {
+    "forge": "station_forge",
+    "anvil": "station_anvil",
+    "mill": "station_mill",
+    "oven": "station_oven",
+    "tannery": "station_tannery",
+    "herbalist": "station_herbalist",
+    "jeweler": "station_jeweler",
+}
 
 # Light props placed by the generator. All burn dusk-to-dawn (night_only):
 # they reveal their surroundings via VisibilitySystem and get a warm glow
@@ -372,10 +386,31 @@ class MapGenerator:
             lx, ly = get_nearest_walkable_tile(village_layers[0], lx, ly)
             self.place_light(world, light["type"], lx, ly)
 
+        # Scenario-authored crafting stations (forge, mill, oven, ...): the
+        # player bumps the (non-walkable) station tile to open its bench.
+        for station in config.get("stations", []):
+            sx, sy = get_nearest_walkable_tile(village_layers[0], station["pos"][0], station["pos"][1])
+            village_layers[0].tiles[sy][sx].set_type(STATION_TILES.get(station["type"], "station_forge"))
+
+        # Scenario-authored resource nodes (grain field, ore vein): bump to
+        # harvest raw materials. Created as entities before freeze.
+        for node in config.get("resources", []):
+            rx, ry = get_nearest_walkable_tile(village_layers[0], node["pos"][0], node["pos"][1])
+            create_resource_node(world, node["kind"], rx, ry, 0)
+
         # --- SPAWN VILLAGE NPCS ---
         for npc in config.get("village_npcs", []):
             nx, ny = get_nearest_walkable_tile(village_layers[0], npc["pos"][0], npc["pos"][1])
-            EntityFactory.create(world, npc["type"], nx, ny)
+            EntityFactory.create(world, npc["type"], nx, ny, merchant_override=npc.get("merchant"))
+
+        # Capacity-based housing: hand out beds, send the rest to the hearth,
+        # and tell everyone where the village's social centre is (Living
+        # Village). Only this scenario's exterior NPCs are live right now.
+        HousingService.assign(world, config, village_layers[0])
+
+        # Individual identity: name the common folk and wire their friendships
+        # and rivalries (Phase L slice 3), so gossip names real people.
+        SocialService.assign(world, seed=self._map_seed(map_id))
 
         # Settlements are civilized ground: no random monster spawns here.
         # Wildlife and monsters live in the settlement's wilderness map.
@@ -400,7 +435,7 @@ class MapGenerator:
             # --- SPAWN HOUSE NPCS ---
             for npc in h.get("npcs", []):
                 nx, ny = get_nearest_walkable_tile(h_container.layers[0], npc["pos"][0], npc["pos"][1])
-                EntityFactory.create(world, npc["type"], nx, ny)
+                EntityFactory.create(world, npc["type"], nx, ny, merchant_override=npc.get("merchant"))
 
             # Portal back to Village
             vx, vy = h["v_pos"]
@@ -535,6 +570,15 @@ class MapGenerator:
                 x, y = walkable[cursor]
                 cursor += 1
                 EntityFactory.create(world, template_id, x, y)
+
+        # Harvestable resource nodes scattered per the biome's resource table.
+        for kind, count in biome.get("resources", []):
+            for _ in range(count):
+                if cursor >= len(walkable):
+                    break
+                x, y = walkable[cursor]
+                cursor += 1
+                create_resource_node(world, kind, x, y, 0)
 
         container.freeze(world)
         return container

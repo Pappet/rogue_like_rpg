@@ -1,6 +1,5 @@
 import esper
 
-from config import SpriteLayer
 from core.visibility_service import VisibilityService
 from game.components import EffectiveStats, Hidden, LightSource, Name, PlayerTag, Position, Stats
 from game.map.tile import VisibilityState
@@ -64,21 +63,13 @@ class VisibilitySystem(esper.Processor, MapAwareSystem):
             if not (0 <= layer_index < len(self._map_container.layers)):
                 return lambda x, y: False
 
-            tiles = self._map_container.layers[layer_index].tiles
-
             def is_transparent(x, y):
-                if x < 0 or y < 0:
-                    return False
-                try:
-                    tile = tiles[y][x]
-                    # Custom logic for transparency:
-                    if not tile.transparent:
-                        return False
-
-                    # Also check for '#' in GROUND layer as a fallback/convention
-                    return tile.sprites.get(SpriteLayer.GROUND) != "#"
-                except IndexError:
-                    return False
+                if 0 <= layer_index < len(self._map_container.layers):
+                    layer = self._map_container.layers[layer_index]
+                    if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
+                        tile = layer.tiles[y][x]
+                        return tile.is_transparent
+                return False
 
             transparency_funcs[layer_index] = is_transparent
             return is_transparent

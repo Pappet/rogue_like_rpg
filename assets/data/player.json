@@ -7,8 +7,8 @@
   255
  ],
  "sprite_layer": "ENTITIES",
- "hp": 100,
- "max_hp": 100,
+ "hp": 30,
+ "max_hp": 30,
  "power": 5,
  "defense": 2,
  "mana": 50,
@@ -17,12 +17,6 @@
  "intelligence": 10,
  "max_carry_weight": 20.0,
  "actions": [
-  {
-   "name": "Move"
-  },
-  {
-   "name": "Enter Portal"
-  },
   {
    "name": "Investigate",
    "range": 10,
@@ -39,9 +33,6 @@
   },
   {
    "name": "Wait"
-  },
-  {
-   "name": "Items"
   }
  ],
  "gold": 50

@@ -38,7 +38,7 @@ GEN_STOCK_THRESHOLD = 2.0  # consumed goods below this stock trigger a request
 GEN_DELIVER_COUNT = 2
 GEN_DELIVER_REWARD_FACTOR = 2.0  # reward = item value * count * factor
 GEN_KILL_COUNT = 2
-GEN_KILL_REWARD = 40
+GEN_KILL_REWARD = 50
 GEN_WOLF_EVENT_ID = "wolves_spotted"
 GEN_EVENT_MAX_AGE_TICKS = 3 * 24 * 60  # wolf sightings older than 3 days expire
 
@@ -56,6 +56,10 @@ class Quest:
     progress: int = 0
     source: str = "authored"  # authored | generated
     cause_event_id: str = ""  # chronicle event that caused this quest (G2)
+    # Quest chains: ids that must be turned_in before this is offered. A quest
+    # with unmet prerequisites stays "offered" but is hidden until they clear,
+    # so accepting one stage unlocks the next (no extra state to serialize).
+    prerequisites: list[str] = field(default_factory=list)
 
 
 # eq=False keeps identity hashing — esper event handlers live in weakref sets.
@@ -89,14 +93,26 @@ class QuestService:
                     target=dict(entry["target"]),
                     reward_gold=int(entry["reward_gold"]),
                     source="authored",
+                    prerequisites=list(entry.get("prerequisites", [])),
                 )
             )
         logger.info("Loaded %d quests (%d total).", len(data), len(self.quests))
 
     # --- Queries ---------------------------------------------------------------
 
+    def _prerequisites_met(self, quest: Quest) -> bool:
+        """True if every prerequisite quest of a chain has been turned in."""
+        if not quest.prerequisites:
+            return True
+        done = {q.id for q in self.quests if q.state == "turned_in"}
+        return all(prereq in done for prereq in quest.prerequisites)
+
     def offers_at(self, location_id: str | None) -> list[Quest]:
-        return [q for q in self.quests if q.state == "offered" and q.giver_location == location_id]
+        return [
+            q
+            for q in self.quests
+            if q.state == "offered" and q.giver_location == location_id and self._prerequisites_met(q)
+        ]
 
     def active_quests(self) -> list[Quest]:
         return [q for q in self.quests if q.state in ("active", "completed")]
@@ -115,8 +131,16 @@ class QuestService:
         return result
 
     def open_offers_elsewhere(self, location_id: str | None) -> list[Quest]:
-        """Offers at OTHER settlements — rumor material (Phase E3)."""
-        return [q for q in self.quests if q.state == "offered" and q.giver_location != location_id]
+        """Offers at OTHER settlements — rumor material (Phase E3).
+
+        Locked chain stages are excluded: the town only gossips about work
+        that can actually be picked up right now.
+        """
+        return [
+            q
+            for q in self.quests
+            if q.state == "offered" and q.giver_location != location_id and self._prerequisites_met(q)
+        ]
 
     # --- Lifecycle ----------------------------------------------------------------
 
@@ -125,6 +149,17 @@ class QuestService:
             return
         quest.state = "active"
         esper.dispatch_event("log_message", f"Quest accepted: [color=yellow]{quest.title}[/color]")
+
+    def _announce_unlocked(self, completed_id: str) -> None:
+        """Tell the player about chain stages this turn-in just unlocked."""
+        for quest in self.quests:
+            if quest.state != "offered" or completed_id not in quest.prerequisites:
+                continue
+            if self._prerequisites_met(quest):
+                esper.dispatch_event(
+                    "log_message",
+                    f"A new task awaits in {quest.giver_location}: [color=yellow]{quest.title}[/color]",
+                )
 
     def turn_in(self, quest: Quest) -> bool:
         """Complete a quest at its giver. Returns True on success."""
@@ -163,6 +198,7 @@ class QuestService:
             None,
             LogCategory.LOOT,
         )
+        self._announce_unlocked(quest.id)
         return True
 
     # --- Progress hooks ---------------------------------------------------------
@@ -207,6 +243,7 @@ class QuestService:
                     None,
                     LogCategory.LOOT,
                 )
+                self._announce_unlocked(quest.id)
 
         # Generate offers for EVERY settlement (economy and chronicle are
         # global state) so rumors can point at requests before the player

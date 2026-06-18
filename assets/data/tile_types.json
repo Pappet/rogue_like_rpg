@@ -511,5 +511,159 @@
    32
   ],
   "occludes_below": false
+ },
+ {
+  "id": "station_forge",
+  "name": "Smelting Forge",
+  "base_description": "A roaring forge with a crucible. You could smelt ore into ingots here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "forge",
+  "sprites": {
+   "GROUND": "♨"
+  },
+  "color": [
+   230,
+   130,
+   60
+  ],
+  "bg_color": [
+   52,
+   28,
+   20
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "station_anvil",
+  "name": "Anvil",
+  "base_description": "A heavy iron anvil and a smith's hammer. You could work ingots into arms and armor here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "anvil",
+  "sprites": {
+   "GROUND": "⚒"
+  },
+  "color": [
+   190,
+   190,
+   200
+  ],
+  "bg_color": [
+   40,
+   38,
+   40
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "station_mill",
+  "name": "Millstone",
+  "base_description": "A great grinding millstone. You could mill grain into flour here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "mill",
+  "sprites": {
+   "GROUND": "◍"
+  },
+  "color": [
+   180,
+   175,
+   165
+  ],
+  "bg_color": [
+   46,
+   40,
+   30
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "station_oven",
+  "name": "Baker's Oven",
+  "base_description": "A stone oven, warm and smelling of bread. You could bake here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "oven",
+  "sprites": {
+   "GROUND": "▢"
+  },
+  "color": [
+   210,
+   150,
+   90
+  ],
+  "bg_color": [
+   50,
+   30,
+   22
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "station_tannery",
+  "name": "Tanning Rack",
+  "base_description": "A rack of stretched hides over a tanning pit. You could work leather here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "tannery",
+  "sprites": {
+   "GROUND": "ƭ"
+  },
+  "color": [
+   150,
+   110,
+   70
+  ],
+  "bg_color": [
+   44,
+   34,
+   24
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "station_herbalist",
+  "name": "Herbalist's Table",
+  "base_description": "A table of mortars, vials and drying herbs. You could prepare remedies here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "herbalist",
+  "sprites": {
+   "GROUND": "⚗"
+  },
+  "color": [
+   120,
+   200,
+   130
+  ],
+  "bg_color": [
+   30,
+   44,
+   30
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "station_jeweler",
+  "name": "Jeweler's Bench",
+  "base_description": "A bench of tiny files, silver and loose gems. You could set jewelry here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "jeweler",
+  "sprites": {
+   "GROUND": "✦"
+  },
+  "color": [
+   220,
+   220,
+   235
+  ],
+  "bg_color": [
+   34,
+   34,
+   46
+  ],
+  "occludes_below": false
  }
 ]

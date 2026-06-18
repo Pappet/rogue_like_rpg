@@ -7,104 +7,148 @@ from config import (
     SCREEN_WIDTH,
     TILE_SIZE,
     UI_BAR_HEIGHT,
-    UI_COLOR_BAR_BG,
-    UI_COLOR_BG_SIDEBAR,
-    UI_COLOR_BORDER,
-    UI_COLOR_HP,
-    UI_COLOR_TEXT_BRIGHT,
-    UI_COLOR_TEXT_DIM,
     UI_PADDING,
+    UI_THEME_DANGER,
+    UI_THEME_GOLD,
+    UI_THEME_HP,
+    UI_THEME_HP_HI,
+    UI_THEME_INK,
+    UI_THEME_INK_DIM,
+    UI_THEME_XP,
     GameStates,
 )
+from core.ui import theme
 from core.ui.window_base import UIWindow
-from game.components import Description, EffectiveStats, Name, Portable, Position, Stats, Targeting
+from game.components import (
+    AIBehaviorState,
+    Alignment,
+    Description,
+    EffectiveStats,
+    Name,
+    Portable,
+    Position,
+    Stats,
+    Targeting,
+    Value,
+)
 from game.map.tile import VisibilityState
+
+# Name colour by disposition, so a threat reads at a glance.
+_ALIGN_COLOR = {
+    Alignment.HOSTILE: UI_THEME_DANGER,
+    Alignment.FRIENDLY: UI_THEME_XP,
+    Alignment.NEUTRAL: UI_THEME_INK,
+}
 
 
 class TooltipWindow(UIWindow):
     def __init__(self, rect, entities):
         super().__init__(rect)
         self.entities = entities  # List of entity IDs
-        self.font_name = pygame.font.Font(None, 24)
-        self.font_desc = pygame.font.Font(None, 20)
-        self.font_stats = pygame.font.Font(None, 18)
+        self.font_name = theme.get_font(23, bold=True)
+        self.font_desc = theme.get_font(19, italic=True)
+        self.font_stats = theme.get_font(18)
+
+    def _name_color(self, ent):
+        behavior = esper.try_component(ent, AIBehaviorState)
+        if behavior is not None:
+            return _ALIGN_COLOR.get(behavior.alignment, UI_THEME_GOLD)
+        return UI_THEME_GOLD
 
     def draw(self, surface):
         if not self.entities:
             return
 
-        # Draw background
-        pygame.draw.rect(surface, UI_COLOR_BG_SIDEBAR, self.rect)
-        pygame.draw.rect(surface, UI_COLOR_BORDER, self.rect, 1)
+        theme.draw_panel(surface, self.rect, shadow=True, ornaments=False)
 
-        curr_y = self.rect.y + UI_PADDING
+        pad = UI_PADDING + 2
+        curr_y = self.rect.y + pad
+        inner_w = self.rect.width - 2 * pad
 
         for ent in self.entities:
-            # Name
             name_comp = esper.try_component(ent, Name)
             name_str = name_comp.name if name_comp else "Unknown"
-            name_surf = self.font_name.render(name_str, True, UI_COLOR_TEXT_BRIGHT)
-            surface.blit(name_surf, (self.rect.x + UI_PADDING, curr_y))
-            curr_y += 25
+            theme.draw_text(surface, name_str, self.font_name, self._name_color(ent), (self.rect.x + pad, curr_y))
+            curr_y += 26
+            theme.draw_divider(surface, self.rect.x + pad, self.rect.right - pad, curr_y, ornament=False)
+            curr_y += 6
 
-            # HP Bar if it has stats
             stats = esper.try_component(ent, Stats)
             eff = esper.try_component(ent, EffectiveStats) or stats
             if stats:
-                bar_width = self.rect.width - 2 * UI_PADDING
-                # BG
-                pygame.draw.rect(surface, UI_COLOR_BAR_BG, (self.rect.x + UI_PADDING, curr_y, bar_width, UI_BAR_HEIGHT))
-                # Fill
-                hp_pct = max(0, min(1, stats.hp / stats.max_hp))
-                pygame.draw.rect(
-                    surface, UI_COLOR_HP, (self.rect.x + UI_PADDING, curr_y, int(bar_width * hp_pct), UI_BAR_HEIGHT)
+                theme.draw_bar(
+                    surface,
+                    (self.rect.x + pad, curr_y, inner_w, UI_BAR_HEIGHT),
+                    max(0, min(1, stats.hp / max(1, stats.max_hp))),
+                    UI_THEME_HP,
+                    hi_color=UI_THEME_HP_HI,
+                    label=f"HP {stats.hp}/{stats.max_hp}",
+                    font=self.font_stats,
                 )
+                curr_y += UI_BAR_HEIGHT + 8
 
-                hp_text = f"HP: {stats.hp}/{stats.max_hp}"
-                hp_surf = self.font_stats.render(hp_text, True, UI_COLOR_TEXT_BRIGHT)
-                surface.blit(hp_surf, (self.rect.x + UI_PADDING + 5, curr_y + 2))
-                curr_y += UI_BAR_HEIGHT + 10
-
-                # Other stats
                 if eff:
-                    stats_text = f"POW: {eff.power}  DEF: {eff.defense}  PER: {eff.perception}  INT: {eff.intelligence}"
-                    stats_surf = self.font_stats.render(stats_text, True, UI_COLOR_TEXT_DIM)
-                    surface.blit(stats_surf, (self.rect.x + UI_PADDING, curr_y))
-                    curr_y += 20
+                    stats_text = f"POW {eff.power}   DEF {eff.defense}   PER {eff.perception}   INT {eff.intelligence}"
+                    theme.draw_text(
+                        surface,
+                        stats_text,
+                        self.font_stats,
+                        UI_THEME_INK_DIM,
+                        (self.rect.x + pad, curr_y),
+                        shadow=False,
+                    )
+                    curr_y += 22
 
-            # Portable / Weight
             portable = esper.try_component(ent, Portable)
             if portable:
-                weight_text = f"Weight: {portable.weight}kg"
-                weight_surf = self.font_stats.render(weight_text, True, UI_COLOR_TEXT_DIM)
-                surface.blit(weight_surf, (self.rect.x + UI_PADDING, curr_y))
-                curr_y += 20
+                theme.draw_text(
+                    surface,
+                    f"Weight: {portable.weight} kg",
+                    self.font_stats,
+                    UI_THEME_INK_DIM,
+                    (self.rect.x + pad, curr_y),
+                    shadow=False,
+                )
+                curr_y += 22
 
-            # Description
+            value = esper.try_component(ent, Value)
+            if value:
+                theme.draw_text(
+                    surface,
+                    f"Value: {value.amount}g",
+                    self.font_stats,
+                    UI_THEME_GOLD,
+                    (self.rect.x + pad, curr_y),
+                    shadow=False,
+                )
+                curr_y += 22
+
             desc_comp = esper.try_component(ent, Description)
             if desc_comp:
                 desc_text = desc_comp.get(stats)
-                # Wrap text
                 words = desc_text.split(" ")
                 lines = []
                 curr_line = ""
                 for word in words:
                     test_line = curr_line + word + " "
-                    if self.font_desc.size(test_line)[0] < self.rect.width - 2 * UI_PADDING:
+                    if self.font_desc.size(test_line)[0] < inner_w:
                         curr_line = test_line
                     else:
                         lines.append(curr_line)
                         curr_line = word + " "
                 lines.append(curr_line)
-
                 for line in lines:
-                    line_surf = self.font_desc.render(line.strip(), True, UI_COLOR_TEXT_DIM)
-                    surface.blit(line_surf, (self.rect.x + UI_PADDING, curr_y))
-                    curr_y = curr_y + 18
+                    theme.draw_text(
+                        surface,
+                        line.strip(),
+                        self.font_desc,
+                        UI_THEME_INK_DIM,
+                        (self.rect.x + pad, curr_y),
+                        shadow=False,
+                    )
+                    curr_y += 19
 
-            curr_y += 10  # Spacing between entities
-
-            # Stop if we exceed rect height
+            curr_y += 10
             if curr_y > self.rect.bottom - 20:
                 break
 

@@ -29,15 +29,15 @@ does not wait for the player."
 
 ## 2. What we already have (the foundation this builds on)
 
-| Building block | Status | Reused for |
-|---|---|---|
-| World clock, day/night, 1 tick per turn | done | global simulation time |
-| NPC schedules (`schedules.json`, target_meta "home") | done | abstract off-screen activity |
-| AI states (WORK/SLEEP/SOCIALIZE/PATROL/CHASE...) | done | needs-driven behavior |
-| Multi-map + portals + freeze/thaw, `travel_ticks` | done | settlements & travel time |
-| Data-driven scenarios (`scenarios/village.json`) | done | more settlements |
-| Items/equipment/consumables, loot, bump-dialogue | done | trade & quest rewards |
-| `WorldMapState` (currently: minimap of active map) | stub | overworld travel screen |
+| Building block                                                         | Status | Reused for                         |
+|------------------------------------------------------------------------|--------|------------------------------------|
+| World clock, day/night, 1 tick per turn                                | done   | global simulation time             |
+| NPC schedules (`schedules.json`, target_meta "home")                   | done   | abstract off-screen activity       |
+| AI states (WORK/SLEEP/SOCIALIZE/PATROL/CHASE...)                       | done   | needs-driven behavior              |
+| Multi-map + portals + freeze/thaw, `travel_ticks`                      | done   | settlements & travel time          |
+| Data-driven scenarios (`scenarios/village.json`)                       | done   | more settlements                   |
+| Items/equipment/consumables, loot, bump-dialogue                       | done   | trade & quest rewards              |
+| `WorldMapState` (currently: minimap of active map)                     | stub   | overworld travel screen            |
 
 ## 3. Phases
 
@@ -234,13 +234,105 @@ Verified by `tests/verify_world_seed.py`,
 `verify_chronicle_consequences.py`, `verify_supply_chains.py`,
 `verify_bandit_activity.py` and `verify_combat_depth.py`.
 
+### Phase H — Crafting ✅ (done)
+
+*The player joins the supply chain instead of only trading along it.*
+
+Bumping a crafting-station tile opens a recipe window; a craft consumes
+input item entities and creates the output (`ItemFactory`), costing in-game
+time. Stations are placed per settlement by profile and metalwork is split
+forge (smelt ore→ingot, Brackenfen) / anvil (smith ingot→arms, Eastmoor),
+mirroring the cross-settlement economy chain. Shipped as `RecipeRegistry` +
+`recipes.json`, `CraftingService`, `CraftWindow` and the `craft_requested`
+flow (mirror of rest tiles). Verified by `tests/verify_crafting.py`.
+
+### Phase I — Character Progression ✅ (done)
+
+*The character grows: foundation for crafting quality tiers and combat depth.*
+
+Learn-by-doing skills — a `Skills` component accumulates XP per skill, level
+derived from a rising curve (`SkillService`). Crafting trains the station's
+skill, slaying foes trains `combat`; level-ups log and emit `skill_increased`.
+Shown on the character sheet. Verified by `tests/verify_skills.py`.
+
+### Phase J — Crafting Quality & Quantity ✅ (done)
+
+*Skill finally pays off at the workbench.*
+
+Higher skill makes a better craft, split by what the recipe makes
+(`crafting_quality.py`): **equippable** output rolls a named **quality** tier
+(*Crude/Fine/Masterwork* — immersive, the grade is in the name, no "+N"),
+scaling the instance's stats and value; **non-equippable** output (food,
+potions, ingots, leather) scales in **quantity** — a master baker pulls more
+loaves from the same flour, making the supply chain pay as you improve. Quality
+rolls draw from a run-seeded RNG. Verified by
+`tests/verify_crafting_quality.py`.
+
+### Phase K — Raw-material Supply ✅ (done)
+
+*Where do raw materials come from? Now: you gather them, and shops recover.*
+
+Two renewable sources close the gather→craft loop. **Resource nodes**
+(`ResourceNode` entities — herb patches, ore veins, grain fields) are bumped to
+harvest; they yield the raw item, train a gathering skill (`foraging`/`mining`/
+`farming`, whose level raises the yield) and respawn after a cooldown. Placement
+is data-driven (biome `resources` scatter — swamp bog iron — plus scenario
+`resources` positions). **Merchant restock**: shops refill their stock toward
+the starting menu over time, gated by the settlement's abstract stock so
+shortages still bite. Verified by `tests/verify_gathering.py` and
+`tests/verify_restock.py`.
+
 ---
 
-**All seven phases of this roadmap are complete.** Candidates for the
-next planning round: multiple save slots, NPC↔NPC relationships
-(deferred from Phase D), a real faction model (relations matrix,
-faction reputation), deeper dungeon levels with stairs, quest chains,
-character progression (learn-by-doing skills), and a walkable overworld.
+### Phase L — Quest Chains & Reactive Dialogue ✅ (slice 1)
+
+*Quests gain memory: stages unlock in sequence and givers acknowledge them.*
+
+Authored quests may declare `prerequisites` (quest ids that must be
+`turned_in` first); a gated stage stays hidden from offers and rumors until
+its chain clears, and turning a stage in announces what it unlocks. Shipped
+with the "Brackenfen's Lifeline" chain (deliver bread → cull boars → carry
+word to Eastmoor) and a `quest` dialogue-context key so the mayor reacts to
+work in progress / ready to report. Verified by `tests/verify_quests.py`.
+
+*Slice 2 — Ambient NPC↔NPC gossip:* `GossipSystem` (phase system) lets
+socialising townsfolk standing close together exchange a line the nearby
+player overhears. Topics draw from the local chronicle (real off-screen
+events) or a generic `_gossip` pool and may name a third villager, so the
+chatter reflects the simulation. Rate-limited, run-seeded, skipped during
+fast-forward. Verified by `tests/verify_gossip.py`.
+
+*Slice 3 — Identity & relationships:* `SocialService` (runs at village build,
+after housing) gives the common crowd individual given names from
+`names.json` and a `Relationships` component wiring each to a few peers as
+friends or a rival. `GossipSystem` reads it so the speaker gossips about
+someone they actually know — warmly about friends (`_gossip_friend`), sharply
+about rivals (`_gossip_rival`). The town is now full of named people with
+opinions of each other. Verified by `tests/verify_social_service.py` and the
+relationship-tone cases in `tests/verify_gossip.py`.
+
+*Slice 4 — Faction model:* `FactionService` + `factions.json` give the world
+real groups (townsfolk, town_guard, bandits, monsters, wildlife) with a
+symmetric relations matrix and a per-faction player standing. Killing a
+peaceful member is a crime (penalty to its faction + allies); killing a
+hostile one is a favour (bonus to its enemies) — so clearing bandits warms the
+guard, and murdering townsfolk eventually makes the guard turn on you.
+Standing translates to behaviour by flipping affected NPCs' alignment to
+HOSTILE (and back) via `sync_alignments()`, run after kills, thaws and load;
+the guard's dialogue reacts to your standing. Standing is saved. Verified by
+`tests/verify_factions.py`. (Next candidates: faction-driven on-map brawls
+generalised from `Skirmisher`, faction-priced trade, and joinable factions.)
+
+---
+
+**All seven roadmap phases plus crafting (H), progression (I), craft
+quality/quantity (J), raw-material supply (K) and quest chains (L) are
+complete.** Candidates for the next planning round (still building toward the
+"deepen the world" goal): NPC↔NPC gossip & relationships (deferred from
+Phase D), a real faction model (relations matrix, faction reputation), binding
+quests to a specific giver NPC, combat scaling from the `combat` skill,
+multiple save slots, deeper dungeon levels with stairs, and a walkable
+overworld.
 
 ## 4. Recommended order & why
 

@@ -51,3 +51,41 @@ UI_COLOR_WINDOW_ERROR = (255, 100, 100)
 # Message Log Colors
 UI_COLOR_LOG_BG = (15, 15, 15)
 UI_COLOR_LOG_BORDER = (100, 100, 100)
+
+# ── Immersive UI theme (aged-tome / parchment palette) ──────────────────
+# Panels render as a vertical gradient between *_TOP and *_BOTTOM, framed by
+# a near-black outer edge and a bronze inner rule, floating on a drop shadow.
+# Reading areas (lists, detail panes) use the lighter PARCHMENT tones.
+UI_THEME_PANEL_TOP = (48, 39, 30)
+UI_THEME_PANEL_BOTTOM = (27, 21, 16)
+UI_THEME_PARCHMENT_TOP = (72, 60, 43)
+UI_THEME_PARCHMENT_BOTTOM = (50, 41, 30)
+UI_THEME_BORDER = (150, 116, 64)  # bronze/gold inner rule + corner ornaments
+UI_THEME_BORDER_DARK = (16, 12, 9)  # near-black outer edge
+UI_THEME_SHADOW_ALPHA = 130  # drop-shadow opacity under panels
+
+# Ink-on-parchment text tones
+UI_THEME_INK = (226, 210, 178)  # primary text
+UI_THEME_INK_DIM = (160, 144, 118)  # secondary text
+UI_THEME_INK_MUTED = (112, 100, 82)  # tertiary / disabled
+UI_THEME_GOLD = (238, 198, 108)  # headings / titles / highlights
+UI_THEME_SELECT_BG = (94, 71, 36)  # selected-row fill
+UI_THEME_SELECT_EDGE = (216, 172, 88)  # selected-row accent edge
+
+# Status / semantic accents tuned for the warm background
+UI_THEME_HP = (176, 52, 46)
+UI_THEME_HP_HI = (224, 92, 76)  # bright end of the HP gradient
+UI_THEME_MANA = (58, 96, 188)
+UI_THEME_MANA_HI = (108, 156, 234)
+UI_THEME_XP = (118, 186, 94)
+UI_THEME_COIN = (240, 200, 96)  # gold pieces
+UI_THEME_DANGER = (206, 84, 64)
+UI_THEME_BAR_BG = (22, 18, 14)  # recessed bar trough
+
+# Time-of-day accent for the HUD clock, keyed by WorldClock.phase
+UI_THEME_PHASE = {
+    "dawn": (240, 178, 120),
+    "day": (246, 228, 162),
+    "dusk": (208, 144, 198),
+    "night": (134, 152, 222),
+}

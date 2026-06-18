@@ -8,7 +8,7 @@ import esper
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from core.ecs import reset_world
-from game.components import Activity, AIBehaviorState, AIState, Alignment, Name, Position, Schedule
+from game.components import Activity, AIBehaviorState, AIState, Alignment, Position, Residence, Schedule, TemplateId
 from game.content.resource_loader import ResourceLoader
 from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
@@ -39,9 +39,11 @@ def test_village_population():
 
     # Find entities in Village map
     # village_map.thaw(world) should have been called in create_village_scenario
+    # Identify NPCs by template id: common folk are renamed to individual
+    # given names by SocialService, so a name filter would no longer match.
     npcs = []
-    for ent, (pos, name) in world.get_components(Position, Name):
-        if pos.layer == 0 and ("Guard" in name.name or "Villager" in name.name):
+    for ent, (pos, tid) in world.get_components(Position, TemplateId):
+        if pos.layer == 0 and tid.id in ("guard", "villager"):
             npcs.append(ent)
 
     print(f"Found {len(npcs)} NPCs in Village map")
@@ -71,8 +73,8 @@ def test_village_population():
 
     # Find a guard
     guard_ent = None
-    for ent, (name, pos) in world.get_components(Name, Position):
-        if "Guard" in name.name:
+    for ent, (tid, pos) in world.get_components(TemplateId, Position):
+        if tid.id == "guard":
             guard_ent = ent
             break
 
@@ -97,17 +99,35 @@ def test_village_population():
     assert activity.current_activity == "SOCIALIZE"
     assert ai_state.state == AIState.SOCIALIZE
 
-    # Test 02:00 (SLEEP)
-    clock_mock.hour = 2
-    # Reset position to home to trigger SLEEP state
-    pos = world.component_for_entity(guard_ent, Position)
-    pos.x, pos.y = activity.home_pos
+    # Test 02:00 (night watch): a guard has no bed, so HousingService marks
+    # it bedless and at night it keeps watch at the hearth/gate instead of
+    # sleeping. The activity stays "SLEEP" (schedule invariant) but the AI
+    # state is SOCIALIZE so it mills about the fire.
+    residence = world.component_for_entity(guard_ent, Residence)
+    assert residence.housed is False, "Guards take the night watch, not a bed"
+    assert residence.gather_pos is not None
 
+    clock_mock.hour = 2
     schedule_system.process(clock_mock, village_map)
 
-    print(f"Guard activity at 02:00: {activity.current_activity}")
+    print(f"Guard activity at 02:00: {activity.current_activity}, state={ai_state.state}")
     assert activity.current_activity == "SLEEP"
-    assert ai_state.state == AIState.SLEEP
+    assert ai_state.state == AIState.SOCIALIZE
+    assert activity.target_pos == residence.gather_pos
+
+    # A housed villager, by contrast, sleeps at its assigned bed at night.
+    housed_villager = None
+    for ent, (tid, res) in world.get_components(TemplateId, Residence):
+        if tid.id == "villager" and res.housed:
+            housed_villager = ent
+            break
+    if housed_villager is not None:
+        v_activity = world.component_for_entity(housed_villager, Activity)
+        v_state = world.component_for_entity(housed_villager, AIBehaviorState)
+        v_pos = world.component_for_entity(housed_villager, Position)
+        v_pos.x, v_pos.y = v_activity.home_pos
+        schedule_system.process(clock_mock, village_map)
+        assert v_state.state == AIState.SLEEP, "A housed villager sleeps in its bed at night"
 
     print("ScheduleSystem verification PASSED")
 

@@ -73,6 +73,7 @@ GameController ──▶ GameState subclasses (TitleScreen, Game, WorldMapState,
 ```
 
 **System categories:**
+
 - **Frame Processors** — run every frame via `esper.process()` (TurnSystem, CombatSystem, ...)
 - **Phase Systems** — called manually during specific game phases (AISystem, ScheduleSystem)
 - **Render Systems** — called during `draw()` (RenderSystem, UISystem, DebugRenderSystem)

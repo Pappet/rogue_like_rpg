@@ -1,0 +1,138 @@
+[
+ {
+  "id": "smelt_iron_ingot",
+  "station": "forge",
+  "inputs": {"iron_ore": 2},
+  "output": "iron_ingot",
+  "output_qty": 1,
+  "ticks": 20
+ },
+ {
+  "id": "smelt_silver_ingot",
+  "station": "forge",
+  "inputs": {"silver_ore": 2},
+  "output": "silver_ingot",
+  "output_qty": 1,
+  "ticks": 25
+ },
+ {
+  "id": "smith_dagger",
+  "station": "anvil",
+  "inputs": {"iron_ingot": 1},
+  "output": "dagger",
+  "output_qty": 1,
+  "ticks": 25
+ },
+ {
+  "id": "smith_short_sword",
+  "station": "anvil",
+  "inputs": {"iron_ingot": 2},
+  "output": "short_sword",
+  "output_qty": 1,
+  "ticks": 35
+ },
+ {
+  "id": "smith_iron_sword",
+  "station": "anvil",
+  "inputs": {"iron_ingot": 3},
+  "output": "iron_sword",
+  "output_qty": 1,
+  "ticks": 45
+ },
+ {
+  "id": "smith_iron_helm",
+  "station": "anvil",
+  "inputs": {"iron_ingot": 2},
+  "output": "iron_helm",
+  "output_qty": 1,
+  "ticks": 40
+ },
+ {
+  "id": "smith_chainmail",
+  "station": "anvil",
+  "inputs": {"iron_ingot": 4},
+  "output": "chainmail",
+  "output_qty": 1,
+  "ticks": 60
+ },
+ {
+  "id": "mill_flour",
+  "station": "mill",
+  "inputs": {"grain": 1},
+  "output": "flour",
+  "output_qty": 1,
+  "ticks": 15
+ },
+ {
+  "id": "bake_bread",
+  "station": "oven",
+  "inputs": {"flour": 1},
+  "output": "bread",
+  "output_qty": 1,
+  "ticks": 20
+ },
+ {
+  "id": "tan_leather",
+  "station": "tannery",
+  "inputs": {"hide": 1},
+  "output": "leather",
+  "output_qty": 1,
+  "ticks": 30
+ },
+ {
+  "id": "stitch_leather_boots",
+  "station": "tannery",
+  "inputs": {"leather": 1},
+  "output": "leather_boots",
+  "output_qty": 1,
+  "ticks": 30
+ },
+ {
+  "id": "stitch_leather_cap",
+  "station": "tannery",
+  "inputs": {"leather": 1},
+  "output": "leather_cap",
+  "output_qty": 1,
+  "ticks": 30
+ },
+ {
+  "id": "stitch_leather_armor",
+  "station": "tannery",
+  "inputs": {"leather": 2},
+  "output": "leather_armor",
+  "output_qty": 1,
+  "ticks": 45
+ },
+ {
+  "id": "grind_healing_salve",
+  "station": "herbalist",
+  "inputs": {"herbs": 1},
+  "output": "healing_salve",
+  "output_qty": 1,
+  "ticks": 20
+ },
+ {
+  "id": "brew_health_potion",
+  "station": "herbalist",
+  "inputs": {"herbs": 2},
+  "output": "health_potion",
+  "output_qty": 1,
+  "ticks": 30
+ },
+ {
+  "id": "cast_amulet_of_vigor",
+  "station": "jeweler",
+  "inputs": {"silver_ingot": 1},
+  "output": "amulet_of_vigor",
+  "output_qty": 1,
+  "ticks": 40
+ },
+ {
+  "id": "set_gemmed_circlet",
+  "station": "jeweler",
+  "inputs": {"silver_ingot": 1, "gemstone": 1},
+  "output": "circlet",
+  "output_qty": 1,
+  "ticks": 50
+ }
+]

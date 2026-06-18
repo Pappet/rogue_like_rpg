@@ -16,7 +16,7 @@ from game.services.pathfinding_service import PathfindingService
 def create_mock_tile(walkable=True):
     tile = Tile(transparent=True)
     # Manually set walkable for testing since we don't want to load TileRegistry
-    tile._walkable = walkable
+    tile._walkable_computed = walkable
     return tile
 
 
@@ -51,8 +51,8 @@ def test_obstacle_avoidance():
     map_container = create_mock_map(5, 5)
 
     # Create walls at (1,1) and (1,0)
-    map_container.layers[0].tiles[1][1]._walkable = False
-    map_container.layers[0].tiles[0][1]._walkable = False
+    map_container.layers[0].tiles[1][1]._walkable_computed = False
+    map_container.layers[0].tiles[0][1]._walkable_computed = False
 
     start = (0, 0)
     end = (2, 2)
@@ -116,9 +116,9 @@ def test_unreachable():
     map_container = create_mock_map(5, 5)
 
     # Box in (4,4)
-    map_container.layers[0].tiles[3][4]._walkable = False
-    map_container.layers[0].tiles[4][3]._walkable = False
-    map_container.layers[0].tiles[3][3]._walkable = False
+    map_container.layers[0].tiles[3][4]._walkable_computed = False
+    map_container.layers[0].tiles[4][3]._walkable_computed = False
+    map_container.layers[0].tiles[3][3]._walkable_computed = False
 
     start = (0, 0)
     end = (4, 4)

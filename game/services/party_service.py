@@ -16,6 +16,7 @@ from game.components import (
     Position,
     Purse,
     Renderable,
+    Skills,
     Stats,
     TurnOrder,
 )
@@ -79,6 +80,7 @@ class PartyService:
             Purse(gold=int(data.get("gold", 0))),
             TurnOrder(priority=0),
             ActionList(actions=actions),
+            Skills(),
         )
 
         return player_entity

@@ -30,7 +30,7 @@ from game.services import equipment_service
 
 logger = logging.getLogger(__name__)
 
-SELL_FACTOR = 0.5  # merchants pay half the base value
+SELL_FACTOR = 0.6  # merchants pay a bit over half the base value
 
 
 class TradeService:

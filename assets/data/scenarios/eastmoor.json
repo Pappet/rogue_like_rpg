@@ -38,7 +38,19 @@
      "pos": [
       8,
       6
-     ]
+     ],
+     "merchant": {
+      "stock": [
+       "bread",
+       "cheese",
+       "dried_meat",
+       "salt",
+       "health_potion",
+       "mana_potion",
+       "leather_armor"
+      ],
+      "gold": 200
+     }
     },
     {
      "type": "villager",
@@ -71,7 +83,22 @@
      "pos": [
       6,
       5
-     ]
+     ],
+     "merchant": {
+      "stock": [
+       "iron_sword",
+       "steel_sword",
+       "mace",
+       "spear",
+       "chainmail",
+       "iron_helm",
+       "iron_greaves",
+       "tower_shield",
+       "iron_buckler",
+       "iron_ingot"
+      ],
+      "gold": 400
+     }
     }
    ],
    "style": "shop"
@@ -97,7 +124,21 @@
      "pos": [
       9,
       7
-     ]
+     ],
+     "merchant": {
+      "stock": [
+       "spices",
+       "salt",
+       "gemstone",
+       "silver_ingot",
+       "cloth",
+       "wool",
+       "leather",
+       "circlet",
+       "lucky_charm"
+      ],
+      "gold": 350
+     }
     },
     {
      "type": "villager",
@@ -198,6 +239,7 @@
   "stock": {
    "iron_sword": 12,
    "steel_sword": 6,
+   "iron_ingot": 4,
    "health_potion": 1,
    "venison": 2,
    "iron_ore": 6,
@@ -222,6 +264,22 @@
   }
  },
  "biome": "plains",
+ "stations": [
+  {
+   "type": "anvil",
+   "pos": [
+    33,
+    18
+   ]
+  },
+  {
+   "type": "jeweler",
+   "pos": [
+    22,
+    20
+   ]
+  }
+ ],
  "lights": [
   {
    "type": "campfire",

@@ -32,6 +32,47 @@
     "target": {
       "location": "Brackenfen"
     },
-    "reward_gold": 15
+    "reward_gold": 25
+  },
+  {
+    "id": "lifeline_larder",
+    "title": "Empty Larders",
+    "description": "Brackenfen's miners go down the shafts hungry. Bring 3 loaves of bread from the Village and the mayor will see you paid.",
+    "quest_type": "deliver",
+    "giver_location": "Brackenfen",
+    "target": {
+      "item": "bread",
+      "count": 3
+    },
+    "reward_gold": 45
+  },
+  {
+    "id": "lifeline_tuskers",
+    "title": "Tuskers in the Mire",
+    "description": "Fed at last, the diggers won't return to the bog — boars have run wild on the trail. Cull 2 of them in Brackenfen's wilds.",
+    "quest_type": "kill",
+    "giver_location": "Brackenfen",
+    "target": {
+      "template": "boar",
+      "count": 2
+    },
+    "reward_gold": 55,
+    "prerequisites": [
+      "lifeline_larder"
+    ]
+  },
+  {
+    "id": "lifeline_word",
+    "title": "Word to the Smithy",
+    "description": "The mire road is open and the ore can flow again. Carry the news to Eastmoor's forge so the trade can be struck.",
+    "quest_type": "visit",
+    "giver_location": "Brackenfen",
+    "target": {
+      "location": "Eastmoor"
+    },
+    "reward_gold": 90,
+    "prerequisites": [
+      "lifeline_tuskers"
+    ]
   }
 ]

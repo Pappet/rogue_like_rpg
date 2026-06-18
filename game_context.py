@@ -14,6 +14,7 @@ from core.world_clock_service import WorldClockService
 from game.content.content_database import ContentDatabase
 from game.map.map_container import MapContainer
 from game.services.economy_service import EconomyService
+from game.services.faction_service import FactionService
 from game.services.map_service import MapService
 from game.services.quest_service import QuestService
 from game.services.render_service import RenderService
@@ -28,6 +29,7 @@ from game.systems.combat_system import CombatSystem
 from game.systems.death_system import DeathSystem
 from game.systems.equipment_system import EquipmentSystem
 from game.systems.fct_system import FCTSystem
+from game.systems.gossip_system import GossipSystem
 from game.systems.movement_system import MovementSystem
 from game.systems.needs_system import NeedsSystem
 from game.systems.schedule_system import ScheduleSystem
@@ -67,6 +69,7 @@ class Systems:
     schedule_system: ScheduleSystem
     needs_system: NeedsSystem = field(default_factory=NeedsSystem)
     status_effect_system: StatusEffectSystem = field(default_factory=StatusEffectSystem)
+    gossip_system: GossipSystem = field(default_factory=GossipSystem)
     render_system: object | None = None
     debug_render_system: object | None = None
     ui_system: object | None = None
@@ -99,6 +102,7 @@ class GameContext:
     world_chronicle: WorldChronicleService | None = None
     economy: EconomyService | None = None
     reputation: ReputationService | None = None
+    factions: FactionService | None = None
     quests: QuestService | None = None
     rumors: RumorService | None = None
     travel_encounters: TravelEncounterService | None = None

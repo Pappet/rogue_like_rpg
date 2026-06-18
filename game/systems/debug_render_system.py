@@ -8,7 +8,6 @@ from config import (
     DEBUG_LABEL_COLOR,
     DEBUG_NPC_FOV_COLOR,
     TILE_SIZE,
-    SpriteLayer,
 )
 from core.visibility_service import VisibilityService
 from game.components import AIBehaviorState, AIState, ChaseData, Position, Stats
@@ -32,11 +31,10 @@ class DebugRenderSystem(MapAwareSystem):
             return False
 
         tile = self._map_container.get_tile(x, y, layer)
-        if tile is None or not tile.transparent:
+        if tile is None:
             return False
 
-        # Fallback for old tile systems where '#' character indicates a wall
-        return tile.sprites.get(SpriteLayer.GROUND) != "#"
+        return tile.is_transparent
 
     def process(self, surface, flags, player_layer):
         """Render the enabled debug overlays.

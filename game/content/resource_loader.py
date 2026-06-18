@@ -13,6 +13,7 @@ from config import SpriteLayer
 from game.components import AIState, Alignment
 from game.content.entity_registry import EntityRegistry, EntityTemplate, entity_registry
 from game.content.item_registry import ItemRegistry, ItemTemplate, item_registry
+from game.content.recipe_registry import Recipe, RecipeRegistry, recipe_registry
 from game.content.schedule_registry import ScheduleEntry, ScheduleRegistry, ScheduleTemplate, schedule_registry
 from game.map.tile_registry import TileRegistry, TileType, tile_registry
 
@@ -62,6 +63,14 @@ class ResourceLoader:
                 if "target_pos" in entry_data and entry_data["target_pos"] is not None:
                     target_pos = tuple(entry_data["target_pos"])
 
+                target_pool = None
+                if entry_data.get("target_pool"):
+                    target_pool = [tuple(p) for p in entry_data["target_pool"]]
+
+                route = None
+                if entry_data.get("route"):
+                    route = [tuple(p) for p in entry_data["route"]]
+
                 entries.append(
                     ScheduleEntry(
                         start=int(entry_data["start"]),
@@ -69,6 +78,8 @@ class ResourceLoader:
                         activity=entry_data["activity"],
                         target_pos=target_pos,
                         target_meta=entry_data.get("target_meta"),
+                        target_pool=target_pool,
+                        route=route,
                     )
                 )
 
@@ -143,6 +154,7 @@ class ResourceLoader:
                 base_description=item.get("base_description", ""),
                 occludes_below=bool(item.get("occludes_below", False)),
                 provides_rest=bool(item.get("provides_rest", False)),
+                crafting_station=str(item.get("crafting_station", "")),
                 bg_color=bg_color,
                 sprite_colors=sprite_colors,
             )
@@ -261,6 +273,7 @@ class ResourceLoader:
                 quest_giver=bool(item.get("quest_giver", False)),
                 animal=bool(item.get("animal", False)),
                 innkeeper=bool(item.get("innkeeper", False)),
+                faction=item.get("faction"),
             )
 
             registry.register(template)
@@ -318,3 +331,44 @@ class ResourceLoader:
             )
 
             registry.register(template)
+
+    @staticmethod
+    def load_recipes(filepath: str, registry: RecipeRegistry = recipe_registry) -> None:
+        """Load crafting recipe definitions from a JSON file (ROADMAP Phase H).
+
+        Args:
+            filepath: Path to the recipes.json file.
+
+        Raises:
+            FileNotFoundError: If the JSON file does not exist at filepath.
+            ValueError: If the JSON is malformed or missing required fields.
+        """
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(
+                f"Recipe resource file not found: '{filepath}'. Expected a JSON file with recipe definitions."
+            )
+
+        try:
+            with open(filepath, encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Malformed JSON in recipe resource file '{filepath}': {exc}") from exc
+
+        if not isinstance(data, list):
+            raise ValueError(f"Recipe resource file '{filepath}' must contain a JSON array, got {type(data).__name__}.")
+
+        for item in data:
+            for required_field in ("id", "station", "output", "inputs"):
+                if required_field not in item:
+                    raise ValueError(f"Recipe entry missing required field '{required_field}': {item}")
+
+            registry.register(
+                Recipe(
+                    id=item["id"],
+                    station=item["station"],
+                    output=item["output"],
+                    inputs={k: int(v) for k, v in item["inputs"].items()},
+                    output_qty=int(item.get("output_qty", 1)),
+                    ticks=int(item.get("ticks", 30)),
+                )
+            )

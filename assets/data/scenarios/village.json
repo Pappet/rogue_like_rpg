@@ -91,7 +91,22 @@
      "pos": [
       5,
       5
-     ]
+     ],
+     "merchant": {
+      "stock": [
+       "bread",
+       "bread",
+       "grain",
+       "flour",
+       "cheese",
+       "dried_meat",
+       "leather_armor",
+       "wooden_shield",
+       "leather_boots",
+       "health_potion"
+      ],
+      "gold": 160
+     }
     }
    ],
    "style": "shop"
@@ -153,6 +168,13 @@
     12,
     25
    ]
+  },
+  {
+   "type": "farmer",
+   "pos": [
+    14,
+    28
+   ]
   }
  ],
  "economy": {
@@ -161,17 +183,86 @@
    "iron_sword": 4,
    "leather_armor": 4,
    "venison": 2,
-   "bread": 8
+   "bread": 8,
+   "grain": 12,
+   "flour": 6,
+   "herbs": 8,
+   "healing_salve": 4
   },
   "rates_per_day": {
    "health_potion": 0.5,
    "iron_sword": 0.25,
    "leather_armor": 0.25,
    "venison": -1.5,
-   "bread": 2
+   "grain": 3,
+   "flour": {
+    "per_day": 2,
+    "requires": {
+     "grain": 1
+    }
+   },
+   "bread": {
+    "per_day": 2,
+    "requires": {
+     "flour": 1
+    }
+   },
+   "herbs": 2,
+   "healing_salve": {
+    "per_day": 1,
+    "requires": {
+     "herbs": 1
+    }
+   }
   }
  },
  "biome": "forest",
+ "stations": [
+  {
+   "type": "mill",
+   "pos": [
+    32,
+    16
+   ]
+  },
+  {
+   "type": "oven",
+   "pos": [
+    34,
+    16
+   ]
+  },
+  {
+   "type": "herbalist",
+   "pos": [
+    10,
+    22
+   ]
+  }
+ ],
+ "resources": [
+  {
+   "kind": "grain_field",
+   "pos": [
+    8,
+    33
+   ]
+  },
+  {
+   "kind": "grain_field",
+   "pos": [
+    10,
+    33
+   ]
+  },
+  {
+   "kind": "grain_field",
+   "pos": [
+    12,
+    32
+   ]
+  }
+ ],
  "lights": [
   {
    "type": "campfire",
