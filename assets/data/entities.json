@@ -1,744 +1,764 @@
 [
- {
-  "id": "orc",
-  "name": "Orc",
-  "sprite": "O",
-  "color": [
-   0,
-   255,
-   0
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 12,
-  "max_hp": 12,
-  "power": 4,
-  "defense": 1,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 5,
-  "intelligence": 5,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "hostile",
-  "blocker": true,
-  "description": "A generic orc",
-  "wounded_text": "A wounded orc",
-  "wounded_threshold": 0.5,
-  "loot_table": [
-   [
-    "iron_sword",
-    1.0
-   ],
-   [
-    "wooden_club",
-    1.0
-   ],
-   [
-    "health_potion",
-    1.0
-   ]
-  ]
- },
- {
-  "id": "villager",
-  "name": "Villager",
-  "sprite": "v",
-  "color": [
-   255,
-   200,
-   150
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 5,
-  "max_hp": 5,
-  "power": 1,
-  "defense": 0,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 5,
-  "intelligence": 5,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "A common villager",
-  "schedule_id": "villager_routine",
-  "home_pos": [
-   10,
-   10
-  ],
-  "needs": {
-   "hunger_rate": 3.0,
-   "eat_threshold": 70.0,
-   "eat_duration_ticks": 30
-  }
- },
- {
-  "id": "guard",
-  "name": "Guard",
-  "sprite": "G",
-  "color": [
-   100,
-   100,
-   255
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 24,
-  "max_hp": 24,
-  "power": 6,
-  "defense": 2,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 10,
-  "intelligence": 5,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "A village guard",
-  "schedule_id": "guard_routine",
-  "home_pos": [
-   35,
-   35
-  ]
- },
- {
-  "id": "shopkeeper",
-  "name": "Shopkeeper",
-  "sprite": "S",
-  "color": [
-   255,
-   255,
-   100
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 10,
-  "max_hp": 10,
-  "power": 2,
-  "defense": 1,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 8,
-  "intelligence": 8,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "A merchant or innkeeper",
-  "schedule_id": "shopkeeper_routine",
-  "home_pos": [
-   2,
-   2
-  ],
-  "merchant": {
-   "stock": [
-    "health_potion",
-    "health_potion",
-    "health_potion",
-    "iron_sword",
-    "leather_armor",
-    "dagger",
-    "iron_ore",
-    "iron_ore"
-   ],
-   "gold": 200
+  {
+    "id": "orc",
+    "name": "Orc",
+    "sprite": "O",
+    "color": [
+      0,
+      255,
+      0
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 12,
+    "max_hp": 12,
+    "power": 4,
+    "defense": 1,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 5,
+    "intelligence": 5,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "hostile",
+    "blocker": true,
+    "description": "A generic orc",
+    "wounded_text": "A wounded orc",
+    "wounded_threshold": 0.5,
+    "loot_table": [
+      [
+        "iron_sword",
+        1.0
+      ],
+      [
+        "wooden_club",
+        1.0
+      ],
+      [
+        "health_potion",
+        1.0
+      ]
+    ],
+    "faction": "monsters"
   },
-  "needs": {
-   "hunger_rate": 3.0,
-   "eat_threshold": 70.0,
-   "eat_duration_ticks": 30
-  }
- },
- {
-  "id": "innkeeper",
-  "name": "Innkeeper",
-  "sprite": "I",
-  "color": [
-   235,
-   200,
-   120
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 12,
-  "max_hp": 12,
-  "power": 2,
-  "defense": 1,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 8,
-  "intelligence": 8,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "The keeper of the tavern. A room for the night is yours for the asking.",
-  "schedule_id": "shopkeeper_routine",
-  "home_pos": [
-   2,
-   2
-  ],
-  "innkeeper": true,
-  "needs": {
-   "hunger_rate": 3.0,
-   "eat_threshold": 70.0,
-   "eat_duration_ticks": 30
-  }
- },
- {
-  "id": "traveling_merchant",
-  "name": "Traveling Merchant",
-  "sprite": "H",
-  "color": [
-   255,
-   210,
-   120
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 12,
-  "max_hp": 12,
-  "power": 2,
-  "defense": 1,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 8,
-  "intelligence": 9,
-  "ai": true,
-  "default_state": "idle",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "A traveling merchant resting beside his cart of rare wares.",
-  "merchant": {
-   "stock": [
-    "circlet",
-    "steel_sword",
-    "chainmail",
-    "iron_ring",
-    "iron_shod_boots",
-    "mana_potion",
-    "mana_potion",
-    "amulet_of_vigor",
-    "spices",
-    "gemstone"
-   ],
-   "gold": 400
-  }
- },
- {
-  "id": "caravan_guard",
-  "name": "Caravan Guard",
-  "sprite": "C",
-  "color": [
-   200,
-   170,
-   110
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 18,
-  "max_hp": 18,
-  "power": 5,
-  "defense": 2,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 8,
-  "intelligence": 5,
-  "ai": true,
-  "default_state": "idle",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "A hired blade guarding the caravans on this road.",
-  "wounded_text": "A battered caravan guard.",
-  "wounded_threshold": 0.5
- },
- {
-  "id": "goblin",
-  "name": "Goblin",
-  "sprite": "g",
-  "color": [
-   50,
-   200,
-   50
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 6,
-  "max_hp": 6,
-  "power": 3,
-  "defense": 0,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 6,
-  "intelligence": 3,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "hostile",
-  "blocker": true,
-  "description": "A small, nasty goblin",
-  "wounded_text": "A crippled goblin",
-  "wounded_threshold": 0.5,
-  "loot_table": [
-   [
-    "dagger",
-    1.0
-   ],
-   [
-    "health_potion",
-    0.5
-   ]
-  ]
- },
- {
-  "id": "troll",
-  "name": "Cave Troll",
-  "sprite": "T",
-  "color": [
-   100,
-   150,
-   100
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 36,
-  "max_hp": 36,
-  "power": 9,
-  "defense": 3,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 3,
-  "intelligence": 2,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "hostile",
-  "blocker": true,
-  "description": "A massive, hulking troll",
-  "wounded_text": "An enraged troll",
-  "wounded_threshold": 0.3,
-  "loot_table": [
-   [
-    "wooden_club",
-    1.0
-   ],
-   [
-    "gemstone",
-    0.25
-   ]
-  ]
- },
- {
-  "id": "mayor",
-  "name": "Mayor",
-  "sprite": "M",
-  "color": [
-   255,
-   100,
-   255
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 8,
-  "max_hp": 8,
-  "power": 1,
-  "defense": 0,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 6,
-  "intelligence": 8,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "The leader of the village",
-  "schedule_id": "mayor_routine",
-  "home_pos": [
-   5,
-   5
-  ],
-  "needs": {
-   "hunger_rate": 3.0,
-   "eat_threshold": 70.0,
-   "eat_duration_ticks": 30
+  {
+    "id": "villager",
+    "name": "Villager",
+    "sprite": "v",
+    "color": [
+      255,
+      200,
+      150
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 5,
+    "max_hp": 5,
+    "power": 1,
+    "defense": 0,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 5,
+    "intelligence": 5,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A common villager",
+    "schedule_id": "villager_routine",
+    "home_pos": [
+      10,
+      10
+    ],
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "faction": "townsfolk"
   },
-  "quest_giver": true
- },
- {
-  "id": "blacksmith",
-  "name": "Blacksmith",
-  "sprite": "B",
-  "color": [
-   150,
-   150,
-   150
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 15,
-  "max_hp": 15,
-  "power": 4,
-  "defense": 2,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 5,
-  "intelligence": 6,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "A burly blacksmith",
-  "schedule_id": "blacksmith_routine",
-  "home_pos": [
-   8,
-   8
-  ],
-  "needs": {
-   "hunger_rate": 3.0,
-   "eat_threshold": 70.0,
-   "eat_duration_ticks": 30
+  {
+    "id": "guard",
+    "name": "Guard",
+    "sprite": "G",
+    "color": [
+      100,
+      100,
+      255
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 24,
+    "max_hp": 24,
+    "power": 6,
+    "defense": 2,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 10,
+    "intelligence": 5,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A village guard",
+    "schedule_id": "guard_routine",
+    "home_pos": [
+      35,
+      35
+    ],
+    "faction": "town_guard"
   },
-  "merchant": {
-   "stock": [
-    "dagger",
-    "short_sword",
-    "iron_sword",
-    "spear",
-    "iron_buckler",
-    "iron_shod_boots",
-    "iron_ingot",
-    "iron_ingot"
-   ],
-   "gold": 250
-  }
- },
- {
-  "id": "wolf",
-  "name": "Wolf",
-  "sprite": "w",
-  "color": [
-   150,
-   150,
-   160
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 7,
-  "max_hp": 7,
-  "power": 3,
-  "defense": 0,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 7,
-  "intelligence": 2,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "hostile",
-  "blocker": true,
-  "description": "A lean grey wolf.",
-  "wounded_text": "A limping grey wolf.",
-  "wounded_threshold": 0.5,
-  "loot_table": [
-   [
-    "pelt",
-    0.5
-   ]
-  ]
- },
- {
-  "id": "deer",
-  "name": "Deer",
-  "sprite": "d",
-  "color": [
-   170,
-   130,
-   80
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 5,
-  "max_hp": 5,
-  "power": 0,
-  "defense": 0,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 8,
-  "intelligence": 1,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "neutral",
-  "blocker": true,
-  "animal": true,
-  "description": "A skittish deer grazing in the undergrowth.",
-  "wounded_text": "A wounded deer, panicked.",
-  "wounded_threshold": 0.5,
-  "loot_table": [
-   [
-    "venison",
-    1.0
-   ],
-   [
-    "pelt",
-    0.6
-   ]
-  ]
- },
- {
-  "id": "boar",
-  "name": "Wild Boar",
-  "sprite": "b",
-  "color": [
-   120,
-   90,
-   60
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 10,
-  "max_hp": 10,
-  "power": 4,
-  "defense": 1,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 6,
-  "intelligence": 1,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "hostile",
-  "blocker": true,
-  "animal": true,
-  "description": "A bristling wild boar with sharp tusks.",
-  "wounded_text": "A furious, bleeding boar.",
-  "wounded_threshold": 0.5,
-  "loot_table": [
-   [
-    "venison",
-    1.0
-   ],
-   [
-    "hide",
-    0.7
-   ]
-  ]
- },
- {
-  "id": "bandit",
-  "name": "Bandit",
-  "sprite": "b",
-  "color": [
-   170,
-   60,
-   60
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 12,
-  "max_hp": 12,
-  "power": 4,
-  "defense": 1,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 7,
-  "intelligence": 4,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "hostile",
-  "blocker": true,
-  "description": "A road bandit with a hungry look and a worn blade.",
-  "wounded_text": "A bleeding bandit, still snarling.",
-  "wounded_threshold": 0.5,
-  "loot_table": [
-   [
-    "dagger",
-    0.6
-   ],
-   [
-    "health_potion",
-    0.3
-   ]
-  ]
- },
- {
-  "id": "bandit_leader",
-  "name": "Bandit Leader",
-  "sprite": "B",
-  "color": [
-   200,
-   50,
-   50
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 20,
-  "max_hp": 20,
-  "power": 6,
-  "defense": 2,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 8,
-  "intelligence": 6,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "hostile",
-  "blocker": true,
-  "description": "The one giving orders — better armed and meaner than the rest.",
-  "wounded_text": "The bandit leader staggers, cursing.",
-  "wounded_threshold": 0.5,
-  "loot_table": [
-   [
-    "iron_sword",
-    0.8
-   ],
-   [
-    "health_potion",
-    0.5
-   ],
-   [
-    "silver_ingot",
-    0.4
-   ]
-  ]
- },
- {
-  "id": "hunter",
-  "name": "Hunter",
-  "sprite": "h",
-  "color": [
-   120,
-   180,
-   90
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 9,
-  "max_hp": 9,
-  "power": 3,
-  "defense": 1,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 10,
-  "intelligence": 6,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "A weathered hunter, bow stave on the back and pelts at the belt.",
-  "schedule_id": "villager_routine",
-  "home_pos": [
-   10,
-   10
-  ],
-  "needs": {
-   "hunger_rate": 3.0,
-   "eat_threshold": 70.0,
-   "eat_duration_ticks": 30
+  {
+    "id": "shopkeeper",
+    "name": "Shopkeeper",
+    "sprite": "S",
+    "color": [
+      255,
+      255,
+      100
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 10,
+    "max_hp": 10,
+    "power": 2,
+    "defense": 1,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 8,
+    "intelligence": 8,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A merchant or innkeeper",
+    "schedule_id": "shopkeeper_routine",
+    "home_pos": [
+      2,
+      2
+    ],
+    "merchant": {
+      "stock": [
+        "health_potion",
+        "health_potion",
+        "health_potion",
+        "iron_sword",
+        "leather_armor",
+        "dagger",
+        "iron_ore",
+        "iron_ore"
+      ],
+      "gold": 200
+    },
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "faction": "townsfolk"
   },
-  "loot_table": [
-   [
-    "pelt",
-    0.6
-   ]
-  ]
- },
- {
-  "id": "farmer",
-  "name": "Farmer",
-  "sprite": "f",
-  "color": [
-   200,
-   180,
-   110
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 6,
-  "max_hp": 6,
-  "power": 1,
-  "defense": 0,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 5,
-  "intelligence": 5,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "A farmer with dirt under the nails and weather in the face.",
-  "schedule_id": "villager_routine",
-  "home_pos": [
-   10,
-   10
-  ],
-  "needs": {
-   "hunger_rate": 3.0,
-   "eat_threshold": 70.0,
-   "eat_duration_ticks": 30
-  }
- },
- {
-  "id": "herbalist",
-  "name": "Herbalist",
-  "sprite": "e",
-  "color": [
-   110,
-   200,
-   140
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 7,
-  "max_hp": 7,
-  "power": 1,
-  "defense": 0,
-  "mana": 10,
-  "max_mana": 10,
-  "perception": 9,
-  "intelligence": 9,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "An herbalist who smells of dried sage and bitter roots.",
-  "schedule_id": "vendor_routine",
-  "home_pos": [
-   12,
-   24
-  ],
-  "needs": {
-   "hunger_rate": 3.0,
-   "eat_threshold": 70.0,
-   "eat_duration_ticks": 30
+  {
+    "id": "innkeeper",
+    "name": "Innkeeper",
+    "sprite": "I",
+    "color": [
+      235,
+      200,
+      120
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 12,
+    "max_hp": 12,
+    "power": 2,
+    "defense": 1,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 8,
+    "intelligence": 8,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "The keeper of the tavern. A room for the night is yours for the asking.",
+    "schedule_id": "shopkeeper_routine",
+    "home_pos": [
+      2,
+      2
+    ],
+    "innkeeper": true,
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "faction": "townsfolk"
   },
-  "merchant": {
-   "stock": [
-    "health_potion",
-    "health_potion",
-    "mana_potion",
-    "healing_salve",
-    "healing_salve",
-    "herbs",
-    "herbs",
-    "bandage",
-    "bandage"
-   ],
-   "gold": 120
+  {
+    "id": "traveling_merchant",
+    "name": "Traveling Merchant",
+    "sprite": "H",
+    "color": [
+      255,
+      210,
+      120
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 12,
+    "max_hp": 12,
+    "power": 2,
+    "defense": 1,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 8,
+    "intelligence": 9,
+    "ai": true,
+    "default_state": "idle",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A traveling merchant resting beside his cart of rare wares.",
+    "merchant": {
+      "stock": [
+        "circlet",
+        "steel_sword",
+        "chainmail",
+        "iron_ring",
+        "iron_shod_boots",
+        "mana_potion",
+        "mana_potion",
+        "amulet_of_vigor",
+        "spices",
+        "gemstone"
+      ],
+      "gold": 400
+    },
+    "faction": "townsfolk"
+  },
+  {
+    "id": "caravan_guard",
+    "name": "Caravan Guard",
+    "sprite": "C",
+    "color": [
+      200,
+      170,
+      110
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 18,
+    "max_hp": 18,
+    "power": 5,
+    "defense": 2,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 8,
+    "intelligence": 5,
+    "ai": true,
+    "default_state": "idle",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A hired blade guarding the caravans on this road.",
+    "wounded_text": "A battered caravan guard.",
+    "wounded_threshold": 0.5,
+    "faction": "town_guard"
+  },
+  {
+    "id": "goblin",
+    "name": "Goblin",
+    "sprite": "g",
+    "color": [
+      50,
+      200,
+      50
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 6,
+    "max_hp": 6,
+    "power": 3,
+    "defense": 0,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 6,
+    "intelligence": 3,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "hostile",
+    "blocker": true,
+    "description": "A small, nasty goblin",
+    "wounded_text": "A crippled goblin",
+    "wounded_threshold": 0.5,
+    "loot_table": [
+      [
+        "dagger",
+        1.0
+      ],
+      [
+        "health_potion",
+        0.5
+      ]
+    ],
+    "faction": "monsters"
+  },
+  {
+    "id": "troll",
+    "name": "Cave Troll",
+    "sprite": "T",
+    "color": [
+      100,
+      150,
+      100
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 36,
+    "max_hp": 36,
+    "power": 9,
+    "defense": 3,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 3,
+    "intelligence": 2,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "hostile",
+    "blocker": true,
+    "description": "A massive, hulking troll",
+    "wounded_text": "An enraged troll",
+    "wounded_threshold": 0.3,
+    "loot_table": [
+      [
+        "wooden_club",
+        1.0
+      ],
+      [
+        "gemstone",
+        0.25
+      ]
+    ],
+    "faction": "monsters"
+  },
+  {
+    "id": "mayor",
+    "name": "Mayor",
+    "sprite": "M",
+    "color": [
+      255,
+      100,
+      255
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 8,
+    "max_hp": 8,
+    "power": 1,
+    "defense": 0,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 6,
+    "intelligence": 8,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "The leader of the village",
+    "schedule_id": "mayor_routine",
+    "home_pos": [
+      5,
+      5
+    ],
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "quest_giver": true,
+    "faction": "townsfolk"
+  },
+  {
+    "id": "blacksmith",
+    "name": "Blacksmith",
+    "sprite": "B",
+    "color": [
+      150,
+      150,
+      150
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 15,
+    "max_hp": 15,
+    "power": 4,
+    "defense": 2,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 5,
+    "intelligence": 6,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A burly blacksmith",
+    "schedule_id": "blacksmith_routine",
+    "home_pos": [
+      8,
+      8
+    ],
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "merchant": {
+      "stock": [
+        "dagger",
+        "short_sword",
+        "iron_sword",
+        "spear",
+        "iron_buckler",
+        "iron_shod_boots",
+        "iron_ingot",
+        "iron_ingot"
+      ],
+      "gold": 250
+    },
+    "faction": "townsfolk"
+  },
+  {
+    "id": "wolf",
+    "name": "Wolf",
+    "sprite": "w",
+    "color": [
+      150,
+      150,
+      160
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 7,
+    "max_hp": 7,
+    "power": 3,
+    "defense": 0,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 7,
+    "intelligence": 2,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "hostile",
+    "blocker": true,
+    "description": "A lean grey wolf.",
+    "wounded_text": "A limping grey wolf.",
+    "wounded_threshold": 0.5,
+    "loot_table": [
+      [
+        "pelt",
+        0.5
+      ]
+    ],
+    "faction": "wildlife"
+  },
+  {
+    "id": "deer",
+    "name": "Deer",
+    "sprite": "d",
+    "color": [
+      170,
+      130,
+      80
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 5,
+    "max_hp": 5,
+    "power": 0,
+    "defense": 0,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 8,
+    "intelligence": 1,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "animal": true,
+    "description": "A skittish deer grazing in the undergrowth.",
+    "wounded_text": "A wounded deer, panicked.",
+    "wounded_threshold": 0.5,
+    "loot_table": [
+      [
+        "venison",
+        1.0
+      ],
+      [
+        "pelt",
+        0.6
+      ]
+    ],
+    "faction": "wildlife"
+  },
+  {
+    "id": "boar",
+    "name": "Wild Boar",
+    "sprite": "b",
+    "color": [
+      120,
+      90,
+      60
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 10,
+    "max_hp": 10,
+    "power": 4,
+    "defense": 1,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 6,
+    "intelligence": 1,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "hostile",
+    "blocker": true,
+    "animal": true,
+    "description": "A bristling wild boar with sharp tusks.",
+    "wounded_text": "A furious, bleeding boar.",
+    "wounded_threshold": 0.5,
+    "loot_table": [
+      [
+        "venison",
+        1.0
+      ],
+      [
+        "hide",
+        0.7
+      ]
+    ],
+    "faction": "wildlife"
+  },
+  {
+    "id": "bandit",
+    "name": "Bandit",
+    "sprite": "b",
+    "color": [
+      170,
+      60,
+      60
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 12,
+    "max_hp": 12,
+    "power": 4,
+    "defense": 1,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 7,
+    "intelligence": 4,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "hostile",
+    "blocker": true,
+    "description": "A road bandit with a hungry look and a worn blade.",
+    "wounded_text": "A bleeding bandit, still snarling.",
+    "wounded_threshold": 0.5,
+    "loot_table": [
+      [
+        "dagger",
+        0.6
+      ],
+      [
+        "health_potion",
+        0.3
+      ]
+    ],
+    "faction": "bandits"
+  },
+  {
+    "id": "bandit_leader",
+    "name": "Bandit Leader",
+    "sprite": "B",
+    "color": [
+      200,
+      50,
+      50
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 20,
+    "max_hp": 20,
+    "power": 6,
+    "defense": 2,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 8,
+    "intelligence": 6,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "hostile",
+    "blocker": true,
+    "description": "The one giving orders — better armed and meaner than the rest.",
+    "wounded_text": "The bandit leader staggers, cursing.",
+    "wounded_threshold": 0.5,
+    "loot_table": [
+      [
+        "iron_sword",
+        0.8
+      ],
+      [
+        "health_potion",
+        0.5
+      ],
+      [
+        "silver_ingot",
+        0.4
+      ]
+    ],
+    "faction": "bandits"
+  },
+  {
+    "id": "hunter",
+    "name": "Hunter",
+    "sprite": "h",
+    "color": [
+      120,
+      180,
+      90
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 9,
+    "max_hp": 9,
+    "power": 3,
+    "defense": 1,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 10,
+    "intelligence": 6,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A weathered hunter, bow stave on the back and pelts at the belt.",
+    "schedule_id": "villager_routine",
+    "home_pos": [
+      10,
+      10
+    ],
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "loot_table": [
+      [
+        "pelt",
+        0.6
+      ]
+    ],
+    "faction": "townsfolk"
+  },
+  {
+    "id": "farmer",
+    "name": "Farmer",
+    "sprite": "f",
+    "color": [
+      200,
+      180,
+      110
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 6,
+    "max_hp": 6,
+    "power": 1,
+    "defense": 0,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 5,
+    "intelligence": 5,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A farmer with dirt under the nails and weather in the face.",
+    "schedule_id": "villager_routine",
+    "home_pos": [
+      10,
+      10
+    ],
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "faction": "townsfolk"
+  },
+  {
+    "id": "herbalist",
+    "name": "Herbalist",
+    "sprite": "e",
+    "color": [
+      110,
+      200,
+      140
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 7,
+    "max_hp": 7,
+    "power": 1,
+    "defense": 0,
+    "mana": 10,
+    "max_mana": 10,
+    "perception": 9,
+    "intelligence": 9,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "An herbalist who smells of dried sage and bitter roots.",
+    "schedule_id": "vendor_routine",
+    "home_pos": [
+      12,
+      24
+    ],
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "merchant": {
+      "stock": [
+        "health_potion",
+        "health_potion",
+        "mana_potion",
+        "healing_salve",
+        "healing_salve",
+        "herbs",
+        "herbs",
+        "bandage",
+        "bandage"
+      ],
+      "gold": 120
+    },
+    "faction": "townsfolk"
+  },
+  {
+    "id": "ore_digger",
+    "name": "Ore Digger",
+    "sprite": "d",
+    "color": [
+      150,
+      130,
+      110
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 11,
+    "max_hp": 11,
+    "power": 3,
+    "defense": 1,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 6,
+    "intelligence": 4,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A bog-iron digger, mud to the knees and proud of it.",
+    "schedule_id": "blacksmith_routine",
+    "home_pos": [
+      8,
+      8
+    ],
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "faction": "townsfolk"
   }
- },
- {
-  "id": "ore_digger",
-  "name": "Ore Digger",
-  "sprite": "d",
-  "color": [
-   150,
-   130,
-   110
-  ],
-  "sprite_layer": "ENTITIES",
-  "hp": 11,
-  "max_hp": 11,
-  "power": 3,
-  "defense": 1,
-  "mana": 0,
-  "max_mana": 0,
-  "perception": 6,
-  "intelligence": 4,
-  "ai": true,
-  "default_state": "wander",
-  "alignment": "neutral",
-  "blocker": true,
-  "description": "A bog-iron digger, mud to the knees and proud of it.",
-  "schedule_id": "blacksmith_routine",
-  "home_pos": [
-   8,
-   8
-  ],
-  "needs": {
-   "hunger_rate": 3.0,
-   "eat_threshold": 70.0,
-   "eat_duration_ticks": 30
-  }
- }
 ]

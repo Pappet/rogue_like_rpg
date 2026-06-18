@@ -102,6 +102,11 @@ class MapTransitionService:
         if ctx.quests is not None:
             ctx.quests.on_map_entered(target_map_id)
 
+        # Re-apply faction hostility to the freshly thawed map: NPCs whose
+        # faction now counts the player an enemy greet them with steel.
+        if ctx.factions is not None:
+            ctx.factions.sync_alignments()
+
         # Keep the world graph's current location in sync (only location maps
         # are graph nodes; interior maps like "Tavern" are not).
         if ctx.world_graph is not None and ctx.world_graph.get_location(target_map_id) is not None:

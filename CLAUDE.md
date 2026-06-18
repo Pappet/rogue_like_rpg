@@ -143,6 +143,7 @@ is neutral constants, usable by both.
 │   ├── player.json                  # Player base stats & actions
 │   ├── world.json                   # World graph: locations + travel routes
 │   ├── world_events.json            # Chronicle event pool (off-screen events)
+│   ├── factions.json                # Faction relations matrix + player start standing
 │   ├── travel_encounters.json       # Road event pool (merchant, ambush, skirmish)
 │   ├── quests.json                  # Authored quests (generated ones come from the sim)
 │   ├── biomes.json                  # Wilderness biomes: terrain mix + wildlife spawns
@@ -228,6 +229,7 @@ is neutral constants, usable by both.
     │   ├── skill_service.py         # Learn-by-doing skill XP/levels (progression)
     │   ├── economy_service.py       # Per-settlement stock levels -> local prices
     │   ├── reputation_service.py    # Player standing per settlement (price/dialogue)
+    │   ├── faction_service.py       # Faction relations matrix + player faction standing
     │   ├── quest_service.py         # Authored + generated quests, progress, turn-in
     │   ├── rumor_service.py         # Smalltalk rumors from chronicle/offers elsewhere
     │   ├── rest_service.py          # Wait/sleep duration presets + time math
@@ -412,6 +414,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Activity`        | Schedule-driven activity + target position   |
 | `Schedule`        | Links entity to a `schedule_id`              |
 | `Relationships`   | NPC↔NPC affinity by name (friend/rival)      |
+| `Faction`         | NPC's faction id (FactionService standing)   |
 | `PatrolRoute`     | A guard's looping beat + current waypoint idx|
 | `Residence`       | Hearth + bed/gather plan (HousingService)    |
 | `PathData`        | A* path + destination for NPC movement       |
@@ -638,6 +641,26 @@ class MapAwareSystem:
   authored home. A bedless NPC's `SLEEP` entry is redirected to its gather
   spot (state `SOCIALIZE`) while the activity key stays `"SLEEP"` so the
   schedule invariant holds (`current_activity` always matches the entry).
+
+#### Factions (`FactionService`)
+
+- **Groups & matrix**: every NPC carries a `Faction` component (id from its
+  template's `faction` field: townsfolk, town_guard, bandits, monsters,
+  wildlife). `assets/data/factions.json` defines a symmetric relations matrix
+  (`ally`/`enemy`/`neutral`) and each faction's starting player standing.
+- **Player standing** (-100..100 per faction, saved): `FactionService`
+  subscribes to `entity_died`. Killing a *peaceful* member is a crime (penalty
+  to its faction + allies); killing a *hostile* member is a favour (bonus to
+  that faction's enemies); `Animal` kills are exempt. Tiers (`FACTION_*` in
+  `config/game.py`): trusted / neutral / hostile.
+- **Standing → hostility**: rather than teach the AI about factions,
+  `sync_alignments()` flips a faction's live NPCs' `AIBehaviorState.alignment`
+  to HOSTILE once standing hits `FACTION_HOSTILE` (and restores the template
+  default when it recovers); the existing chase/bump logic does the rest. Run
+  in bootstrap, after each map thaw (`MapTransitionService`), after load, and
+  after every kill. So spill enough blood and the town guard turns on you.
+- **Dialogue**: `_dialogue_context` exposes `guards` = the town_guard tier, so
+  the `guard` template has wary/hostile vs. warm conditional lines.
 
 ### Input Handling
 

@@ -14,6 +14,7 @@ from core.world_clock_service import WorldClockService
 from game.content.content_database import ContentDatabase
 from game.map.map_container import MapContainer
 from game.services.economy_service import EconomyService
+from game.services.faction_service import FactionService
 from game.services.map_service import MapService
 from game.services.quest_service import QuestService
 from game.services.render_service import RenderService
@@ -101,6 +102,7 @@ class GameContext:
     world_chronicle: WorldChronicleService | None = None
     economy: EconomyService | None = None
     reputation: ReputationService | None = None
+    factions: FactionService | None = None
     quests: QuestService | None = None
     rumors: RumorService | None = None
     travel_encounters: TravelEncounterService | None = None

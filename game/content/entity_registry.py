@@ -42,6 +42,7 @@ class EntityTemplate:
     quest_giver: bool = False
     animal: bool = False
     innkeeper: bool = False  # bumping offers rest (sleep) instead of dialogue
+    faction: str | None = None  # faction id (FactionService) — disposition & standing
 
 
 class EntityRegistry(Registry[EntityTemplate]):

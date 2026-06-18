@@ -343,6 +343,18 @@ class Schedule:
 
 
 @dataclass
+class Faction:
+    """Which faction an NPC belongs to (Phase L slice 4).
+
+    Drives faction-vs-faction disposition and the player's per-faction
+    standing: when standing with this faction falls to FACTION_HOSTILE,
+    FactionService flips the NPC's alignment to HOSTILE. Assigned from the
+    entity template's `faction` field."""
+
+    faction_id: str = ""
+
+
+@dataclass
 class Relationships:
     """How an NPC feels about specific other townsfolk (Phase L slice 3).
 

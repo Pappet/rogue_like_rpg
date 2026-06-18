@@ -309,9 +309,19 @@ friends or a rival. `GossipSystem` reads it so the speaker gossips about
 someone they actually know — warmly about friends (`_gossip_friend`), sharply
 about rivals (`_gossip_rival`). The town is now full of named people with
 opinions of each other. Verified by `tests/verify_social_service.py` and the
-relationship-tone cases in `tests/verify_gossip.py`. (Next candidate: a real
-*faction* model — relations matrix + faction reputation that gates trade,
-dialogue and guard behaviour.)
+relationship-tone cases in `tests/verify_gossip.py`.
+
+*Slice 4 — Faction model:* `FactionService` + `factions.json` give the world
+real groups (townsfolk, town_guard, bandits, monsters, wildlife) with a
+symmetric relations matrix and a per-faction player standing. Killing a
+peaceful member is a crime (penalty to its faction + allies); killing a
+hostile one is a favour (bonus to its enemies) — so clearing bandits warms the
+guard, and murdering townsfolk eventually makes the guard turn on you.
+Standing translates to behaviour by flipping affected NPCs' alignment to
+HOSTILE (and back) via `sync_alignments()`, run after kills, thaws and load;
+the guard's dialogue reacts to your standing. Standing is saved. Verified by
+`tests/verify_factions.py`. (Next candidates: faction-driven on-map brawls
+generalised from `Skirmisher`, faction-priced trade, and joinable factions.)
 
 ---
 
