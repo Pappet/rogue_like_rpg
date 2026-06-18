@@ -148,6 +148,21 @@ class Quality:
 
 
 @dataclass
+class ResourceNode:
+    """A harvestable raw-material source on the map (ROADMAP Phase K).
+
+    Bumping it yields ``item`` into the player's inventory and trains ``skill``;
+    the node is then spent until ``ready_at`` (a world tick), after which it can
+    be gathered again. Catalogue in ``gather_service.RESOURCE_NODES``.
+    """
+
+    item: str
+    skill: str
+    respawn_ticks: int = 240
+    ready_at: int = 0
+
+
+@dataclass
 class Portable:
     weight: float  # kg
 
@@ -328,6 +343,30 @@ class Schedule:
 
 
 @dataclass
+class Faction:
+    """Which faction an NPC belongs to (Phase L slice 4).
+
+    Drives faction-vs-faction disposition and the player's per-faction
+    standing: when standing with this faction falls to FACTION_HOSTILE,
+    FactionService flips the NPC's alignment to HOSTILE. Assigned from the
+    entity template's `faction` field."""
+
+    faction_id: str = ""
+
+
+@dataclass
+class Relationships:
+    """How an NPC feels about specific other townsfolk (Phase L slice 3).
+
+    Keyed by the *other* NPC's display name (a stable string that survives
+    freeze/thaw, unlike ECS entity ids). Affinity is roughly -100..100:
+    positive = friend, negative = rival. Assigned once at village build by
+    SocialService and read by GossipSystem to colour who-talks-about-whom."""
+
+    affinity: dict[str, int] = field(default_factory=dict)
+
+
+@dataclass
 class PatrolRoute:
     """A guard's looping beat. Assigned by ScheduleSystem the first time a
     PATROL entry with a `route` is encountered. `index` is staggered per
@@ -392,9 +431,14 @@ class Value:
 @dataclass
 class Merchant:
     """Marks an NPC as a trader. Stock is a list of item template ids —
-    fungible goods, not item entities, so freeze/thaw never dangles."""
+    fungible goods, not item entities, so freeze/thaw never dangles.
+
+    base_stock is the shop's replenishable menu (a snapshot of the starting
+    stock); MerchantRestockService refills `stock` back toward it over time.
+    """
 
     stock: list[str] = field(default_factory=list)
+    base_stock: list[str] = field(default_factory=list)
 
 
 @dataclass

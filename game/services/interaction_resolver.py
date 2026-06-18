@@ -11,6 +11,7 @@ from game.components import (
     Merchant,
     Name,
     QuestGiver,
+    ResourceNode,
     Stats,
     TemplateId,
 )
@@ -25,6 +26,7 @@ class InteractionType(Enum):
     TRADE = auto()
     QUESTS = auto()
     REST = auto()
+    HARVEST = auto()
 
 
 class InteractionResolver:
@@ -61,6 +63,10 @@ class InteractionResolver:
             # Neutral/Friendly entities are talked to
             if behavior.alignment in [Alignment.NEUTRAL, Alignment.FRIENDLY]:
                 return InteractionType.TALK
+
+        # Resource nodes (herb patch, ore vein, grain field) are harvested
+        if world.has_component(target_ent, ResourceNode):
+            return InteractionType.HARVEST
 
         # Generic entities with Stats (destructibles?) are attacked
         if world.has_component(target_ent, Stats):
@@ -106,6 +112,11 @@ class InteractionResolver:
             # Sanctioned request: the movement layer must not know about UI —
             # the gameplay state opens the rest window.
             world.dispatch_event("rest_requested", {"source": "innkeeper"})
+
+        elif interaction == InteractionType.HARVEST:
+            # Sanctioned request: the movement layer raises it, the gameplay
+            # state (with ctx access) runs the harvest rules.
+            world.dispatch_event("harvest_requested", target_ent)
 
     @staticmethod
     def _say_line(world, target_ent: int) -> None:

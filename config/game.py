@@ -64,6 +64,34 @@ PROSPERITY_PRICE_SPAN = 0.2  # price baseline 0.9x (destitute) .. 1.1x (rich)
 AI_LOITER_RADIUS = 3
 AI_LOITER_MOVE_CHANCE = 0.5
 
+# NPC<->NPC ambient gossip (ROADMAP Phase L slice 2)
+# During the enemy phase, socialising townsfolk standing close together may
+# exchange a line the nearby player overhears. Rate-limited so the log stays
+# flavourful, not spammy: at most one snippet every GOSSIP_COOLDOWN_TICKS, and
+# only with GOSSIP_CHANCE on an eligible turn. Topics come from the local
+# chronicle (real events) or a generic pool, and may name a third villager.
+GOSSIP_COOLDOWN_TICKS = 8
+GOSSIP_CHANCE = 0.3
+GOSSIP_HEAR_RADIUS = 6  # player must be within this many tiles to overhear
+GOSSIP_PAIR_RADIUS = 2  # two NPCs this close count as in conversation
+GOSSIP_TOPICAL_CHANCE = 0.5  # gossip about a real chronicle event vs. generic banter
+GOSSIP_EVENT_MAX_AGE_TICKS = 4 * 24 * 60  # only recent events are worth gossip
+
+# Factions (ROADMAP Phase L slice 4)
+# Player standing per faction runs FACTION_MIN..FACTION_MAX. Tiers gate
+# dialogue and, crucially, hostility: a faction whose standing has fallen to
+# FACTION_HOSTILE treats the player as an enemy (its NPCs turn HOSTILE).
+FACTION_MIN = -100
+FACTION_MAX = 100
+FACTION_TRUSTED = 50
+FACTION_HOSTILE = -50
+# Killing a faction member shifts standing: the victim's faction (penalty),
+# its allies (smaller penalty) and its enemies (a small bonus — you did them
+# a favour). Wildlife (Animal) kills are exempt: hunting is honest work.
+FACTION_KILL_PENALTY = -30
+FACTION_KILL_ALLY_PENALTY = -15
+FACTION_KILL_ENEMY_BONUS = 10
+
 # Combat depth (ROADMAP Phase G5)
 COMBAT_CRIT_CHANCE = 0.1  # chance any damaging hit is a critical
 COMBAT_CRIT_MULTIPLIER = 2  # critical hits deal double damage
@@ -89,6 +117,12 @@ COMBAT_XP_PER_KILL_BASE = 10  # flat combat XP per kill, plus the foe's max HP
 # CRAFT_QUANTITY_LEVELS_PER_BONUS skill levels above the first.
 CRAFT_QUALITY_SWING = 1.5
 CRAFT_QUANTITY_LEVELS_PER_BONUS = 3
+
+# Resource gathering & merchant restock (ROADMAP Phase K).
+GATHER_XP_PER_HARVEST = 12  # gathering-skill XP each time a node is harvested
+# Shops refill their stock toward the starting menu, one unit per good per hour,
+# but only for goods the settlement still has in abstract stock (scarcity bites).
+RESTOCK_MIN_ECON_STOCK = 1.0
 
 # Day/Night Settings
 DN_SETTINGS = {

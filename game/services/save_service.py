@@ -66,6 +66,7 @@ class SaveService:
                 "chronicle": ctx.world_chronicle.to_dict() if ctx.world_chronicle else None,
                 "economy": ctx.economy.to_dict() if ctx.economy else None,
                 "reputation": ctx.reputation.to_dict() if ctx.reputation else None,
+                "factions": ctx.factions.to_dict() if ctx.factions else None,
                 "quests": ctx.quests.to_dict() if ctx.quests else None,
                 "party": party,
                 "player_old_id": ctx.player_entity,
@@ -127,6 +128,11 @@ class SaveService:
         # Reputation
         if ctx.reputation is not None and data.get("reputation"):
             ctx.reputation.from_dict(data["reputation"])
+
+        # Factions: restore standing, then re-apply hostility to the live map.
+        if ctx.factions is not None and data.get("factions"):
+            ctx.factions.from_dict(data["factions"])
+            ctx.factions.sync_alignments()
 
         # Quests
         if ctx.quests is not None and data.get("quests"):

@@ -8,7 +8,7 @@ import esper
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from core.ecs import reset_world
-from game.components import Activity, AIBehaviorState, AIState, Alignment, Name, Position, Residence, Schedule
+from game.components import Activity, AIBehaviorState, AIState, Alignment, Position, Residence, Schedule, TemplateId
 from game.content.resource_loader import ResourceLoader
 from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
@@ -39,9 +39,11 @@ def test_village_population():
 
     # Find entities in Village map
     # village_map.thaw(world) should have been called in create_village_scenario
+    # Identify NPCs by template id: common folk are renamed to individual
+    # given names by SocialService, so a name filter would no longer match.
     npcs = []
-    for ent, (pos, name) in world.get_components(Position, Name):
-        if pos.layer == 0 and ("Guard" in name.name or "Villager" in name.name):
+    for ent, (pos, tid) in world.get_components(Position, TemplateId):
+        if pos.layer == 0 and tid.id in ("guard", "villager"):
             npcs.append(ent)
 
     print(f"Found {len(npcs)} NPCs in Village map")
@@ -71,8 +73,8 @@ def test_village_population():
 
     # Find a guard
     guard_ent = None
-    for ent, (name, pos) in world.get_components(Name, Position):
-        if "Guard" in name.name:
+    for ent, (tid, pos) in world.get_components(TemplateId, Position):
+        if tid.id == "guard":
             guard_ent = ent
             break
 
@@ -115,8 +117,8 @@ def test_village_population():
 
     # A housed villager, by contrast, sleeps at its assigned bed at night.
     housed_villager = None
-    for ent, (name, res) in world.get_components(Name, Residence):
-        if "Villager" in name.name and res.housed:
+    for ent, (tid, res) in world.get_components(TemplateId, Residence):
+        if tid.id == "villager" and res.housed:
             housed_villager = ent
             break
     if housed_villager is not None:

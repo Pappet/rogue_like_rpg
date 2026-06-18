@@ -1,0 +1,43 @@
+{
+  "factions": {
+    "townsfolk": {
+      "name": "Townsfolk",
+      "player_start": 0,
+      "relations": {
+        "town_guard": "ally",
+        "bandits": "enemy",
+        "monsters": "enemy"
+      }
+    },
+    "town_guard": {
+      "name": "Town Guard",
+      "player_start": 0,
+      "relations": {
+        "townsfolk": "ally",
+        "bandits": "enemy",
+        "monsters": "enemy"
+      }
+    },
+    "bandits": {
+      "name": "Bandits",
+      "player_start": -100,
+      "relations": {
+        "townsfolk": "enemy",
+        "town_guard": "enemy"
+      }
+    },
+    "monsters": {
+      "name": "Monsters",
+      "player_start": -100,
+      "relations": {
+        "townsfolk": "enemy",
+        "town_guard": "enemy"
+      }
+    },
+    "wildlife": {
+      "name": "Wildlife",
+      "player_start": 0,
+      "relations": {}
+    }
+  }
+}

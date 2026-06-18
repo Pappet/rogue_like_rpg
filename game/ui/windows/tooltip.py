@@ -29,6 +29,7 @@ from game.components import (
     Position,
     Stats,
     Targeting,
+    Value,
 )
 from game.map.tile import VisibilityState
 
@@ -105,6 +106,18 @@ class TooltipWindow(UIWindow):
                     f"Weight: {portable.weight} kg",
                     self.font_stats,
                     UI_THEME_INK_DIM,
+                    (self.rect.x + pad, curr_y),
+                    shadow=False,
+                )
+                curr_y += 22
+
+            value = esper.try_component(ent, Value)
+            if value:
+                theme.draw_text(
+                    surface,
+                    f"Value: {value.amount}g",
+                    self.font_stats,
+                    UI_THEME_GOLD,
                     (self.rect.x + pad, curr_y),
                     shadow=False,
                 )

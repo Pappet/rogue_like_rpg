@@ -14,6 +14,7 @@ from game.components import (
     Animal,
     Blocker,
     Description,
+    Faction,
     Innkeeper,
     LootTable,
     MapBound,
@@ -131,7 +132,9 @@ class EntityFactory:
 
         merchant_data = merchant_override if merchant_override is not None else template.merchant
         if merchant_data:
-            components.append(Merchant(stock=list(merchant_data.get("stock", []))))
+            stock = list(merchant_data.get("stock", []))
+            # base_stock is the replenishable menu the shop restocks toward.
+            components.append(Merchant(stock=stock, base_stock=list(stock)))
             components.append(Purse(gold=int(merchant_data.get("gold", 0))))
 
         if template.quest_giver:
@@ -142,6 +145,9 @@ class EntityFactory:
 
         if template.innkeeper:
             components.append(Innkeeper())
+
+        if template.faction:
+            components.append(Faction(faction_id=template.faction))
 
         if template.needs:
             components.append(

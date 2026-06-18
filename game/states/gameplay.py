@@ -10,6 +10,7 @@ from game.controllers.render_pipeline import RenderPipeline
 from game.controllers.turn_orchestrator import TurnOrchestrator
 from game.services import rest_service
 from game.services.crafting_service import CraftingService
+from game.services.gather_service import GatherService
 from game.services.map_transition_service import MapTransitionService
 from game.services.party_service import PartyService
 from game.states.base import GameState
@@ -75,6 +76,7 @@ class GameplayState(GameState):
         esper.set_handler("quests_requested", self._on_quests_requested)
         esper.set_handler("rest_requested", self._on_rest_requested)
         esper.set_handler("craft_requested", self._on_craft_requested)
+        esper.set_handler("harvest_requested", self._on_harvest_requested)
 
     def _on_player_died(self):
         """Handle the player_died event by transitioning to GAME_OVER state."""
@@ -110,6 +112,10 @@ class GameplayState(GameState):
         station = (payload or {}).get("station", "")
         rect = pygame.Rect(*UI_CRAFT_RECT)
         self.ui_stack.push(CraftWindow(rect, self.ctx.player_entity, station, self.ctx, self._craft))
+
+    def _on_harvest_requested(self, node_entity):
+        """Harvest a resource node the player bumped (immediate, no window)."""
+        GatherService.harvest(self.ctx, node_entity)
 
     def _craft(self, recipe):
         """CraftWindow callback: perform the craft, then fast-forward the clock.

@@ -40,11 +40,13 @@ class TurnOrchestrator:
         # Phase systems run during the enemy turn
         self._run_enemy_phase()
 
-    def _run_enemy_phase(self) -> None:
+    def _run_enemy_phase(self, ambient: bool = True) -> None:
         """Run the enemy-turn phase systems if it is currently the enemy turn.
 
         ScheduleSystem/AISystem etc. only act during ENEMY_TURN; AISystem ends
-        the enemy turn, flipping the state back to PLAYER_TURN.
+        the enemy turn, flipping the state back to PLAYER_TURN. Ambient flavour
+        (NPC gossip) is skipped during fast-forward (``ambient=False``) so a
+        long rest doesn't flood the log.
         """
         ctx = self.ctx
         if ctx.systems.turn_system.current_state != GameStates.ENEMY_TURN:
@@ -54,6 +56,8 @@ class TurnOrchestrator:
         ctx.systems.schedule_system.process(ctx.world_clock, ctx.map_container)
         ctx.systems.needs_system.process(ctx.map_container)
         ctx.systems.ai_system.process(ctx.systems.turn_system, ctx.map_container, player_layer, ctx.player_entity)
+        if ambient:
+            ctx.systems.gossip_system.process(ctx, player_layer)
 
     # --- Time skipping (rest / wait) --------------------------------------
 
@@ -88,7 +92,7 @@ class TurnOrchestrator:
         turn_system = self.ctx.systems.turn_system
         turn_system.end_player_turn()  # -> ENEMY_TURN, world clock +1
         esper.process(0)  # frame processors apply queued movement / combat
-        self._run_enemy_phase()  # phase systems -> end_enemy_turn -> PLAYER_TURN
+        self._run_enemy_phase(ambient=False)  # phase systems -> end_enemy_turn -> PLAYER_TURN
 
     def _threatened(self, player) -> bool:
         """True if a hostile is actively hunting the player on their layer."""

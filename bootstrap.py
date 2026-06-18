@@ -17,8 +17,10 @@ from core.ui.stack_manager import UIStack
 from core.world_clock_service import WorldClockService
 from game.content.content_database import default_content
 from game.services.economy_service import EconomyService
+from game.services.faction_service import FactionService
 from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
+from game.services.merchant_restock_service import MerchantRestockService
 from game.services.quest_service import QuestService
 from game.services.render_service import RenderService
 from game.services.reputation_service import ReputationService
@@ -61,6 +63,8 @@ def build_game_context(seed: int | None = None) -> GameContext:
 
     systems = build_systems(world_clock, map_service.get_active_map())
     register_processors(systems)
+    # Reproducible ambient gossip per world seed (Phase L slice 2)
+    systems.gossip_system.rng.seed(derive_seed(world_seed, "gossip"))
 
     ctx = GameContext(
         map_service=map_service,
@@ -89,8 +93,21 @@ def build_game_context(seed: int | None = None) -> GameContext:
     ctx.economy = economy
     esper.set_handler("clock_tick", economy.on_clock_tick)
 
+    # Shops refill their stock toward the starting menu over time (Phase K)
+    restock = MerchantRestockService(economy=economy, world_graph=world_graph)
+    ctx.merchant_restock = restock
+    esper.set_handler("clock_tick", restock.on_clock_tick)
+
     # Player reputation per settlement (registers its entity_died handler)
     ctx.reputation = ReputationService(ctx=ctx)
+
+    # Factions: group disposition + per-faction player standing (registers its
+    # entity_died handler). Sync alignments once so the starting map reflects
+    # any faction that already counts the player an enemy.
+    factions = FactionService(ctx=ctx)
+    factions.load(f"{DATA_DIR}/factions.json")
+    factions.sync_alignments()
+    ctx.factions = factions
 
     # Quests: authored from JSON, generated ones appear on arrival
     quests = QuestService(ctx=ctx)
@@ -112,11 +129,23 @@ def build_game_context(seed: int | None = None) -> GameContext:
     # phase and the settlement's prosperity tier (G3)
     def _dialogue_context() -> dict:
         location_id = ctx.world_graph.current_location_id if ctx.world_graph else None
-        return {
+        context = {
             "rep": ctx.reputation.tier(location_id) if ctx.reputation else "neutral",
             "phase": ctx.world_clock.phase if ctx.world_clock else "day",
             "prosperity": ctx.economy.prosperity_tier(location_id) if ctx.economy else "stable",
         }
+        # Quest-aware smalltalk: givers comment on work in progress here so a
+        # conversation reflects what the player owes the settlement (Phase: chains).
+        if ctx.quests is not None:
+            if ctx.quests.turn_in_candidates(location_id):
+                context["quest"] = "ready"
+            elif any(q.giver_location == location_id for q in ctx.quests.active_quests()):
+                context["quest"] = "active"
+        # Faction-aware smalltalk: the guard reacts to the player's standing
+        # with the town guard (wary/hostile if you've spilled the wrong blood).
+        if ctx.factions is not None:
+            context["guards"] = ctx.factions.tier("town_guard")
+        return context
 
     default_content.dialogues.context_provider = _dialogue_context
 
