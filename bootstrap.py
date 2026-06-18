@@ -19,6 +19,7 @@ from game.content.content_database import default_content
 from game.services.economy_service import EconomyService
 from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
+from game.services.merchant_restock_service import MerchantRestockService
 from game.services.quest_service import QuestService
 from game.services.render_service import RenderService
 from game.services.reputation_service import ReputationService
@@ -88,6 +89,11 @@ def build_game_context(seed: int | None = None) -> GameContext:
     economy.apply_variation(random.Random(derive_seed(world_seed, "economy")))
     ctx.economy = economy
     esper.set_handler("clock_tick", economy.on_clock_tick)
+
+    # Shops refill their stock toward the starting menu over time (Phase K)
+    restock = MerchantRestockService(economy=economy, world_graph=world_graph)
+    ctx.merchant_restock = restock
+    esper.set_handler("clock_tick", restock.on_clock_tick)
 
     # Player reputation per settlement (registers its entity_died handler)
     ctx.reputation = ReputationService(ctx=ctx)

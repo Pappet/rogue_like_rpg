@@ -240,6 +240,29 @@
    ]
   }
  ],
+ "resources": [
+  {
+   "kind": "grain_field",
+   "pos": [
+    8,
+    33
+   ]
+  },
+  {
+   "kind": "grain_field",
+   "pos": [
+    10,
+    33
+   ]
+  },
+  {
+   "kind": "grain_field",
+   "pos": [
+    12,
+    32
+   ]
+  }
+ ],
  "lights": [
   {
    "type": "campfire",

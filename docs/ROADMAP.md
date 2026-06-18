@@ -268,12 +268,23 @@ loaves from the same flour, making the supply chain pay as you improve. Quality
 rolls draw from a run-seeded RNG. Verified by
 `tests/verify_crafting_quality.py`.
 
+### Phase K — Raw-material Supply ✅ (done)
+
+*Where do raw materials come from? Now: you gather them, and shops recover.*
+
+Two renewable sources close the gather→craft loop. **Resource nodes**
+(`ResourceNode` entities — herb patches, ore veins, grain fields) are bumped to
+harvest; they yield the raw item, train a gathering skill (`foraging`/`mining`/
+`farming`, whose level raises the yield) and respawn after a cooldown. Placement
+is data-driven (biome `resources` scatter — swamp bog iron — plus scenario
+`resources` positions). **Merchant restock**: shops refill their stock toward
+the starting menu over time, gated by the settlement's abstract stock so
+shortages still bite. Verified by `tests/verify_gathering.py` and
+`tests/verify_restock.py`.
+
 ---
 
-**All seven roadmap phases plus crafting (H), progression (I) and
-craft quality/quantity (J) are complete.**
-
-### Phase K — Quest Chains & Reactive Dialogue ✅ (slice 1)
+### Phase L — Quest Chains & Reactive Dialogue ✅ (slice 1)
 
 *Quests gain memory: stages unlock in sequence and givers acknowledge them.*
 
@@ -284,12 +295,16 @@ with the "Brackenfen's Lifeline" chain (deliver bread → cull boars → carry
 word to Eastmoor) and a `quest` dialogue-context key so the mayor reacts to
 work in progress / ready to report. Verified by `tests/verify_quests.py`.
 
-Candidates for the next planning round (still building toward the user's
+---
+
+**All seven roadmap phases plus crafting (H), progression (I), craft
+quality/quantity (J), raw-material supply (K) and quest chains (L) are
+complete.** Candidates for the next planning round (still building toward the
 "deepen the world" goal): NPC↔NPC gossip & relationships (deferred from
-Phase D), a real faction model (relations matrix, faction reputation),
-binding quests to a specific giver NPC, combat scaling from the `combat`
-skill, multiple save slots, deeper dungeon levels with stairs, and a
-walkable overworld.
+Phase D), a real faction model (relations matrix, faction reputation), binding
+quests to a specific giver NPC, combat scaling from the `combat` skill,
+multiple save slots, deeper dungeon levels with stairs, and a walkable
+overworld.
 
 ## 4. Recommended order & why
 

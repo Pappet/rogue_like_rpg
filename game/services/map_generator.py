@@ -13,6 +13,7 @@ from game.map.map_container import MapContainer
 from game.map.map_generator_utils import draw_rectangle, get_nearest_walkable_tile
 from game.map.map_layer import MapLayer
 from game.map.tile import Tile, VisibilityState
+from game.services.gather_service import create_resource_node
 from game.services.housing_service import HousingService
 from game.services.map_service import MapService
 from game.services.spawn_service import SpawnService
@@ -390,6 +391,12 @@ class MapGenerator:
             sx, sy = get_nearest_walkable_tile(village_layers[0], station["pos"][0], station["pos"][1])
             village_layers[0].tiles[sy][sx].set_type(STATION_TILES.get(station["type"], "station_forge"))
 
+        # Scenario-authored resource nodes (grain field, ore vein): bump to
+        # harvest raw materials. Created as entities before freeze.
+        for node in config.get("resources", []):
+            rx, ry = get_nearest_walkable_tile(village_layers[0], node["pos"][0], node["pos"][1])
+            create_resource_node(world, node["kind"], rx, ry, 0)
+
         # --- SPAWN VILLAGE NPCS ---
         for npc in config.get("village_npcs", []):
             nx, ny = get_nearest_walkable_tile(village_layers[0], npc["pos"][0], npc["pos"][1])
@@ -558,6 +565,15 @@ class MapGenerator:
                 x, y = walkable[cursor]
                 cursor += 1
                 EntityFactory.create(world, template_id, x, y)
+
+        # Harvestable resource nodes scattered per the biome's resource table.
+        for kind, count in biome.get("resources", []):
+            for _ in range(count):
+                if cursor >= len(walkable):
+                    break
+                x, y = walkable[cursor]
+                cursor += 1
+                create_resource_node(world, kind, x, y, 0)
 
         container.freeze(world)
         return container
