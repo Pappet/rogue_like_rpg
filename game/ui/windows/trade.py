@@ -244,7 +244,7 @@ class TradeWindow(UIWindow):
             surface,
             left,
             pane=0,
-            empty_text="Sold out.",
+            empty_text="Sold out. Come back tomorrow.",
             entries=[
                 (
                     item_registry.get(tid).name if item_registry.get(tid) else tid,
@@ -257,7 +257,7 @@ class TradeWindow(UIWindow):
             surface,
             right,
             pane=1,
-            empty_text="Nothing to sell.",
+            empty_text="Nothing to sell. Gather more items.",
             entries=[
                 (
                     self.world.component_for_entity(ent, Name).name
@@ -274,9 +274,16 @@ class TradeWindow(UIWindow):
         theme.draw_inset(surface, detail_rect)
         self._draw_detail(surface, detail_rect)
 
+        has_items = bool(self._merchant_stock()) if self.active_pane == 0 else bool(self._player_items())
+        if not has_items:
+            hint = "[←/→] Switch   [Esc] Leave"
+        else:
+            action = "Buy" if self.active_pane == 0 else "Sell"
+            hint = f"[←/→] Switch   [↑/↓] Select   [Enter] {action}   [Esc] Leave"
+
         theme.draw_text(
             surface,
-            "[←/→] Switch   [↑/↓] Select   [Enter] Buy/Sell   [Esc] Leave",
+            hint,
             self.small_font,
             UI_THEME_INK_MUTED,
             (box_x + pad + 4, box_y + box_height - 30),
