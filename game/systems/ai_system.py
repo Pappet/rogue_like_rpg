@@ -388,6 +388,9 @@ class AISystem(esper.Processor):
     def _make_transparency_func(self, layer_idx, map_container):
         """Build transparency function for VisibilityService — mirrors visibility_system.py pattern."""
 
+        if not (0 <= layer_idx < len(map_container.layers)):
+            return lambda x, y: False
+
         def is_transparent(x, y):
             if 0 <= layer_idx < len(map_container.layers):
                 layer = map_container.layers[layer_idx]

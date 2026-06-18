@@ -21,6 +21,7 @@ This project is a grid-based, turn-based roguelike RPG. It features exploration 
 7. **Pre-computed Tile Properties**: To eliminate hot loop dictionary lookups during pathfinding and visibility calculations, tile properties like `walkable` and `transparent` are pre-computed on the tile instances themselves.
 8. **Actionable Empty States**: UI windows like Inventory, Quests, and Trade implement context-aware empty states with actionable hints rather than just showing a blank window when empty.
 9. **Item Value Context**: Tooltips and descriptions dynamically surface item values to aid player decision making when trading or evaluating inventory.
+10. **FOV Transparency Optimization**: Field of view calculations cache tile transparency to minimize redundant lookups during shadowcasting.
 
 ## Detailed Architecture
 The game loop runs inside `GameController` driving the active `GameState` subclass:

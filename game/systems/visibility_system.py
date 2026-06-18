@@ -53,7 +53,16 @@ class VisibilitySystem(esper.Processor, MapAwareSystem):
         # 2. Find all entities that provide vision (Position + Stats/LightSource)
         visible_coords = set()
 
+        # Cache transparency functions per layer during the frame
+        transparency_funcs = {}
+
         def get_is_transparent(layer_index):
+            if layer_index in transparency_funcs:
+                return transparency_funcs[layer_index]
+
+            if not (0 <= layer_index < len(self._map_container.layers)):
+                return lambda x, y: False
+
             def is_transparent(x, y):
                 if 0 <= layer_index < len(self._map_container.layers):
                     layer = self._map_container.layers[layer_index]
@@ -62,6 +71,7 @@ class VisibilitySystem(esper.Processor, MapAwareSystem):
                         return tile.is_transparent
                 return False
 
+            transparency_funcs[layer_index] = is_transparent
             return is_transparent
 
         # Get entities providing vision
