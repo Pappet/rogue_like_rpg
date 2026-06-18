@@ -53,10 +53,12 @@ class Tile:
             self.transparent = transparent if transparent is not None else True
             self.dark = dark
             self.sprites = sprites if sprites is not None else {}
-            self._walkable = None  # computed from sprites (legacy behaviour)
+            self._walkable = None
             self.color = (200, 200, 200)
             self.bg_color = None
             self.sprite_colors = {}
+
+        self._update_computed_properties()
 
         # Per-instance mutable state.
         self.visibility_state = VisibilityState.UNEXPLORED
@@ -76,6 +78,19 @@ class Tile:
         self.color = tile_type.color
         self.bg_color = tile_type.bg_color
         self.sprite_colors = dict(tile_type.sprite_colors)
+        self._update_computed_properties()
+
+    def _update_computed_properties(self):
+        """Recompute derived properties when underlying properties change."""
+        self.is_transparent = self.transparent and self.sprites.get(SpriteLayer.GROUND) != "#"
+        if self._walkable is not None:
+            self._walkable_computed = self._walkable
+        else:
+            # Legacy fallback: derive from sprites.
+            if SpriteLayer.GROUND not in self.sprites:
+                self._walkable_computed = False
+            else:
+                self._walkable_computed = self.sprites[SpriteLayer.GROUND] != "#"
 
     @property
     def type_id(self) -> str | None:
@@ -89,12 +104,7 @@ class Tile:
         For registry-backed tiles this comes directly from the TileType.
         For legacy tiles it is derived from the GROUND sprite value (old behaviour).
         """
-        if self._walkable is not None:
-            return self._walkable
-        # Legacy fallback: derive from sprites.
-        if SpriteLayer.GROUND not in self.sprites:
-            return False
-        return self.sprites[SpriteLayer.GROUND] != "#"
+        return self._walkable_computed
 
     @property
     def provides_rest(self) -> bool:
