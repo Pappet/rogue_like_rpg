@@ -32,6 +32,12 @@
     "wolf",
     2
    ]
+  ],
+  "resources": [
+   [
+    "herb_patch",
+    8
+   ]
   ]
  },
  "swamp": {
@@ -67,6 +73,16 @@
     "wolf",
     3
    ]
+  ],
+  "resources": [
+   [
+    "herb_patch",
+    5
+   ],
+   [
+    "iron_vein",
+    4
+   ]
   ]
  },
  "plains": {
@@ -101,6 +117,12 @@
    [
     "wolf",
     2
+   ]
+  ],
+  "resources": [
+   [
+    "herb_patch",
+    4
    ]
   ]
  }

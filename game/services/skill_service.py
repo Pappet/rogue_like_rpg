@@ -25,6 +25,9 @@ SKILLS: dict[str, str] = {
     "alchemy": "Alchemy",
     "jewelcrafting": "Jewelcrafting",
     "combat": "Combat",
+    "foraging": "Foraging",
+    "mining": "Mining",
+    "farming": "Farming",
 }
 
 # Crafting station type -> the skill that craft trains.

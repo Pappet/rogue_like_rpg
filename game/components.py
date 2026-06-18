@@ -148,6 +148,21 @@ class Quality:
 
 
 @dataclass
+class ResourceNode:
+    """A harvestable raw-material source on the map (ROADMAP Phase K).
+
+    Bumping it yields ``item`` into the player's inventory and trains ``skill``;
+    the node is then spent until ``ready_at`` (a world tick), after which it can
+    be gathered again. Catalogue in ``gather_service.RESOURCE_NODES``.
+    """
+
+    item: str
+    skill: str
+    respawn_ticks: int = 240
+    ready_at: int = 0
+
+
+@dataclass
 class Portable:
     weight: float  # kg
 
@@ -392,9 +407,14 @@ class Value:
 @dataclass
 class Merchant:
     """Marks an NPC as a trader. Stock is a list of item template ids —
-    fungible goods, not item entities, so freeze/thaw never dangles."""
+    fungible goods, not item entities, so freeze/thaw never dangles.
+
+    base_stock is the shop's replenishable menu (a snapshot of the starting
+    stock); MerchantRestockService refills `stock` back toward it over time.
+    """
 
     stock: list[str] = field(default_factory=list)
+    base_stock: list[str] = field(default_factory=list)
 
 
 @dataclass

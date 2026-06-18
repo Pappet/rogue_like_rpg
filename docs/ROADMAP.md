@@ -268,14 +268,28 @@ loaves from the same flour, making the supply chain pay as you improve. Quality
 rolls draw from a run-seeded RNG. Verified by
 `tests/verify_crafting_quality.py`.
 
+### Phase K — Raw-material Supply ✅ (done)
+
+*Where do raw materials come from? Now: you gather them, and shops recover.*
+
+Two renewable sources close the gather→craft loop. **Resource nodes**
+(`ResourceNode` entities — herb patches, ore veins, grain fields) are bumped to
+harvest; they yield the raw item, train a gathering skill (`foraging`/`mining`/
+`farming`, whose level raises the yield) and respawn after a cooldown. Placement
+is data-driven (biome `resources` scatter — swamp bog iron — plus scenario
+`resources` positions). **Merchant restock**: shops refill their stock toward
+the starting menu over time, gated by the settlement's abstract stock so
+shortages still bite. Verified by `tests/verify_gathering.py` and
+`tests/verify_restock.py`.
+
 ---
 
-**All seven roadmap phases plus crafting (H), progression (I) and
-craft quality/quantity (J) are complete.** Candidates for the next planning
-round: combat scaling from the `combat` skill (the matching follow-on to J),
-multiple save slots, NPC↔NPC relationships (deferred from Phase D), a real
-faction model (relations matrix, faction reputation), deeper dungeon levels
-with stairs, quest chains, and a walkable overworld.
+**All seven roadmap phases plus crafting (H), progression (I), craft
+quality/quantity (J) and raw-material supply (K) are complete.** Candidates for
+the next planning round: combat scaling from the `combat` skill (the matching
+follow-on to J), multiple save slots, NPC↔NPC relationships (deferred from
+Phase D), a real faction model (relations matrix, faction reputation), deeper
+dungeon levels with stairs, quest chains, and a walkable overworld.
 
 ## 4. Recommended order & why
 
