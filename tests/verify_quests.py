@@ -58,7 +58,7 @@ def _service(current="Village") -> tuple[QuestService, _FakeCtx]:
 
 def test_authored_quests_load_and_offers_filter_by_location():
     service, _ = _service()
-    assert len(service.quests) == 3
+    assert len(service.quests) == 6
     assert [q.id for q in service.offers_at("Village")] == ["long_road"]
     assert [q.id for q in service.offers_at("Eastmoor")] == ["taste_of_home"]
 
@@ -142,6 +142,74 @@ def test_kill_progress_ignores_other_locations():
 
 
 # ---------------------------------------------------------------------------
+# Quest chains: prerequisites gate later stages; turning one in unlocks next
+# ---------------------------------------------------------------------------
+
+
+def test_quest_chain_gates_and_unlocks_stages():
+    _load_content()
+    service, ctx = _service(current="Brackenfen")
+    inventory = Inventory()
+    ctx.player_entity = esper.create_entity(PlayerTag(), Purse(gold=0), inventory)
+
+    # Only the first stage is offered; later stages stay hidden until unlocked.
+    offered = [q.id for q in service.offers_at("Brackenfen")]
+    assert "lifeline_larder" in offered
+    assert "lifeline_tuskers" not in offered
+    assert "lifeline_word" not in offered
+    # A locked stage is also not gossiped about elsewhere.
+    assert all(q.id != "lifeline_tuskers" for q in service.open_offers_elsewhere("Village"))
+
+    # Stage 1: deliver 3 bread -> stage 2 (kill) unlocks.
+    larder = next(q for q in service.quests if q.id == "lifeline_larder")
+    service.accept(larder)
+    for _ in range(3):
+        inventory.items.append(ItemFactory.create(esper, "bread"))
+    assert service.turn_in(larder) is True
+    offered = [q.id for q in service.offers_at("Brackenfen")]
+    assert "lifeline_tuskers" in offered
+    assert "lifeline_word" not in offered
+
+    # Stage 2: cull 2 boar -> stage 3 (visit) unlocks.
+    tuskers = next(q for q in service.quests if q.id == "lifeline_tuskers")
+    service.accept(tuskers)
+    for _ in range(2):
+        boar = esper.create_entity(TemplateId("boar"))
+        service.on_entity_died(boar, attacker=ctx.player_entity)
+    assert tuskers.state == "completed"
+    assert service.turn_in(tuskers) is True
+    offered = [q.id for q in service.offers_at("Brackenfen")]
+    assert "lifeline_word" in offered
+
+
+def test_chain_serialization_preserves_prerequisites():
+    service, ctx = _service()
+    data = service.to_dict()
+    restored = QuestService(ctx=ctx)
+    restored.from_dict(data)
+    word = next(q for q in restored.quests if q.id == "lifeline_word")
+    assert word.prerequisites == ["lifeline_tuskers"]
+    # With nothing turned in, the gated stage is hidden.
+    assert restored._prerequisites_met(word) is False
+
+
+def test_mayor_dialogue_reacts_to_quest_state():
+    from game.content.dialogue_service import DialogueService
+
+    svc = DialogueService()
+    svc.load("assets/data/dialogues.json")
+    ready_pool = svc._dialogues["mayor"]["conditional"][0]["lines"]
+    active_pool = svc._dialogues["mayor"]["conditional"][1]["lines"]
+    default_pool = svc._dialogues["mayor"]["default"]
+
+    for _ in range(20):
+        assert svc.get_line("mayor", {"quest": "ready"}) in ready_pool
+        assert svc.get_line("mayor", {"quest": "active"}) in active_pool
+        # No quest context -> the mayor falls back to plain smalltalk.
+        assert svc.get_line("mayor", {}) in default_pool
+
+
+# ---------------------------------------------------------------------------
 # Generated quests (E2)
 # ---------------------------------------------------------------------------
 
@@ -216,7 +284,7 @@ def test_serialization_roundtrip():
 
     restored = QuestService(ctx=ctx)
     restored.from_dict(data)
-    assert len(restored.quests) == 3
+    assert len(restored.quests) == 6
     assert next(q for q in restored.quests if q.id == quest.id).state == "active"
 
 
