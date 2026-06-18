@@ -2,7 +2,7 @@ import random
 
 import esper
 
-from config import AI_LOITER_MOVE_CHANCE, AI_LOITER_RADIUS, GameStates, LogCategory, SpriteLayer
+from config import AI_LOITER_MOVE_CHANCE, AI_LOITER_RADIUS, GameStates, LogCategory
 from core.visibility_service import VisibilityService
 from game.components import (
     AI,
@@ -393,9 +393,7 @@ class AISystem(esper.Processor):
                 layer = map_container.layers[layer_idx]
                 if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
                     tile = layer.tiles[y][x]
-                    if not tile.transparent:
-                        return False
-                    return tile.sprites.get(SpriteLayer.GROUND) != "#"
+                    return tile.is_transparent
             return False
 
         return is_transparent

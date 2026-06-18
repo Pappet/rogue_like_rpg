@@ -118,7 +118,9 @@ class QuestWindow(UIWindow):
 
         entries = self._entries()
         if not entries:
-            empty = "No quests here right now." if self.mode == "giver" else "Your journal is empty."
+            empty = (
+                "No quests here right now." if self.mode == "giver" else "Your journal is empty. Speak to town mayors."
+            )
             theme.draw_text(surface, empty, self.font, UI_THEME_INK_MUTED, (body.x + 14, body.y + 14))
         else:
             row_h = 80
@@ -201,7 +203,10 @@ class QuestWindow(UIWindow):
                     )
                 y += 80
 
-        hint = "[↑/↓] Select   [Enter] Accept / Turn in   [Esc] Leave" if self.mode == "giver" else "[Esc] Close"
+        if not entries:
+            hint = "[Esc] Leave" if self.mode == "giver" else "[Esc] Close"
+        else:
+            hint = "[↑/↓] Select   [Enter] Accept / Turn in   [Esc] Leave" if self.mode == "giver" else "[Esc] Close"
         theme.draw_text(
             surface, hint, self.small_font, UI_THEME_INK_MUTED, (box_x + pad + 4, box_y + box_height - 30), shadow=False
         )
