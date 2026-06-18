@@ -112,11 +112,19 @@ def build_game_context(seed: int | None = None) -> GameContext:
     # phase and the settlement's prosperity tier (G3)
     def _dialogue_context() -> dict:
         location_id = ctx.world_graph.current_location_id if ctx.world_graph else None
-        return {
+        context = {
             "rep": ctx.reputation.tier(location_id) if ctx.reputation else "neutral",
             "phase": ctx.world_clock.phase if ctx.world_clock else "day",
             "prosperity": ctx.economy.prosperity_tier(location_id) if ctx.economy else "stable",
         }
+        # Quest-aware smalltalk: givers comment on work in progress here so a
+        # conversation reflects what the player owes the settlement (Phase: chains).
+        if ctx.quests is not None:
+            if ctx.quests.turn_in_candidates(location_id):
+                context["quest"] = "ready"
+            elif any(q.giver_location == location_id for q in ctx.quests.active_quests()):
+                context["quest"] = "active"
+        return context
 
     default_content.dialogues.context_provider = _dialogue_context
 

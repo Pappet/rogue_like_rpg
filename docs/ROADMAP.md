@@ -271,11 +271,25 @@ rolls draw from a run-seeded RNG. Verified by
 ---
 
 **All seven roadmap phases plus crafting (H), progression (I) and
-craft quality/quantity (J) are complete.** Candidates for the next planning
-round: combat scaling from the `combat` skill (the matching follow-on to J),
-multiple save slots, NPC↔NPC relationships (deferred from Phase D), a real
-faction model (relations matrix, faction reputation), deeper dungeon levels
-with stairs, quest chains, and a walkable overworld.
+craft quality/quantity (J) are complete.**
+
+### Phase K — Quest Chains & Reactive Dialogue ✅ (slice 1)
+
+*Quests gain memory: stages unlock in sequence and givers acknowledge them.*
+
+Authored quests may declare `prerequisites` (quest ids that must be
+`turned_in` first); a gated stage stays hidden from offers and rumors until
+its chain clears, and turning a stage in announces what it unlocks. Shipped
+with the "Brackenfen's Lifeline" chain (deliver bread → cull boars → carry
+word to Eastmoor) and a `quest` dialogue-context key so the mayor reacts to
+work in progress / ready to report. Verified by `tests/verify_quests.py`.
+
+Candidates for the next planning round (still building toward the user's
+"deepen the world" goal): NPC↔NPC gossip & relationships (deferred from
+Phase D), a real faction model (relations matrix, faction reputation),
+binding quests to a specific giver NPC, combat scaling from the `combat`
+skill, multiple save slots, deeper dungeon levels with stairs, and a
+walkable overworld.
 
 ## 4. Recommended order & why
 
