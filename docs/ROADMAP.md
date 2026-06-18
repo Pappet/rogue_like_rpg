@@ -300,8 +300,18 @@ socialising townsfolk standing close together exchange a line the nearby
 player overhears. Topics draw from the local chronicle (real off-screen
 events) or a generic `_gossip` pool and may name a third villager, so the
 chatter reflects the simulation. Rate-limited, run-seeded, skipped during
-fast-forward. Verified by `tests/verify_gossip.py`. (Next: NPC↔NPC
-*relationship* values — affinity/rivalry that shapes who gossips about whom.)
+fast-forward. Verified by `tests/verify_gossip.py`.
+
+*Slice 3 — Identity & relationships:* `SocialService` (runs at village build,
+after housing) gives the common crowd individual given names from
+`names.json` and a `Relationships` component wiring each to a few peers as
+friends or a rival. `GossipSystem` reads it so the speaker gossips about
+someone they actually know — warmly about friends (`_gossip_friend`), sharply
+about rivals (`_gossip_rival`). The town is now full of named people with
+opinions of each other. Verified by `tests/verify_social_service.py` and the
+relationship-tone cases in `tests/verify_gossip.py`. (Next candidate: a real
+*faction* model — relations matrix + faction reputation that gates trade,
+dialogue and guard behaviour.)
 
 ---
 

@@ -166,13 +166,26 @@
  "_gossip": [
   "Have you seen {subject} about? Keeping to themselves lately.",
   "{subject} swears the harvest will be better next year.",
-  "Don't repeat this, but {subject} still hasn't paid their tab.",
   "They say {subject} fancies someone across the square.",
   "Word is {subject} had words with the mayor again.",
   "Cold nights lately. My old bones feel every one.",
   "The work's hard, but the roof holds, eh?",
   "Heard the price of bread again? Robbery, I call it.",
   "Quiet today. Quiet's good. Quiet means no wolves."
+ ],
+ "_gossip_friend": [
+  "Good soul, {subject}. Always lends a hand at harvest.",
+  "I'd trust {subject} with my last coin, and gladly.",
+  "{subject} sat with me through the fever last winter. Never forget that.",
+  "If you need help, ask {subject} — kindest in the village.",
+  "{subject} and I go back years. Salt of the earth, that one."
+ ],
+ "_gossip_rival": [
+  "Don't get me started on {subject}. Still owes me for the spring market.",
+  "{subject}? Wouldn't share water in a drought, that one.",
+  "Mark my words, {subject} shorted me on the last trade.",
+  "I've no quarrel with anyone — save {subject}, and they know why.",
+  "Keep your purse shut around {subject}, is all I'll say."
  ],
  "hunter": {
   "default": [

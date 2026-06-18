@@ -25,11 +25,17 @@ from config import (
     GOSSIP_TOPICAL_CHANCE,
     LogCategory,
 )
-from game.components import AIBehaviorState, AIState, Alignment, Corpse, Name, PlayerTag, Position
+from game.components import AIBehaviorState, AIState, Alignment, Corpse, Name, PlayerTag, Position, Relationships
 from game.content.dialogue_service import dialogue_service
 
 # States whose NPCs are idle enough to chatter.
 _CHATTY_STATES = (AIState.SOCIALIZE, AIState.WORK, AIState.IDLE)
+
+# How often a speaker with relationships gossips about someone they actually
+# know (vs. a random bystander).
+_RELATIONSHIP_SUBJECT_CHANCE = 0.75
+# Gossip pool per relationship tone.
+_TONE_POOL = {"friend": "_gossip_friend", "rival": "_gossip_rival", "neutral": "_gossip"}
 
 
 class GossipSystem:
@@ -74,8 +80,9 @@ class GossipSystem:
             return
         (e1, n1, _), (e2, n2, _) = pair
 
-        subject = self._pick_subject(subjects, {n1, n2})
-        line = self._pick_line(ctx, tick, subject)
+        rel = esper.try_component(e1, Relationships)
+        subject, tone = self._pick_subject(rel, subjects, {n1, n2})
+        line = self._pick_line(ctx, tick, subject, tone)
         if line is None:
             return
 
@@ -102,17 +109,33 @@ class GossipSystem:
                     return first, second
         return None
 
-    def _pick_subject(self, subjects: list[str], exclude: set[str]) -> str | None:
-        pool = [name for name in subjects if name not in exclude]
-        return self.rng.choice(pool) if pool else None
+    def _pick_subject(self, rel, subjects: list[str], exclude: set[str]) -> tuple[str | None, str]:
+        """Choose who the speaker gossips about and the tone toward them.
 
-    def _pick_line(self, ctx, tick: int, subject: str | None) -> str | None:
-        """Pick a gossip line: a topical chronicle event or generic banter."""
+        A speaker with relationships usually talks about someone they actually
+        know (a friend warmly, a rival sharply); otherwise a random bystander.
+        Returns (subject_name | None, tone) where tone is friend/rival/neutral.
+        """
+        candidates = [name for name in subjects if name not in exclude]
+        if not candidates:
+            return None, "neutral"
+        if rel is not None:
+            known = [(name, rel.affinity[name]) for name in candidates if name in rel.affinity]
+            if known and self.rng.random() < _RELATIONSHIP_SUBJECT_CHANCE:
+                name, affinity = self.rng.choice(known)
+                tone = "friend" if affinity > 0 else "rival" if affinity < 0 else "neutral"
+                return name, tone
+        return self.rng.choice(candidates), "neutral"
+
+    def _pick_line(self, ctx, tick: int, subject: str | None, tone: str = "neutral") -> str | None:
+        """Pick a gossip line: a topical chronicle event or relationship-toned banter."""
         event = self._recent_event(ctx, tick)
         if event is not None and self.rng.random() < GOSSIP_TOPICAL_CHANCE:
             return f"Did you hear? {event.text}"
 
-        lines = dialogue_service.gossip_lines()
+        lines = dialogue_service.gossip_lines(_TONE_POOL.get(tone, "_gossip"))
+        if not lines and tone != "neutral":
+            lines = dialogue_service.gossip_lines()  # fall back to neutral pool
         usable = [ln for ln in lines if subject is not None or "{subject}" not in ln]
         if not usable:
             return None

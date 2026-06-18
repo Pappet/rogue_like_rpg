@@ -8,7 +8,7 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 import esper
 
 from config import GOSSIP_COOLDOWN_TICKS
-from game.components import AIBehaviorState, AIState, Alignment, Name, PlayerTag, Position
+from game.components import AIBehaviorState, AIState, Alignment, Name, PlayerTag, Position, Relationships
 from game.content.dialogue_service import dialogue_service
 from game.services.world_chronicle_service import ChronicleEvent
 from game.systems.gossip_system import GossipSystem
@@ -128,3 +128,44 @@ def test_gossip_can_reference_a_real_chronicle_event():
             found = True
             break
     assert found, f"gossip should sometimes repeat real chronicle events: {msgs}"
+
+
+# ---------------------------------------------------------------------------
+# Relationships colour who is gossiped about and in what tone (slice 3)
+# ---------------------------------------------------------------------------
+
+
+def test_pick_subject_prefers_a_known_relationship_with_tone():
+    dialogue_service.load(DIALOGUES)
+    gs = GossipSystem(rng=random.Random(0))
+    rel = Relationships(affinity={"Bert": 60, "Cyrus": -60})
+    subjects = ["Bert", "Cyrus", "Dahl", "Ewan"]
+
+    tones = {}
+    for _ in range(200):
+        name, tone = gs._pick_subject(rel, subjects, exclude={"Anna"})
+        tones.setdefault(name, set()).add(tone)
+    # The known peers are picked, with the matching tone.
+    assert "friend" in tones.get("Bert", set())
+    assert "rival" in tones.get("Cyrus", set())
+    # A stranger, if ever chosen, is only ever neutral.
+    assert tones.get("Dahl", {"neutral"}) == {"neutral"}
+
+
+def test_pick_line_draws_from_the_tone_pool():
+    dialogue_service.load(DIALOGUES)
+    gs = GossipSystem(rng=random.Random(1))
+
+    class _Ctx0:
+        world_chronicle = None
+        world_graph = None
+
+    friend_pool = dialogue_service.gossip_lines("_gossip_friend")
+    rival_pool = dialogue_service.gossip_lines("_gossip_rival")
+    assert friend_pool and rival_pool
+
+    for _ in range(40):
+        warm = gs._pick_line(_Ctx0(), tick=0, subject="Bert", tone="friend")
+        assert warm in [ln.format(subject="Bert") for ln in friend_pool], warm
+        sharp = gs._pick_line(_Ctx0(), tick=0, subject="Bert", tone="rival")
+        assert sharp in [ln.format(subject="Bert") for ln in rival_pool], sharp

@@ -343,6 +343,18 @@ class Schedule:
 
 
 @dataclass
+class Relationships:
+    """How an NPC feels about specific other townsfolk (Phase L slice 3).
+
+    Keyed by the *other* NPC's display name (a stable string that survives
+    freeze/thaw, unlike ECS entity ids). Affinity is roughly -100..100:
+    positive = friend, negative = rival. Assigned once at village build by
+    SocialService and read by GossipSystem to colour who-talks-about-whom."""
+
+    affinity: dict[str, int] = field(default_factory=dict)
+
+
+@dataclass
 class PatrolRoute:
     """A guard's looping beat. Assigned by ScheduleSystem the first time a
     PATROL entry with a `route` is encountered. `index` is staggered per
