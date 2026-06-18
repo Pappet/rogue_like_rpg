@@ -41,6 +41,7 @@ class QuestWindow(UIWindow):
         self.input_manager = ctx.input_manager
         self.world = esper
         self.selected_idx = 0
+        self.scroll_offset = 0
         self.title_font = theme.get_font(34, display=True)
         self.font = theme.get_font(25)
         self.small_font = theme.get_font(20)
@@ -120,10 +121,20 @@ class QuestWindow(UIWindow):
             empty = "No quests here right now." if self.mode == "giver" else "Your journal is empty."
             theme.draw_text(surface, empty, self.font, UI_THEME_INK_MUTED, (body.x + 14, body.y + 14))
         else:
+            row_h = 80
+            max_visible = max(1, (body.height - 16) // row_h)
+
+            if self.selected_idx < self.scroll_offset:
+                self.scroll_offset = self.selected_idx
+            elif self.selected_idx >= self.scroll_offset + max_visible:
+                self.scroll_offset = self.selected_idx - max_visible + 1
+
+            max_scroll = max(0, len(entries) - max_visible)
+            self.scroll_offset = max(0, min(self.scroll_offset, max_scroll))
+
             y = body.y + 12
-            for i, (kind, quest) in enumerate(entries):
-                if y + 78 > body.bottom:
-                    break
+            for i in range(self.scroll_offset, min(len(entries), self.scroll_offset + max_visible)):
+                kind, quest = entries[i]
                 selected = i == self.selected_idx and self.mode == "giver"
                 card = pygame.Rect(body.x + 8, y, body.width - 16, 74)
                 if selected:
