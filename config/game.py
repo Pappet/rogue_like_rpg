@@ -77,6 +77,21 @@ GOSSIP_PAIR_RADIUS = 2  # two NPCs this close count as in conversation
 GOSSIP_TOPICAL_CHANCE = 0.5  # gossip about a real chronicle event vs. generic banter
 GOSSIP_EVENT_MAX_AGE_TICKS = 4 * 24 * 60  # only recent events are worth gossip
 
+# Factions (ROADMAP Phase L slice 4)
+# Player standing per faction runs FACTION_MIN..FACTION_MAX. Tiers gate
+# dialogue and, crucially, hostility: a faction whose standing has fallen to
+# FACTION_HOSTILE treats the player as an enemy (its NPCs turn HOSTILE).
+FACTION_MIN = -100
+FACTION_MAX = 100
+FACTION_TRUSTED = 50
+FACTION_HOSTILE = -50
+# Killing a faction member shifts standing: the victim's faction (penalty),
+# its allies (smaller penalty) and its enemies (a small bonus — you did them
+# a favour). Wildlife (Animal) kills are exempt: hunting is honest work.
+FACTION_KILL_PENALTY = -30
+FACTION_KILL_ALLY_PENALTY = -15
+FACTION_KILL_ENEMY_BONUS = 10
+
 # Combat depth (ROADMAP Phase G5)
 COMBAT_CRIT_CHANCE = 0.1  # chance any damaging hit is a critical
 COMBAT_CRIT_MULTIPLIER = 2  # critical hits deal double damage

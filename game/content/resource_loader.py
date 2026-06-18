@@ -273,6 +273,7 @@ class ResourceLoader:
                 quest_giver=bool(item.get("quest_giver", False)),
                 animal=bool(item.get("animal", False)),
                 innkeeper=bool(item.get("innkeeper", False)),
+                faction=item.get("faction"),
             )
 
             registry.register(template)

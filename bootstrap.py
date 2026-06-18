@@ -17,6 +17,7 @@ from core.ui.stack_manager import UIStack
 from core.world_clock_service import WorldClockService
 from game.content.content_database import default_content
 from game.services.economy_service import EconomyService
+from game.services.faction_service import FactionService
 from game.services.map_generator import MapGenerator
 from game.services.map_service import MapService
 from game.services.merchant_restock_service import MerchantRestockService
@@ -100,6 +101,14 @@ def build_game_context(seed: int | None = None) -> GameContext:
     # Player reputation per settlement (registers its entity_died handler)
     ctx.reputation = ReputationService(ctx=ctx)
 
+    # Factions: group disposition + per-faction player standing (registers its
+    # entity_died handler). Sync alignments once so the starting map reflects
+    # any faction that already counts the player an enemy.
+    factions = FactionService(ctx=ctx)
+    factions.load(f"{DATA_DIR}/factions.json")
+    factions.sync_alignments()
+    ctx.factions = factions
+
     # Quests: authored from JSON, generated ones appear on arrival
     quests = QuestService(ctx=ctx)
     quests.rng.seed(derive_seed(world_seed, "quests"))
@@ -132,6 +141,10 @@ def build_game_context(seed: int | None = None) -> GameContext:
                 context["quest"] = "ready"
             elif any(q.giver_location == location_id for q in ctx.quests.active_quests()):
                 context["quest"] = "active"
+        # Faction-aware smalltalk: the guard reacts to the player's standing
+        # with the town guard (wary/hostile if you've spilled the wrong blood).
+        if ctx.factions is not None:
+            context["guards"] = ctx.factions.tier("town_guard")
         return context
 
     default_content.dialogues.context_provider = _dialogue_context

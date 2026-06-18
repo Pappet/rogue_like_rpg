@@ -14,6 +14,7 @@ from game.components import (
     Animal,
     Blocker,
     Description,
+    Faction,
     Innkeeper,
     LootTable,
     MapBound,
@@ -144,6 +145,9 @@ class EntityFactory:
 
         if template.innkeeper:
             components.append(Innkeeper())
+
+        if template.faction:
+            components.append(Faction(faction_id=template.faction))
 
         if template.needs:
             components.append(

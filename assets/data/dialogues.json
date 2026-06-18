@@ -75,13 +75,37 @@
    }
   ]
  },
- "guard": [
-  "Move along, citizen.",
-  "Stay out of trouble.",
-  "The roads aren't safe at night.",
-  "I'm keeping watch. No need to worry.",
-  "Report anything suspicious to me."
- ],
+ "guard": {
+  "default": [
+   "Move along, citizen.",
+   "Stay out of trouble.",
+   "The roads aren't safe at night.",
+   "I'm keeping watch. No need to worry.",
+   "Report anything suspicious to me."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "guards": "hostile"
+    },
+    "lines": [
+     "You've a nerve showing your face to the watch.",
+     "Murderer. The next blade you see will be mine.",
+     "Step wrong and I'll cut you down where you stand."
+    ]
+   },
+   {
+    "when": {
+     "guards": "trusted"
+    },
+    "lines": [
+     "The watch is glad to have you, friend.",
+     "You've earned our respect. Walk easy.",
+     "Any trouble, and the guard stands with you."
+    ]
+   }
+  ]
+ },
  "shopkeeper": {
   "default": [
    "Looking to buy something?",
