@@ -1,0 +1,3 @@
+## 2024-06-18 - Contextual Footer Hints in Pygame
+**Learning:** Pygame UI windows lacked context-awareness in empty states, leading to confusing keyboard shortcuts (e.g., prompting users to "Select" or "Drop" when nothing was in the inventory). Empty states themselves lacked actionable guidance.
+**Action:** When designing modal dialogs or inventory screens in this app, always ensure empty states tell the user *how* to populate them (e.g., "Explore to find items", "Speak to town mayors"). Dynamically hide or change footer keyboard hints based on the active state or list length so users aren't presented with invalid actions.
