@@ -70,6 +70,14 @@ class DialogueService:
         """Remove all loaded dialogues (used by tests)."""
         self._dialogues = {}
 
+    def gossip_lines(self) -> list[str]:
+        """Raw NPC<->NPC gossip pool (the ``_gossip`` entry, may be empty).
+
+        Returned verbatim — lines may carry a ``{subject}`` placeholder the
+        caller fills with a third villager's name (GossipSystem)."""
+        entry = self._dialogues.get("_gossip")
+        return list(entry) if isinstance(entry, list) else []
+
     def get_line(self, template_id: str, context: dict | None = None) -> str:
         """Return a dialogue line for the given template ID.
 

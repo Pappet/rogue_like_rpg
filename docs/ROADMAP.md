@@ -295,6 +295,14 @@ with the "Brackenfen's Lifeline" chain (deliver bread → cull boars → carry
 word to Eastmoor) and a `quest` dialogue-context key so the mayor reacts to
 work in progress / ready to report. Verified by `tests/verify_quests.py`.
 
+*Slice 2 — Ambient NPC↔NPC gossip:* `GossipSystem` (phase system) lets
+socialising townsfolk standing close together exchange a line the nearby
+player overhears. Topics draw from the local chronicle (real off-screen
+events) or a generic `_gossip` pool and may name a third villager, so the
+chatter reflects the simulation. Rate-limited, run-seeded, skipped during
+fast-forward. Verified by `tests/verify_gossip.py`. (Next: NPC↔NPC
+*relationship* values — affinity/rivalry that shapes who gossips about whom.)
+
 ---
 
 **All seven roadmap phases plus crafting (H), progression (I), craft

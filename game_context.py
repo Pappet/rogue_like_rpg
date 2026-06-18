@@ -28,6 +28,7 @@ from game.systems.combat_system import CombatSystem
 from game.systems.death_system import DeathSystem
 from game.systems.equipment_system import EquipmentSystem
 from game.systems.fct_system import FCTSystem
+from game.systems.gossip_system import GossipSystem
 from game.systems.movement_system import MovementSystem
 from game.systems.needs_system import NeedsSystem
 from game.systems.schedule_system import ScheduleSystem
@@ -67,6 +68,7 @@ class Systems:
     schedule_system: ScheduleSystem
     needs_system: NeedsSystem = field(default_factory=NeedsSystem)
     status_effect_system: StatusEffectSystem = field(default_factory=StatusEffectSystem)
+    gossip_system: GossipSystem = field(default_factory=GossipSystem)
     render_system: object | None = None
     debug_render_system: object | None = None
     ui_system: object | None = None

@@ -82,7 +82,7 @@ The ECS logic is separated into four distinct categories:
 1. **FRAME-PROCESSORS**: Registered once with `esper.add_processor()` (via `register_processors()` in the bootstrap) and run every frame by `TurnOrchestrator.update()` via `esper.process()`.
    - `TurnSystem`, `EquipmentSystem`, `VisibilitySystem`, `MovementSystem`, `CombatSystem`, `FCTSystem`
 2. **PHASE-SYSTEMS**: Called by `TurnOrchestrator` during specific game phases (like enemy turn).
-   - `StatusEffectSystem` (`ENEMY_TURN`, first), `AISystem` (`ENEMY_TURN`), `ScheduleSystem` (`ENEMY_TURN`), `NeedsSystem` (`ENEMY_TURN`, after ScheduleSystem)
+   - `StatusEffectSystem` (`ENEMY_TURN`, first), `AISystem` (`ENEMY_TURN`), `ScheduleSystem` (`ENEMY_TURN`), `NeedsSystem` (`ENEMY_TURN`, after ScheduleSystem), `GossipSystem` (`ENEMY_TURN`, last; ambient flavour, skipped during fast-forward)
 3. **RENDER-SYSTEMS**: Called by `RenderPipeline` during the `draw()` cycle. (Re)created in `GameplayState.startup()`.
    - `RenderSystem`, `UISystem`, `DebugRenderSystem`
 4. **EVENT-SYSTEMS**: React exclusively to events (callbacks set up in `__init__` via `esper.set_handler()`), without a `process()` loop and therefore *not* added as an `esper.Processor`.
@@ -179,6 +179,7 @@ is neutral constants, usable by both.
     │   ├── schedule_system.py       # ScheduleSystem (phase system)
     │   ├── needs_system.py          # NeedsSystem (phase system; needs preempt schedules)
     │   ├── status_effect_system.py  # StatusEffectSystem (phase system; bleeding ticks)
+    │   ├── gossip_system.py         # GossipSystem (phase system; ambient NPC<->NPC chatter)
     │   ├── death_system.py          # DeathSystem (event system)
     │   ├── render_system.py         # RenderSystem (render system)
     │   ├── ui_system.py             # UISystem (render system)
@@ -597,6 +598,13 @@ class MapAwareSystem:
   `AI_LOITER_RADIUS` of the anchor (stepping back if it drifts out, an
   occasional small step otherwise). This is what breaks the "crowd frozen in
   a blob" look — daytime work crowds and the evening fire now stay in motion.
+- **Gossip**: `GossipSystem` (phase system, run last in the enemy phase) lets
+  socialising/working townsfolk standing close together exchange a line the
+  nearby player overhears. Topics come from the local chronicle (real events)
+  or the `_gossip` pool in `dialogues.json`, and may name a third villager via
+  a `{subject}` placeholder — the town talks about itself. Rate-limited by
+  `GOSSIP_*` constants in `config/game.py`; skipped during rest fast-forward.
+  Drawn from a run-seeded RNG (`derive_seed(world_seed, "gossip")`).
 - **Patrol routes**: a `PATROL` schedule entry may carry a `route` (waypoint
   list). `ScheduleSystem._update_patrol` cycles a guard through it via a
   `PatrolRoute` component whose start index is staggered per entity
