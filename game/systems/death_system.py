@@ -18,6 +18,7 @@ from game.components import (
     PatrolRoute,
     PlayerTag,
     Position,
+    Relationships,
     Renderable,
     Skirmisher,
     Stats,
@@ -88,6 +89,7 @@ class DeathSystem(MapAwareSystem):
             Merchant,
             Innkeeper,
             Skirmisher,
+            Relationships,
         ]:
             if esper.has_component(entity, component_type):
                 esper.remove_component(entity, component_type)

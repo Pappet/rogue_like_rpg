@@ -16,6 +16,7 @@ from game.map.tile import Tile, VisibilityState
 from game.services.gather_service import create_resource_node
 from game.services.housing_service import HousingService
 from game.services.map_service import MapService
+from game.services.social_service import SocialService
 from game.services.spawn_service import SpawnService
 
 WILDERNESS_SIZE = 40
@@ -406,6 +407,10 @@ class MapGenerator:
         # and tell everyone where the village's social centre is (Living
         # Village). Only this scenario's exterior NPCs are live right now.
         HousingService.assign(world, config, village_layers[0])
+
+        # Individual identity: name the common folk and wire their friendships
+        # and rivalries (Phase L slice 3), so gossip names real people.
+        SocialService.assign(world, seed=self._map_seed(map_id))
 
         # Settlements are civilized ground: no random monster spawns here.
         # Wildlife and monsters live in the settlement's wilderness map.

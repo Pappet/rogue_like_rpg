@@ -147,7 +147,8 @@ is neutral constants, usable by both.
 │   ├── quests.json                  # Authored quests (generated ones come from the sim)
 │   ├── biomes.json                  # Wilderness biomes: terrain mix + wildlife spawns
 │   ├── schedules.json               # NPC daily routines
-│   ├── dialogues.json               # NPC dialogue lines by template_id
+│   ├── dialogues.json               # NPC dialogue lines by template_id (+ _gossip pools)
+│   ├── names.json                   # Given-name pool for townsfolk (SocialService)
 │   ├── prefabs/                     # Prefab room layouts
 │   └── scenarios/                   # Data-driven map scenarios (e.g. village.json)
 │
@@ -214,6 +215,7 @@ is neutral constants, usable by both.
     │   ├── save_serialization.py    # Generic dataclass/tile JSON (de)serialization
     │   ├── spawn_service.py         # Monster/NPC spawning
     │   ├── housing_service.py       # Capacity-based night housing (beds vs hearth)
+    │   ├── social_service.py        # Townsfolk given names + NPC↔NPC relationships
     │   ├── party_service.py         # Player party creation
     │   ├── render_service.py        # Map rendering + viewport tint
     │   ├── pathfinding_service.py   # A* pathfinding wrapper
@@ -409,6 +411,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `AIBehaviorState` | Current `AIState` + `Alignment`              |
 | `Activity`        | Schedule-driven activity + target position   |
 | `Schedule`        | Links entity to a `schedule_id`              |
+| `Relationships`   | NPC↔NPC affinity by name (friend/rival)      |
 | `PatrolRoute`     | A guard's looping beat + current waypoint idx|
 | `Residence`       | Hearth + bed/gather plan (HousingService)    |
 | `PathData`        | A* path + destination for NPC movement       |
@@ -598,11 +601,22 @@ class MapAwareSystem:
   `AI_LOITER_RADIUS` of the anchor (stepping back if it drifts out, an
   occasional small step otherwise). This is what breaks the "crowd frozen in
   a blob" look — daytime work crowds and the evening fire now stay in motion.
+- **Identity & relationships**: `SocialService` runs once per settlement at
+  village build (after `HousingService`, before freeze; mirrors that pattern).
+  It gives the common crowd (`SocialService.NAMED_TEMPLATES`: villager, farmer,
+  hunter, herbalist, ore_digger, guard) a unique given name from
+  `assets/data/names.json`, and wires each to a few peers as friends
+  (`+affinity`) or a rival (`-affinity`) in a `Relationships` component keyed by
+  name (stable across freeze/thaw). Service NPCs the player finds by role
+  (mayor, innkeeper, merchants) keep their title. Deterministic per
+  `derive_seed(world_seed, <settlement>)`.
 - **Gossip**: `GossipSystem` (phase system, run last in the enemy phase) lets
   socialising/working townsfolk standing close together exchange a line the
-  nearby player overhears. Topics come from the local chronicle (real events)
-  or the `_gossip` pool in `dialogues.json`, and may name a third villager via
-  a `{subject}` placeholder — the town talks about itself. Rate-limited by
+  nearby player overhears. The speaker usually gossips about someone they
+  actually know — a friend warmly (`_gossip_friend`), a rival sharply
+  (`_gossip_rival`), else a neutral line (`_gossip`) — naming the subject via a
+  `{subject}` placeholder, so the town talks about its own people. Topics may
+  instead come from the local chronicle (real events). Rate-limited by
   `GOSSIP_*` constants in `config/game.py`; skipped during rest fast-forward.
   Drawn from a run-seeded RNG (`derive_seed(world_seed, "gossip")`).
 - **Patrol routes**: a `PATROL` schedule entry may carry a `route` (waypoint
