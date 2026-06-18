@@ -1,3 +1,3 @@
-## 2024-06-18 - Contextual Footer Hints in Pygame
-**Learning:** Pygame UI windows lacked context-awareness in empty states, leading to confusing keyboard shortcuts (e.g., prompting users to "Select" or "Drop" when nothing was in the inventory). Empty states themselves lacked actionable guidance.
-**Action:** When designing modal dialogs or inventory screens in this app, always ensure empty states tell the user *how* to populate them (e.g., "Explore to find items", "Speak to town mayors"). Dynamically hide or change footer keyboard hints based on the active state or list length so users aren't presented with invalid actions.
+## 2024-05-24 - Surface Item Value in Tooltips and Descriptions
+**Learning:** Exposing hidden/existing item data (like `Value`) in tooltips and detailed views significantly reduces the cognitive load of having to pick up an item to know what it's worth.
+**Action:** When adding new item properties that affect player decision-making, ensure they are surfaced in all relevant UI contexts (inventory details, examine tooltips).

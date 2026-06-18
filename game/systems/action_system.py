@@ -35,9 +35,12 @@ class ActionSystem(esper.Processor, MapAwareSystem):
     @staticmethod
     def get_detailed_description(world, entity_id) -> str:
         """Generates a detailed physical description for an item or entity."""
+        from game.components import Value
+
         desc_comp = world.try_component(entity_id, Description)
         material_comp = world.try_component(entity_id, ItemMaterial)
         portable_comp = world.try_component(entity_id, Portable)
+        value_comp = world.try_component(entity_id, Value)
 
         # We might also want stats for wounded descriptions
         stats_comp = world.try_component(entity_id, Stats)
@@ -51,6 +54,9 @@ class ActionSystem(esper.Processor, MapAwareSystem):
 
         if portable_comp:
             parts.append(f"Weight: {portable_comp.weight}kg")
+
+        if value_comp:
+            parts.append(f"Value: {value_comp.amount}g")
 
         return "\n".join(parts)
 
