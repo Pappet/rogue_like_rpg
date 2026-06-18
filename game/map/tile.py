@@ -47,6 +47,7 @@ class Tile:
             self.bg_color = tile_type.bg_color
             self.sprite_colors = dict(tile_type.sprite_colors)
             self.dark = dark
+            self.is_transparent: bool = self.transparent and self.sprites.get(SpriteLayer.GROUND) != "#"
         else:
             # Legacy construction – explicit properties.
             self._type_id = None
@@ -57,6 +58,7 @@ class Tile:
             self.color = (200, 200, 200)
             self.bg_color = None
             self.sprite_colors = {}
+            self.is_transparent = self.transparent and self.sprites.get(SpriteLayer.GROUND) != "#"
 
         # Per-instance mutable state.
         self.visibility_state = VisibilityState.UNEXPLORED
@@ -76,6 +78,7 @@ class Tile:
         self.color = tile_type.color
         self.bg_color = tile_type.bg_color
         self.sprite_colors = dict(tile_type.sprite_colors)
+        self.is_transparent = self.transparent and self.sprites.get(SpriteLayer.GROUND) != "#"
 
     @property
     def type_id(self) -> str | None:
