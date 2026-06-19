@@ -281,6 +281,13 @@ class TradeWindow(UIWindow):
         else:
             action = "Buy" if self.active_pane == 0 else "Sell"
             hint = f"[←/→] Switch   [↑/↓] Select   [Enter] {action}   [Esc] Leave"
+            if self.active_pane == 0:
+                stock = self._merchant_stock()
+                if stock and self.selected_idx < len(stock):
+                    tid = stock[self.selected_idx]
+                    price = TradeService.buy_price(tid, self._economy(), self._location_id(), self._reputation())
+                    if self._gold_of(self.player_entity) < price:
+                        hint = "[←/→] Switch   [↑/↓] Select   [Esc] Leave"
 
         theme.draw_text(
             surface,

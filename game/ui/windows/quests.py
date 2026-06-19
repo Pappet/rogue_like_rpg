@@ -206,7 +206,16 @@ class QuestWindow(UIWindow):
         if not entries:
             hint = "[Esc] Leave" if self.mode == "giver" else "[Esc] Close"
         else:
-            hint = "[↑/↓] Select   [Enter] Accept / Turn in   [Esc] Leave" if self.mode == "giver" else "[Esc] Close"
+            if self.mode == "giver":
+                kind = entries[self.selected_idx][0]
+                if kind == "offer":
+                    hint = "[↑/↓] Select   [Enter] Accept   [Esc] Leave"
+                elif kind == "turn_in":
+                    hint = "[↑/↓] Select   [Enter] Turn in   [Esc] Leave"
+                else:
+                    hint = "[↑/↓] Select   [Esc] Leave"
+            else:
+                hint = "[Esc] Close"
         theme.draw_text(
             surface, hint, self.small_font, UI_THEME_INK_MUTED, (box_x + pad + 4, box_y + box_height - 30), shadow=False
         )

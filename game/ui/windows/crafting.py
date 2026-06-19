@@ -122,9 +122,15 @@ class CraftWindow(UIWindow):
         theme.draw_inset(surface, detail_rect)
         self._draw_detail(surface, detail_rect)
 
+        hint = "[↑/↓] Select   [Esc] Leave"
+        if self.recipes and self.selected_idx < len(self.recipes):
+            recipe = self.recipes[self.selected_idx]
+            if CraftingService.can_craft(self.world, self.player_entity, recipe):
+                hint = "[↑/↓] Select   [Enter] Craft   [Esc] Leave"
+
         theme.draw_text(
             surface,
-            "[↑/↓] Select   [Enter] Craft   [Esc] Leave",
+            hint,
             self.small_font,
             UI_THEME_INK_MUTED,
             (box_x + pad + 4, box_y + box_h - 30),
