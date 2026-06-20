@@ -10,6 +10,9 @@
       "map_pos": [
         30,
         62
+      ],
+      "friends": [
+        "Brackenfen"
       ]
     },
     {
@@ -21,6 +24,9 @@
       "map_pos": [
         72,
         35
+      ],
+      "friends": [
+        "Brackenfen"
       ]
     },
     {
@@ -32,6 +38,10 @@
       "map_pos": [
         52,
         78
+      ],
+      "friends": [
+        "Village",
+        "Eastmoor"
       ]
     },
     {

@@ -26,6 +26,9 @@ class WorldLocation:
     # route is known and the place is travelable. discovered implies heard.
     heard: bool = False
     discovered: bool = False
+    # Settlements this place is on good terms with. Friends advertise each
+    # other's needs and point the way (guide quests, Phase: discovery).
+    friends: list[str] = field(default_factory=list)
     # Abstract overworld coordinates (0-100 grid) for drawing the travel map.
     map_pos: tuple[int, int] = (50, 50)
 
@@ -69,6 +72,7 @@ class WorldGraphService:
                     # A discovered place is, by definition, also one you've heard of.
                     heard=loc.get("heard", discovered),
                     discovered=discovered,
+                    friends=list(loc.get("friends", [])),
                     map_pos=tuple(loc.get("map_pos", (50, 50))),
                 )
             )
@@ -128,6 +132,13 @@ class WorldGraphService:
     def heard_undiscovered(self) -> list[WorldLocation]:
         """Places the player has heard of but doesn't yet know the way to."""
         return [loc for loc in self.locations.values() if loc.heard and not loc.discovered]
+
+    def friends_of(self, location_id: str) -> list[WorldLocation]:
+        """Settlements ``location_id`` is on good terms with."""
+        location = self.locations.get(location_id)
+        if location is None:
+            return []
+        return [self.locations[fid] for fid in location.friends if fid in self.locations]
 
     def travel_ticks(self, a: str, b: str) -> int | None:
         """Travel cost between two directly connected locations, else None."""

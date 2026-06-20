@@ -201,9 +201,10 @@ perception payoff.
 *Extended (post-G):* discovery now applies to **all** locations, not just
 POIs. Every place except the start town begins unknown, and knowledge is
 two-tier — `heard` (a lead, from a rumor) vs `discovered` (route known, from
-asking a local for directions / "Wegauskunft"). See CLAUDE.md "Location
-discovery (two-tier)". Quest-driven discovery (friendly-neighbour guide
-quests) is the planned next step.
+asking a local for directions / "Wegauskunft"). Quest-driven discovery also
+ships: a settlement advertises a `friends` neighbour's shortage as a guide
+quest (offered here, turned in there), and accepting it reveals the road to
+that neighbour. See CLAUDE.md "Location discovery (two-tier)".
 
 ### Phase G — Replayability & Living Consequences ✅ (done)
 
