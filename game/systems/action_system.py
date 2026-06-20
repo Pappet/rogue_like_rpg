@@ -60,6 +60,23 @@ class ActionSystem(esper.Processor, MapAwareSystem):
 
         return "\n".join(parts)
 
+    @staticmethod
+    def get_compact_description(world, entity_id) -> list[str]:
+        """Detailed description folded into at most two lines for fixed-height
+        detail panes: the flavour text, then Material/Weight/Value joined on a
+        single line. Keeps detail boxes from overflowing on items that carry
+        all four facts.
+        """
+        lines = [ln for ln in ActionSystem.get_detailed_description(world, entity_id).split("\n") if ln]
+        if not lines:
+            return []
+        facts = [ln for ln in lines if ln.startswith(("Material:", "Weight:", "Value:"))]
+        flavour = [ln for ln in lines if ln not in facts]
+        result = flavour[:1]
+        if facts:
+            result.append("   ·   ".join(facts))
+        return result
+
     def process(self, *args, **kwargs):
         # This could handle animations or time-based action logic
         pass

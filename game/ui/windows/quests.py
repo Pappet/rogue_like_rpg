@@ -111,8 +111,10 @@ class QuestWindow(UIWindow):
         header_bottom = box_y + 58
         theme.draw_divider(surface, box_x + pad, box_x + box_width - pad, header_bottom)
 
+        # Reserve a ~44px band at the bottom for the key-hint footer so the
+        # card list doesn't run underneath it.
         body = pygame.Rect(
-            box_x + pad, header_bottom + 10, box_width - 2 * pad, box_height - (header_bottom - box_y) - 24
+            box_x + pad, header_bottom + 10, box_width - 2 * pad, box_height - (header_bottom - box_y) - 44
         )
         theme.draw_inset(surface, body)
 
@@ -146,11 +148,11 @@ class QuestWindow(UIWindow):
                 badge_text, badge_color = _BADGE[kind]
                 self._draw_badge(surface, badge_text, badge_color, (card.x + 8, card.y + 8))
 
-                # Title + reward coin
+                # Title + reward coin. Title is clipped to leave room for the
+                # reward block on the right so a long title never collides.
                 title_color = UI_THEME_GOLD if selected else UI_THEME_INK
-                theme.draw_text(
-                    surface, quest.title, self.font, title_color, (card.x + 78, card.y + 6), shadow=selected
-                )
+                title_text = theme.truncate_text(quest.title, self.font, card.right - 80 - (card.x + 78))
+                theme.draw_text(surface, title_text, self.font, title_color, (card.x + 78, card.y + 6), shadow=selected)
                 rect = theme.draw_text(
                     surface,
                     "●",
@@ -170,10 +172,11 @@ class QuestWindow(UIWindow):
                     shadow=False,
                 )
 
-                # Description
+                # Description (single line, clipped to the card width)
+                desc_text = theme.truncate_text(quest.description, self.small_font, card.right - 12 - (card.x + 78))
                 theme.draw_text(
                     surface,
-                    quest.description,
+                    desc_text,
                     self.small_font,
                     UI_THEME_INK_DIM,
                     (card.x + 78, card.y + 32),

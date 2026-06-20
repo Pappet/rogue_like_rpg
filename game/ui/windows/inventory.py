@@ -343,9 +343,8 @@ class InventoryWindow(UIWindow):
                 theme.draw_divider(
                     surface, detail_rect.x + 12, detail_rect.right - 12, detail_rect.y + 44, ornament=False
                 )
-                detailed_desc = ActionSystem.get_detailed_description(self.world, item_id)
                 dy = detail_rect.y + 54
-                for line in detailed_desc.split("\n"):
+                for line in ActionSystem.get_compact_description(self.world, item_id):
                     theme.draw_text(
                         surface, line, self.small_font, UI_THEME_INK_DIM, (detail_rect.x + 14, dy), shadow=False
                     )
@@ -411,4 +410,6 @@ class InventoryWindow(UIWindow):
                 theme.draw_text(
                     surface, "— empty —", self.small_font, UI_THEME_INK_MUTED, (rect.x + 52, y + 14), shadow=False
                 )
-            y += 40
+            # 36px row pitch keeps all six slots inside the equipment pane
+            # (40px spilled the last row past the inset into the detail pane).
+            y += 36

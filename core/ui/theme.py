@@ -57,6 +57,21 @@ def reset_caches() -> None:
     _vignette_cache.clear()
 
 
+def truncate_text(text: str, font: pygame.font.Font, max_width: int, ellipsis: str = "…") -> str:
+    """Shorten ``text`` with a trailing ellipsis until it fits ``max_width`` px.
+
+    Used by fixed-width rows (e.g. quest cards) so a long, author-supplied
+    title or description is clipped cleanly instead of spilling past its frame.
+    """
+    if max_width <= 0:
+        return ""
+    if font.size(text)[0] <= max_width:
+        return text
+    while text and font.size(text + ellipsis)[0] > max_width:
+        text = text[:-1]
+    return (text.rstrip() + ellipsis) if text else ellipsis
+
+
 def get_font(size: int, *, bold: bool = False, italic: bool = False, display: bool = False) -> pygame.font.Font:
     """Return a cached serif font. ``display=True`` uses the title stack."""
     key = (size, bold, italic, display)

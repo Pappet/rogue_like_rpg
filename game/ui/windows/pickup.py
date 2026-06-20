@@ -182,8 +182,7 @@ class PickupWindow(UIWindow):
             (detail_rect.x + 14, detail_rect.y + 10),
         )
         theme.draw_divider(surface, detail_rect.x + 12, detail_rect.right - 12, detail_rect.y + 44, ornament=False)
-        detailed_desc = ActionSystem.get_detailed_description(self.world, item_id)
         dy = detail_rect.y + 54
-        for line in detailed_desc.split("\n"):
+        for line in ActionSystem.get_compact_description(self.world, item_id):
             theme.draw_text(surface, line, self.small_font, UI_THEME_INK_DIM, (detail_rect.x + 14, dy), shadow=False)
             dy += 22

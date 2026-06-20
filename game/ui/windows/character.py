@@ -67,15 +67,16 @@ class CharacterWindow(UIWindow):
         header_bottom = box_y + 60
         theme.draw_divider(surface, box_x + pad, box_x + box_width - pad, header_bottom)
 
+        # Reserve a ~44px band at the bottom for the key-hint footer so the
+        # inset panes don't run underneath "[Esc/C] Close".
+        pane_height = box_height - (header_bottom - box_y) - 44
         col_split = box_x + int(box_width * 0.52)
-        stats_rect = pygame.Rect(
-            box_x + pad, header_bottom + 10, col_split - box_x - pad - 8, box_height - (header_bottom - box_y) - 24
-        )
+        stats_rect = pygame.Rect(box_x + pad, header_bottom + 10, col_split - box_x - pad - 8, pane_height)
         skills_rect = pygame.Rect(
             col_split + 8,
             header_bottom + 10,
             box_x + box_width - pad - col_split - 8,
-            box_height - (header_bottom - box_y) - 24,
+            pane_height,
         )
         theme.draw_inset(surface, stats_rect)
         theme.draw_inset(surface, skills_rect)
