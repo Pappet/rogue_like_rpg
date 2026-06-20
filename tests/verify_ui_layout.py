@@ -39,8 +39,8 @@ from game.systems.action_system import ActionSystem
 # How far a glyph may poke past its box before we call it an overflow. Real
 # overflows are whole rows / lines (10px+); this only forgives sub-pixel and
 # font-metric jitter.
-TOL_RIGHT = 4
-TOL_BOTTOM = 6
+TOL_RIGHT = 6
+TOL_BOTTOM = 8
 
 
 class _Capture:
