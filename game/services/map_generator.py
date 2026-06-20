@@ -30,7 +30,10 @@ STATION_TILES = {
     "anvil": "station_anvil",
     "mill": "station_mill",
     "oven": "station_oven",
+    "kitchen": "station_kitchen",
     "tannery": "station_tannery",
+    "loom": "station_loom",
+    "sawmill": "station_sawmill",
     "herbalist": "station_herbalist",
     "jeweler": "station_jeweler",
 }

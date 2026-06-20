@@ -12,7 +12,8 @@
         62
       ],
       "friends": [
-        "Brackenfen"
+        "Brackenfen",
+        "Foxhollow"
       ]
     },
     {
@@ -26,7 +27,8 @@
         35
       ],
       "friends": [
-        "Brackenfen"
+        "Brackenfen",
+        "Timberfall"
       ]
     },
     {
@@ -41,6 +43,49 @@
       ],
       "friends": [
         "Village",
+        "Eastmoor",
+        "Saltmarsh"
+      ]
+    },
+    {
+      "id": "Foxhollow",
+      "name": "Foxhollow",
+      "type": "settlement",
+      "scenario": "foxhollow",
+      "discovered": false,
+      "map_pos": [
+        14,
+        48
+      ],
+      "friends": [
+        "Village"
+      ]
+    },
+    {
+      "id": "Saltmarsh",
+      "name": "Saltmarsh",
+      "type": "settlement",
+      "scenario": "saltmarsh",
+      "discovered": false,
+      "map_pos": [
+        58,
+        95
+      ],
+      "friends": [
+        "Brackenfen"
+      ]
+    },
+    {
+      "id": "Timberfall",
+      "name": "Timberfall",
+      "type": "settlement",
+      "scenario": "timberfall",
+      "discovered": false,
+      "map_pos": [
+        90,
+        48
+      ],
+      "friends": [
         "Eastmoor"
       ]
     },
@@ -53,6 +98,39 @@
       "map_pos": [
         78,
         78
+      ]
+    },
+    {
+      "id": "Sunken Crypt",
+      "name": "Sunken Crypt",
+      "type": "poi",
+      "scenario": "",
+      "discovered": false,
+      "map_pos": [
+        70,
+        96
+      ]
+    },
+    {
+      "id": "Bandit Camp",
+      "name": "Bandit Camp",
+      "type": "poi",
+      "scenario": "",
+      "discovered": false,
+      "map_pos": [
+        90,
+        62
+      ]
+    },
+    {
+      "id": "Abandoned Mine",
+      "name": "Abandoned Mine",
+      "type": "poi",
+      "scenario": "",
+      "discovered": false,
+      "map_pos": [
+        5,
+        40
       ]
     }
   ],
@@ -73,6 +151,13 @@
     },
     {
       "between": [
+        "Village",
+        "Foxhollow"
+      ],
+      "travel_ticks": 240
+    },
+    {
+      "between": [
         "Brackenfen",
         "Eastmoor"
       ],
@@ -81,9 +166,51 @@
     {
       "between": [
         "Brackenfen",
+        "Saltmarsh"
+      ],
+      "travel_ticks": 300
+    },
+    {
+      "between": [
+        "Foxhollow",
+        "Brackenfen"
+      ],
+      "travel_ticks": 420
+    },
+    {
+      "between": [
+        "Eastmoor",
+        "Timberfall"
+      ],
+      "travel_ticks": 360
+    },
+    {
+      "between": [
+        "Brackenfen",
         "Old Ruins"
       ],
       "travel_ticks": 240
+    },
+    {
+      "between": [
+        "Saltmarsh",
+        "Sunken Crypt"
+      ],
+      "travel_ticks": 200
+    },
+    {
+      "between": [
+        "Timberfall",
+        "Bandit Camp"
+      ],
+      "travel_ticks": 240
+    },
+    {
+      "between": [
+        "Foxhollow",
+        "Abandoned Mine"
+      ],
+      "travel_ticks": 180
     }
   ]
 }

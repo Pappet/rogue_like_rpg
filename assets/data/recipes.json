@@ -134,5 +134,93 @@
   "output": "circlet",
   "output_qty": 1,
   "ticks": 50
+ },
+ {
+  "id": "weave_cloth",
+  "station": "loom",
+  "inputs": {"wool": 2},
+  "output": "cloth",
+  "output_qty": 1,
+  "ticks": 20
+ },
+ {
+  "id": "sew_cloth_hood",
+  "station": "loom",
+  "inputs": {"cloth": 1},
+  "output": "cloth_hood",
+  "output_qty": 1,
+  "ticks": 25
+ },
+ {
+  "id": "sew_wool_cloak",
+  "station": "loom",
+  "inputs": {"cloth": 1, "wool": 1},
+  "output": "wool_cloak",
+  "output_qty": 1,
+  "ticks": 35
+ },
+ {
+  "id": "sew_padded_vest",
+  "station": "loom",
+  "inputs": {"cloth": 2},
+  "output": "padded_vest",
+  "output_qty": 1,
+  "ticks": 45
+ },
+ {
+  "id": "saw_planks",
+  "station": "sawmill",
+  "inputs": {"log": 1},
+  "output": "plank",
+  "output_qty": 2,
+  "ticks": 15
+ },
+ {
+  "id": "carve_quarterstaff",
+  "station": "sawmill",
+  "inputs": {"plank": 2},
+  "output": "quarterstaff",
+  "output_qty": 1,
+  "ticks": 25
+ },
+ {
+  "id": "carve_wooden_shield",
+  "station": "sawmill",
+  "inputs": {"plank": 2},
+  "output": "wooden_shield",
+  "output_qty": 1,
+  "ticks": 30
+ },
+ {
+  "id": "carve_tower_shield",
+  "station": "sawmill",
+  "inputs": {"plank": 3},
+  "output": "tower_shield",
+  "output_qty": 1,
+  "ticks": 45
+ },
+ {
+  "id": "grill_fish",
+  "station": "kitchen",
+  "inputs": {"raw_fish": 1},
+  "output": "cooked_fish",
+  "output_qty": 1,
+  "ticks": 15
+ },
+ {
+  "id": "cure_dried_meat",
+  "station": "kitchen",
+  "inputs": {"venison": 1, "salt": 1},
+  "output": "dried_meat",
+  "output_qty": 2,
+  "ticks": 20
+ },
+ {
+  "id": "cook_hearty_stew",
+  "station": "kitchen",
+  "inputs": {"venison": 1, "herbs": 1},
+  "output": "hearty_stew",
+  "output_qty": 1,
+  "ticks": 30
  }
 ]

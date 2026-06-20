@@ -196,5 +196,148 @@
         "pelt": -1
       }
     }
+  },
+  {
+    "id": "good_catch",
+    "text": "The boats of {location} came in heavy with fish.",
+    "weight": 2,
+    "effects": {
+      "stock_delta": {
+        "raw_fish": 3
+      },
+      "prosperity_delta": 1
+    }
+  },
+  {
+    "id": "storm_warning",
+    "text": "Sailors mutter of a storm building off {location}.",
+    "weight": 2,
+    "escalation": {
+      "event_id": "boats_wrecked",
+      "delay_hours": 30
+    }
+  },
+  {
+    "id": "boats_wrecked",
+    "text": "A storm battered the moorings of {location} — half the boats won't sail this week.",
+    "weight": 0,
+    "effects": {
+      "stock_delta": {
+        "raw_fish": -4,
+        "salt": -1
+      },
+      "prosperity_delta": -3
+    }
+  },
+  {
+    "id": "shearing_season",
+    "text": "Shearing season filled the wool sheds of {location}.",
+    "weight": 2,
+    "effects": {
+      "stock_delta": {
+        "wool": 3,
+        "cloth": 1
+      },
+      "prosperity_delta": 1
+    }
+  },
+  {
+    "id": "looms_humming",
+    "text": "The looms of {location} ran late into the night; bolts of cloth pile up.",
+    "weight": 1,
+    "effects": {
+      "stock_delta": {
+        "cloth": 2
+      }
+    }
+  },
+  {
+    "id": "great_felling",
+    "text": "The saw crews of {location} brought down a stand of old timber.",
+    "weight": 2,
+    "effects": {
+      "stock_delta": {
+        "log": 4,
+        "plank": 1
+      },
+      "prosperity_delta": 1
+    }
+  },
+  {
+    "id": "sawmill_breakdown",
+    "text": "The great saw at {location} threw a blade — the carpenters are idle.",
+    "weight": 1,
+    "effects": {
+      "stock_delta": {
+        "plank": -2
+      },
+      "prosperity_delta": -1
+    }
+  },
+  {
+    "id": "salt_caravan",
+    "text": "A salt caravan reached the markets of {location}.",
+    "weight": 1,
+    "effects": {
+      "stock_delta": {
+        "salt": 2,
+        "spices": 1
+      },
+      "prosperity_delta": 1
+    }
+  },
+  {
+    "id": "spice_ship_docked",
+    "text": "A spice ship from far roads put in at {location}.",
+    "weight": 1,
+    "effects": {
+      "stock_delta": {
+        "spices": 2
+      },
+      "prosperity_delta": 2
+    }
+  },
+  {
+    "id": "ore_strike",
+    "text": "Diggers near {location} struck a rich seam of bog iron.",
+    "weight": 1,
+    "effects": {
+      "stock_delta": {
+        "iron_ore": 3
+      },
+      "prosperity_delta": 1
+    }
+  },
+  {
+    "id": "market_day",
+    "text": "It was market day in {location}; the square was packed shoulder to shoulder.",
+    "weight": 2,
+    "effects": {
+      "prosperity_delta": 1
+    }
+  },
+  {
+    "id": "festival_announced",
+    "text": "{location} is making ready for a midsummer festival.",
+    "weight": 1,
+    "effects": {
+      "prosperity_delta": 2
+    }
+  },
+  {
+    "id": "pilgrims_passing",
+    "text": "A band of pilgrims passed through {location}, bound for the old ruins.",
+    "weight": 1
+  },
+  {
+    "id": "bridge_out",
+    "text": "The plank bridge into {location} gave way; folk ford the stream for now.",
+    "weight": 1,
+    "effects": {
+      "stock_delta": {
+        "plank": -1
+      },
+      "prosperity_delta": -1
+    }
   }
 ]

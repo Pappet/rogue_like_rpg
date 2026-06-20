@@ -58,7 +58,7 @@ def _service(current="Village") -> tuple[QuestService, _FakeCtx]:
 
 def test_authored_quests_load_and_offers_filter_by_location():
     service, _ = _service()
-    assert len(service.quests) == 6
+    assert len(service.quests) == 13
     assert [q.id for q in service.offers_at("Village")] == ["long_road"]
     assert [q.id for q in service.offers_at("Eastmoor")] == ["taste_of_home"]
 
@@ -284,7 +284,7 @@ def test_serialization_roundtrip():
 
     restored = QuestService(ctx=ctx)
     restored.from_dict(data)
-    assert len(restored.quests) == 6
+    assert len(restored.quests) == 13
     assert next(q for q in restored.quests if q.id == quest.id).state == "active"
 
 

@@ -665,5 +665,71 @@
    46
   ],
   "occludes_below": false
+ },
+ {
+  "id": "station_loom",
+  "name": "Weaver's Loom",
+  "base_description": "A tall loom strung with thread. You could spin wool into cloth and stitch garments here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "loom",
+  "sprites": {
+   "GROUND": "╫"
+  },
+  "color": [
+   210,
+   195,
+   170
+  ],
+  "bg_color": [
+   46,
+   40,
+   34
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "station_sawmill",
+  "name": "Sawmill Bench",
+  "base_description": "A saw pit and carpenter's bench heaped with shavings. You could work logs into planks and gear here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "sawmill",
+  "sprites": {
+   "GROUND": "╤"
+  },
+  "color": [
+   175,
+   130,
+   80
+  ],
+  "bg_color": [
+   46,
+   34,
+   22
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "station_kitchen",
+  "name": "Cook's Hearth",
+  "base_description": "A cluttered kitchen hearth hung with pots. You could cook hearty meals here.",
+  "walkable": false,
+  "transparent": true,
+  "crafting_station": "kitchen",
+  "sprites": {
+   "GROUND": "♨"
+  },
+  "color": [
+   235,
+   165,
+   95
+  ],
+  "bg_color": [
+   48,
+   30,
+   22
+  ],
+  "occludes_below": false
  }
 ]

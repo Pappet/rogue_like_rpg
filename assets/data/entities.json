@@ -760,5 +760,122 @@
       "eat_duration_ticks": 30
     },
     "faction": "townsfolk"
+  },
+  {
+    "id": "fisher",
+    "name": "Fisher",
+    "sprite": "f",
+    "color": [
+      110,
+      170,
+      200
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 8,
+    "max_hp": 8,
+    "power": 2,
+    "defense": 0,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 7,
+    "intelligence": 5,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A fisher with salt in the beard and a net over one shoulder.",
+    "schedule_id": "villager_routine",
+    "home_pos": [
+      10,
+      10
+    ],
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "loot_table": [
+      [
+        "raw_fish",
+        0.6
+      ]
+    ],
+    "faction": "townsfolk"
+  },
+  {
+    "id": "weaver",
+    "name": "Weaver",
+    "sprite": "e",
+    "color": [
+      210,
+      180,
+      150
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 7,
+    "max_hp": 7,
+    "power": 1,
+    "defense": 0,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 6,
+    "intelligence": 7,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A weaver, fingers stained with dye and quick at the loom.",
+    "schedule_id": "vendor_routine",
+    "home_pos": [
+      12,
+      12
+    ],
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "faction": "townsfolk"
+  },
+  {
+    "id": "lumberjack",
+    "name": "Lumberjack",
+    "sprite": "l",
+    "color": [
+      150,
+      120,
+      80
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 13,
+    "max_hp": 13,
+    "power": 4,
+    "defense": 1,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 6,
+    "intelligence": 4,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "neutral",
+    "blocker": true,
+    "description": "A broad-shouldered lumberjack with an axe worn smooth at the haft.",
+    "schedule_id": "blacksmith_routine",
+    "home_pos": [
+      8,
+      8
+    ],
+    "needs": {
+      "hunger_rate": 3.0,
+      "eat_threshold": 70.0,
+      "eat_duration_ticks": 30
+    },
+    "loot_table": [
+      [
+        "log",
+        0.5
+      ]
+    ],
+    "faction": "townsfolk"
   }
 ]

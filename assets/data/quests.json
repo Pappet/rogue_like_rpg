@@ -74,5 +74,99 @@
     "prerequisites": [
       "lifeline_tuskers"
     ]
+  },
+  {
+    "id": "timber_run_provisions",
+    "title": "Loggers' Provisions",
+    "description": "Timberfall's saw crews work dawn to dusk and the larder's bare. Bring 3 loaves of bread and the foreman will see you paid.",
+    "quest_type": "deliver",
+    "giver_location": "Timberfall",
+    "target": {
+      "item": "bread",
+      "count": 3
+    },
+    "reward_gold": 45
+  },
+  {
+    "id": "timber_run_road",
+    "title": "Bandits on the Timber Road",
+    "description": "Fed and back at work, the crews can't haul a plank — bandits have set on the road out of Timberfall. Drive off 2 of them in the timberlands.",
+    "quest_type": "kill",
+    "giver_location": "Timberfall",
+    "target": {
+      "template": "bandit",
+      "count": 2
+    },
+    "reward_gold": 70,
+    "prerequisites": [
+      "timber_run_provisions"
+    ]
+  },
+  {
+    "id": "timber_run_delivery",
+    "title": "Planks for the Forge",
+    "description": "The road is clear and the wagons roll again. Carry word to Eastmoor that the timber is coming, so the smiths can fire their forges.",
+    "quest_type": "visit",
+    "giver_location": "Eastmoor",
+    "target": {
+      "location": "Eastmoor"
+    },
+    "reward_gold": 95,
+    "prerequisites": [
+      "timber_run_road"
+    ]
+  },
+  {
+    "id": "saltmarsh_fever",
+    "title": "Marsh Fever",
+    "description": "A fever creeps through the harbor and the healers have run dry. Bring 2 health potions to Saltmarsh.",
+    "quest_type": "deliver",
+    "giver_location": "Saltmarsh",
+    "target": {
+      "item": "health_potion",
+      "count": 2
+    },
+    "reward_gold": 55
+  },
+  {
+    "id": "saltmarsh_tuskers",
+    "title": "Boars in the Reeds",
+    "description": "The fever's broken, but the fishers won't walk the reed paths — boars have rooted up the nets. Cull 2 of them in the Saltmarsh wilds.",
+    "quest_type": "kill",
+    "giver_location": "Saltmarsh",
+    "target": {
+      "template": "boar",
+      "count": 2
+    },
+    "reward_gold": 60,
+    "prerequisites": [
+      "saltmarsh_fever"
+    ]
+  },
+  {
+    "id": "saltmarsh_news",
+    "title": "Word Up the Mire Road",
+    "description": "Nets mended and the catch flowing, the harbormaster wants Brackenfen told the salt-fish trade can resume. Carry the news to Brackenfen.",
+    "quest_type": "visit",
+    "giver_location": "Brackenfen",
+    "target": {
+      "location": "Brackenfen"
+    },
+    "reward_gold": 80,
+    "prerequisites": [
+      "saltmarsh_tuskers"
+    ]
+  },
+  {
+    "id": "foxhollow_flock",
+    "title": "Wolves at the Fold",
+    "description": "Wolves have come down on Foxhollow's flocks and the shepherds dare not graze. Hunt down 2 of them in the surrounding country.",
+    "quest_type": "kill",
+    "giver_location": "Foxhollow",
+    "target": {
+      "template": "wolf",
+      "count": 2
+    },
+    "reward_gold": 50
   }
 ]
