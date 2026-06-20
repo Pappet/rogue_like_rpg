@@ -391,12 +391,16 @@ class AISystem(esper.Processor):
         if not (0 <= layer_idx < len(map_container.layers)):
             return lambda x, y: False
 
+        # Optimize: Cache the tiles list and its length outside the closure
+        # to avoid expensive repeated list and attribute lookups during raycasting.
+        layer_tiles = map_container.layers[layer_idx].tiles
+        len_y = len(layer_tiles)
+
         def is_transparent(x, y):
-            if 0 <= layer_idx < len(map_container.layers):
-                layer = map_container.layers[layer_idx]
-                if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
-                    tile = layer.tiles[y][x]
-                    return tile.is_transparent
+            if 0 <= y < len_y:
+                row = layer_tiles[y]
+                if 0 <= x < len(row):
+                    return row[x].is_transparent
             return False
 
         return is_transparent
