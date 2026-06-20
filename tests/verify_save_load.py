@@ -170,6 +170,7 @@ def test_save_load_across_boot_preserves_travel(tmp_path):
     gc, game = _boot()
     _frames(gc)
     ctx = gc.ctx
+    ctx.world_graph.reveal_routes_from(ctx.world_graph.current_location_id)  # ask for directions
     ctx.travel_encounters.templates = []  # deterministic direct travel, no road events
     _key(gc, pygame.K_m)
     destination, _ = gc.state.destinations[gc.state.selected_idx]

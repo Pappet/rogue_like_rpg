@@ -174,6 +174,11 @@ class WorldMapState(GameState):
                 pygame.draw.line(surface, COLOR_ROUTE, pa, pb, 5)
                 pygame.draw.line(surface, COLOR_ROUTE_CORE, pa, pb, 2)
 
+        # Heard-of-but-unreached places show as a faded "?" — you know they're
+        # out there, but must learn the way (ask around / a quest).
+        for location in graph.heard_undiscovered():
+            self._draw_heard_node(surface, location)
+
         pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 400)
         for location in graph.locations.values():
             if not location.discovered:
@@ -210,6 +215,22 @@ class WorldMapState(GameState):
         label_color = UI_THEME_GOLD if (is_current or is_selected) else UI_THEME_INK
         theme.draw_text(
             surface, location.name, self.font_small, label_color, (pos[0], pos[1] + NODE_RADIUS + 6), anchor="midtop"
+        )
+
+    def _draw_heard_node(self, surface, location):
+        """A rumored place: dim node + '?' glyph, no route, not selectable."""
+        pos = self._node_screen_pos(location)
+        pygame.draw.circle(surface, (24, 18, 12), pos, NODE_RADIUS)
+        pygame.draw.circle(surface, UI_THEME_INK_MUTED, pos, NODE_RADIUS, 2)
+        theme.draw_text(surface, "?", self.node_font, UI_THEME_INK_MUTED, pos, anchor="center", shadow=False)
+        theme.draw_text(
+            surface,
+            f"{location.name} (heard of)",
+            self.font_small,
+            UI_THEME_INK_MUTED,
+            (pos[0], pos[1] + NODE_RADIUS + 6),
+            anchor="midtop",
+            shadow=False,
         )
 
     def _draw_sidebar(self, surface, current):

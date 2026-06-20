@@ -22,36 +22,61 @@ class RumorService:
     ctx: object = None
     rng: random.Random = field(default_factory=random.Random)
 
+    def directions(self) -> str | None:
+        """ "Wegauskunft": a local points out the roads from the current town.
+
+        Reliable (not chance-gated) so the player's first chat in a fresh town
+        reveals the way out. Returns a line and discovers the routes, or None
+        when there is nothing new to reveal.
+        """
+        graph = self.ctx.world_graph if self.ctx else None
+        if graph is None or graph.current_location_id is None:
+            return None
+        newly = graph.reveal_routes_from(graph.current_location_id)
+        if not newly:
+            return None
+        here = graph.get_location(graph.current_location_id)
+        here_name = here.name if here else "here"
+        names = ", ".join(loc.name for loc in newly)
+        return f"The roads from {here_name} lead to {names}. Safe travels, friend."
+
     def maybe_rumor(self) -> str | None:
         """A rumor line with RUMOR_CHANCE probability, else None."""
         if self.rng.random() >= RUMOR_CHANCE:
             return None
-        # Undiscovered POIs take priority: hearing about them puts them on
-        # the travel map (Phase F — rumors lead to secrets).
-        poi_rumor = self._poi_rumor()
-        if poi_rumor is not None:
-            return poi_rumor
+        # Hearing of an undiscovered place makes it a lead (heard, not yet
+        # travelable). Settlements you then learn the way to by asking around;
+        # secret POIs need this rumor before locals will even point the way.
+        discovery_rumor = self._discovery_rumor()
+        if discovery_rumor is not None:
+            return discovery_rumor
         candidates = self._candidates()
         if not candidates:
             return None
         return self.rng.choice(candidates)
 
-    def _poi_rumor(self) -> str | None:
-        """Reveal an undiscovered POI connected to a discovered location."""
+    def _discovery_rumor(self) -> str | None:
+        """Make an unheard place (reachable from somewhere known) a lead."""
         graph = self.ctx.world_graph if self.ctx else None
         if graph is None:
             return None
         for location in graph.locations.values():
-            if location.type != "poi" or location.discovered:
+            if location.discovered or location.heard:
                 continue
-            # Only POIs reachable from somewhere the player knows
+            # Only places adjacent to somewhere the player already knows.
             anchors = [other.name for other, _ in graph.neighbors(location.id) if other.discovered]
             if not anchors:
                 continue
-            graph.discover(location.id)
+            graph.hear(location.id)
+            if location.type == "poi":
+                return (
+                    f"Have you heard of the {location.name}? Somewhere out past "
+                    f"{anchors[0]}, they say. Few who go looking come back. "
+                    "Ask around there if you mean to find the way."
+                )
             return (
-                f"Have you heard of the {location.name}? Somewhere out past "
-                f"{anchors[0]}, they say. Few who go looking come back."
+                f"Folk speak of {location.name}, a place beyond {anchors[0]}. "
+                "Ask for the road there and you could see it yourself."
             )
         return None
 

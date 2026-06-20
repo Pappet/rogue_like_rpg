@@ -102,6 +102,7 @@ def test_travel_produces_chronicle_entries():
     gc.state = game
     game.startup(gc.ctx)
     ctx = gc.ctx
+    ctx.world_graph.reveal_routes_from(ctx.world_graph.current_location_id)  # ask for directions
     # Deterministic rolls with a generous event chance via seeded RNG
     ctx.world_chronicle.rng = random.Random(7)
     ctx.travel_encounters.templates = []  # deterministic direct travel, no road events

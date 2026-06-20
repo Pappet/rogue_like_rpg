@@ -233,7 +233,7 @@ is neutral constants, usable by both.
     │   ├── reputation_service.py    # Player standing per settlement (price/dialogue)
     │   ├── faction_service.py       # Faction relations matrix + player faction standing
     │   ├── quest_service.py         # Authored + generated quests, progress, turn-in
-    │   ├── rumor_service.py         # Smalltalk rumors from chronicle/offers elsewhere
+    │   ├── rumor_service.py         # Smalltalk: directions (Wegauskunft) + rumors/leads about other places
     │   ├── rest_service.py          # Wait/sleep duration presets + time math
     │   ├── consumable_service.py    # Item consumption logic
     │   └── equipment_service.py     # Equipment slot logic
@@ -679,6 +679,33 @@ class MapAwareSystem:
   after every kill. So spill enough blood and the town guard turns on you.
 - **Dialogue**: `_dialogue_context` exposes `guards` = the town_guard tier, so
   the `guard` template has wary/hostile vs. warm conditional lines.
+
+#### Location discovery (two-tier)
+
+The player starts knowing only the `start_location`; every other place in
+`world.json` is unknown (`discovered: false`). `WorldLocation` has two
+knowledge tiers: **`heard`** (you know the place exists — a lead) and
+**`discovered`** (you know the route — it's travelable; the world map's
+`discovered_neighbors` is the only travel source). `discover()` implies
+`heard`; the world map draws `heard_undiscovered()` places as a faded "?".
+
+How knowledge spreads (all via NPC talk, routed through
+`InteractionResolver._say_line` → `dialogue_service.directions_provider` /
+`rumor_provider`, both wired to `RumorService` in bootstrap):
+
+- **Wegauskunft (`RumorService.directions` → `WorldGraphService.reveal_routes_from`)**:
+  talking to a local reliably (not chance-gated) reveals the roads *out of the
+  current town* — neighbouring **settlements** become travelable. A
+  neighbouring **POI** is gated: it is only revealed once already `heard`
+  (locals won't point you to a secret you haven't caught wind of).
+- **Rumors (`RumorService.maybe_rumor` → `_discovery_rumor`)**: chance-based
+  smalltalk makes a not-yet-known place adjacent to a known one `heard` (a
+  lead), not travelable. You then learn the way by reaching an adjacent town
+  and asking (Wegauskunft).
+
+Both `heard` and `discovered` are saved (`save_service`). Quest-driven
+discovery (a settlement's need + a friendly neighbour generating a guide
+quest) is a planned follow-up, not yet implemented.
 
 ### Input Handling
 

@@ -85,7 +85,7 @@ def test_hidden_items_cannot_be_picked_up(monkeypatch):
     assert found == [], "hidden items must not be visible to pickup logic"
 
 
-def test_rumor_discovers_poi_and_makes_it_travelable():
+def test_rumor_makes_poi_heard_then_directions_reveal_it():
     graph = WorldGraphService.from_file(WORLD_FILE)
 
     class _Ctx:
@@ -96,18 +96,25 @@ def test_rumor_discovers_poi_and_makes_it_travelable():
 
     rumors = RumorService(ctx=_Ctx(), rng=random.Random(0))
     poi = next(loc for loc in graph.locations.values() if loc.type == "poi")
-    assert not poi.discovered
+    anchor = next(other for other, _ in graph.neighbors(poi.id))
+    assert not poi.discovered and not poi.heard
 
+    # Learn the way to the anchor settlement first (ask locals at the start town).
+    graph.reveal_routes_from(graph.start_location_id)
+    assert anchor.discovered, "the POI's anchor settlement must be reachable from the start"
+
+    # A rumor now makes the POI a *lead* (heard), but not yet travelable.
     line = None
-    for _ in range(20):
+    for _ in range(50):
         line = rumors.maybe_rumor()
         if line and poi.name in line:
             break
     assert line is not None and poi.name in line, "a rumor should mention the POI"
-    assert poi.discovered, "hearing the rumor discovers the POI"
+    assert poi.heard and not poi.discovered, "a rumor is a lead, not directions"
 
-    # Now it shows up as a destination from its anchor settlement
-    anchor = next(other for other, _ in graph.neighbors(poi.id))
+    # At the anchor, asking for directions turns the lead into a real route.
+    newly = graph.reveal_routes_from(anchor.id)
+    assert poi in newly and poi.discovered, "directions at the anchor reveal the heard POI"
     destinations = [loc.id for loc, _ in graph.discovered_neighbors(anchor.id)]
     assert poi.id in destinations
 
@@ -127,7 +134,8 @@ def test_poi_rumor_not_told_without_discovered_anchor():
     rumors = RumorService(ctx=_Ctx(), rng=random.Random(0))
     for _ in range(20):
         rumors.maybe_rumor()
-    assert not graph.get_location("Cave").discovered, "POIs behind undiscovered locations stay secret"
+    cave = graph.get_location("Cave")
+    assert not cave.discovered and not cave.heard, "places behind undiscovered locations stay secret"
 
 
 # ---------------------------------------------------------------------------
@@ -168,9 +176,11 @@ def test_rumor_leads_to_dungeon_with_secret():
 
     frames()
     poi = next(loc for loc in ctx.world_graph.locations.values() if loc.type == "poi")
-    assert not poi.discovered
+    assert not poi.discovered and not poi.heard
 
-    # 1) Hear the rumor: bump a pinned villager until the POI is mentioned
+    # 1) Talk to a villager: the first chat gives directions out of the start
+    #    town (revealing Brackenfen); continued chatter eventually turns up a
+    #    rumor that makes the Old Ruins a *lead* (heard, not yet travelable).
     from game.components import AI, Activity, Schedule
     from game.content.entity_factory import EntityFactory
 
@@ -183,11 +193,13 @@ def test_rumor_leads_to_dungeon_with_secret():
     for _ in range(30):
         key(pygame.K_RIGHT)
         frames(2)
-        if poi.discovered:
+        if poi.heard:
             break
-    assert poi.discovered, "smalltalk should eventually reveal the POI"
+    assert poi.heard, "smalltalk should eventually turn up a rumor of the POI"
+    assert not poi.discovered, "a rumor is only a lead — the way is still unknown"
+    assert ctx.world_graph.get_location("Brackenfen").discovered, "directions revealed Brackenfen"
 
-    # 2) Travel: Village -> Brackenfen -> Old Ruins
+    # 2) Travel to Brackenfen, then ask a local there for the road to the ruins.
     key(pygame.K_m)
     idx = next(i for i, (loc, _) in enumerate(gc.state.destinations) if loc.id == "Brackenfen")
     for _ in range(idx):
@@ -196,9 +208,13 @@ def test_rumor_leads_to_dungeon_with_secret():
     assert ctx.map_service.active_map_id == "Brackenfen"
     frames()
 
+    # Ask a Brackenfen local for directions — turns the heard-of ruins into a route.
+    ctx.world_graph.reveal_routes_from("Brackenfen")
+    assert poi.discovered, "directions at the anchor make the heard POI travelable"
+
     key(pygame.K_m)
     dest_ids = [loc.id for loc, _ in gc.state.destinations]
-    assert poi.id in dest_ids, "the discovered POI must be a travel destination"
+    assert poi.id in dest_ids, "the now-discovered POI must be a travel destination"
     for _ in range(dest_ids.index(poi.id)):
         key(pygame.K_DOWN)
     key(pygame.K_RETURN)
