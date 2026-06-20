@@ -43,9 +43,11 @@ and 3.12 (headless SDL). All three must be green before merging.
 
 ## Planning
 
-The project direction and phase plan live in `ROADMAP.md` (source of truth
-for upcoming features). The development history through v1.6 is preserved in
-`DEV_JOURNAL.md`. The former `.planning/` directory has been retired.
+The project direction and phase plan live in `docs/ROADMAP.md` (source of
+truth for upcoming features). The development history through v1.6 is preserved
+in `docs/DEV_JOURNAL.md`, and the completed refactoring rationale in
+`docs/ARCHITECTURE_CONCEPT.md`. The former `.planning/` directory has been
+retired. A high-level player-facing summary lives in `README.md`.
 
 ## Architecture
 
@@ -403,6 +405,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `PlayerTag`       | Marker for the player entity                 |
 | `AI`              | Marker for AI-controlled entities            |
 | `Blocker`         | Marker for movement-blocking entities        |
+| `TemplateId`      | Registry template id the entity was made from|
 | `Position`        | x, y, layer (map layer index)                |
 | `Renderable`      | sprite char, SpriteLayer value, color        |
 | `Name`            | Entity display name                          |
@@ -423,6 +426,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `TurnOrder`       | Priority ordering for turn processing        |
 | `Portal`          | Map transition target                        |
 | `LootTable`       | Death loot drops [(template_id, chance)]     |
+| `Corpse`          | Marker for a slain entity's remains          |
 | `Inventory`       | List of item entity IDs                      |
 | `Equipment`       | Slot → entity_id mapping                     |
 | `Equippable`      | Declares which `SlotType` this item occupies |
@@ -430,7 +434,10 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `ItemMaterial`    | Material type (iron, wood, glass, etc.)      |
 | `Consumable`      | Use effect (heal_hp, etc.)                   |
 | `LightSource`     | Light emission radius                        |
+| `Action`          | A single action: name, costs, range, targeting|
 | `ActionList`      | Available actions with selected index        |
+| `MovementRequest` | Transient: queued (dx, dy) for MovementSystem |
+| `AttackIntent`    | Transient: target + power_multiplier for combat|
 | `Targeting`       | Targeting state: origin, target, range, mode |
 | `FCT`             | Floating combat text with velocity + TTL     |
 | `Purse`           | Gold carried by player or NPC                |
@@ -446,6 +453,7 @@ event only for facts (`*_died`, `log_message`) or sanctioned requests
 | `Skills`          | Learn-by-doing XP per skill id (progression)  |
 | `Quality`         | Crafted-item grade tier (named, scales stats) |
 | `ResourceNode`    | Harvestable raw-material node (bump to gather) |
+| `MapBound`        | Marker: entity is frozen/thawed with its map  |
 
 ### Enums
 

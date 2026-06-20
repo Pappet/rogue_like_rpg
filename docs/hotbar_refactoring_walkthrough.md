@@ -1,5 +1,9 @@
 # Walkthrough - Hotbar Cleanup & Keyboard Shortcuts
 
+> **STATUS: HISTORISCH.** One-off walkthrough of a single completed task,
+> kept as a record. Test counts and line numbers reflect the repo at that
+> time, not today's code.
+
 This document describes the changes made during the hotbar cleanup task.
 
 ## Objective
