@@ -40,6 +40,10 @@ class DialogueService:
         # Optional callable returning a rumor line (or None). Rumors
         # occasionally replace smalltalk (wired in bootstrap).
         self.rumor_provider = None
+        # Optional callable returning a directions line (or None). Locals give
+        # directions out of the current town the first time you ask (wired in
+        # bootstrap). Takes priority over rumors/smalltalk when it fires.
+        self.directions_provider = None
 
     def load(self, filepath: str) -> None:
         """Load dialogue definitions from a JSON file.

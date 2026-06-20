@@ -121,8 +121,15 @@ class InteractionResolver:
     @staticmethod
     def _say_line(world, target_ent: int) -> None:
         name = world.component_for_entity(target_ent, Name).name if world.has_component(target_ent, Name) else "Someone"
-        # Sometimes NPCs share a rumor about the wider world instead of
-        # their usual smalltalk (Phase E3).
+        # Locals give directions out of the current town the first time you ask
+        # — this is how new places enter the travel map. Takes priority.
+        if dialogue_service.directions_provider is not None:
+            directions = dialogue_service.directions_provider()
+            if directions:
+                world.dispatch_event("log_message", f"[color=yellow]{name}:[/color] {directions}")
+                return
+        # Otherwise NPCs sometimes share a rumor about the wider world instead
+        # of their usual smalltalk (Phase E3).
         if dialogue_service.rumor_provider is not None:
             rumor = dialogue_service.rumor_provider()
             if rumor:

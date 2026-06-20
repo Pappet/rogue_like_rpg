@@ -55,6 +55,10 @@ class GameplayState(GameState):
             # Start at 1,1 to avoid the wall at 0,0
             ctx.player_entity = PartyService().create_initial_party(1, 1)
             esper.dispatch_event("log_message", "Welcome [color=green]Traveler[/color] to the dungeon!")
+            esper.dispatch_event(
+                "log_message",
+                "Speak with the townsfolk (bump into them) to learn the roads to other places.",
+            )
 
         # Render-cycle systems need camera/player context, (re)built on entry
         systems.ui_system = UISystem(systems.turn_system, ctx.player_entity, ctx.world_clock)

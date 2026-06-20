@@ -21,6 +21,10 @@ class WorldLocation:
     name: str
     type: str = "settlement"
     scenario: str = ""
+    # Two-tier knowledge: ``heard`` means the player has heard the place exists
+    # (from a rumor) but does not yet know the way; ``discovered`` means the
+    # route is known and the place is travelable. discovered implies heard.
+    heard: bool = False
     discovered: bool = False
     # Abstract overworld coordinates (0-100 grid) for drawing the travel map.
     map_pos: tuple[int, int] = (50, 50)
@@ -55,13 +59,16 @@ class WorldGraphService:
 
         graph = cls()
         for loc in data.get("locations", []):
+            discovered = loc.get("discovered", False)
             graph.add_location(
                 WorldLocation(
                     id=loc["id"],
                     name=loc.get("name", loc["id"]),
                     type=loc.get("type", "settlement"),
                     scenario=loc.get("scenario", ""),
-                    discovered=loc.get("discovered", False),
+                    # A discovered place is, by definition, also one you've heard of.
+                    heard=loc.get("heard", discovered),
+                    discovered=discovered,
                     map_pos=tuple(loc.get("map_pos", (50, 50))),
                 )
             )
@@ -118,6 +125,10 @@ class WorldGraphService:
         """Connected locations the player knows about (travel destinations)."""
         return [(loc, ticks) for loc, ticks in self.neighbors(location_id) if loc.discovered]
 
+    def heard_undiscovered(self) -> list[WorldLocation]:
+        """Places the player has heard of but doesn't yet know the way to."""
+        return [loc for loc in self.locations.values() if loc.heard and not loc.discovered]
+
     def travel_ticks(self, a: str, b: str) -> int | None:
         """Travel cost between two directly connected locations, else None."""
         for route in self.routes:
@@ -127,11 +138,41 @@ class WorldGraphService:
 
     # --- State changes ------------------------------------------------------
 
+    def hear(self, location_id: str) -> bool:
+        """Mark a place as heard-of (a lead). Returns True if this is news."""
+        location = self.locations.get(location_id)
+        if location is not None and not location.heard and not location.discovered:
+            location.heard = True
+            logger.info("Heard of location: %s", location_id)
+            return True
+        return False
+
     def discover(self, location_id: str) -> None:
         location = self.locations.get(location_id)
         if location is not None and not location.discovered:
             location.discovered = True
+            location.heard = True
             logger.info("Location discovered: %s", location_id)
+
+    def reveal_routes_from(self, location_id: str) -> list[WorldLocation]:
+        """ "Wegauskunft": locals reveal the roads out of this settlement.
+
+        Neighbouring *settlements* become travelable (the townsfolk know their
+        own roads). A neighbouring *POI* is only revealed once the player has
+        already *heard* of it (from a rumor) — secrets stay secret until you
+        know to ask about them. Returns the locations newly made travelable.
+        """
+        newly: list[WorldLocation] = []
+        for other, _ticks in self.neighbors(location_id):
+            if other.discovered:
+                continue
+            if other.type == "settlement" or other.heard:
+                other.discovered = True
+                other.heard = True
+                newly.append(other)
+        if newly:
+            logger.info("Directions from %s reveal: %s", location_id, [loc.id for loc in newly])
+        return newly
 
     def set_current_location(self, location_id: str) -> None:
         if location_id not in self.locations:

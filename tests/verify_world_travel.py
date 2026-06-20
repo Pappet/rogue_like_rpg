@@ -55,6 +55,8 @@ def test_travel_to_destination():
     gc, game = _boot()
     _frames(gc)
     ctx = gc.ctx
+    # The player has asked a local for directions out of the start town.
+    ctx.world_graph.reveal_routes_from(ctx.world_graph.current_location_id)
     ctx.travel_encounters.templates = []  # deterministic direct travel, no road events
     ticks_before = ctx.world_clock.total_ticks
 

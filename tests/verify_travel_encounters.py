@@ -277,6 +277,7 @@ def test_travel_encounter_end_to_end():
     gc, game = _boot()
     _frames(gc)
     ctx = gc.ctx
+    ctx.world_graph.reveal_routes_from(ctx.world_graph.current_location_id)  # ask for directions
     ctx.travel_encounters.rng.random = lambda: 0.0  # force an encounter on this trip
     ticks_before = ctx.world_clock.total_ticks
 

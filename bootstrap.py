@@ -121,9 +121,11 @@ def build_game_context(seed: int | None = None) -> GameContext:
     travel_encounters.load_templates(f"{DATA_DIR}/travel_encounters.json")
     ctx.travel_encounters = travel_encounters
 
-    # Rumors: smalltalk occasionally points at other settlements
+    # Rumors: smalltalk occasionally points at other settlements; locals give
+    # directions out of town the first time you ask (how places become known).
     ctx.rumors = RumorService(ctx=ctx)
     default_content.dialogues.rumor_provider = ctx.rumors.maybe_rumor
+    default_content.dialogues.directions_provider = ctx.rumors.directions
 
     # Dialogue selection context: rep tier at the current location, day
     # phase and the settlement's prosperity tier (G3)

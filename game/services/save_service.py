@@ -61,6 +61,9 @@ class SaveService:
                     "discovered": [loc.id for loc in ctx.world_graph.locations.values() if loc.discovered]
                     if ctx.world_graph
                     else [],
+                    "heard": [loc.id for loc in ctx.world_graph.locations.values() if loc.heard]
+                    if ctx.world_graph
+                    else [],
                 },
                 "maps": {map_id: encode_map(c) for map_id, c in ctx.map_service.maps.items()},
                 "chronicle": ctx.world_chronicle.to_dict() if ctx.world_chronicle else None,
@@ -105,8 +108,12 @@ class SaveService:
         # World graph state
         if ctx.world_graph is not None:
             wg = data.get("world_graph", {})
+            discovered = set(wg.get("discovered", []))
+            # Older saves predate the "heard" tier — treat discovered as heard.
+            heard = set(wg.get("heard", discovered))
             for location in ctx.world_graph.locations.values():
-                location.discovered = location.id in wg.get("discovered", [])
+                location.discovered = location.id in discovered
+                location.heard = location.id in heard or location.discovered
             if wg.get("current_location_id"):
                 ctx.world_graph.set_current_location(wg["current_location_id"])
 

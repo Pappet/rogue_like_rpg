@@ -188,8 +188,7 @@ The done-criterion runs end-to-end in
 **Done when:** a rumor from Phase E leads to an undiscovered POI with a
 hand-placed secret and a generated dungeon.
 
-*Shipped as:* the undiscovered "Old Ruins" POI on the world graph
-(rumors discover it — only POIs behind known locations can be heard of),
+*Shipped as:* the undiscovered "Old Ruins" POI on the world graph,
 `MapGenerator.create_dungeon()` (seeded rooms-and-corridors with
 monsters) and the `Hidden` component (concealed entities are invisible
 to rendering/tooltip/pickup until `VisibilitySystem` reveals them at
@@ -198,6 +197,13 @@ close range; perception extends the radius). The full chain runs in
 Deviation from the plan: the secret reveal is proximity/perception-based
 rather than requiring the manual Investigate mode — less friction, same
 perception payoff.
+
+*Extended (post-G):* discovery now applies to **all** locations, not just
+POIs. Every place except the start town begins unknown, and knowledge is
+two-tier — `heard` (a lead, from a rumor) vs `discovered` (route known, from
+asking a local for directions / "Wegauskunft"). See CLAUDE.md "Location
+discovery (two-tier)". Quest-driven discovery (friendly-neighbour guide
+quests) is the planned next step.
 
 ### Phase G — Replayability & Living Consequences ✅ (done)
 

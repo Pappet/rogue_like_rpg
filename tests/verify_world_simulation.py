@@ -184,6 +184,7 @@ def _frames(gc, n=5, dt=0.016):
 def test_travel_roundtrip_reconciles_village_npcs():
     gc, _game = _boot()
     ctx = gc.ctx
+    ctx.world_graph.reveal_routes_from(ctx.world_graph.current_location_id)  # ask for directions
     ctx.travel_encounters.templates = []  # deterministic direct travel, no road events
     _frames(gc)
 
