@@ -371,6 +371,13 @@ The chain is always: key → `InputCommand` → `InputController` →
    fonts/surfaces are invalidated per test by `theme.reset_caches()` in
    `tests/conftest.py` — never create module-level `Font` objects that
    outlive a `pygame.quit()`.
+5. Add the window to `tests/verify_ui_layout.py`. That guard renders every
+   modal with worst-case content (one of every item, longest text, full
+   lists) and asserts nothing spills out of its inset box or the panel —
+   so detail panes / lists that grow a line or a row are caught in CI
+   instead of on screen. Fixed-height detail panes should fold an item's
+   facts via `ActionSystem.get_compact_description` (≤2 lines) rather than
+   listing Material/Weight/Value on separate lines.
 
 #### Recipe G — New game state (screen)
 
