@@ -12,6 +12,7 @@ import pygame
 from config import (
     UI_SPACING_X,
     UI_THEME_COIN,
+    UI_THEME_DANGER,
     UI_THEME_GOLD,
     UI_THEME_INK,
     UI_THEME_INK_DIM,
@@ -346,19 +347,31 @@ class TradeWindow(UIWindow):
         offset = max(0, min(offset, max_scroll))
         self.scroll_offsets[pane] = offset
 
+        # On the buy pane, dim goods the player cannot currently afford so the
+        # affordable stock reads at a glance (mirror of the footer-hint logic).
+        player_gold = self._gold_of(self.player_entity) if pane == 0 else None
+
         for i in range(offset, min(len(entries), offset + max_visible)):
             name, price = entries[i]
             row_y = rect.y + 8 + (i - offset) * row_h
             selected = pane == self.active_pane and i == self.selected_idx
+            unaffordable = player_gold is not None and price > player_gold
             if selected:
                 theme.draw_selection(surface, (rect.x + 3, row_y - 2, rect.width - 6, row_h - 2))
-            name_color = UI_THEME_GOLD if selected else UI_THEME_INK
-            theme.draw_text(surface, name, self.font, name_color, (rect.x + 12, row_y), shadow=selected)
+            if unaffordable:
+                name_color = UI_THEME_INK_MUTED
+                price_color = UI_THEME_DANGER
+            else:
+                name_color = UI_THEME_GOLD if selected else UI_THEME_INK
+                price_color = UI_THEME_COIN
+            theme.draw_text(
+                surface, name, self.font, name_color, (rect.x + 12, row_y), shadow=selected and not unaffordable
+            )
             theme.draw_text(
                 surface,
                 f"{price}g",
                 self.font,
-                UI_THEME_COIN,
+                price_color,
                 (rect.right - 10, row_y),
                 anchor="topright",
                 shadow=False,

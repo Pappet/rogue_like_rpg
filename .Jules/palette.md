@@ -9,3 +9,11 @@
 ## 2024-05-24 - Dynamic Footer Hints Prevent Frustration
 **Learning:** Displaying keyboard shortcuts (like `[Enter] Buy` or `[Enter] Craft`) when the action is actually invalid (due to insufficient gold or materials) leads to player frustration and pressing keys without feedback.
 **Action:** Always make footer interaction hints context-aware. If an item cannot be bought, crafted, or interacted with, hide the corresponding keyboard hint to cleanly communicate the action's unavailability. Name the concrete action (Accept / Turn in) rather than an ambiguous combined label.
+
+## 2026-06-20 - Show State in the List, Not Just the Footer
+**Learning:** Hiding a footer hint when an action is invalid tells the player *that* something is off, but not *which* row. Carrying the same state into the list itself (dimming unaffordable goods, colouring the price red) lets the player scan affordability at a glance instead of selecting each row to find out.
+**Action:** When an action's validity varies per list entry, reflect it on the entry (dim/recolour), not only in the shared footer.
+
+## 2026-06-20 - Prefer a Bar Over a Number for Magnitudes
+**Learning:** A bare readout like "Weight: 9.0/10.0 kg" forces the player to read and compare two numbers; a coloured fill bar (green → amber → red) communicates "nearly full / over the limit" instantly.
+**Action:** For bounded magnitudes (carry load, HP, progress), draw a `theme.draw_bar` with a threshold colour instead of, or alongside, the raw numbers. Keep the same physical facts (Material/Weight/Value) consistent across every surface that shows an item (inventory, crafting, examine tooltip).
