@@ -49,17 +49,27 @@ class Quest:
     title: str
     description: str
     quest_type: str  # "deliver" | "kill" | "visit"
-    giver_location: str
+    giver_location: str  # where the quest is turned in (and, by default, offered)
     target: dict
     reward_gold: int
     state: str = "offered"  # offered | active | completed | turned_in
     progress: int = 0
     source: str = "authored"  # authored | generated
     cause_event_id: str = ""  # chronicle event that caused this quest (G2)
+    # Where the quest is *offered*, when that differs from where it is turned
+    # in. A guide quest is offered by a friendly settlement but sends you to
+    # another (its giver_location); accepting it reveals the way there. Empty
+    # means "offered where it's turned in" (the common case).
+    offer_location: str = ""
     # Quest chains: ids that must be turned_in before this is offered. A quest
     # with unmet prerequisites stays "offered" but is hidden until they clear,
     # so accepting one stage unlocks the next (no extra state to serialize).
     prerequisites: list[str] = field(default_factory=list)
+
+    @property
+    def where_offered(self) -> str:
+        """Settlement whose quest board shows this quest."""
+        return self.offer_location or self.giver_location
 
 
 # eq=False keeps identity hashing — esper event handlers live in weakref sets.
@@ -111,7 +121,7 @@ class QuestService:
         return [
             q
             for q in self.quests
-            if q.state == "offered" and q.giver_location == location_id and self._prerequisites_met(q)
+            if q.state == "offered" and q.where_offered == location_id and self._prerequisites_met(q)
         ]
 
     def active_quests(self) -> list[Quest]:
@@ -139,7 +149,7 @@ class QuestService:
         return [
             q
             for q in self.quests
-            if q.state == "offered" and q.giver_location != location_id and self._prerequisites_met(q)
+            if q.state == "offered" and q.where_offered != location_id and self._prerequisites_met(q)
         ]
 
     # --- Lifecycle ----------------------------------------------------------------
@@ -149,6 +159,17 @@ class QuestService:
             return
         quest.state = "active"
         esper.dispatch_event("log_message", f"Quest accepted: [color=yellow]{quest.title}[/color]")
+        # A quest that sends you to another settlement reveals the way there
+        # ("here's the road, hero"). No-op when it's turned in where it's given.
+        graph = self.ctx.world_graph if self.ctx else None
+        if graph is not None and quest.giver_location and quest.giver_location != quest.where_offered:
+            destination = graph.get_location(quest.giver_location)
+            if destination is not None and not destination.discovered:
+                graph.discover(quest.giver_location)
+                esper.dispatch_event(
+                    "log_message",
+                    f"[color=yellow]The road to {destination.name} is now known.[/color]",
+                )
 
     def _announce_unlocked(self, completed_id: str) -> None:
         """Tell the player about chain stages this turn-in just unlocked."""
@@ -252,6 +273,7 @@ class QuestService:
             for loc in self.ctx.world_graph.locations.values():
                 if loc.type == "settlement":
                     self._generate_offers(loc.id)
+                    self._generate_guide_offers(loc.id)
         else:
             self._generate_offers(location_id)
 
@@ -319,6 +341,61 @@ class QuestService:
                     )
                 )
                 logger.info("Generated wolf-hunt quest at %s.", location_id)
+
+    def _worst_shortage(self, location_id: str) -> str | None:
+        """The consumed good a settlement is shortest on (below threshold), or None."""
+        economy = self.ctx.economy if self.ctx else None
+        if economy is None:
+            return None
+        best_item, best_level = None, GEN_STOCK_THRESHOLD
+        for item_id, level in economy.stocks.get(location_id, {}).items():
+            if level >= GEN_STOCK_THRESHOLD or not economy.consumes(location_id, item_id):
+                continue
+            if best_item is None or level < best_level:
+                best_item, best_level = item_id, level
+        return best_item
+
+    def _generate_guide_offers(self, offer_location: str) -> None:
+        """A friendly settlement advertises a neighbour's need and points the way.
+
+        "Our friends in B are short on bread — carry some there." Offered at
+        ``offer_location``, turned in at the friend (its giver_location), so
+        accepting reveals the road to the friend (see ``accept``). This is the
+        quest-driven half of location discovery.
+        """
+        if self.ctx is None or self.ctx.world_graph is None or self.ctx.economy is None:
+            return
+        graph = self.ctx.world_graph
+        for friend in graph.friends_of(offer_location):
+            # A guide is only useful when a real road runs to the friend.
+            if graph.travel_ticks(offer_location, friend.id) is None:
+                continue
+            item_id = self._worst_shortage(friend.id)
+            if item_id is None:
+                continue
+            quest_id = f"gen_guide_{offer_location}_{friend.id}_{item_id}"
+            if any(q.id == quest_id and q.state != "turned_in" for q in self.quests):
+                continue
+            template = item_registry.get(item_id)
+            item_name = template.name if template else item_id
+            value = template.value if template else 10
+            self.quests = [q for q in self.quests if q.id != quest_id]  # drop old turned_in copy
+            self.quests.append(
+                Quest(
+                    id=quest_id,
+                    title=f"Aid for {friend.name}",
+                    description=f"Our friends in {friend.name} are short on {item_name}s. "
+                    f"Carry {GEN_DELIVER_COUNT} there and they'll see you well paid. "
+                    "We'll set you on the road.",
+                    quest_type="deliver",
+                    giver_location=friend.id,  # delivered & turned in at the friend
+                    offer_location=offer_location,  # advertised here
+                    target={"item": item_id, "count": GEN_DELIVER_COUNT},
+                    reward_gold=int(value * GEN_DELIVER_COUNT * GEN_DELIVER_REWARD_FACTOR),
+                    source="generated",
+                )
+            )
+            logger.info("Generated guide quest at %s -> %s for %s.", offer_location, friend.id, item_id)
 
     def on_map_entered(self, map_id: str) -> None:
         """Any-map-transition hook: kill-quest targets live in the giver

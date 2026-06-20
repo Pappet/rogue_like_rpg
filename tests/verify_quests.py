@@ -520,3 +520,81 @@ def test_bump_mayor_opens_quest_window_and_accepts():
     assert journal._entries(), "journal should list the accepted quest"
     key(pygame.K_ESCAPE)
     frames()
+
+
+# ---------------------------------------------------------------------------
+# Guide quests: a friendly settlement advertises a neighbour's need and the
+# acceptance reveals the road there (quest-driven location discovery).
+# ---------------------------------------------------------------------------
+
+
+class _FakeEconomy:
+    def __init__(self, stocks):
+        self.stocks = stocks
+
+    def consumes(self, location_id, item_id):
+        return True
+
+
+def _friends_graph():
+    from game.services.world_graph_service import WorldGraphService, WorldLocation
+
+    graph = WorldGraphService()
+    graph.add_location(WorldLocation(id="Village", name="Village", discovered=True, friends=["Brackenfen"]))
+    graph.add_location(WorldLocation(id="Brackenfen", name="Brackenfen", discovered=False, friends=["Village"]))
+    graph.add_route("Village", "Brackenfen", 100)
+    graph.start_location_id = "Village"
+    graph.current_location_id = "Village"
+    return graph
+
+
+def test_guide_quest_offered_by_friend_and_reveals_route_on_accept():
+    _load_content()
+    ctx = _FakeCtx()
+    ctx.world_graph = _friends_graph()
+    ctx.economy = _FakeEconomy({"Brackenfen": {"bread": 0.0}})
+    service = QuestService(ctx=ctx, rng=random.Random(1))
+    ctx.quests = service
+
+    service._generate_guide_offers("Village")
+    guides = [q for q in service.offers_at("Village") if q.id.startswith("gen_guide_")]
+    assert guides, "a guide quest should be offered at the friendly settlement"
+    quest = guides[0]
+    assert quest.where_offered == "Village" and quest.giver_location == "Brackenfen"
+    assert quest.quest_type == "deliver" and quest.target["item"] == "bread"
+
+    # The destination is unknown until you take the job.
+    assert not ctx.world_graph.get_location("Brackenfen").discovered
+    service.accept(quest)
+    assert ctx.world_graph.get_location("Brackenfen").discovered, "accepting reveals the road to the friend"
+
+
+def test_no_guide_quest_without_a_shortage():
+    _load_content()
+    ctx = _FakeCtx()
+    ctx.world_graph = _friends_graph()
+    ctx.economy = _FakeEconomy({"Brackenfen": {"bread": 99.0}})  # well stocked
+    service = QuestService(ctx=ctx, rng=random.Random(1))
+    ctx.quests = service
+
+    service._generate_guide_offers("Village")
+    assert not [q for q in service.quests if q.id.startswith("gen_guide_")]
+
+
+def test_no_guide_quest_to_unconnected_friend():
+    _load_content()
+    from game.services.world_graph_service import WorldGraphService, WorldLocation
+
+    graph = WorldGraphService()
+    graph.add_location(WorldLocation(id="Village", name="Village", discovered=True, friends=["Faraway"]))
+    graph.add_location(WorldLocation(id="Faraway", name="Faraway", discovered=False))
+    # No route between them — a guide can't point a road that doesn't exist.
+    graph.current_location_id = "Village"
+    ctx = _FakeCtx()
+    ctx.world_graph = graph
+    ctx.economy = _FakeEconomy({"Faraway": {"bread": 0.0}})
+    service = QuestService(ctx=ctx, rng=random.Random(1))
+    ctx.quests = service
+
+    service._generate_guide_offers("Village")
+    assert not [q for q in service.quests if q.id.startswith("gen_guide_")]

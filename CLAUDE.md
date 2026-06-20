@@ -543,7 +543,7 @@ class MapAwareSystem:
 - **Add new schedules**: `assets/data/schedules.json` → assign via `schedule_id` in entity template
 - **Player stats**: `assets/data/player.json` → base stats and actions loaded by `PartyService`
 - **Dialogues**: `assets/data/dialogues.json` → NPC dialogue lines keyed by template_id, loaded by `DialogueService`. Conditional lines match a context dict assembled per conversation; alongside `rep`/`phase`/`prosperity`/`activity` there is a `quest` key (`"ready"` when a quest can be turned in here, `"active"` when one is in progress for this settlement) so givers react to work the player owes the town. The context is built in `bootstrap._dialogue_context`
-- **Quests & chains**: `assets/data/quests.json` → authored quests loaded by `QuestService`. A quest may carry a `"prerequisites": [quest_id, ...]` list: it stays `offered` but is hidden from `offers_at`/rumors until every listed quest is `turned_in`, so turning in one stage unlocks the next (a chain). Turn-in announces any stage it unlocks. Generated quests (shortage deliver / wolf hunt) have no prerequisites. Verified by `tests/verify_quests.py`
+- **Quests & chains**: `assets/data/quests.json` → authored quests loaded by `QuestService`. A quest may carry a `"prerequisites": [quest_id, ...]` list: it stays `offered` but is hidden from `offers_at`/rumors until every listed quest is `turned_in`, so turning in one stage unlocks the next (a chain). Turn-in announces any stage it unlocks. Generated quests (shortage deliver / wolf hunt / friendly-neighbour **guide**) have no prerequisites. A guide quest carries `offer_location` ≠ `giver_location` (offered by a friend, turned in at the destination) so accepting it discovers the destination — see "Location discovery (two-tier)". Verified by `tests/verify_quests.py`
 - **Map scenarios**: `assets/data/scenarios/*.json` → data-driven map layouts loaded by `MapGenerator`; a `"biome"` key gives the settlement a generated wilderness map (entered via portal, not a world-graph node)
 - **Economy blocks** in scenarios: `rates_per_day` entries may be a plain number or `{"per_day": N, "requires": {"input_item": amount}}` — production stalls without inputs (supply chains, Phase G3). Settlements run real item chains: Village mills `grain`→`flour`→`bread` and grinds `herbs`→`healing_salve`; Brackenfen tans `hide`→`leather`→`leather_armor` and digs `iron_ore`; Eastmoor forges `iron_ore`→`iron_sword`/`steel_sword`. The cross-settlement loop (Brackenfen ore → Eastmoor smithy) is asserted by `tests/verify_supply_chains.py`
 - **Per-settlement merchant override**: a scenario NPC entry (in `village_npcs` or a structure's `npcs`) may carry a `"merchant": {"stock": [...], "gold": N}` block. `EntityFactory.create(..., merchant_override=...)` replaces the *template's* merchant data for that instance, so the same role (`shopkeeper`, `blacksmith`) sells a settlement-specific sortiment without new templates. This is how the market profiles differ (Village=food/grain, Brackenfen=raw materials/leather, Eastmoor=metal/luxury). `tests/verify_item_distribution.py` guards that **every** item in `items.json` is reachable (sold or looted) — add new items to a merchant stock or loot table, not just the item file
@@ -702,10 +702,16 @@ How knowledge spreads (all via NPC talk, routed through
   smalltalk makes a not-yet-known place adjacent to a known one `heard` (a
   lead), not travelable. You then learn the way by reaching an adjacent town
   and asking (Wegauskunft).
+- **Guide quests (`QuestService._generate_guide_offers`)**: a settlement
+  `friends` with a neighbour (world.json `friends` list) advertises that
+  friend's shortage as a deliver quest *offered here* but *turned in there*
+  ("our friends in B need bread — carry some over"). A `Quest` separates
+  `offer_location` (where it shows, via `where_offered`) from `giver_location`
+  (where it's turned in / the destination); `accept()` discovers the
+  `giver_location` when it differs — taking the job reveals the road. Friends
+  must be route-connected (a guide can't point a road that doesn't exist).
 
-Both `heard` and `discovered` are saved (`save_service`). Quest-driven
-discovery (a settlement's need + a friendly neighbour generating a guide
-quest) is a planned follow-up, not yet implemented.
+Both `heard` and `discovered` are saved (`save_service`).
 
 ### Input Handling
 
