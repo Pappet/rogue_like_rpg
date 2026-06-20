@@ -24,6 +24,7 @@ from game.components import (
     Alignment,
     Description,
     EffectiveStats,
+    ItemMaterial,
     Name,
     Portable,
     Position,
@@ -98,6 +99,20 @@ class TooltipWindow(UIWindow):
                         shadow=False,
                     )
                     curr_y += 22
+
+            # Material / Weight / Value mirror the inventory & crafting detail
+            # panes so examine reports the same physical facts.
+            material = esper.try_component(ent, ItemMaterial)
+            if material:
+                theme.draw_text(
+                    surface,
+                    f"Material: {material.material}",
+                    self.font_stats,
+                    UI_THEME_INK_DIM,
+                    (self.rect.x + pad, curr_y),
+                    shadow=False,
+                )
+                curr_y += 22
 
             portable = esper.try_component(ent, Portable)
             if portable:
