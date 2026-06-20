@@ -93,3 +93,33 @@ if __name__ == "__main__":
 
         traceback.print_exc()
         sys.exit(1)
+
+
+def test_compact_description_folds_facts_to_two_lines():
+    """get_compact_description keeps fixed-height detail panes from overflowing:
+    flavour text on its own line, Material/Weight/Value combined on a second."""
+    reset_world()
+    world = esper
+
+    item = world.create_entity(
+        Name("Iron Sword"),
+        Description("A plain but reliable blade."),
+        ItemMaterial("iron"),
+        Portable(3.0),
+    )
+    from game.components import Value
+
+    world.add_component(item, Value(amount=30))
+
+    lines = ActionSystem.get_compact_description(world, item)
+    assert len(lines) == 2, f"expected 2 lines, got {lines}"
+    assert lines[0] == "A plain but reliable blade."
+    assert "Material: iron" in lines[1]
+    assert "Weight: 3.0kg" in lines[1]
+    assert "Value: 30g" in lines[1]
+
+    # Facts-only item (no Description) collapses to a single combined line.
+    bare = world.create_entity(Portable(1.0), Value(amount=5))
+    bare_lines = ActionSystem.get_compact_description(world, bare)
+    assert len(bare_lines) == 1
+    assert "Weight: 1.0kg" in bare_lines[0] and "Value: 5g" in bare_lines[0]
