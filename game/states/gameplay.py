@@ -18,6 +18,7 @@ from game.systems.debug_render_system import DebugRenderSystem
 from game.systems.render_system import RenderSystem
 from game.systems.ui_system import UISystem
 from game.ui.windows.crafting import CraftWindow
+from game.ui.windows.pickup import PickupWindow
 from game.ui.windows.quests import QuestWindow
 from game.ui.windows.rest import RestWindow
 from game.ui.windows.tooltip import TooltipWindow
@@ -77,6 +78,7 @@ class GameplayState(GameState):
         esper.set_handler("rest_requested", self._on_rest_requested)
         esper.set_handler("craft_requested", self._on_craft_requested)
         esper.set_handler("harvest_requested", self._on_harvest_requested)
+        esper.set_handler("pickup_choice_requested", self._on_pickup_choice_requested)
 
     def _on_player_died(self):
         """Handle the player_died event by transitioning to GAME_OVER state."""
@@ -116,6 +118,13 @@ class GameplayState(GameState):
     def _on_harvest_requested(self, node_entity):
         """Harvest a resource node the player bumped (immediate, no window)."""
         GatherService.harvest(self.ctx, node_entity)
+
+    def _on_pickup_choice_requested(self, items):
+        """Open the pickup chooser when a tile holds more than one item."""
+        if self.ui_stack.is_active():
+            return
+        rect = pygame.Rect(*UI_MODAL_RECT)
+        self.ui_stack.push(PickupWindow(rect, items, self.input_controller.actions, self.ctx.input_manager))
 
     def _craft(self, recipe):
         """CraftWindow callback: perform the craft, then fast-forward the clock.
