@@ -18,6 +18,7 @@ from game.systems.debug_render_system import DebugRenderSystem
 from game.systems.render_system import RenderSystem
 from game.systems.ui_system import UISystem
 from game.ui.windows.crafting import CraftWindow
+from game.ui.windows.dialogue import DialogueWindow
 from game.ui.windows.pickup import PickupWindow
 from game.ui.windows.quests import QuestWindow
 from game.ui.windows.rest import RestWindow
@@ -51,17 +52,25 @@ class GameplayState(GameState):
         super().startup(ctx)
         systems = ctx.systems
 
-        if ctx.player_entity is None:
+        fresh_start = ctx.player_entity is None
+        if fresh_start:
             # Start at 1,1 to avoid the wall at 0,0
             ctx.player_entity = PartyService().create_initial_party(1, 1)
+
+        # Render-cycle systems need camera/player context, (re)built on entry.
+        # The message log, however, is session history — reuse the persisted
+        # instance so the chronicle isn't wiped each time we re-enter gameplay.
+        systems.ui_system = UISystem(systems.turn_system, ctx.player_entity, ctx.world_clock, ctx.message_log)
+        ctx.message_log = systems.ui_system.message_log
+
+        # Welcome lines are dispatched only after the log handler is live (above)
+        # so they actually land in the chronicle, and only on a fresh run.
+        if fresh_start:
             esper.dispatch_event("log_message", "Welcome [color=green]Traveler[/color] to the dungeon!")
             esper.dispatch_event(
                 "log_message",
-                "Speak with the townsfolk (bump into them) to learn the roads to other places.",
+                "Speak with the townsfolk (bump into them) to learn the roads and hear rumors.",
             )
-
-        # Render-cycle systems need camera/player context, (re)built on entry
-        systems.ui_system = UISystem(systems.turn_system, ctx.player_entity, ctx.world_clock)
         systems.render_system = RenderSystem(ctx.camera)
         systems.render_system.set_map(ctx.map_container)
         systems.debug_render_system = DebugRenderSystem(ctx.camera)
@@ -77,6 +86,7 @@ class GameplayState(GameState):
         # Event subscriptions (facts/requests dispatched by lower layers)
         esper.set_handler("map_change_requested", self.map_transition_service.transition)
         esper.set_handler("player_died", self._on_player_died)
+        esper.set_handler("dialogue_requested", self._on_dialogue_requested)
         esper.set_handler("trade_requested", self._on_trade_requested)
         esper.set_handler("quests_requested", self._on_quests_requested)
         esper.set_handler("rest_requested", self._on_rest_requested)
@@ -88,6 +98,13 @@ class GameplayState(GameState):
         """Handle the player_died event by transitioning to GAME_OVER state."""
         self.done = True
         self.next_state = "GAME_OVER"
+
+    def _on_dialogue_requested(self, npc_entity):
+        """Open the conversation window after bumping a friendly/neutral NPC."""
+        if self.ui_stack.is_active():
+            return
+        rect = pygame.Rect(*UI_MODAL_RECT)
+        self.ui_stack.push(DialogueWindow(rect, self.ctx, npc_entity))
 
     def _on_quests_requested(self, giver_entity):
         """Open the quest window after bumping a quest giver."""

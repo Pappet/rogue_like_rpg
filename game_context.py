@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 
 from core.camera import Camera
 from core.input_manager import InputManager
+from core.ui.message_log import MessageLog
 from core.ui.stack_manager import UIStack
 from core.world_clock_service import WorldClockService
 from game.content.content_database import ContentDatabase
@@ -110,6 +111,10 @@ class GameContext:
     player_entity: int | None = None
     content: ContentDatabase | None = None
     world_seed: int = 0
+    # The chronicle/message log persists across gameplay re-entry (e.g.
+    # returning from the world map) so its history is never reset. UISystem
+    # reuses this instance instead of creating a fresh, empty one.
+    message_log: MessageLog | None = None
 
     @property
     def map_container(self) -> MapContainer | None:

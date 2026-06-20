@@ -41,9 +41,23 @@ class RumorService:
         return f"The roads from {here_name} lead to {names}. Safe travels, friend."
 
     def maybe_rumor(self) -> str | None:
-        """A rumor line with RUMOR_CHANCE probability, else None."""
+        """A rumor line with RUMOR_CHANCE probability, else None.
+
+        Used for the ambient path where smalltalk *might* turn into a rumor.
+        When the player explicitly asks for news, use :meth:`ask_news`.
+        """
         if self.rng.random() >= RUMOR_CHANCE:
             return None
+        return self.ask_news()
+
+    def ask_news(self) -> str | None:
+        """A rumor line in response to the player explicitly asking for news.
+
+        Unlike :meth:`maybe_rumor` this is NOT chance-gated — the player chose
+        to ask, so we always hand back whatever the world knows (a discovery
+        lead first, else a chronicle/quest rumor), or None when there is
+        nothing new to share.
+        """
         # Hearing of an undiscovered place makes it a lead (heard, not yet
         # travelable). Settlements you then learn the way to by asking around;
         # secret POIs need this rumor before locals will even point the way.

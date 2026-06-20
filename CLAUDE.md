@@ -255,6 +255,7 @@ is neutral constants, usable by both.
         ├── quests.py                # Quest offers/turn-in + journal window
         ├── rest.py                  # Wait/sleep duration picker (time skip)
         ├── pickup.py                # Multi-item pickup chooser (item details)
+        ├── dialogue.py              # NPC conversation window (roads/news/smalltalk)
         └── tooltip.py               # Examine/tooltip window
 ```
 
@@ -271,6 +272,12 @@ there is no string-keyed `persist` dict anymore:
 - `ctx.world_seed` — the run's world seed (Phase G1). All run-scoped
   randomness derives from it via `core/rng.py::derive_seed(seed, label)`;
   `bootstrap.build_game_context(seed=...)` accepts it, `--seed` sets it.
+- `ctx.message_log` — the chronicle's `MessageLog`. It is **session history**,
+  so it lives on the context and survives re-entering gameplay. `UISystem` is
+  rebuilt every `GameplayState.startup()` (it needs fresh camera/player
+  context) but reuses this instance instead of constructing an empty one — that
+  is what stops the message log from resetting when returning from the world
+  map. Welcome lines are dispatched only after the log handler is live.
 
 `bootstrap.build_game_context()` is the only place that constructs services
 and systems. States receive the context via `startup(ctx)`.
@@ -689,19 +696,31 @@ knowledge tiers: **`heard`** (you know the place exists — a lead) and
 `discovered_neighbors` is the only travel source). `discover()` implies
 `heard`; the world map draws `heard_undiscovered()` places as a faded "?".
 
-How knowledge spreads (all via NPC talk, routed through
-`InteractionResolver._say_line` → `dialogue_service.directions_provider` /
-`rumor_provider`, both wired to `RumorService` in bootstrap):
+How knowledge spreads (all via NPC talk in the **DialogueWindow**). Bumping a
+friendly/neutral NPC dispatches `dialogue_requested` (sanctioned request, like
+`trade_requested`); `GameplayState` opens `game/ui/windows/dialogue.py`, a
+topic-driven conversation. The player picks a topic and reads the reply in
+place (the roads/news replies are also mirrored to the chronicle log). The two
+world-knowledge topics call `ctx.rumors` (RumorService) directly:
 
-- **Wegauskunft (`RumorService.directions` → `WorldGraphService.reveal_routes_from`)**:
-  talking to a local reliably (not chance-gated) reveals the roads *out of the
-  current town* — neighbouring **settlements** become travelable. A
-  neighbouring **POI** is gated: it is only revealed once already `heard`
-  (locals won't point you to a secret you haven't caught wind of).
-- **Rumors (`RumorService.maybe_rumor` → `_discovery_rumor`)**: chance-based
-  smalltalk makes a not-yet-known place adjacent to a known one `heard` (a
-  lead), not travelable. You then learn the way by reaching an adjacent town
-  and asking (Wegauskunft).
+- **"Ask about the roads"** — **Wegauskunft (`RumorService.directions` →
+  `WorldGraphService.reveal_routes_from`)**: reliably (not chance-gated)
+  reveals the roads *out of the current town* — neighbouring **settlements**
+  become travelable. A neighbouring **POI** is gated: it is only revealed once
+  already `heard` (locals won't point you to a secret you haven't caught wind
+  of).
+- **"Heard any news?"** — **Rumors (`RumorService.ask_news` →
+  `_discovery_rumor`)**: makes a not-yet-known place adjacent to a known one
+  `heard` (a lead), not travelable; else passes on a chronicle/quest rumor.
+  Because the player explicitly asked, this is NOT chance-gated (unlike the
+  ambient `maybe_rumor`). You then learn the way by reaching an adjacent town
+  and asking for the roads (Wegauskunft).
+- **"Make small talk"** — a flavour line from `dialogue_service.get_line`
+  (template-specific, selected against the rep/phase/prosperity/activity
+  context — see Dialogues below). Service NPCs (merchant/quest-giver/innkeeper)
+  open their own window instead and only log a one-line greeting
+  (`InteractionResolver._say_line`); directions/rumors live solely in the
+  conversation window now.
 - **Guide quests (`QuestService._generate_guide_offers`)**: a settlement
   `friends` with a neighbour (world.json `friends` list) advertises that
   friend's shortage as a deliver quest *offered here* but *turned in there*

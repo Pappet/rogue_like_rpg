@@ -383,15 +383,22 @@ def test_rumor_leads_to_generated_quest_with_real_cause():
     for comp_type in (AI, Schedule, Activity):
         if esper.has_component(villager, comp_type):
             esper.remove_component(villager, comp_type)
+    key(pygame.K_RIGHT)  # bump -> opens the conversation window
+    frames(2)
+    key(pygame.K_RETURN)  # topic "Ask about the roads" -> reveals Brackenfen
+    frames(2)
+    key(pygame.K_DOWN)  # move to the "Heard any news?" topic
     heard = False
     for _ in range(30):
         log.clear()
-        key(pygame.K_RIGHT)
+        key(pygame.K_RETURN)  # ask for news until the wolf rumor surfaces
         frames(2)
         if any("Brackenfen" in m and "Wolves" in m for m in log):
             heard = True
             break
     assert heard, "a villager should eventually pass on the wolf rumor"
+    key(pygame.K_ESCAPE)  # leave the conversation before travelling on
+    frames(2)
 
     # 2) Travel to Brackenfen
     key(pygame.K_m)
