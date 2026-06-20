@@ -144,12 +144,22 @@ def test_bump_friendly_npc_talks():
     hp_before = esper.component_for_entity(villager, Stats).hp
 
     h.log.clear()
-    h.key(pygame.K_RIGHT)  # bump
+    h.key(pygame.K_RIGHT)  # bump -> opens the conversation window
     h.frames()
 
-    assert any("[color=yellow]" in m for m in h.log), f"expected dialogue line, log: {h.log}"
+    from game.ui.windows.dialogue import DialogueWindow
+
+    assert h.ctx.ui_stack.is_active(), "talking should open a dialogue window"
+    window = h.ctx.ui_stack.stack[-1]
+    assert isinstance(window, DialogueWindow), "the bump should push a DialogueWindow"
+    assert window.transcript, "the NPC should greet the player when the window opens"
     assert esper.component_for_entity(villager, Stats).hp == hp_before, "talking must not damage the NPC"
     assert (h.player_pos().x, h.player_pos().y) == (x, y), "player must not move into the NPC"
+
+    # Asking about the roads (the first topic) mirrors the NPC reply to the log.
+    h.key(pygame.K_RETURN)
+    h.frames()
+    assert any("[color=yellow]" in m for m in h.log), f"expected dialogue line, log: {h.log}"
 
 
 def test_bump_hostile_npc_fights_to_death_with_loot():

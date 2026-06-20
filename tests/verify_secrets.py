@@ -190,12 +190,19 @@ def test_rumor_leads_to_dungeon_with_secret():
         if esper.has_component(villager, comp_type):
             esper.remove_component(villager, comp_type)
     ctx.rumors.rng = random.Random(5)
+    key(pygame.K_RIGHT)  # bump -> opens the conversation window
+    frames(2)
+    key(pygame.K_RETURN)  # topic "Ask about the roads" -> reveals Brackenfen
+    frames(2)
+    key(pygame.K_DOWN)  # move to the "Heard any news?" topic
     for _ in range(30):
-        key(pygame.K_RIGHT)
+        key(pygame.K_RETURN)  # ask for news until the POI rumor surfaces
         frames(2)
         if poi.heard:
             break
-    assert poi.heard, "smalltalk should eventually turn up a rumor of the POI"
+    key(pygame.K_ESCAPE)  # leave the conversation before travelling on
+    frames(2)
+    assert poi.heard, "asking for news should eventually turn up a rumor of the POI"
     assert not poi.discovered, "a rumor is only a lead — the way is still unknown"
     assert ctx.world_graph.get_location("Brackenfen").discovered, "directions revealed Brackenfen"
 

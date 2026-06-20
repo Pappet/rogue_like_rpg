@@ -33,7 +33,7 @@ _PHASE_GLYPH = {"dawn": "☀", "day": "☀", "dusk": "☾", "night": "☾"}
 
 
 class UISystem(esper.Processor):
-    def __init__(self, turn_system, player_entity, world_clock):
+    def __init__(self, turn_system, player_entity, world_clock, message_log=None):
         self.turn_system = turn_system
         self.player_entity = player_entity
         self.world_clock = world_clock
@@ -51,7 +51,17 @@ class UISystem(esper.Processor):
             self.actions_width, SCREEN_HEIGHT - LOG_HEIGHT, SCREEN_WIDTH - self.actions_width, LOG_HEIGHT
         )
 
-        self.message_log = MessageLog(self.log_rect, self.small_font)
+        # Reuse a persisted message log (kept on the GameContext) when one is
+        # supplied, so the chronicle's history survives re-entering gameplay
+        # instead of resetting to empty. Re-point its rect/font to the current
+        # layout in case those changed.
+        if message_log is not None:
+            self.message_log = message_log
+            self.message_log.rect = self.log_rect
+            self.message_log.font = self.small_font
+            self.message_log.line_height = self.small_font.get_linesize()
+        else:
+            self.message_log = MessageLog(self.log_rect, self.small_font)
 
         # Register event handler
         esper.set_handler("log_message", self.message_log.add_message)

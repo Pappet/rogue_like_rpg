@@ -267,6 +267,33 @@ def test_quest_window_no_overflow(surface, mode):
     _assert_clean(f"Quests {mode}", cap, UI_MODAL_RECT)
 
 
+def test_dialogue_window_no_overflow(surface):
+    from game.components import Activity, Name, Renderable, TemplateId
+    from game.ui.windows.dialogue import DialogueWindow
+
+    npc = esper.create_entity(
+        Name("Aldric the Exceedingly Well-Named Villager"),
+        Renderable("v", 5, (200, 180, 120)),
+        TemplateId("villager"),
+        Activity("WORK"),
+    )
+    ctx = SimpleNamespace(
+        input_manager=MagicMock(),
+        rumors=SimpleNamespace(
+            directions=lambda: "The roads from here lead to Brackenfen, Eastmoor and the Sunken Crypt. Safe travels.",
+            ask_news=lambda: "I heard from a traveler: a record catch was landed down at the distant harbor town.",
+        ),
+    )
+    window = DialogueWindow(pygame.Rect(*UI_MODAL_RECT), ctx, npc)
+    # Stress the transcript with several long turns so wrapping/overflow shows.
+    for _ in range(6):
+        window._ask("roads")
+        window._ask("news")
+    with _Capture() as cap:
+        window.draw(surface)
+    _assert_clean("Dialogue", cap, UI_MODAL_RECT)
+
+
 def test_rest_window_no_overflow(surface):
     from game.ui.windows.rest import RestWindow
 

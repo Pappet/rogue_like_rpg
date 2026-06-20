@@ -95,7 +95,10 @@ class InteractionResolver:
                 world.dispatch_event("log_message", f"You wake up {name}.")
 
         elif interaction == InteractionType.TALK:
-            InteractionResolver._say_line(world, target_ent)
+            # Sanctioned request: the movement layer must not know about UI —
+            # the gameplay state opens the conversation window. Talking is the
+            # channel for directions/rumors, so it gets a proper dialogue.
+            world.dispatch_event("dialogue_requested", target_ent)
 
         elif interaction == InteractionType.TRADE:
             InteractionResolver._say_line(world, target_ent)
@@ -120,21 +123,14 @@ class InteractionResolver:
 
     @staticmethod
     def _say_line(world, target_ent: int) -> None:
+        """A one-line greeting logged when bumping a service NPC (merchant,
+        quest giver, innkeeper) before their window opens.
+
+        Directions and rumors are no longer injected here — those are the
+        player's *talk* topics now (DialogueWindow), so a quick trade or
+        quest visit just gets the NPC's flavour line.
+        """
         name = world.component_for_entity(target_ent, Name).name if world.has_component(target_ent, Name) else "Someone"
-        # Locals give directions out of the current town the first time you ask
-        # — this is how new places enter the travel map. Takes priority.
-        if dialogue_service.directions_provider is not None:
-            directions = dialogue_service.directions_provider()
-            if directions:
-                world.dispatch_event("log_message", f"[color=yellow]{name}:[/color] {directions}")
-                return
-        # Otherwise NPCs sometimes share a rumor about the wider world instead
-        # of their usual smalltalk (Phase E3).
-        if dialogue_service.rumor_provider is not None:
-            rumor = dialogue_service.rumor_provider()
-            if rumor:
-                world.dispatch_event("log_message", f"[color=yellow]{name}:[/color] {rumor}")
-                return
         # Look up template-specific dialogue, with selection context:
         # the NPC's current activity plus whatever the game layer provides
         # (reputation tier, day phase) via the context_provider.
