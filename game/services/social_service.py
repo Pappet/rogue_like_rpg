@@ -31,7 +31,9 @@ logger = logging.getLogger(__name__)
 # Templates that get an individual given name (the gossiping crowd). Service
 # NPCs identified by role (mayor, innkeeper, traveling_merchant, shopkeeper,
 # blacksmith) keep their title so the player can still find the shop/quest.
-NAMED_TEMPLATES = frozenset({"villager", "farmer", "hunter", "herbalist", "ore_digger", "guard"})
+NAMED_TEMPLATES = frozenset(
+    {"villager", "farmer", "hunter", "herbalist", "ore_digger", "guard", "fisher", "weaver", "lumberjack"}
+)
 
 FRIEND_AFFINITY = 60
 RIVAL_AFFINITY = -60

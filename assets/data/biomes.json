@@ -37,6 +37,10 @@
    [
     "herb_patch",
     8
+   ],
+   [
+    "timber_stand",
+    5
    ]
   ]
  },
@@ -81,6 +85,10 @@
    ],
    [
     "iron_vein",
+    4
+   ],
+   [
+    "fishing_spot",
     4
    ]
   ]

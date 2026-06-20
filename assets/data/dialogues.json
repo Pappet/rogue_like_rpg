@@ -195,7 +195,12 @@
   "Cold nights lately. My old bones feel every one.",
   "The work's hard, but the roof holds, eh?",
   "Heard the price of bread again? Robbery, I call it.",
-  "Quiet today. Quiet's good. Quiet means no wolves."
+  "Quiet today. Quiet's good. Quiet means no wolves.",
+  "They say the roads east are busier of late. More carts, more coin.",
+  "A peddler swore he saw a light burning in the old ruins. Drink talking, surely.",
+  "If {subject} would mend that fence, my goats would stop wandering.",
+  "Heard the harbor folk landed a record catch. Fish for everyone, they say.",
+  "The weavers' cloaks are the warmest thing I ever owned, mind you."
  ],
  "_gossip_friend": [
   "Good soul, {subject}. Always lends a hand at harvest.",
@@ -254,6 +259,24 @@
   "Bog iron's good iron, whatever the city smiths say.",
   "Knee-deep in the mire all day — someone has to be.",
   "The smithy in Eastmoor buys every lump we haul."
+ ],
+ "fisher": [
+  "Tide's turning. The marsh gives up her fish if you're patient.",
+  "Salt and fish, fish and salt. It's a living, stranger.",
+  "Cook what you catch before it turns, that's my advice.",
+  "The harbor traders pay in coin from a dozen roads."
+ ],
+ "weaver": [
+  "Spin the wool, weave the cloth, stitch the cloak. Same as ever.",
+  "A good loom outlasts three weavers, my mother used to say.",
+  "Cloth keeps a body warmer than mail, and lighter too.",
+  "Bring me wool and I'll send you off in something fit for the road."
+ ],
+ "lumberjack": [
+  "Timber! ...Ah, you're fine. Mind where you stand, though.",
+  "Green wood's no good. Let it season, then it'll serve.",
+  "Every plank in three towns came off our saws.",
+  "Axe work keeps the cold out better than any fire."
  ],
  "traveling_merchant": [
   "Roads are long, purses are short. Let's fix one of those.",

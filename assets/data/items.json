@@ -818,5 +818,174 @@
   "description": "A glittering chunk of raw silver ore. A forge can smelt it into pure silver.",
   "stats": {},
   "value": 14
+ },
+ {
+  "id": "log",
+  "name": "Timber Log",
+  "sprite": "=",
+  "color": [
+   130,
+   95,
+   55
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 6.0,
+  "material": "wood",
+  "description": "A rough-cut log. A sawmill can rip it into usable planks.",
+  "stats": {},
+  "value": 4
+ },
+ {
+  "id": "plank",
+  "name": "Wooden Plank",
+  "sprite": "=",
+  "color": [
+   180,
+   140,
+   90
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 2.0,
+  "material": "wood",
+  "description": "A sawn plank, smooth and square. The carpenter's raw stock.",
+  "stats": {},
+  "value": 6
+ },
+ {
+  "id": "raw_fish",
+  "name": "Fresh Fish",
+  "sprite": "%",
+  "color": [
+   140,
+   180,
+   200
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.8,
+  "material": "fish",
+  "description": "A glistening marsh fish, best cooked before it turns.",
+  "stats": {},
+  "value": 5,
+  "consumable": {
+   "effect_type": "heal_hp",
+   "amount": 2
+  }
+ },
+ {
+  "id": "cooked_fish",
+  "name": "Grilled Fish",
+  "sprite": "%",
+  "color": [
+   220,
+   170,
+   110
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.7,
+  "material": "food",
+  "description": "A fish grilled over coals. Hot, flaky and filling.",
+  "stats": {},
+  "value": 9,
+  "consumable": {
+   "effect_type": "heal_hp",
+   "amount": 7
+  }
+ },
+ {
+  "id": "hearty_stew",
+  "name": "Hearty Stew",
+  "sprite": "%",
+  "color": [
+   200,
+   120,
+   70
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 1.0,
+  "material": "food",
+  "description": "A thick stew of meat and herbs. A bowl puts the strength back in your legs.",
+  "stats": {},
+  "value": 16,
+  "consumable": {
+   "effect_type": "heal_hp",
+   "amount": 12
+  }
+ },
+ {
+  "id": "wool_cloak",
+  "name": "Woolen Cloak",
+  "sprite": "(",
+  "color": [
+   170,
+   150,
+   120
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 1.6,
+  "material": "cloth",
+  "description": "A warm woolen cloak. Light, and it turns the wind.",
+  "slot": "body",
+  "stats": {
+   "defense": 2
+  },
+  "value": 22
+ },
+ {
+  "id": "padded_vest",
+  "name": "Padded Vest",
+  "sprite": "[",
+  "color": [
+   200,
+   185,
+   150
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 3.0,
+  "material": "cloth",
+  "description": "A quilted vest of layered cloth. Soft armor that takes the edge off a blow.",
+  "slot": "body",
+  "stats": {
+   "defense": 4
+  },
+  "value": 30
+ },
+ {
+  "id": "cloth_hood",
+  "name": "Cloth Hood",
+  "sprite": "^",
+  "color": [
+   195,
+   180,
+   150
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.4,
+  "material": "cloth",
+  "description": "A simple stitched hood that keeps the rain off.",
+  "slot": "head",
+  "stats": {
+   "defense": 1,
+   "perception": 1
+  },
+  "value": 16
+ },
+ {
+  "id": "quarterstaff",
+  "name": "Quarterstaff",
+  "sprite": "|",
+  "color": [
+   175,
+   135,
+   85
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 2.0,
+  "material": "wood",
+  "description": "A stout hardwood staff, taller than a man. Cheap, and it bites.",
+  "slot": "main_hand",
+  "stats": {
+   "power": 4
+  },
+  "value": 18
  }
 ]

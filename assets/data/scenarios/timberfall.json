@@ -1,0 +1,273 @@
+{
+ "id": "Timberfall",
+ "dimensions": {
+  "width": 40,
+  "height": 40
+ },
+ "arrival_pos": [
+  20,
+  38
+ ],
+ "base_layer": "floor_dirt",
+ "terrain_variety": {
+  "chance": 0.45,
+  "choices": [
+   "floor_grass",
+   "floor_dirt"
+  ]
+ },
+ "structures": [
+  {
+   "id": "Timberfall Lodge",
+   "v_pos": [
+    6,
+    5
+   ],
+   "v_size": [
+    13,
+    9
+   ],
+   "h_size": [
+    16,
+    12
+   ],
+   "floors": 2,
+   "npcs": [
+    {
+     "type": "innkeeper",
+     "pos": [
+      8,
+      7
+     ]
+    },
+    {
+     "type": "lumberjack",
+     "pos": [
+      4,
+      4
+     ]
+    }
+   ],
+   "style": "tavern"
+  },
+  {
+   "id": "Timberfall Carpentry",
+   "v_pos": [
+    24,
+    6
+   ],
+   "v_size": [
+    10,
+    7
+   ],
+   "h_size": [
+    14,
+    10
+   ],
+   "floors": 1,
+   "npcs": [
+    {
+     "type": "lumberjack",
+     "pos": [
+      6,
+      5
+     ],
+     "merchant": {
+      "stock": [
+       "log",
+       "log",
+       "plank",
+       "plank",
+       "quarterstaff",
+       "wooden_club",
+       "wooden_shield",
+       "tower_shield",
+       "leather_boots"
+      ],
+      "gold": 220
+     }
+    }
+   ],
+   "style": "shop"
+  },
+  {
+   "id": "Timberfall Foreman's Cabin",
+   "v_pos": [
+    26,
+    24
+   ],
+   "v_size": [
+    9,
+    9
+   ],
+   "h_size": [
+    13,
+    12
+   ],
+   "floors": 1,
+   "npcs": [
+    {
+     "type": "mayor",
+     "pos": [
+      6,
+      6
+     ]
+    }
+   ],
+   "style": "home"
+  }
+ ],
+ "village_npcs": [
+  {
+   "type": "guard",
+   "pos": [
+    20,
+    35
+   ]
+  },
+  {
+   "type": "guard",
+   "pos": [
+    6,
+    33
+   ]
+  },
+  {
+   "type": "lumberjack",
+   "pos": [
+    12,
+    20
+   ]
+  },
+  {
+   "type": "lumberjack",
+   "pos": [
+    16,
+    24
+   ]
+  },
+  {
+   "type": "hunter",
+   "pos": [
+    30,
+    32
+   ]
+  },
+  {
+   "type": "villager",
+   "pos": [
+    14,
+    16
+   ]
+  },
+  {
+   "type": "shopkeeper",
+   "pos": [
+    10,
+    30
+   ],
+   "merchant": {
+    "stock": [
+     "bread",
+     "dried_meat",
+     "health_potion",
+     "plank",
+     "wooden_shield",
+     "leather_cap"
+    ],
+    "gold": 160
+   }
+  }
+ ],
+ "economy": {
+  "stock": {
+   "log": 14,
+   "plank": 8,
+   "wooden_shield": 4,
+   "tower_shield": 2,
+   "bread": 2,
+   "health_potion": 3,
+   "venison": 3
+  },
+  "rates_per_day": {
+   "log": 4,
+   "plank": {
+    "per_day": 3,
+    "requires": {
+     "log": 1
+    }
+   },
+   "wooden_shield": {
+    "per_day": 0.5,
+    "requires": {
+     "plank": 2
+    }
+   },
+   "tower_shield": {
+    "per_day": 0.25,
+    "requires": {
+     "plank": 3
+    }
+   },
+   "bread": -1.5,
+   "health_potion": -0.5,
+   "venison": -1
+  }
+ },
+ "biome": "forest",
+ "stations": [
+  {
+   "type": "sawmill",
+   "pos": [
+    14,
+    22
+   ]
+  }
+ ],
+ "resources": [
+  {
+   "kind": "timber_stand",
+   "pos": [
+    18,
+    28
+   ]
+  },
+  {
+   "kind": "timber_stand",
+   "pos": [
+    20,
+    29
+   ]
+  },
+  {
+   "kind": "herb_patch",
+   "pos": [
+    32,
+    30
+   ]
+  }
+ ],
+ "lights": [
+  {
+   "type": "campfire",
+   "pos": [
+    20,
+    16
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    18,
+    38
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    22,
+    38
+   ]
+  }
+ ]
+}

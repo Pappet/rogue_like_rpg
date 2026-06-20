@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 SKILLS: dict[str, str] = {
     "smithing": "Smithing",
     "leatherworking": "Leatherworking",
+    "weaving": "Weaving",
+    "woodworking": "Woodworking",
     "cooking": "Cooking",
     "alchemy": "Alchemy",
     "jewelcrafting": "Jewelcrafting",
@@ -36,7 +38,10 @@ STATION_SKILL: dict[str, str] = {
     "anvil": "smithing",
     "mill": "cooking",
     "oven": "cooking",
+    "kitchen": "cooking",
     "tannery": "leatherworking",
+    "loom": "weaving",
+    "sawmill": "woodworking",
     "herbalist": "alchemy",
     "jeweler": "jewelcrafting",
 }

@@ -1,0 +1,299 @@
+{
+ "id": "Saltmarsh",
+ "dimensions": {
+  "width": 46,
+  "height": 42
+ },
+ "arrival_pos": [
+  23,
+  40
+ ],
+ "base_layer": "floor_sand",
+ "terrain_variety": {
+  "chance": 0.35,
+  "choices": [
+   "floor_mud",
+   "floor_grass",
+   "floor_sand"
+  ]
+ },
+ "structures": [
+  {
+   "id": "Saltmarsh Harbor Inn",
+   "v_pos": [
+    7,
+    5
+   ],
+   "v_size": [
+    12,
+    9
+   ],
+   "h_size": [
+    16,
+    12
+   ],
+   "floors": 2,
+   "npcs": [
+    {
+     "type": "innkeeper",
+     "pos": [
+      8,
+      7
+     ]
+    },
+    {
+     "type": "fisher",
+     "pos": [
+      4,
+      4
+     ]
+    }
+   ],
+   "style": "tavern"
+  },
+  {
+   "id": "Saltmarsh Fishmonger",
+   "v_pos": [
+    26,
+    6
+   ],
+   "v_size": [
+    9,
+    7
+   ],
+   "h_size": [
+    13,
+    10
+   ],
+   "floors": 1,
+   "npcs": [
+    {
+     "type": "fisher",
+     "pos": [
+      5,
+      5
+     ],
+     "merchant": {
+      "stock": [
+       "raw_fish",
+       "raw_fish",
+       "cooked_fish",
+       "cooked_fish",
+       "hearty_stew",
+       "salt",
+       "dried_meat",
+       "bandage"
+      ],
+      "gold": 170
+     }
+    }
+   ],
+   "style": "shop"
+  },
+  {
+   "id": "Saltmarsh Trading House",
+   "v_pos": [
+    16,
+    20
+   ],
+   "v_size": [
+    13,
+    9
+   ],
+   "h_size": [
+    17,
+    13
+   ],
+   "floors": 1,
+   "npcs": [
+    {
+     "type": "shopkeeper",
+     "pos": [
+      8,
+      6
+     ],
+     "merchant": {
+      "stock": [
+       "salt",
+       "salt",
+       "spices",
+       "spices",
+       "cloth",
+       "gemstone",
+       "silver_ingot",
+       "lucky_charm",
+       "mana_potion"
+      ],
+      "gold": 360
+     }
+    },
+    {
+     "type": "villager",
+     "pos": [
+      4,
+      4
+     ]
+    }
+   ],
+   "style": "shop"
+  },
+  {
+   "id": "Saltmarsh Harbormaster",
+   "v_pos": [
+    33,
+    24
+   ],
+   "v_size": [
+    9,
+    9
+   ],
+   "h_size": [
+    13,
+    12
+   ],
+   "floors": 2,
+   "npcs": [
+    {
+     "type": "mayor",
+     "pos": [
+      6,
+      6
+     ]
+    }
+   ],
+   "style": "home"
+  }
+ ],
+ "village_npcs": [
+  {
+   "type": "guard",
+   "pos": [
+    23,
+    37
+   ]
+  },
+  {
+   "type": "guard",
+   "pos": [
+    8,
+    25
+   ]
+  },
+  {
+   "type": "fisher",
+   "pos": [
+    18,
+    34
+   ]
+  },
+  {
+   "type": "fisher",
+   "pos": [
+    30,
+    36
+   ]
+  },
+  {
+   "type": "villager",
+   "pos": [
+    14,
+    14
+   ]
+  },
+  {
+   "type": "villager",
+   "pos": [
+    36,
+    16
+   ]
+  },
+  {
+   "type": "traveling_merchant",
+   "pos": [
+    24,
+    24
+   ]
+  }
+ ],
+ "economy": {
+  "stock": {
+   "raw_fish": 12,
+   "cooked_fish": 5,
+   "salt": 10,
+   "spices": 4,
+   "bread": 2,
+   "grain": 2,
+   "health_potion": 3
+  },
+  "rates_per_day": {
+   "raw_fish": 4,
+   "cooked_fish": {
+    "per_day": 2,
+    "requires": {
+     "raw_fish": 1
+    }
+   },
+   "salt": 2,
+   "spices": -0.5,
+   "bread": -1.5,
+   "grain": -1,
+   "health_potion": -0.5
+  }
+ },
+ "biome": "swamp",
+ "stations": [
+  {
+   "type": "kitchen",
+   "pos": [
+    20,
+    18
+   ]
+  }
+ ],
+ "resources": [
+  {
+   "kind": "fishing_spot",
+   "pos": [
+    11,
+    34
+   ]
+  },
+  {
+   "kind": "fishing_spot",
+   "pos": [
+    34,
+    34
+   ]
+  },
+  {
+   "kind": "herb_patch",
+   "pos": [
+    40,
+    30
+   ]
+  }
+ ],
+ "lights": [
+  {
+   "type": "campfire",
+   "pos": [
+    23,
+    24
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    21,
+    40
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    25,
+    40
+   ]
+  }
+ ]
+}

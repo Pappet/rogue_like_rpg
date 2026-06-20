@@ -1,0 +1,280 @@
+{
+ "id": "Foxhollow",
+ "dimensions": {
+  "width": 38,
+  "height": 38
+ },
+ "arrival_pos": [
+  19,
+  36
+ ],
+ "base_layer": "floor_grass",
+ "terrain_variety": {
+  "chance": 0.4,
+  "choices": [
+   "floor_dirt",
+   "floor_grass"
+  ]
+ },
+ "structures": [
+  {
+   "id": "Foxhollow Inn",
+   "v_pos": [
+    18,
+    5
+   ],
+   "v_size": [
+    12,
+    9
+   ],
+   "h_size": [
+    15,
+    12
+   ],
+   "floors": 2,
+   "npcs": [
+    {
+     "type": "innkeeper",
+     "pos": [
+      7,
+      7
+     ]
+    },
+    {
+     "type": "villager",
+     "pos": [
+      4,
+      4
+     ]
+    }
+   ],
+   "style": "tavern"
+  },
+  {
+   "id": "Foxhollow Weaving Hall",
+   "v_pos": [
+    5,
+    20
+   ],
+   "v_size": [
+    9,
+    7
+   ],
+   "h_size": [
+    13,
+    10
+   ],
+   "floors": 1,
+   "npcs": [
+    {
+     "type": "weaver",
+     "pos": [
+      5,
+      5
+     ],
+     "merchant": {
+      "stock": [
+       "wool",
+       "wool",
+       "cloth",
+       "cloth",
+       "cloth_hood",
+       "wool_cloak",
+       "padded_vest",
+       "fur_cloak",
+       "bandage"
+      ],
+      "gold": 200
+     }
+    }
+   ],
+   "style": "shop"
+  },
+  {
+   "id": "Foxhollow Manor",
+   "v_pos": [
+    24,
+    22
+   ],
+   "v_size": [
+    9,
+    9
+   ],
+   "h_size": [
+    13,
+    12
+   ],
+   "floors": 2,
+   "npcs": [
+    {
+     "type": "mayor",
+     "pos": [
+      6,
+      6
+     ]
+    }
+   ],
+   "style": "home"
+  }
+ ],
+ "village_npcs": [
+  {
+   "type": "guard",
+   "pos": [
+    19,
+    33
+   ]
+  },
+  {
+   "type": "guard",
+   "pos": [
+    6,
+    33
+   ]
+  },
+  {
+   "type": "weaver",
+   "pos": [
+    10,
+    18
+   ]
+  },
+  {
+   "type": "farmer",
+   "pos": [
+    14,
+    28
+   ]
+  },
+  {
+   "type": "farmer",
+   "pos": [
+    24,
+    30
+   ]
+  },
+  {
+   "type": "villager",
+   "pos": [
+    16,
+    16
+   ]
+  },
+  {
+   "type": "villager",
+   "pos": [
+    28,
+    16
+   ]
+  },
+  {
+   "type": "shopkeeper",
+   "pos": [
+    30,
+    33
+   ],
+   "merchant": {
+    "stock": [
+     "bread",
+     "cheese",
+     "wool",
+     "cloth",
+     "leather_boots",
+     "health_potion"
+    ],
+    "gold": 150
+   }
+  }
+ ],
+ "economy": {
+  "stock": {
+   "wool": 14,
+   "cloth": 6,
+   "padded_vest": 3,
+   "wool_cloak": 4,
+   "bread": 2,
+   "health_potion": 3,
+   "cheese": 6
+  },
+  "rates_per_day": {
+   "wool": 4,
+   "cloth": {
+    "per_day": 2,
+    "requires": {
+     "wool": 1
+    }
+   },
+   "padded_vest": {
+    "per_day": 0.5,
+    "requires": {
+     "cloth": 2
+    }
+   },
+   "wool_cloak": {
+    "per_day": 0.5,
+    "requires": {
+     "cloth": 1
+    }
+   },
+   "bread": -1.5,
+   "health_potion": -0.5,
+   "cheese": 1
+  }
+ },
+ "biome": "plains",
+ "stations": [
+  {
+   "type": "loom",
+   "pos": [
+    8,
+    18
+   ]
+  }
+ ],
+ "resources": [
+  {
+   "kind": "grain_field",
+   "pos": [
+    13,
+    30
+   ]
+  },
+  {
+   "kind": "grain_field",
+   "pos": [
+    15,
+    31
+   ]
+  },
+  {
+   "kind": "herb_patch",
+   "pos": [
+    26,
+    32
+   ]
+  }
+ ],
+ "lights": [
+  {
+   "type": "campfire",
+   "pos": [
+    19,
+    14
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    17,
+    36
+   ]
+  },
+  {
+   "type": "torch",
+   "pos": [
+    21,
+    36
+   ]
+  }
+ ]
+}
