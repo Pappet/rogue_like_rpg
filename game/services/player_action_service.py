@@ -73,53 +73,100 @@ class PlayerActionService:
 
         return self._action_system.perform_action(self._player, Action(name="Enter Portal"))
 
-    def pickup_item(self) -> bool:
-        """Pick up the first portable item at the player's position.
+    def items_at_player(self) -> list[int]:
+        """Return entity ids of pickable items on the player's tile.
 
-        Returns True if an item was picked up (this consumes the turn).
+        Items are pickable if they are Portable and not currently Hidden.
         """
         try:
             player_pos = esper.component_for_entity(self._player, Position)
-            inventory = esper.component_for_entity(self._player, Inventory)
-            stats = esper.component_for_entity(self._player, Stats)
         except KeyError:
-            return False
+            return []
 
-        items_here = [
+        return [
             ent
-            for ent, (pos, portable) in esper.get_components(Position, Portable)
+            for ent, (pos, _portable) in esper.get_components(Position, Portable)
             if pos.x == player_pos.x
             and pos.y == player_pos.y
             and pos.layer == player_pos.layer
             and not esper.has_component(ent, Hidden)
         ]
+
+    def _current_carry_weight(self, inventory: Inventory) -> float:
+        """Sum the weight of everything already in the given inventory."""
+        total = 0.0
+        for inv_item_id in inventory.items:
+            with contextlib.suppress(KeyError):
+                total += esper.component_for_entity(inv_item_id, Portable).weight
+        return total
+
+    def pickup_item(self) -> bool:
+        """Pick up an item at the player's position.
+
+        - Nothing here: report it, no turn consumed.
+        - Exactly one item: pick it up directly (consumes the turn).
+        - Multiple items: dispatch ``pickup_choice_requested`` so the player
+          can choose which one(s) to take via a window. The turn is consumed
+          by the window once an item is actually taken, not here.
+
+        Returns True only when an item was picked up immediately.
+        """
+        items_here = self.items_at_player()
         if not items_here:
             esper.dispatch_event("log_message", "There is nothing here to pick up.", None, LogCategory.ALERT)
             return False
 
-        item_ent = items_here[0]
-        portable = esper.component_for_entity(item_ent, Portable)
+        if len(items_here) == 1:
+            return self.pickup_specific(items_here[0])
 
-        current_weight = 0
-        for inv_item_id in inventory.items:
-            with contextlib.suppress(KeyError):
-                current_weight += esper.component_for_entity(inv_item_id, Portable).weight
+        esper.dispatch_event("pickup_choice_requested", items_here)
+        return False
 
-        if current_weight + portable.weight > stats.max_carry_weight:
-            esper.dispatch_event("log_message", "Too heavy to carry.", None, LogCategory.ALERT)
+    def pickup_specific(self, item_ent: int, end_turn: bool = True) -> bool:
+        """Move a specific item into the player's inventory.
+
+        Enforces the carry-weight limit. On success the item loses its
+        Position and (when ``end_turn``) the player turn ends. Used both by
+        the single-item fast path and the pickup chooser window.
+        """
+        try:
+            inventory = esper.component_for_entity(self._player, Inventory)
+            stats = esper.component_for_entity(self._player, Stats)
+            portable = esper.component_for_entity(item_ent, Portable)
+        except KeyError:
             return False
-
-        esper.remove_component(item_ent, Position)
-        inventory.items.append(item_ent)
 
         try:
             item_name = esper.component_for_entity(item_ent, Name).name
         except KeyError:
             item_name = "item"
 
+        if self._current_carry_weight(inventory) + portable.weight > stats.max_carry_weight:
+            esper.dispatch_event("log_message", f"The {item_name} is too heavy to carry.", None, LogCategory.ALERT)
+            return False
+
+        esper.remove_component(item_ent, Position)
+        inventory.items.append(item_ent)
+
         esper.dispatch_event("log_message", f"You pick up the {item_name}.", None, LogCategory.LOOT)
-        self._turn_system.end_player_turn()
+        if end_turn:
+            self._turn_system.end_player_turn()
         return True
+
+    def pickup_all(self, items: list[int]) -> bool:
+        """Pick up every item in ``items`` that still fits the carry limit.
+
+        Stops adding once an item would exceed the weight limit but keeps
+        trying lighter items. Consumes a single turn if anything was taken.
+        Returns True if at least one item was picked up.
+        """
+        picked_any = False
+        for item_ent in list(items):
+            if self.pickup_specific(item_ent, end_turn=False):
+                picked_any = True
+        if picked_any:
+            self._turn_system.end_player_turn()
+        return picked_any
 
     def interact(self) -> None:
         """Context-sensitive interact: portal first, otherwise pickup."""

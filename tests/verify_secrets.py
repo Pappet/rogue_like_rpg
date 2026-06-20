@@ -220,9 +220,12 @@ def test_rumor_leads_to_dungeon_with_secret():
     assert not esper.has_component(cache_ent, Hidden), "standing on the cache must reveal it"
     assert any("hidden" in m.lower() for m in log), f"reveal should be logged, got {log[-3:]}"
 
-    # 4) Now it can be picked up
+    # 4) Now it can be picked up. The cache holds more than one item, so G
+    #    opens the pickup chooser; Enter takes the highlighted item.
     items_before = len(esper.component_for_entity(ctx.player_entity, Inventory).items)
     key(pygame.K_g)
+    frames()
+    key(pygame.K_RETURN)
     frames()
     assert len(esper.component_for_entity(ctx.player_entity, Inventory).items) == items_before + 1
     name = esper.component_for_entity(esper.component_for_entity(ctx.player_entity, Inventory).items[-1], Name).name

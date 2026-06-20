@@ -254,6 +254,7 @@ is neutral constants, usable by both.
         ├── crafting.py              # Crafting bench (recipe list, bump a station)
         ├── quests.py                # Quest offers/turn-in + journal window
         ├── rest.py                  # Wait/sleep duration picker (time skip)
+        ├── pickup.py                # Multi-item pickup chooser (item details)
         └── tooltip.py               # Examine/tooltip window
 ```
 
@@ -543,6 +544,8 @@ class MapAwareSystem:
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)
 - **Rest tiles**: a tile with `"provides_rest": true` (e.g. `furniture_bed`) lets the player bump it to sleep. An entity with `"innkeeper": true` offers the same. Both dispatch the `rest_requested` request event; `GameplayState` opens the `RestWindow`, which calls `TurnOrchestrator.advance_turns(ticks)` to fast-forward the world clock (stops early if a hostile starts hunting or the player takes damage). Duration presets come from `rest_service`.
 - **Crafting stations** (Phase H): a tile with `"crafting_station": "<type>"` (e.g. `station_forge`, `station_anvil`, `station_mill`) lets the player bump it to open the `CraftWindow`. `MovementSystem` dispatches the `craft_requested` request event (player only, mirror of `rest_requested`); `GameplayState` opens the window and on confirm runs `CraftingService.craft()` then `advance_turns(recipe.ticks)` — crafting costs in-game time. Stations are placed per settlement via a scenario top-level `"stations": [{"type", "pos"}]` list (mirrors `"lights"`); `MapGenerator` stamps the matching tile (`STATION_TILES`). Recipes group by `station` type. The chain key→station→window mirrors the rest-tile flow exactly. Metalworking is split across two stations to mirror the cross-settlement supply chain: the **forge** only smelts ore into ingots (`iron_ore`/`silver_ore` → ingot, sited in Brackenfen the mining town) and the **anvil** only works ingots into arms/armor (sited in Eastmoor the smithy) — `tests/verify_crafting.py::test_forge_smelts_anvil_smiths` guards the split. Distribution by settlement profile: Village (mill/oven/herbalist, a farming village), Brackenfen (forge/tannery), Eastmoor (anvil/jeweler).
+
+- **Item pickup chooser**: `PlayerActionService.pickup_item()` (the `G`/interact key) picks up directly when a tile holds a single item, but dispatches the `pickup_choice_requested` request event when it holds more than one. `GameplayState` opens the `PickupWindow` (`game/ui/windows/pickup.py`), which lists every item with its glyph and full details (`ActionSystem.get_detailed_description`) and lets the player take the highlighted one (`Enter`), take everything that fits (`A`), or cancel (`Esc`) — so the player chooses *which* item instead of blindly grabbing the first. The window calls back into `PlayerActionService.pickup_specific()` / `pickup_all()` (the only writers of pickup rules); taking one item or all costs a single turn. Mirrors the rest/craft request-event → window flow.
 
 ### Character Progression (Phase I)
 

@@ -106,6 +106,56 @@ def test_pickup_ignores_items_on_other_tiles(service, player):
     assert service.pickup_item() is False
 
 
+def test_pickup_with_multiple_items_opens_chooser(service, player):
+    """A tile with >1 item dispatches the chooser event instead of grabbing
+    a random one, and does not consume the turn yet."""
+    a = esper.create_entity(Position(3, 3, 0), Portable(weight=1.0), Name("Dagger"))
+    b = esper.create_entity(Position(3, 3, 0), Portable(weight=1.0), Name("Apple"))
+
+    captured = []
+
+    def on_choice(items):
+        captured.append(items)
+
+    esper.set_handler("pickup_choice_requested", on_choice)
+
+    assert service.pickup_item() is False
+    assert captured and set(captured[0]) == {a, b}
+    # Nothing taken, no turn spent — the window will drive the actual pickup.
+    inventory = esper.component_for_entity(player, Inventory)
+    assert a not in inventory.items and b not in inventory.items
+    service.ctx.systems.turn_system.end_player_turn.assert_not_called()
+
+
+def test_items_at_player_lists_only_local_items(service, player):
+    here = esper.create_entity(Position(3, 3, 0), Portable(weight=1.0), Name("Here"))
+    esper.create_entity(Position(4, 3, 0), Portable(weight=1.0), Name("There"))
+
+    assert service.items_at_player() == [here]
+
+
+def test_pickup_specific_can_skip_ending_turn(service, player):
+    item = esper.create_entity(Position(3, 3, 0), Portable(weight=1.0), Name("Dagger"))
+
+    assert service.pickup_specific(item, end_turn=False) is True
+
+    inventory = esper.component_for_entity(player, Inventory)
+    assert item in inventory.items
+    service.ctx.systems.turn_system.end_player_turn.assert_not_called()
+
+
+def test_pickup_all_takes_everything_that_fits_in_one_turn(service, player):
+    a = esper.create_entity(Position(3, 3, 0), Portable(weight=1.0), Name("Dagger"))
+    b = esper.create_entity(Position(3, 3, 0), Portable(weight=1.0), Name("Apple"))
+
+    assert service.pickup_all([a, b]) is True
+
+    inventory = esper.component_for_entity(player, Inventory)
+    assert a in inventory.items and b in inventory.items
+    # Several items, but only a single turn is spent.
+    service.ctx.systems.turn_system.end_player_turn.assert_called_once()
+
+
 def test_try_enter_portal_without_portal_returns_false(service):
     assert service.try_enter_portal() is False
     service.ctx.systems.action_system.perform_action.assert_not_called()
