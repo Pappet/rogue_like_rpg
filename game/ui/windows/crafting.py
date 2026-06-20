@@ -24,6 +24,7 @@ from config import (
 from core.input_manager import InputCommand
 from core.ui import theme
 from core.ui.window_base import UIWindow
+from game.content.item_registry import item_registry
 from game.services.crafting_service import CraftingService
 
 # Station type -> the heading shown at the top of the bench window.
@@ -186,16 +187,53 @@ class CraftWindow(UIWindow):
             return
         recipe = self.recipes[self.selected_idx]
         out_name = CraftingService.item_name(recipe.output)
+        template = item_registry.get(recipe.output)
+
         theme.draw_text(surface, out_name, theme.get_font(24, bold=True), UI_THEME_GOLD, (rect.x + 12, rect.y + 8))
+
+        if template and template.value > 0:
+            theme.draw_text(
+                surface,
+                f"Value: {template.value}g",
+                self.small_font,
+                UI_THEME_GOLD,
+                (rect.right - 12, rect.y + 14),
+                anchor="topright",
+                shadow=False,
+            )
+
         theme.draw_divider(surface, rect.x + 12, rect.right - 12, rect.y + 38, ornament=False)
+
+        dy = rect.y + 46
+
+        if template:
+            parts = []
+            if template.description:
+                parts.append(template.description)
+            if template.weight > 0:
+                parts.append(f"Weight: {template.weight}kg")
+            if parts:
+                desc_text = "   ·   ".join(parts)
+                theme.draw_text(
+                    surface,
+                    desc_text,
+                    theme.get_font(19, italic=True),
+                    UI_THEME_INK_DIM,
+                    (rect.x + 12, dy),
+                    shadow=False,
+                )
+                dy += 22
+
         theme.draw_text(
             surface,
             f"Requires: {self._inputs_text(recipe)}",
             self.small_font,
             UI_THEME_INK,
-            (rect.x + 12, rect.y + 46),
+            (rect.x + 12, dy),
             shadow=False,
         )
+        dy += 24
+
         hours = recipe.ticks / TICKS_PER_HOUR
         dur = f"{hours:.0f}h" if hours >= 1 else f"{recipe.ticks}m"
         craftable = CraftingService.can_craft(self.world, self.player_entity, recipe)
@@ -205,6 +243,6 @@ class CraftWindow(UIWindow):
             status,
             self.small_font,
             UI_THEME_INK_DIM if craftable else UI_THEME_INK_MUTED,
-            (rect.x + 12, rect.y + 70),
+            (rect.x + 12, dy),
             shadow=False,
         )
