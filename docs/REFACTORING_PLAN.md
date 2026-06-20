@@ -1,6 +1,13 @@
 # Refactoring Plan — Roguelike RPG "Back on Track"
 
-> **Ziel:** Codebase stabilisieren, technische Schulden abbauen, klare Architektur für zukünftige Features schaffen.
+> **STATUS: HISTORISCH / ABGELÖST.** Dieser Plan wurde von
+> `docs/ARCHITECTURE_CONCEPT.md` ("Aufräumen statt Neubau", Phasen R0–R6,
+> umgesetzt) abgelöst. Er beschreibt den Stand *vor* dem Refactoring und
+> referenziert Dateien, die es heute nicht mehr gibt (z. B. das aufgelöste
+> `game_states.py` Gott-Objekt → heute `game/states/` + Controller). Bleibt
+> als Beleg der Ausgangslage und der erledigten Schuldenliste erhalten.
+>
+> **Ziel (damals):** Codebase stabilisieren, technische Schulden abbauen, klare Architektur für zukünftige Features schaffen.
 > **Methode:** Phase für Phase mit Claude Code durcharbeiten. Jede Phase hat klare Tasks, Akzeptanzkriterien und eine Validierung.
 
 ---

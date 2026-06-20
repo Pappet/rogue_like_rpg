@@ -12,7 +12,7 @@ The core value of this project has always been to provide an engaging and replay
 
 Our technology choices and architectural patterns were deliberate and have proven highly effective:
 
-- **Core Engine:** Python 3.13.11 with **Pygame 1.x+** for rendering, input, and loop management.
+- **Core Engine:** Python 3.10+ with **Pygame 2.x** for rendering, input, and loop management.
 - **Entity Component System (ECS):** We leveraged the **Esper** library to transition away from deeply nested inheritance trees. All entities (Player, NPCs, Items) are simply IDs with attached `@dataclass` components (`Position`, `Stats`, `Renderable`, `ActionList`).
 - **State Machine Pattern:** High-level game flow is managed by state classes (`TitleScreen`, `Game`, `WorldMapState`), while in-game flow is directed by `TurnSystem` (`PLAYER_TURN`, `ENEMY_TURN`, `TARGETING`).
 - **Data-Driven Assets:** We built a robust **JSON pipeline pattern** (data file → ResourceLoader → Registry → Factory). For instance, `TileType` acts as a dataclass flyweight—preventing memory bloat without risking shared state corruption.

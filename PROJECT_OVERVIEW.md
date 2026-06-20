@@ -26,8 +26,9 @@ This project is a grid-based, turn-based roguelike RPG. It features exploration 
 ## Detailed Architecture
 The game loop runs inside `GameController` driving the active `GameState` subclass:
 - **TitleScreen**: Renders intro.
-- **Game**: Main play loop containing map, clock, and ECS systems.
-- **WorldMapState**: Scaled out map view.
+- **GameplayState**: Main play loop; a thin coordinator that delegates to
+  `InputController`, `TurnOrchestrator` and `RenderPipeline`.
+- **WorldMapState**: Overworld travel screen (select a connected location to travel).
 - **GameOver**: Death screen.
 
 Systems process entities having matching components every frame (`esper.process()`) or during specific phase ticks (e.g., AI and NPC schedules).
@@ -54,4 +55,7 @@ Systems process entities having matching components every frame (`esper.process(
 
 ## Additional References
 - `README.md`: High level project overview, quickstart instructions, and controls guide.
-- `ARCHITECTURE_CONCEPT.md`: Detailed guide to systems, entity models, and rendering pipelines.
+- `CLAUDE.md`: Full architecture reference and the playbook for adding features.
+- `docs/ROADMAP.md`: Project direction and the shipped feature phases (A–L).
+- `docs/ARCHITECTURE_CONCEPT.md`: Rationale for the completed core/game refactoring.
+- `docs/DEV_JOURNAL.md`: Development history through v1.6.
