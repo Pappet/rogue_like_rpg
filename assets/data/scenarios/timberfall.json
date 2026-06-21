@@ -215,12 +215,16 @@
   }
  },
  "biome": "forest",
- "stations": [
+ "shelters": [
   {
-   "type": "sawmill",
+   "station": "sawmill",
    "pos": [
-    14,
-    22
+    13,
+    20
+   ],
+   "size": [
+    5,
+    4
    ]
   }
  ],

@@ -138,10 +138,23 @@ class RenderService:
             return COLOR_TILE_FORGOTTEN_BG
         return _scale(bg, _variation_factor(x, y))
 
-    def render_map(self, surface: pygame.Surface, map_container: MapContainer, camera: Camera, player_layer: int = 0):
-        """Renders the layered map tiles with ground occlusion."""
+    def render_map(
+        self,
+        surface: pygame.Surface,
+        map_container: MapContainer,
+        camera: Camera,
+        player_layer: int = 0,
+        roof_cutaway: set | None = None,
+    ):
+        """Renders the layered map tiles with ground occlusion.
+
+        roof_cutaway: positions whose roof is currently peeled away (the player
+        is standing under that structure). Roofs sit on layers above the player
+        and are drawn as a cutaway overlay everywhere else.
+        """
         if not map_container.layers:
             return
+        roof_cutaway = roof_cutaway or set()
 
         # Determine visible tile range
         width = map_container.width
@@ -214,3 +227,32 @@ class RenderService:
                             offset_x = (TILE_SIZE - glyph.get_width()) // 2
                             offset_y = (TILE_SIZE - glyph.get_height()) // 2
                             surface.blit(glyph, (screen_x + offset_x, screen_y + offset_y))
+
+                # 3. Cutaway roof overlay: a roof on a layer above the player is
+                # drawn over the world so the structure reads as a building —
+                # unless the player has stepped under it (roof_cutaway), in which
+                # case the whole footprint is peeled away to reveal the work below.
+                if (x, y) not in roof_cutaway:
+                    self._draw_roof(surface, map_container, camera, x, y, player_layer)
+
+    def _draw_roof(self, surface, map_container, camera, x, y, player_layer):
+        """Draw the lowest roof tile sitting above the player at (x, y), if any."""
+        for i in range(player_layer + 1, len(map_container.layers)):
+            tile = map_container.get_tile(x, y, i)
+            if not tile or not tile.is_roof:
+                continue
+            if tile.visibility_state == VisibilityState.UNEXPLORED:
+                return
+            screen_x, screen_y = camera.apply_to_pos(x * TILE_SIZE, y * TILE_SIZE)
+            color = self.tile_color(tile, x, y)
+            bg_color = self.tile_bg_color(tile, x, y)
+            if bg_color is not None:
+                surface.fill(bg_color, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
+            for slayer in sorted(tile.sprites.keys(), key=lambda l: l.value):
+                sprite_char = tile.sprites[slayer]
+                if sprite_char:
+                    glyph = self._glyph(sprite_char, color)
+                    offset_x = (TILE_SIZE - glyph.get_width()) // 2
+                    offset_y = (TILE_SIZE - glyph.get_height()) // 2
+                    surface.blit(glyph, (screen_x + offset_x, screen_y + offset_y))
+            return

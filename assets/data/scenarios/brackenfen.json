@@ -86,6 +86,25 @@
     }
    ],
    "style": "shop"
+  },
+  {
+   "id": "Brackenfen Forge",
+   "v_pos": [
+    6,
+    20
+   ],
+   "v_size": [
+    8,
+    7
+   ],
+   "h_size": [
+    11,
+    9
+   ],
+   "floors": 2,
+   "station": "forge",
+   "npcs": [],
+   "style": "shop"
   }
  ],
  "village_npcs": [
@@ -169,19 +188,16 @@
   }
  },
  "biome": "swamp",
- "stations": [
+ "shelters": [
   {
-   "type": "tannery",
+   "station": "tannery",
    "pos": [
-    10,
-    22
-   ]
-  },
-  {
-   "type": "forge",
-   "pos": [
-    20,
-    24
+    19,
+    21
+   ],
+   "size": [
+    5,
+    4
    ]
   }
  ],

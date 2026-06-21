@@ -64,7 +64,8 @@
     13,
     10
    ],
-   "floors": 1,
+   "floors": 2,
+   "station": "loom",
    "npcs": [
     {
      "type": "weaver",
@@ -222,15 +223,6 @@
   }
  },
  "biome": "plains",
- "stations": [
-  {
-   "type": "loom",
-   "pos": [
-    8,
-    18
-   ]
-  }
- ],
  "resources": [
   {
    "kind": "grain_field",
