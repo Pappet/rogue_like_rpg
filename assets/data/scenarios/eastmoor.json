@@ -76,7 +76,8 @@
     12,
     10
    ],
-   "floors": 1,
+   "floors": 2,
+   "station": "anvil",
    "npcs": [
     {
      "type": "blacksmith",
@@ -264,19 +265,16 @@
   }
  },
  "biome": "plains",
- "stations": [
+ "shelters": [
   {
-   "type": "anvil",
+   "station": "jeweler",
    "pos": [
     33,
-    18
-   ]
-  },
-  {
-   "type": "jeweler",
-   "pos": [
-    22,
-    20
+    17
+   ],
+   "size": [
+    4,
+    4
    ]
   }
  ],

@@ -731,5 +731,69 @@
    22
   ],
   "occludes_below": false
+ },
+ {
+  "id": "roof_plank",
+  "name": "Shingled Roof",
+  "base_description": "A sloped roof of overlapping planks, sheltering the work below.",
+  "walkable": false,
+  "transparent": false,
+  "roof": true,
+  "sprites": {
+   "GROUND": "▦"
+  },
+  "color": [
+   158,
+   116,
+   70
+  ],
+  "bg_color": [
+   72,
+   52,
+   30
+  ],
+  "occludes_below": true
+ },
+ {
+  "id": "crop_field",
+  "name": "Field of Grain",
+  "base_description": "Rows of ripening grain swaying in the breeze.",
+  "walkable": true,
+  "transparent": true,
+  "sprites": {
+   "GROUND": "\""
+  },
+  "color": [
+   206,
+   181,
+   84
+  ],
+  "bg_color": [
+   72,
+   60,
+   28
+  ],
+  "occludes_below": false
+ },
+ {
+  "id": "rock_rough",
+  "name": "Rocky Outcrop",
+  "base_description": "A jut of broken grey rock, streaked with raw ore.",
+  "walkable": false,
+  "transparent": false,
+  "sprites": {
+   "GROUND": "▴"
+  },
+  "color": [
+   152,
+   140,
+   122
+  ],
+  "bg_color": [
+   58,
+   54,
+   50
+  ],
+  "occludes_below": false
  }
 ]

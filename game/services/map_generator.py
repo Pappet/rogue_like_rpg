@@ -38,6 +38,36 @@ STATION_TILES = {
     "jeweler": "station_jeweler",
 }
 
+# The roof tile laid over an open-shelter workshop (drawn as a cutaway overlay).
+SHELTER_ROOF = "roof_plank"
+
+# Natural ground a resource node's decoration is allowed to overpaint. Keeps
+# fields/rocks/lakes off of walls, doors, station tiles and building floors.
+DECOR_PAINTABLE = {
+    "floor_stone",
+    "floor_grass",
+    "floor_dirt",
+    "floor_sand",
+    "floor_mud",
+    "crop_field",
+}
+
+# Resource-node kind -> how it is dressed into a real map object, so harvest
+# nodes read as fields, rocky outcrops and ponds instead of lone glyphs:
+#   tile     — terrain painted around (and optionally under) the node
+#   radius   — Chebyshev radius of the patch
+#   blocking — if the decor tile is impassable, its four orthogonal neighbours
+#              are kept clear so the node stays reachable to bump
+#   fill_node— also paint the node's own tile (e.g. a fishing spot in the water)
+RESOURCE_DECOR = {
+    "grain_field": {"tile": "crop_field", "radius": 2, "blocking": False, "fill_node": True, "chance": 0.85},
+    "herb_patch": {"tile": "floor_grass", "radius": 2, "blocking": False, "fill_node": False, "chance": 0.6},
+    "iron_vein": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
+    "silver_vein": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
+    "timber_stand": {"tile": "tree_sapling", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.55},
+    "fishing_spot": {"tile": "water_shallow", "radius": 2, "blocking": True, "fill_node": True, "chance": 0.8},
+}
+
 # Light props placed by the generator. All burn dusk-to-dawn (night_only):
 # they reveal their surroundings via VisibilitySystem and get a warm glow
 # from the render pipeline once the day/night tint darkens.
@@ -84,6 +114,75 @@ class MapGenerator:
             Name(props["name"]),
             LightSource(radius=props["radius"], night_only=True),
         )
+
+    def build_shelter(self, world, layers: list[MapLayer], spec: dict) -> None:
+        """Stamp an open-shelter workshop onto the village exterior.
+
+        An open shelter is a roofed but wall-less workspace: a timber floor with
+        corner posts, the crafting station in the middle, and a plank roof laid
+        on the layer *above* the ground. The roof is drawn over the world from
+        the street (so it reads as a building) but peels away the moment the
+        player walks beneath it (see MapContainer.roof_cutaway), showing off the
+        layered rendering without a separate interior map.
+
+        spec keys: ``station`` (station type), ``pos`` [x, y] top-left,
+        optional ``size`` [w, h] (default 4x4), optional ``light`` (default True).
+        """
+        ground = layers[0]
+        roof = layers[1]
+        x0, y0 = spec["pos"]
+        w, h = spec.get("size", [4, 4])
+        station_tile = STATION_TILES.get(spec["station"], "station_forge")
+
+        for yy in range(y0, y0 + h):
+            for xx in range(x0, x0 + w):
+                if not (0 <= yy < ground.height and 0 <= xx < ground.width):
+                    continue
+                # Open floor underfoot, a roof overhead.
+                ground.tiles[yy][xx].set_type("floor_wood")
+                roof.tiles[yy][xx].set_type(SHELTER_ROOF)
+
+        # Corner posts hold the roof up; the sides stay open to walk through.
+        for cx, cy in ((x0, y0), (x0 + w - 1, y0), (x0, y0 + h - 1), (x0 + w - 1, y0 + h - 1)):
+            if 0 <= cy < ground.height and 0 <= cx < ground.width:
+                ground.tiles[cy][cx].set_type("wall_wood")
+
+        # The workstation sits at the heart of the shelter.
+        sx, sy = x0 + w // 2, y0 + h // 2
+        if 0 <= sy < ground.height and 0 <= sx < ground.width:
+            ground.tiles[sy][sx].set_type(station_tile)
+
+        if spec.get("light", True):
+            lx, ly = get_nearest_walkable_tile(ground, x0 + w // 2, y0 + h - 1)
+            self.place_light(world, "lantern", lx, ly)
+
+    def _decorate_resource(self, layer: MapLayer, kind: str, nx: int, ny: int) -> None:
+        """Dress a resource node into a field / rocky outcrop / pond around (nx, ny)."""
+        spec = RESOURCE_DECOR.get(kind)
+        if spec is None:
+            return
+
+        def paint(x: int, y: int) -> None:
+            if not (0 <= y < layer.height and 0 <= x < layer.width):
+                return
+            tile = layer.tiles[y][x]
+            if tile.type_id in DECOR_PAINTABLE:
+                tile.set_type(spec["tile"])
+
+        if spec["fill_node"]:
+            paint(nx, ny)
+
+        r = spec["radius"]
+        for dy in range(-r, r + 1):
+            for dx in range(-r, r + 1):
+                if dx == 0 and dy == 0:
+                    continue
+                # Keep the four orthogonal neighbours of a blocking patch clear so
+                # there is always a tile to stand on and bump the node from.
+                if spec["blocking"] and abs(dx) + abs(dy) == 1:
+                    continue
+                if self._rng.random() < spec["chance"]:
+                    paint(nx + dx, ny + dy)
 
     def apply_terrain_variety(self, layer: MapLayer, chance: float, type_id_choices: list):
         """
@@ -395,11 +494,18 @@ class MapGenerator:
             sx, sy = get_nearest_walkable_tile(village_layers[0], station["pos"][0], station["pos"][1])
             village_layers[0].tiles[sy][sx].set_type(STATION_TILES.get(station["type"], "station_forge"))
 
+        # Open-shelter workshops: roofed but wall-less workspaces wrapping a
+        # station, with the roof drawn as a cutaway overlay (multi-level reveal).
+        for shelter in config.get("shelters", []):
+            self.build_shelter(world, village_layers, shelter)
+
         # Scenario-authored resource nodes (grain field, ore vein): bump to
-        # harvest raw materials. Created as entities before freeze.
+        # harvest raw materials. Created as entities before freeze. Each node is
+        # then dressed into a real map object (field / outcrop / pond).
         for node in config.get("resources", []):
             rx, ry = get_nearest_walkable_tile(village_layers[0], node["pos"][0], node["pos"][1])
             create_resource_node(world, node["kind"], rx, ry, 0)
+            self._decorate_resource(village_layers[0], node["kind"], rx, ry)
 
         # --- SPAWN VILLAGE NPCS ---
         for npc in config.get("village_npcs", []):
@@ -434,6 +540,14 @@ class MapGenerator:
 
             # Populate house interior
             self.add_house_to_map(world, h_container, 0, 0, hi, hj, floors, style=h.get("style", "home"))
+
+            # An enterable workshop carries its crafting station indoors: bump
+            # it inside to use the bench. Upper floors then show off the layered
+            # rendering as you climb (e.g. a mill's grinding floor above).
+            if h.get("station"):
+                station_tile = STATION_TILES.get(h["station"], "station_forge")
+                stx, sty = get_nearest_walkable_tile(h_container.layers[0], hi // 2, 2)
+                h_container.layers[0].tiles[sty][stx].set_type(station_tile)
 
             # --- SPAWN HOUSE NPCS ---
             for npc in h.get("npcs", []):

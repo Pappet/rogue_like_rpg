@@ -65,7 +65,8 @@
     13,
     10
    ],
-   "floors": 1,
+   "floors": 2,
+   "station": "kitchen",
    "npcs": [
     {
      "type": "fisher",
@@ -241,15 +242,6 @@
   }
  },
  "biome": "swamp",
- "stations": [
-  {
-   "type": "kitchen",
-   "pos": [
-    20,
-    18
-   ]
-  }
- ],
  "resources": [
   {
    "kind": "fishing_spot",

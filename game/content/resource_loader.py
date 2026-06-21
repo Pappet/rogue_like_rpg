@@ -153,6 +153,7 @@ class ResourceLoader:
                 color=color,
                 base_description=item.get("base_description", ""),
                 occludes_below=bool(item.get("occludes_below", False)),
+                roof=bool(item.get("roof", False)),
                 provides_rest=bool(item.get("provides_rest", False)),
                 crafting_station=str(item.get("crafting_station", "")),
                 bg_color=bg_color,
