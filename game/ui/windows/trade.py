@@ -18,6 +18,7 @@ from config import (
     UI_THEME_INK_DIM,
     UI_THEME_INK_MUTED,
     UI_THEME_SELECT_EDGE,
+    UI_THEME_XP,
     GameStates,
 )
 from core.input_manager import InputCommand
@@ -226,14 +227,22 @@ class TradeWindow(UIWindow):
 
         # Player carry weight, right-aligned in the "Your Goods" header band
         cur_w, max_w = self._player_carry()
-        theme.draw_text(
+        load = (cur_w / max_w) if max_w > 0 else 0.0
+        if load >= 1.0:
+            load_color = UI_THEME_DANGER
+        elif load >= 0.85:
+            load_color = UI_THEME_COIN
+        else:
+            load_color = UI_THEME_XP
+        bar_w = 190
+        theme.draw_bar(
             surface,
-            f"Weight {cur_w:.1f}/{max_w:.1f} kg",
-            self.small_font,
-            UI_THEME_INK_DIM,
-            (box_x + box_width - pad - 4, box_y + 56),
-            anchor="topright",
-            shadow=False,
+            (box_x + box_width - pad - bar_w - 4, box_y + 40, bar_w, 18),
+            min(1.0, load),
+            load_color,
+            hi_color=theme.lighten(load_color, 0.4),
+            label=f"{cur_w:.1f}/{max_w:.1f} kg",
+            font=self.small_font,
         )
 
         # Active-pane frame glow
