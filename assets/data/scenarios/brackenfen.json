@@ -71,6 +71,8 @@
        "iron_ore",
        "silver_ore",
        "silver_ore",
+       "coal",
+       "coal",
        "hide",
        "hide",
        "leather",
@@ -214,6 +216,20 @@
    "pos": [
     27,
     8
+   ]
+  },
+  {
+   "kind": "coal_seam",
+   "pos": [
+    25,
+    11
+   ]
+  },
+  {
+   "kind": "gem_vein",
+   "pos": [
+    27,
+    12
    ]
   }
  ],

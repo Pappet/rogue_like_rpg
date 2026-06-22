@@ -90,10 +90,15 @@ def test_forge_smelts_anvil_smiths():
     """Conceptual split: the forge only smelts ore into ingots; the anvil
     only works ingots into finished arms/armor."""
     _load_content()
-    # Every forge recipe turns raw ore into an ingot.
+    # Every forge recipe turns raw ore into an ingot. Coal is the one
+    # permitted non-ore input: it is the fuel/carbon that tempers iron into
+    # steel, not a finished good.
+    forge_fuels = {"coal"}
     for recipe in recipe_registry.for_station("forge"):
         assert recipe.output.endswith("_ingot"), f"{recipe.id}: forge should smelt ingots"
-        assert all(item_id.endswith("_ore") for item_id in recipe.inputs), f"{recipe.id}: forge consumes ore"
+        assert all(
+            item_id.endswith("_ore") or item_id in forge_fuels for item_id in recipe.inputs
+        ), f"{recipe.id}: forge consumes ore (plus coal as fuel)"
     # Every anvil recipe consumes an ingot (no raw ore at the anvil).
     anvil = recipe_registry.for_station("anvil")
     assert anvil, "the anvil must have smithing recipes"

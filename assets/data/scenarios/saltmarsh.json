@@ -81,6 +81,7 @@
        "cooked_fish",
        "cooked_fish",
        "hearty_stew",
+       "spiced_stew",
        "salt",
        "dried_meat",
        "bandage"
@@ -262,6 +263,20 @@
    "pos": [
     40,
     30
+   ]
+  },
+  {
+   "kind": "salt_pan",
+   "pos": [
+    42,
+    36
+   ]
+  },
+  {
+   "kind": "salt_pan",
+   "pos": [
+    6,
+    36
    ]
   }
  ],

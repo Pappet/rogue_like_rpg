@@ -41,6 +41,10 @@
    [
     "timber_stand",
     5
+   ],
+   [
+    "coal_seam",
+    2
    ]
   ]
  },
@@ -90,6 +94,18 @@
    [
     "fishing_spot",
     4
+   ],
+   [
+    "salt_pan",
+    3
+   ],
+   [
+    "coal_seam",
+    2
+   ],
+   [
+    "gem_vein",
+    1
    ]
   ]
  },
@@ -131,6 +147,10 @@
    [
     "herb_patch",
     4
+   ],
+   [
+    "pasture",
+    3
    ]
   ]
  }

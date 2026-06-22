@@ -96,7 +96,9 @@
        "iron_greaves",
        "tower_shield",
        "iron_buckler",
-       "iron_ingot"
+       "iron_ingot",
+       "steel_ingot",
+       "coal"
       ],
       "gold": 400
      }

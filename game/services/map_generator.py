@@ -66,6 +66,10 @@ RESOURCE_DECOR = {
     "silver_vein": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
     "timber_stand": {"tile": "tree_sapling", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.55},
     "fishing_spot": {"tile": "water_shallow", "radius": 2, "blocking": True, "fill_node": True, "chance": 0.8},
+    "pasture": {"tile": "floor_grass", "radius": 2, "blocking": False, "fill_node": False, "chance": 0.7},
+    "salt_pan": {"tile": "floor_sand", "radius": 2, "blocking": False, "fill_node": True, "chance": 0.8},
+    "gem_vein": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
+    "coal_seam": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
 }
 
 # Light props placed by the generator. All burn dusk-to-dawn (night_only):
