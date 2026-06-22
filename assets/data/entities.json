@@ -27,15 +27,15 @@
     "loot_table": [
       [
         "iron_sword",
-        1.0
+        0.35
       ],
       [
         "wooden_club",
-        1.0
+        0.5
       ],
       [
         "health_potion",
-        1.0
+        0.4
       ]
     ],
     "faction": "monsters"
@@ -284,11 +284,11 @@
     "loot_table": [
       [
         "dagger",
-        1.0
+        0.5
       ],
       [
         "health_potion",
-        0.5
+        0.3
       ]
     ],
     "faction": "monsters"
@@ -321,7 +321,7 @@
     "loot_table": [
       [
         "wooden_club",
-        1.0
+        0.6
       ],
       [
         "gemstone",
