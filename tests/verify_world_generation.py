@@ -77,3 +77,34 @@ def test_duplicate_map_ids_rejected():
     generator.create_scenario(esper, "assets/data/scenarios/village.json")
     with pytest.raises(ValueError):
         generator.create_scenario(esper, "assets/data/scenarios/village.json")
+
+
+def test_poi_dungeons_use_their_themed_monsters_and_caches():
+    """Each POI draws from its own monster pool and hides its own cache,
+    instead of every dungeon sharing the generic orc/goblin/troll + steel sword."""
+    from game.components import Hidden, Name, ResourceNode, TemplateId
+
+    map_service, _ = _build_world()
+
+    def contents(map_id):
+        container = map_service.get_map(map_id)
+        monsters, cache, nodes = set(), set(), set()
+        for comps in container.frozen_entities:
+            if any(isinstance(c, ResourceNode) for c in comps):
+                nodes.add(next(c.item for c in comps if isinstance(c, ResourceNode)))
+            elif any(isinstance(c, Hidden) for c in comps):
+                cache.add(next((c.name for c in comps if isinstance(c, Name)), None))
+            elif tid := next((c.id for c in comps if isinstance(c, TemplateId)), None):
+                monsters.add(tid)
+        return monsters, cache, nodes
+
+    crypt_m, crypt_c, _ = contents("Sunken Crypt")
+    assert "skeleton" in crypt_m, "the crypt should be full of skeletons"
+    assert "orc" not in crypt_m and "troll" not in crypt_m
+
+    camp_m, _, _ = contents("Bandit Camp")
+    assert {"bandit", "bandit_leader"} & camp_m, "the bandit camp should hold bandits"
+
+    # The mine actually contains mineable veins.
+    _, _, mine_nodes = contents("Abandoned Mine")
+    assert {"iron_ore", "coal", "gemstone"} & mine_nodes, "the mine should have ore to dig"

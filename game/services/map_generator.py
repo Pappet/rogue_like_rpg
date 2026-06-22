@@ -383,7 +383,14 @@ class MapGenerator:
                 scenario_path = f"assets/data/scenarios/{location.scenario}.json"
                 self.create_scenario(world, scenario_path, map_id=location.id)
             elif location.type == "poi":
-                self.create_dungeon(world, map_id=location.id, seed=self._map_seed(location.id))
+                self.create_dungeon(
+                    world,
+                    map_id=location.id,
+                    seed=self._map_seed(location.id),
+                    monsters=location.monsters or None,
+                    cache=location.cache or None,
+                    resources=location.resources or None,
+                )
 
         start_id = world_graph.start_location_id
         self.map_service.set_active_map(start_id)
@@ -740,6 +747,9 @@ class MapGenerator:
         height: int = 30,
         seed: int | None = None,
         monster_density: float = 0.025,
+        monsters: list[str] | None = None,
+        cache: list[str] | None = None,
+        resources: list[str] | None = None,
     ) -> MapContainer:
         """Generate a small procedural dungeon for a POI (ROADMAP Phase F).
 
@@ -748,10 +758,18 @@ class MapGenerator:
         Spawns monsters and places a hidden cache in the last room — the
         secret the Investigate/perception mechanics can uncover.
 
+        ``monsters`` / ``cache`` / ``resources`` theme the place (see the POI
+        entries in world.json): the monster pool that guards it, the items in
+        its hidden cache, and any resource-node kinds to seed through its rooms
+        (e.g. ore and coal veins in the Abandoned Mine). Each falls back to the
+        generic dungeon defaults when empty.
+
         The map is registered and left frozen (like create_scenario);
         arrival_pos is the center of the first room.
         """
         from game.components import Hidden
+
+        cache = cache or ["steel_sword", "health_potion"]
 
         rng = random.Random(seed)
         tiles = [[Tile(type_id="wall_stone") for _ in range(width)] for _ in range(height)]
@@ -792,12 +810,20 @@ class MapGenerator:
             raise ValueError(f"Map id '{map_id}' is already registered.")
         self.map_service.register_map(map_id, container)
 
-        # 3. Monsters guard the place
-        SpawnService.spawn_monsters(world, container, density=monster_density)
+        # 3. Monsters guard the place (themed pool when the POI defines one)
+        SpawnService.spawn_monsters(world, container, density=monster_density, monsters=monsters)
+
+        # 3b. Resource nodes seeded through the middle rooms (themed POIs only,
+        # e.g. ore/coal/gem veins in the Abandoned Mine). Each goes at a room
+        # centre so its bump neighbours stay clear.
+        if resources and len(rooms) > 2:
+            for i, kind in enumerate(resources):
+                rx, ry = center(rooms[1 + (i % (len(rooms) - 2))])
+                create_resource_node(world, kind, rx, ry, 0)
 
         # 4. Hidden cache in the last room (Phase F secret)
         cx, cy = center(rooms[-1])
-        for template_id in ("steel_sword", "health_potion"):
+        for template_id in cache:
             item = ItemFactory.create_on_ground(world, template_id, cx, cy, 0)
             _esper.add_component(item, Hidden())
 

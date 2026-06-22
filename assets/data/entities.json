@@ -877,5 +877,42 @@
       ]
     ],
     "faction": "townsfolk"
+  },
+  {
+    "id": "skeleton",
+    "name": "Skeleton",
+    "sprite": "s",
+    "color": [
+      220,
+      220,
+      210
+    ],
+    "sprite_layer": "ENTITIES",
+    "hp": 10,
+    "max_hp": 10,
+    "power": 4,
+    "defense": 1,
+    "mana": 0,
+    "max_mana": 0,
+    "perception": 6,
+    "intelligence": 2,
+    "ai": true,
+    "default_state": "wander",
+    "alignment": "hostile",
+    "blocker": true,
+    "description": "A clattering skeleton risen from the crypt, eye-sockets cold and dark.",
+    "wounded_text": "A skeleton missing half its ribs, still lurching forward.",
+    "wounded_threshold": 0.5,
+    "loot_table": [
+      [
+        "dagger",
+        0.3
+      ],
+      [
+        "silver_ingot",
+        0.15
+      ]
+    ],
+    "faction": "monsters"
   }
 ]

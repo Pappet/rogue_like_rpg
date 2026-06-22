@@ -98,7 +98,9 @@
       "map_pos": [
         78,
         78
-      ]
+      ],
+      "monsters": ["orc", "goblin"],
+      "cache": ["steel_sword", "health_potion"]
     },
     {
       "id": "Sunken Crypt",
@@ -109,7 +111,9 @@
       "map_pos": [
         70,
         96
-      ]
+      ],
+      "monsters": ["skeleton", "skeleton", "goblin"],
+      "cache": ["silver_ingot", "mana_potion", "gemstone"]
     },
     {
       "id": "Bandit Camp",
@@ -120,7 +124,9 @@
       "map_pos": [
         90,
         62
-      ]
+      ],
+      "monsters": ["bandit", "bandit", "bandit_leader"],
+      "cache": ["iron_sword", "health_potion", "silver_ingot"]
     },
     {
       "id": "Abandoned Mine",
@@ -131,7 +137,10 @@
       "map_pos": [
         5,
         40
-      ]
+      ],
+      "monsters": ["goblin", "troll"],
+      "cache": ["gemstone", "silver_ingot"],
+      "resources": ["iron_vein", "coal_seam", "gem_vein"]
     }
   ],
   "routes": [

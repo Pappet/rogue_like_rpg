@@ -31,6 +31,12 @@ class WorldLocation:
     friends: list[str] = field(default_factory=list)
     # Abstract overworld coordinates (0-100 grid) for drawing the travel map.
     map_pos: tuple[int, int] = (50, 50)
+    # POI dungeon theming (type == "poi"): the monster pool that guards it, the
+    # hidden cache items in its final room, and any resource-node kinds to
+    # scatter through it. Empty lists fall back to the generic dungeon defaults.
+    monsters: list[str] = field(default_factory=list)
+    cache: list[str] = field(default_factory=list)
+    resources: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -74,6 +80,9 @@ class WorldGraphService:
                     discovered=discovered,
                     friends=list(loc.get("friends", [])),
                     map_pos=tuple(loc.get("map_pos", (50, 50))),
+                    monsters=list(loc.get("monsters", [])),
+                    cache=list(loc.get("cache", [])),
+                    resources=list(loc.get("resources", [])),
                 )
             )
 
