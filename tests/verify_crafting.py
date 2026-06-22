@@ -96,9 +96,9 @@ def test_forge_smelts_anvil_smiths():
     forge_fuels = {"coal"}
     for recipe in recipe_registry.for_station("forge"):
         assert recipe.output.endswith("_ingot"), f"{recipe.id}: forge should smelt ingots"
-        assert all(
-            item_id.endswith("_ore") or item_id in forge_fuels for item_id in recipe.inputs
-        ), f"{recipe.id}: forge consumes ore (plus coal as fuel)"
+        assert all(item_id.endswith("_ore") or item_id in forge_fuels for item_id in recipe.inputs), (
+            f"{recipe.id}: forge consumes ore (plus coal as fuel)"
+        )
     # Every anvil recipe consumes an ingot (no raw ore at the anvil).
     anvil = recipe_registry.for_station("anvil")
     assert anvil, "the anvil must have smithing recipes"

@@ -62,7 +62,7 @@
     "weight": 2,
     "effects": {
       "stock_delta": {
-        "venison": 2
+        "grain": 3
       },
       "prosperity_delta": 2
     }
@@ -84,7 +84,7 @@
     "weight": 2,
     "effects": {
       "stock_delta": {
-        "venison": 3
+        "raw_fish": 3
       },
       "prosperity_delta": 1
     }
