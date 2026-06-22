@@ -1016,7 +1016,7 @@
   "sprite_layer": "ITEMS",
   "weight": 2.5,
   "material": "steel",
-  "description": "A bar of bright steel, iron tempered with coal-fire. The makings of a fine blade.",
+  "description": "A bar of bright steel, the makings of a fine blade.",
   "stats": {},
   "value": 30
  },
