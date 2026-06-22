@@ -126,3 +126,43 @@ if __name__ == "__main__":
     test_notables_keep_their_home()
     test_housed_folk_get_distinct_beds()
     print("Housing verification PASSED")
+
+
+def test_work_anchors_and_patrol_routes_bind_to_settlement_geography():
+    """Common folk fan across the scenario's work_anchors; guards get its
+    patrol_route — so daytime crowds and the watch follow the real map instead
+    of fixed, map-agnostic coordinates."""
+    from game.components import TemplateId
+    from game.services.world_simulation_service import resolve_scheduled_target
+
+    layer = _open_layer(size=30)
+    config = dict(CONFIG)
+    config["work_anchors"] = [[8, 8], [20, 20]]
+    config["patrol_route"] = [[2, 2], [25, 2], [25, 25]]
+
+    folk = [_make(needs=True), _make(needs=True)]
+    guard = esper.create_entity(
+        Position(1, 1, 0),
+        TemplateId("guard"),
+        Schedule("guard_routine"),
+        Activity(home_pos=(2, 2)),
+        AIBehaviorState(AIState.IDLE, Alignment.NEUTRAL),
+    )
+
+    HousingService.assign(esper, config, layer)
+
+    work_positions = {esper.component_for_entity(e, Residence).work_pos for e in folk}
+    assert None not in work_positions, "housed folk should receive a work anchor"
+    assert work_positions <= {(8, 8), (20, 20)}, "work spots come from the authored anchors"
+
+    guard_res = esper.component_for_entity(guard, Residence)
+    assert guard_res.patrol_route == [[2, 2], [25, 2], [25, 25]], "guard walks the town's beat"
+
+    # A WORK entry targeting "work" resolves to the assigned anchor.
+    from game.content.schedule_registry import schedule_registry
+
+    ResourceLoader.load_schedules("assets/data/schedules.json")
+    entry = next(e for e in schedule_registry.get("villager_routine").entries if e.activity == "WORK")
+    activity = esper.component_for_entity(folk[0], Activity)
+    resolved = resolve_scheduled_target(entry, activity, folk[0], esper)
+    assert resolved == esper.component_for_entity(folk[0], Residence).work_pos

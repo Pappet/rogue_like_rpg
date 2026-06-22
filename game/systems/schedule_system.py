@@ -8,6 +8,7 @@ from game.components import (
     PathData,
     PatrolRoute,
     Position,
+    Residence,
     Schedule,
 )
 from game.content.schedule_registry import schedule_registry
@@ -114,8 +115,13 @@ class ScheduleSystem(esper.Processor):
 
         The PatrolRoute is created lazily with a per-entity start offset so
         guards sharing a route spread along it instead of marching as a pack.
-        Reaching the current waypoint advances to the next leg."""
-        route = entry.route
+        Reaching the current waypoint advances to the next leg.
+
+        A guard housed in a settlement walks that town's authored beat
+        (Residence.patrol_route) so the watch covers the real map; only when no
+        such beat exists does it fall back to the schedule's generic route."""
+        residence = esper.try_component(ent, Residence)
+        route = residence.patrol_route if residence and residence.patrol_route else entry.route
         pr = esper.try_component(ent, PatrolRoute)
         if pr is None:
             pr = PatrolRoute(waypoints=[tuple(w) for w in route], index=ent % len(route))
