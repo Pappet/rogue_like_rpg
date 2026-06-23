@@ -167,12 +167,14 @@ the full suite on Python 3.10 and 3.12 (headless SDL) for every PR and push to
 │   └── ui/windows/          # 7 modal windows (inventory, trade, crafting, ...)
 ├── assets/data/             # JSON game content (+ prefabs/, scenarios/)
 ├── tests/                   # 93 test files (verify_*.py + test_smoke.py)
-└── docs/                    # ROADMAP, DEV_JOURNAL, ARCHITECTURE_CONCEPT, ...
+└── docs/                    # ROADMAP, DEV_JOURNAL, ARCHITECTURE_CONCEPT, CONTENT_GUIDE, ...
 ```
 
 See [`CLAUDE.md`](CLAUDE.md) for the full architecture reference and the
 playbook for adding features, and [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md)
-for the key architectural decisions.
+for the key architectural decisions. For authoring JSON content (settlements,
+items, entities, biomes), see the data-driven content reference
+[`docs/CONTENT_GUIDE.md`](docs/CONTENT_GUIDE.md).
 
 ## License
 
