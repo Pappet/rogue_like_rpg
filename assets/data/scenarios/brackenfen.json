@@ -71,6 +71,8 @@
        "iron_ore",
        "silver_ore",
        "silver_ore",
+       "coal",
+       "coal",
        "hide",
        "hide",
        "leather",
@@ -215,7 +217,33 @@
     27,
     8
    ]
+  },
+  {
+   "kind": "coal_seam",
+   "pos": [
+    25,
+    11
+   ]
+  },
+  {
+   "kind": "gem_vein",
+   "pos": [
+    27,
+    12
+   ]
   }
+ ],
+ "work_anchors": [
+  [15, 16],
+  [19, 17],
+  [10, 21],
+  [24, 10]
+ ],
+ "patrol_route": [
+  [4, 5],
+  [26, 5],
+  [26, 26],
+  [4, 26]
  ],
  "lights": [
   {

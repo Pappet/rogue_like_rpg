@@ -30,6 +30,7 @@ from game.components import (
     QuestGiver,
     Residence,
     Schedule,
+    TemplateId,
 )
 from game.map.map_generator_utils import get_nearest_walkable_tile
 
@@ -86,6 +87,8 @@ class HousingService:
                 gather_cycle += 1
                 world.add_component(ent, Residence(hearth_pos=hearth_pos, housed=False, gather_pos=gather_pos))
 
+        HousingService._assign_work_and_patrol(world, config, exterior_layer, residents)
+
         logger.info(
             "Housing: %d residents, %d beds, %d gather spots (hearth=%s).",
             len(residents),
@@ -93,6 +96,39 @@ class HousingService:
             len(gather_spots),
             hearth_pos,
         )
+
+    @staticmethod
+    def _assign_work_and_patrol(world, config: dict, layer, residents) -> None:
+        """Bind ambient daytime targets to the settlement's own geography.
+
+        Common folk (villager/vendor/blacksmith routines, which target
+        ``"work"``) are fanned across the scenario's ``work_anchors`` so the
+        daytime crowd gathers at this town's real market/fields/shops instead
+        of a fixed corner. Guards get this town's ``patrol_route`` so the watch
+        covers the actual map. Both are optional — without them the legacy
+        per-schedule targets still apply."""
+        anchors = [get_nearest_walkable_tile(layer, x, y) for x, y in config.get("work_anchors", [])]
+        patrol = [list(get_nearest_walkable_tile(layer, x, y)) for x, y in config.get("patrol_route", [])]
+
+        work_i = 0
+        for ent in residents:
+            tid = world.try_component(ent, TemplateId)
+            residence = world.try_component(ent, Residence)
+            if residence is None:
+                continue
+            if tid is not None and tid.id == "guard":
+                if patrol:
+                    residence.patrol_route = patrol
+                continue
+            # Notables work at their authored shop/home, not a generic anchor.
+            is_notable = (
+                world.has_component(ent, Merchant)
+                or world.has_component(ent, QuestGiver)
+                or world.has_component(ent, Innkeeper)
+            )
+            if anchors and not is_notable:
+                residence.work_pos = anchors[work_i % len(anchors)]
+                work_i += 1
 
     # --- helpers -------------------------------------------------------------
 

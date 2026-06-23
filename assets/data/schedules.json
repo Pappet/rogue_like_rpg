@@ -8,6 +8,7 @@
         "start": 7,
         "end": 12,
         "activity": "WORK",
+        "target_meta": "work",
         "target_pool": [[12, 20], [24, 20], [12, 3]]
       },
       {
@@ -21,6 +22,7 @@
         "start": 13,
         "end": 19,
         "activity": "WORK",
+        "target_meta": "work",
         "target_pool": [[24, 3], [12, 3], [24, 20]]
       },
       {
@@ -69,7 +71,7 @@
     "name": "Market Vendor Day",
     "entries": [
       { "start": 0, "end": 7, "activity": "SLEEP", "target_meta": "home" },
-      { "start": 7, "end": 12, "activity": "WORK", "target_pos": [12, 22] },
+      { "start": 7, "end": 12, "activity": "WORK", "target_meta": "work", "target_pos": [12, 22] },
       {
         "start": 12,
         "end": 13,
@@ -77,7 +79,7 @@
         "target_meta": "hearth",
         "target_pos": [12, 22]
       },
-      { "start": 13, "end": 19, "activity": "WORK", "target_pos": [12, 22] },
+      { "start": 13, "end": 19, "activity": "WORK", "target_meta": "work", "target_pos": [12, 22] },
       {
         "start": 19,
         "end": 22,
@@ -115,7 +117,7 @@
     "name": "Blacksmith Routine",
     "entries": [
       { "start": 0, "end": 5, "activity": "SLEEP", "target_meta": "home" },
-      { "start": 5, "end": 17, "activity": "WORK", "target_pos": [6, 20] },
+      { "start": 5, "end": 17, "activity": "WORK", "target_meta": "work", "target_pos": [6, 20] },
       {
         "start": 17,
         "end": 21,

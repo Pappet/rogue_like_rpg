@@ -96,7 +96,9 @@
        "iron_greaves",
        "tower_shield",
        "iron_buckler",
-       "iron_ingot"
+       "iron_ingot",
+       "steel_ingot",
+       "coal"
       ],
       "gold": 400
      }
@@ -277,6 +279,18 @@
     4
    ]
   }
+ ],
+ "work_anchors": [
+  [25, 26],
+  [22, 23],
+  [31, 16],
+  [16, 32]
+ ],
+ "patrol_route": [
+  [6, 6],
+  [44, 6],
+  [44, 44],
+  [6, 44]
  ],
  "lights": [
   {

@@ -36,6 +36,10 @@ def resolve_scheduled_target(entry, activity: Activity, ent=None, world=None) ->
     - ``target_meta == "home"`` -> the NPC's ``Activity.home_pos``.
     - ``target_meta == "hearth"`` -> its ``Residence.hearth_pos`` (the
       village's real campfire/tavern); falls back to ``target_pos``.
+    - ``target_meta == "work"`` -> its ``Residence.work_pos`` (a daytime work
+      spot from the settlement's authored anchors); falls back to the entry's
+      own ``route`` / ``target_pool`` / ``target_pos`` so towns that don't
+      author anchors keep the legacy behaviour.
     - ``route`` / ``target_pool`` -> a per-entity pick (entity id modulo
       length) so a shared schedule fans its NPCs across several spots.
     - otherwise the authored ``target_pos``.
@@ -48,6 +52,11 @@ def resolve_scheduled_target(entry, activity: Activity, ent=None, world=None) ->
             if residence and residence.hearth_pos:
                 return residence.hearth_pos
         return entry.target_pos
+    if entry.target_meta == "work" and ent is not None and world is not None:
+        residence = world.try_component(ent, Residence)
+        if residence and residence.work_pos:
+            return residence.work_pos
+        # else fall through to the entry's own route/pool/pos
     if entry.route and ent is not None:
         return tuple(entry.route[ent % len(entry.route)])
     if entry.target_pool and ent is not None:

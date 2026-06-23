@@ -48,8 +48,8 @@
   ],
   "sprite_layer": "ITEMS",
   "weight": 0.2,
-  "material": "gold",
-  "description": "A delicate gold circlet that enhances mana.",
+  "material": "silver",
+  "description": "A delicate silver circlet set with a gem that enhances mana.",
   "slot": "head",
   "stats": {
    "mana": 10
@@ -987,5 +987,77 @@
    "power": 4
   },
   "value": 18
+ },
+ {
+  "id": "coal",
+  "name": "Lump of Coal",
+  "sprite": "*",
+  "color": [
+   60,
+   60,
+   65
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 2.0,
+  "material": "coal",
+  "description": "Black coal dug from the seam. A forge burns it hot enough to make steel.",
+  "stats": {},
+  "value": 6
+ },
+ {
+  "id": "steel_ingot",
+  "name": "Steel Ingot",
+  "sprite": "=",
+  "color": [
+   170,
+   175,
+   185
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 2.5,
+  "material": "steel",
+  "description": "A bar of bright steel, the makings of a fine blade.",
+  "stats": {},
+  "value": 30
+ },
+ {
+  "id": "spiced_stew",
+  "name": "Spiced Stew",
+  "sprite": "%",
+  "color": [
+   210,
+   130,
+   60
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 1.0,
+  "material": "food",
+  "description": "Stew rich with far-road spices. A bowl warms you to the bones and then some.",
+  "stats": {},
+  "value": 24,
+  "consumable": {
+   "effect_type": "heal_hp",
+   "amount": 18
+  }
+ },
+ {
+  "id": "cheese_pie",
+  "name": "Cheese Pie",
+  "sprite": "%",
+  "color": [
+   225,
+   195,
+   110
+  ],
+  "sprite_layer": "ITEMS",
+  "weight": 0.7,
+  "material": "food",
+  "description": "A golden pie of baked cheese and crust. Hearty fare for the road.",
+  "stats": {},
+  "value": 12,
+  "consumable": {
+   "effect_type": "heal_hp",
+   "amount": 9
+  }
  }
 ]

@@ -393,6 +393,12 @@ class Residence:
     hearth_pos: tuple[int, int] | None = None
     housed: bool = True
     gather_pos: tuple[int, int] | None = None
+    work_pos: tuple[int, int] | None = None
+    # A guard's authored beat for *this* settlement (from the scenario's
+    # `patrol_route`). Persisted here rather than on the transient PatrolRoute
+    # component, which ScheduleSystem strips every night; _update_patrol prefers
+    # it over the schedule's generic fallback route.
+    patrol_route: list | None = None
 
 
 @dataclass

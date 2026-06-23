@@ -16,6 +16,14 @@
   "ticks": 25
  },
  {
+  "id": "smelt_steel_ingot",
+  "station": "forge",
+  "inputs": {"iron_ore": 2, "coal": 1},
+  "output": "steel_ingot",
+  "output_qty": 1,
+  "ticks": 40
+ },
+ {
   "id": "smith_dagger",
   "station": "anvil",
   "inputs": {"iron_ingot": 1},
@@ -56,6 +64,54 @@
   "ticks": 60
  },
  {
+  "id": "smith_spear",
+  "station": "anvil",
+  "inputs": {"iron_ingot": 2},
+  "output": "spear",
+  "output_qty": 1,
+  "ticks": 35
+ },
+ {
+  "id": "smith_mace",
+  "station": "anvil",
+  "inputs": {"iron_ingot": 3},
+  "output": "mace",
+  "output_qty": 1,
+  "ticks": 45
+ },
+ {
+  "id": "smith_iron_buckler",
+  "station": "anvil",
+  "inputs": {"iron_ingot": 1},
+  "output": "iron_buckler",
+  "output_qty": 1,
+  "ticks": 25
+ },
+ {
+  "id": "smith_iron_greaves",
+  "station": "anvil",
+  "inputs": {"iron_ingot": 2},
+  "output": "iron_greaves",
+  "output_qty": 1,
+  "ticks": 40
+ },
+ {
+  "id": "smith_iron_shod_boots",
+  "station": "anvil",
+  "inputs": {"iron_ingot": 2},
+  "output": "iron_shod_boots",
+  "output_qty": 1,
+  "ticks": 35
+ },
+ {
+  "id": "smith_steel_sword",
+  "station": "anvil",
+  "inputs": {"steel_ingot": 2},
+  "output": "steel_sword",
+  "output_qty": 1,
+  "ticks": 70
+ },
+ {
   "id": "mill_flour",
   "station": "mill",
   "inputs": {"grain": 1},
@@ -72,12 +128,28 @@
   "ticks": 20
  },
  {
+  "id": "bake_cheese_pie",
+  "station": "oven",
+  "inputs": {"flour": 1, "cheese": 1},
+  "output": "cheese_pie",
+  "output_qty": 1,
+  "ticks": 25
+ },
+ {
   "id": "tan_leather",
   "station": "tannery",
   "inputs": {"hide": 1},
   "output": "leather",
   "output_qty": 1,
   "ticks": 30
+ },
+ {
+  "id": "tan_pelt",
+  "station": "tannery",
+  "inputs": {"pelt": 2},
+  "output": "leather",
+  "output_qty": 1,
+  "ticks": 25
  },
  {
   "id": "stitch_leather_boots",
@@ -222,5 +294,13 @@
   "output": "hearty_stew",
   "output_qty": 1,
   "ticks": 30
+ },
+ {
+  "id": "cook_spiced_stew",
+  "station": "kitchen",
+  "inputs": {"venison": 1, "herbs": 1, "spices": 1},
+  "output": "spiced_stew",
+  "output_qty": 1,
+  "ticks": 35
  }
 ]

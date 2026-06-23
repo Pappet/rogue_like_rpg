@@ -557,7 +557,7 @@ class MapAwareSystem:
 - **World events**: `assets/data/world_events.json` entries may carry `effects` (`stock_delta`, `prosperity_delta`) and `escalation` (`{event_id, delay_hours}`); `weight: 0` templates are escalation-only (Phase G2)
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)
 - **Rest tiles**: a tile with `"provides_rest": true` (e.g. `furniture_bed`) lets the player bump it to sleep. An entity with `"innkeeper": true` offers the same. Both dispatch the `rest_requested` request event; `GameplayState` opens the `RestWindow`, which calls `TurnOrchestrator.advance_turns(ticks)` to fast-forward the world clock (stops early if a hostile starts hunting or the player takes damage). Duration presets come from `rest_service`.
-- **Crafting stations** (Phase H): a tile with `"crafting_station": "<type>"` (e.g. `station_forge`, `station_anvil`, `station_mill`) lets the player bump it to open the `CraftWindow`. `MovementSystem` dispatches the `craft_requested` request event (player only, mirror of `rest_requested`); `GameplayState` opens the window and on confirm runs `CraftingService.craft()` then `advance_turns(recipe.ticks)` — crafting costs in-game time. Stations are placed per settlement via a scenario top-level `"stations": [{"type", "pos"}]` list (mirrors `"lights"`); `MapGenerator` stamps the matching tile (`STATION_TILES`). Recipes group by `station` type. The chain key→station→window mirrors the rest-tile flow exactly. Metalworking is split across two stations to mirror the cross-settlement supply chain: the **forge** only smelts ore into ingots (`iron_ore`/`silver_ore` → ingot, sited in Brackenfen the mining town) and the **anvil** only works ingots into arms/armor (sited in Eastmoor the smithy) — `tests/verify_crafting.py::test_forge_smelts_anvil_smiths` guards the split. Distribution by settlement profile: Village (mill/oven/herbalist, a farming village), Brackenfen (forge/tannery), Eastmoor (anvil/jeweler), Foxhollow (`loom`, a wool/weaving town: `wool`→`cloth`→`padded_vest`/`wool_cloak`/`cloth_hood`), Saltmarsh (`kitchen`, a coastal fishing & trade port: `raw_fish`→`cooked_fish`, `venison`+`herbs`→`hearty_stew`, salt/spice trade), Timberfall (`sawmill`, a logging camp: `log`→`plank`→`wooden_shield`/`tower_shield`/`quarterstaff`). The `loom`/`sawmill`/`kitchen` stations train the `weaving`/`woodworking`/`cooking` skills. New gathering nodes feed these chains: `timber_stand`→`log` (woodworking, in forest biomes/Timberfall) and `fishing_spot`→`raw_fish` (foraging, in swamp biomes/Saltmarsh). POI dungeons: Old Ruins, Sunken Crypt, Bandit Camp, Abandoned Mine.
+- **Crafting stations** (Phase H): a tile with `"crafting_station": "<type>"` (e.g. `station_forge`, `station_anvil`, `station_mill`) lets the player bump it to open the `CraftWindow`. `MovementSystem` dispatches the `craft_requested` request event (player only, mirror of `rest_requested`); `GameplayState` opens the window and on confirm runs `CraftingService.craft()` then `advance_turns(recipe.ticks)` — crafting costs in-game time. Stations are placed per settlement via a scenario top-level `"stations": [{"type", "pos"}]` list (mirrors `"lights"`); `MapGenerator` stamps the matching tile (`STATION_TILES`). Recipes group by `station` type. The chain key→station→window mirrors the rest-tile flow exactly. Metalworking is split across two stations to mirror the cross-settlement supply chain: the **forge** only smelts ore into ingots (`iron_ore`/`silver_ore` → ingot, plus the steel chain `iron_ore`+`coal` → `steel_ingot`; `coal` is the one permitted non-ore forge input, the carbon/fuel for steel) sited in Brackenfen the mining town, and the **anvil** only works ingots into arms/armor (`steel_ingot` → `steel_sword`, plus the mid-tier iron gear: spear/mace/buckler/greaves/iron-shod boots) sited in Eastmoor the smithy — `tests/verify_crafting.py::test_forge_smelts_anvil_smiths` guards the split. Distribution by settlement profile: Village (mill/oven/herbalist, a farming village), Brackenfen (forge/tannery), Eastmoor (anvil/jeweler), Foxhollow (`loom`, a wool/weaving town: `wool`→`cloth`→`padded_vest`/`wool_cloak`/`cloth_hood`), Saltmarsh (`kitchen`, a coastal fishing & trade port: `raw_fish`→`cooked_fish`, `venison`+`herbs`→`hearty_stew`, salt/spice trade), Timberfall (`sawmill`, a logging camp: `log`→`plank`→`wooden_shield`/`tower_shield`/`quarterstaff`). The `loom`/`sawmill`/`kitchen` stations train the `weaving`/`woodworking`/`cooking` skills. New gathering nodes feed these chains: `timber_stand`→`log` (woodworking, in forest biomes/Timberfall), `fishing_spot`→`raw_fish` (foraging, in swamp biomes/Saltmarsh), `pasture`→`wool` (Foxhollow/plains), `salt_pan`→`salt` (Saltmarsh/swamp), and `coal_seam`/`gem_vein` (Brackenfen/swamp). POI dungeons are themed via their `world.json` entry: a `monsters` pool, a hidden `cache` item list, and (for the Abandoned Mine) `resources` node kinds — so the Bandit Camp holds bandits, the Sunken Crypt skeletons, and the mine actual ore/coal/gem veins (Old Ruins, Sunken Crypt, Bandit Camp, Abandoned Mine).
 - **Workshop housing (stations live in buildings, not loose in the street)**: a station is integrated into a dedicated structure two ways. *Enterable workshop* — a `structures` entry carries a `"station": "<type>"` field; `MapGenerator` stamps that station tile inside the interior map's ground floor, so you enter via the portal and the upper floors show off the layered rendering (e.g. the multi-floor `Village Mill`, `Brackenfen Forge`; or an existing themed shop like the Eastmoor Smithy=anvil, Foxhollow Weaving Hall=loom). *Open shelter (`Unterstand`)* — a scenario top-level `"shelters": [{"station", "pos", "size"}]` list (mirrors `"stations"`); `MapGenerator.build_shelter` lays a timber floor with corner posts and the station at centre on layer 0, plus a `roof_plank` over the footprint on **layer 1**. A roof tile (`"roof": true` in `tile_types.json` → `TileType.roof` → `Tile.is_roof`) is drawn as a **cutaway overlay**: visible from the street so the shelter reads as a building, then peeled away the moment the player steps under it. `MapContainer.roof_cutaway(px, py, layer)` flood-fills the footprint above the player (no stored state, survives save/load); `RenderPipeline` passes that set to `RenderService.render_map` (draws roofs above the player unless cut away) and `RenderSystem` (hides entities standing under an intact roof). The legacy bare `"stations"` list still works for loose stations. Guarded by `tests/verify_workshops.py`.
 
 - **Item pickup chooser**: `PlayerActionService.pickup_item()` (the `G`/interact key) picks up directly when a tile holds a single item, but dispatches the `pickup_choice_requested` request event when it holds more than one. `GameplayState` opens the `PickupWindow` (`game/ui/windows/pickup.py`), which lists every item with its glyph and full details (`ActionSystem.get_detailed_description`) and lets the player take the highlighted one (`Enter`), take everything that fits (`A`), or cancel (`Esc`) — so the player chooses *which* item instead of blindly grabbing the first. The window calls back into `PlayerActionService.pickup_specific()` / `pickup_all()` (the only writers of pickup rules); taking one item or all costs a single turn. Mirrors the rest/craft request-event → window flow.
@@ -597,12 +597,14 @@ class MapAwareSystem:
 
 ### Raw-material Supply (Phase K)
 
-- **Resource nodes**: a `ResourceNode` entity (herb patch, ore vein, grain
-  field — catalogue `gather_service.RESOURCE_NODES`) is a `Blocker` the player
-  bumps to harvest. The bump → `harvest_requested` request event →
-  `GatherService.harvest(ctx, node)` chain mirrors crafting stations/rest
-  tiles. Harvest yields the raw item, trains the node's gathering skill
-  (`foraging`/`mining`/`farming`), and spends the node until `ready_at` (a
+- **Resource nodes**: a `ResourceNode` entity (catalogue
+  `gather_service.RESOURCE_NODES`: `herb_patch`→herbs, `iron_vein`/`silver_vein`
+  →ore, `grain_field`→grain, `timber_stand`→log, `fishing_spot`→fish,
+  `pasture`→wool, `salt_pan`→salt, `gem_vein`→gemstone, `coal_seam`→coal) is a
+  `Blocker` the player bumps to harvest. The bump → `harvest_requested` request
+  event → `GatherService.harvest(ctx, node)` chain mirrors crafting
+  stations/rest tiles. Harvest yields the raw item, trains the node's gathering
+  skill (`foraging`/`mining`/`farming`), and spends the node until `ready_at` (a
   world tick); skill raises the yield via the same `quantity_bonus`. Placement
   is data-driven: biomes scatter node *kinds* (`biomes.json` → `resources`,
   e.g. swamp = bog `iron_vein`), scenarios pin them at positions
@@ -657,16 +659,25 @@ class MapAwareSystem:
   list). `ScheduleSystem._update_patrol` cycles a guard through it via a
   `PatrolRoute` component whose start index is staggered per entity
   (`entity_id % len`), so guards sharing a route walk it out of phase instead
-  of marching as a pack.
-- **Target pools / hearth**: a schedule entry may use `target_pool` (each NPC
-  deterministically picks `pool[entity_id % len]`, fanning a shared schedule
-  across several spots) or `target_meta: "hearth"` (resolves to the NPC's
-  `Residence.hearth_pos` — the village's *real* campfire/tavern, so evening
-  gatherings center on the correct fire in every settlement).
+  of marching as a pack. The generic `route` is a *fallback*: a scenario that
+  authors a top-level `"patrol_route"` has `HousingService` bake it onto each
+  guard's `Residence.patrol_route`, which `_update_patrol` prefers — so the
+  watch covers *this* town's real map, not a map-agnostic corner.
+- **Target pools / hearth / work**: a schedule entry may use `target_pool`
+  (each NPC deterministically picks `pool[entity_id % len]`, fanning a shared
+  schedule across several spots), `target_meta: "hearth"` (resolves to the
+  NPC's `Residence.hearth_pos` — the village's *real* campfire/tavern), or
+  `target_meta: "work"` (resolves to `Residence.work_pos`, a daytime work spot
+  `HousingService` hands out from the scenario's top-level `"work_anchors"`
+  list, so the work crowd gathers at this town's actual market/fields/shops
+  instead of fixed coordinates). `work`/`patrol_route` fall back to the
+  schedule's own `target_pool`/`route` for towns that author neither.
 - **Capacity-based housing** (`HousingService`, run once at village build,
   before freeze): counts beds in `home` structures (default one bed per floor,
   override with a scenario `"beds"` field), seats common folk into them, and
-  gives everyone a `Residence`. The surplus and guards (bedless) get a
+  gives everyone a `Residence` (also stamping `work_pos` from the scenario's
+  `work_anchors` for common folk and `patrol_route` for guards — see "Target
+  pools / hearth / work"). The surplus and guards (bedless) get a
   `gather_pos` and spend the night milling at the hearth/tavern instead of
   sleeping; notables (merchants, innkeeper, the quest-giving mayor) keep their
   authored home. A bedless NPC's `SLEEP` entry is redirected to its gather

@@ -81,6 +81,7 @@
        "cooked_fish",
        "cooked_fish",
        "hearty_stew",
+       "spiced_stew",
        "salt",
        "dried_meat",
        "bandage"
@@ -263,7 +264,33 @@
     40,
     30
    ]
+  },
+  {
+   "kind": "salt_pan",
+   "pos": [
+    42,
+    36
+   ]
+  },
+  {
+   "kind": "salt_pan",
+   "pos": [
+    6,
+    36
+   ]
   }
+ ],
+ "work_anchors": [
+  [23, 26],
+  [18, 23],
+  [28, 10],
+  [38, 32]
+ ],
+ "patrol_route": [
+  [6, 6],
+  [40, 6],
+  [40, 38],
+  [6, 38]
  ],
  "lights": [
   {

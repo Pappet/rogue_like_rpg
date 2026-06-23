@@ -23,7 +23,8 @@
       "player_start": -100,
       "relations": {
         "townsfolk": "enemy",
-        "town_guard": "enemy"
+        "town_guard": "enemy",
+        "monsters": "enemy"
       }
     },
     "monsters": {
@@ -31,7 +32,8 @@
       "player_start": -100,
       "relations": {
         "townsfolk": "enemy",
-        "town_guard": "enemy"
+        "town_guard": "enemy",
+        "bandits": "enemy"
       }
     },
     "wildlife": {

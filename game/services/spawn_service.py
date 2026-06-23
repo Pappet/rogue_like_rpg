@@ -6,9 +6,14 @@ from game.map.map_container import MapContainer
 
 class SpawnService:
     @staticmethod
-    def spawn_monsters(world, map_container: MapContainer, density: float = 0.02):
-        """Spawns monsters randomly across all layers of the map based on density."""
-        monsters = ["orc", "goblin", "troll"]
+    def spawn_monsters(world, map_container: MapContainer, density: float = 0.02, monsters: list[str] | None = None):
+        """Spawns monsters randomly across all layers of the map based on density.
+
+        ``monsters`` is the pool to draw from (each spawn picks one at random);
+        it defaults to the generic dungeon trio when not given, so POIs can pass
+        a themed pool (skeletons for a crypt, bandits for a camp, ...).
+        """
+        monsters = monsters or ["orc", "goblin", "troll"]
 
         for layer_idx, layer in enumerate(map_container.layers):
             # Calculate how many monsters to spawn on this layer

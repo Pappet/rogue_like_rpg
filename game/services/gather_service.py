@@ -45,6 +45,10 @@ RESOURCE_NODES: dict[str, tuple] = {
     "grain_field": ("grain", "farming", "≈", (210, 190, 90), "Grain Field", 360),
     "timber_stand": ("log", "woodworking", "♠", (110, 150, 80), "Timber Stand", 420),
     "fishing_spot": ("raw_fish", "foraging", "≋", (90, 160, 210), "Fishing Spot", 300),
+    "pasture": ("wool", "farming", "Ψ", (225, 225, 215), "Sheep Pasture", 300),
+    "salt_pan": ("salt", "foraging", "░", (235, 235, 240), "Salt Pan", 360),
+    "gem_vein": ("gemstone", "mining", "◊", (120, 200, 230), "Gem Vein", 720),
+    "coal_seam": ("coal", "mining", "▓", (70, 70, 75), "Coal Seam", 480),
 }
 
 
