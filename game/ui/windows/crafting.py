@@ -15,10 +15,13 @@ import pygame
 from config import (
     TICKS_PER_HOUR,
     UI_SPACING_X,
+    UI_THEME_COIN,
+    UI_THEME_DANGER,
     UI_THEME_GOLD,
     UI_THEME_INK,
     UI_THEME_INK_DIM,
     UI_THEME_INK_MUTED,
+    UI_THEME_XP,
     GameStates,
 )
 from core.input_manager import InputCommand
@@ -103,14 +106,23 @@ class CraftWindow(UIWindow):
         theme.draw_text(surface, f"⚒ {title}", self.title_font, UI_THEME_GOLD, (box_x + pad + 4, box_y + 14))
 
         cur_w, max_w = CraftingService.carry_weight(self.world, self.player_entity)
-        theme.draw_text(
+        right_x = box_x + box_w - pad - 4
+        load = (cur_w / max_w) if max_w > 0 else 0.0
+        if load >= 1.0:
+            load_color = UI_THEME_DANGER
+        elif load >= 0.85:
+            load_color = UI_THEME_COIN
+        else:
+            load_color = UI_THEME_XP
+        bar_w = 190
+        theme.draw_bar(
             surface,
-            f"Weight {cur_w:.1f}/{max_w:.1f} kg",
-            self.small_font,
-            UI_THEME_INK_DIM,
-            (box_x + box_w - pad - 4, box_y + 22),
-            anchor="topright",
-            shadow=False,
+            (right_x - bar_w, box_y + 24, bar_w, 18),
+            min(1.0, load),
+            load_color,
+            hi_color=theme.lighten(load_color, 0.4),
+            label=f"{cur_w:.1f}/{max_w:.1f} kg",
+            font=self.small_font,
         )
         theme.draw_divider(surface, box_x + pad, box_x + box_w - pad, box_y + 56)
 

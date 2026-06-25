@@ -17,3 +17,7 @@
 ## 2026-06-20 - Prefer a Bar Over a Number for Magnitudes
 **Learning:** A bare readout like "Weight: 9.0/10.0 kg" forces the player to read and compare two numbers; a coloured fill bar (green → amber → red) communicates "nearly full / over the limit" instantly.
 **Action:** For bounded magnitudes (carry load, HP, progress), draw a `theme.draw_bar` with a threshold colour instead of, or alongside, the raw numbers. Keep the same physical facts (Material/Weight/Value) consistent across every surface that shows an item (inventory, crafting, examine tooltip).
+
+## 2024-06-25 - Extrapolate UI Polish Cross-Feature
+**Learning:** When one window (like `Inventory`) adopts a helpful UI pattern—like replacing a plain text weight limit with a color-coded threshold progress bar—other similar windows (like `Trade` and `Crafting`) should be updated to match to provide a consistent experience across the app.
+**Action:** When working on UI enhancements, look for similar surfaces that show the same information and ensure the improvement is applied consistently across all of them.
