@@ -60,15 +60,22 @@ class VisibilitySystem(esper.Processor, MapAwareSystem):
             if layer_index in transparency_funcs:
                 return transparency_funcs[layer_index]
 
-            if not (0 <= layer_index < len(self._map_container.layers)):
+            if layer_index < 0:
                 return lambda x, y: False
 
+            try:
+                layer = self._map_container.layers[layer_index]
+                tiles = layer.tiles
+                height = len(tiles)
+                width = len(tiles[0]) if height > 0 else 0
+            except IndexError:
+                return lambda x, y: False
+
+            # Optimization: caching list references and pre-calculating lengths
+            # significantly speeds up inner loop bounds checking.
             def is_transparent(x, y):
-                if 0 <= layer_index < len(self._map_container.layers):
-                    layer = self._map_container.layers[layer_index]
-                    if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
-                        tile = layer.tiles[y][x]
-                        return tile.is_transparent
+                if 0 <= y < height and 0 <= x < width:
+                    return tiles[y][x].is_transparent
                 return False
 
             transparency_funcs[layer_index] = is_transparent
