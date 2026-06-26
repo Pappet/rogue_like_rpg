@@ -23,7 +23,18 @@ from config import (
 from core.input_manager import InputCommand
 from core.ui import theme
 from core.ui.window_base import UIWindow
-from game.components import Description, Equipment, Inventory, ItemMaterial, Merchant, Name, Portable, Purse, Stats
+from game.components import (
+    Description,
+    Equipment,
+    Inventory,
+    ItemMaterial,
+    Merchant,
+    Name,
+    Portable,
+    Purse,
+    Stats,
+    Value,
+)
 from game.content.item_registry import item_registry
 from game.services.trade_service import TradeService
 
@@ -98,7 +109,8 @@ class TradeWindow(UIWindow):
             if not tpl:
                 return tid, "", ""
             price = TradeService.buy_price(tid, self._economy(), self._location_id(), self._reputation())
-            return tpl.name, tpl.description, self._stats_line(tpl.material, tpl.weight, "Buy", price)
+            base_value = tpl.value if tpl else 0
+            return tpl.name, tpl.description, self._stats_line(tpl.material, tpl.weight, base_value, "Buy", price)
 
         items = self._player_items()
         if not items or self.selected_idx >= len(items):
@@ -111,18 +123,23 @@ class TradeWindow(UIWindow):
         price = TradeService.sell_price(ent, self._economy(), self._location_id(), self._reputation())
         material = material_c.material if material_c else ""
         weight = port_c.weight if port_c else 0.0
+        value_c = self.world.try_component(ent, Value)
+        base_value = value_c.amount if value_c else 0
         return (
             name_c.name if name_c else f"Item {ent}",
             desc_c.get(None) if desc_c else "",
-            self._stats_line(material, weight, "Sell", price),
+            self._stats_line(material, weight, base_value, "Sell", price),
         )
 
     @staticmethod
-    def _stats_line(material: str, weight: float, price_label: str, price: int) -> str:
+    def _stats_line(material: str, weight: float, base_value: int, price_label: str, price: int) -> str:
         parts = []
         if material:
             parts.append(f"Material: {material}")
-        parts.append(f"Weight: {weight:g} kg")
+        if weight > 0.0:
+            parts.append(f"Weight: {weight:g} kg")
+        if base_value > 0:
+            parts.append(f"Value: {base_value}g")
         parts.append(f"{price_label}: {price}g")
         return "   ·   ".join(parts)
 
