@@ -18,6 +18,10 @@
 **Learning:** A bare readout like "Weight: 9.0/10.0 kg" forces the player to read and compare two numbers; a coloured fill bar (green → amber → red) communicates "nearly full / over the limit" instantly.
 **Action:** For bounded magnitudes (carry load, HP, progress), draw a `theme.draw_bar` with a threshold colour instead of, or alongside, the raw numbers. Keep the same physical facts (Material/Weight/Value) consistent across every surface that shows an item (inventory, crafting, examine tooltip).
 
+## 2024-06-26 - Surface Base Value in Trade Menu
+**Learning:** Players benefit from seeing an item's base value alongside the buy/sell price in trade menus to gauge whether a merchant is giving them a fair deal. Showing a raw 0-weight for weightless items clutters the UI unnecessarily.
+**Action:** Always surface baseline reference values (like item value) next to dynamically calculated values (like trade prices), and omit properties that are zero (like weight) to declutter detail panes.
+
 ## 2026-06-21 - Actionable Empty States and Context-Aware Hints
 **Learning:** Displaying non-actionable empty states (e.g., 'There is nothing here to pick up.') and generic footer hints (e.g., '[Enter] Take' when there are no items) increases cognitive load and frustration.
 **Action:** For Pygame UI windows, follow the convention of making empty states actionable (providing guidance on how to populate them) and making footer keyboard hints context-aware by dynamically hiding invalid inputs.
