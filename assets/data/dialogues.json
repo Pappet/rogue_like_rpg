@@ -5,6 +5,26 @@
    "Rest as long as you like — the fire stays warm.",
    "A quiet room and a sound sleep, that's what I offer.",
    "Sleep here and you'll wake to a brighter day."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "phase": "night"
+    },
+    "lines": [
+     "Late to be wandering. The bed's still warm if you want it.",
+     "Most folk are abed — you'd do well to join them."
+    ]
+   },
+   {
+    "when": {
+     "prosperity": "struggling"
+    },
+    "lines": [
+     "Quiet rooms these days. Times are hard on travelers.",
+     "Half my beds sit empty. Stay a while — it helps."
+    ]
+   }
   ]
  },
  "villager": {
@@ -175,13 +195,44 @@
    }
   ]
  },
- "blacksmith": [
-  "Need some steel forged?",
-  "My blades never dull.",
-  "Strike while the iron is hot!",
-  "Armor or weapons, you name it, I can craft it.",
-  "Keep your gear in good condition out there."
- ],
+ "blacksmith": {
+  "default": [
+   "Need some steel forged?",
+   "My blades never dull.",
+   "Strike while the iron is hot!",
+   "Armor or weapons, you name it, I can craft it.",
+   "Keep your gear in good condition out there."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "prosperity": "struggling"
+    },
+    "lines": [
+     "Iron's dear and coal's dearer. Hard to keep the fire lit.",
+     "Folk can't pay for good steel in lean times like these."
+    ]
+   },
+   {
+    "when": {
+     "rep": "beloved"
+    },
+    "lines": [
+     "For you I'll put an edge on it that bites twice.",
+     "Always glad of your custom — finest work for the finest sort."
+    ]
+   },
+   {
+    "when": {
+     "phase": "night"
+    },
+    "lines": [
+     "Forge is cold this hour. Come back at dawn.",
+     "Even a smith sleeps, stranger."
+    ]
+   }
+  ]
+ },
  "_default": [
   "...",
   "They nod at you.",
@@ -233,11 +284,42 @@
    }
   ]
  },
- "farmer": [
-  "The fields don't wait for anyone.",
-  "Rain when we need sun, sun when we need rain. Always the way.",
-  "Buy local, stranger. Keeps us all fed."
- ],
+ "farmer": {
+  "default": [
+   "The fields don't wait for anyone.",
+   "Rain when we need sun, sun when we need rain. Always the way.",
+   "Buy local, stranger. Keeps us all fed."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "prosperity": "struggling"
+    },
+    "lines": [
+     "Blight on the near field and prices low. Lean year.",
+     "If the rains fail again we'll be eating the seed corn."
+    ]
+   },
+   {
+    "when": {
+     "prosperity": "thriving"
+    },
+    "lines": [
+     "Barns are full and the stock is fat. Can't complain.",
+     "Best yield in years — the granary's nigh bursting."
+    ]
+   },
+   {
+    "when": {
+     "activity": "WORK"
+    },
+    "lines": [
+     "Mind the furrows — I've just sown there.",
+     "No rest for a farmer till the light goes."
+    ]
+   }
+  ]
+ },
  "herbalist": {
   "default": [
    "Sage for the lungs, yarrow for the blood.",
@@ -255,32 +337,149 @@
    }
   ]
  },
- "ore_digger": [
-  "Bog iron's good iron, whatever the city smiths say.",
-  "Knee-deep in the mire all day — someone has to be.",
-  "The smithy in Eastmoor buys every lump we haul."
- ],
- "fisher": [
-  "Tide's turning. The marsh gives up her fish if you're patient.",
-  "Salt and fish, fish and salt. It's a living, stranger.",
-  "Cook what you catch before it turns, that's my advice.",
-  "The harbor traders pay in coin from a dozen roads."
- ],
- "weaver": [
-  "Spin the wool, weave the cloth, stitch the cloak. Same as ever.",
-  "A good loom outlasts three weavers, my mother used to say.",
-  "Cloth keeps a body warmer than mail, and lighter too.",
-  "Bring me wool and I'll send you off in something fit for the road."
- ],
- "lumberjack": [
-  "Timber! ...Ah, you're fine. Mind where you stand, though.",
-  "Green wood's no good. Let it season, then it'll serve.",
-  "Every plank in three towns came off our saws.",
-  "Axe work keeps the cold out better than any fire."
- ],
- "traveling_merchant": [
-  "Roads are long, purses are short. Let's fix one of those.",
-  "Everything you see is for sale. Almost everything.",
-  "I hear all sorts of things on the road, friend."
- ]
+ "ore_digger": {
+  "default": [
+   "Bog iron's good iron, whatever the city smiths say.",
+   "Knee-deep in the mire all day — someone has to be.",
+   "The smithy in Eastmoor buys every lump we haul."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "prosperity": "struggling"
+    },
+    "lines": [
+     "Seam's playing out and the smiths pay less. Grim work.",
+     "Knee-deep for half what the ore fetched last year."
+    ]
+   },
+   {
+    "when": {
+     "phase": "night"
+    },
+    "lines": [
+     "You don't go down the bog-shafts after dark. Not if you're wise."
+    ]
+   }
+  ]
+ },
+ "fisher": {
+  "default": [
+   "Tide's turning. The marsh gives up her fish if you're patient.",
+   "Salt and fish, fish and salt. It's a living, stranger.",
+   "Cook what you catch before it turns, that's my advice.",
+   "The harbor traders pay in coin from a dozen roads."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "prosperity": "struggling"
+    },
+    "lines": [
+     "Nets come up empty more days than not lately.",
+     "Lean catch, lean coin. The marsh is stingy this season."
+    ]
+   },
+   {
+    "when": {
+     "prosperity": "thriving"
+    },
+    "lines": [
+     "Boats come in heavy every dawn. Good days.",
+     "Fish near jump in the boat this season."
+    ]
+   },
+   {
+    "when": {
+     "phase": "night"
+    },
+    "lines": [
+     "Tide's wrong for fishing now. I'm for my bed."
+    ]
+   }
+  ]
+ },
+ "weaver": {
+  "default": [
+   "Spin the wool, weave the cloth, stitch the cloak. Same as ever.",
+   "A good loom outlasts three weavers, my mother used to say.",
+   "Cloth keeps a body warmer than mail, and lighter too.",
+   "Bring me wool and I'll send you off in something fit for the road."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "rep": "beloved"
+    },
+    "lines": [
+     "For our friend? I'll throw in a hood, no charge.",
+     "Always glad to dress a hero for the road."
+    ]
+   },
+   {
+    "when": {
+     "prosperity": "struggling"
+    },
+    "lines": [
+     "Wool's scarce and the looms sit half-idle.",
+     "Hard to sell a fine cloak when no one's coin to spare."
+    ]
+   }
+  ]
+ },
+ "lumberjack": {
+  "default": [
+   "Timber! ...Ah, you're fine. Mind where you stand, though.",
+   "Green wood's no good. Let it season, then it'll serve.",
+   "Every plank in three towns came off our saws.",
+   "Axe work keeps the cold out better than any fire."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "phase": "night"
+    },
+    "lines": [
+     "No felling after dark — that's how a man loses a leg.",
+     "Saws are quiet now. Even the timber rests."
+    ]
+   },
+   {
+    "when": {
+     "prosperity": "thriving"
+    },
+    "lines": [
+     "Wagons can't haul the planks fast enough. Boom times.",
+     "Whole forest's coming down to lumber — orders are that thick."
+    ]
+   }
+  ]
+ },
+ "traveling_merchant": {
+  "default": [
+   "Roads are long, purses are short. Let's fix one of those.",
+   "Everything you see is for sale. Almost everything.",
+   "I hear all sorts of things on the road, friend."
+  ],
+  "conditional": [
+   {
+    "when": {
+     "rep": "notorious"
+    },
+    "lines": [
+     "I deal with all sorts — but I count my coins twice around you.",
+     "Your reputation rides ahead of you. Cash only, friend."
+    ]
+   },
+   {
+    "when": {
+     "rep": "beloved"
+    },
+    "lines": [
+     "For one so well spoken-of? A discount, just this once.",
+     "Ah, the hero! Sit — let me show you the good stock."
+    ]
+   }
+  ]
+ }
 }

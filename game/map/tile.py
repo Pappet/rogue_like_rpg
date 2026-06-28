@@ -46,6 +46,7 @@ class Tile:
             self.color = tile_type.color
             self.bg_color = tile_type.bg_color
             self.sprite_colors = dict(tile_type.sprite_colors)
+            self.is_roof = tile_type.roof
             self.dark = dark
         else:
             # Legacy construction – explicit properties.
@@ -57,6 +58,7 @@ class Tile:
             self.color = (200, 200, 200)
             self.bg_color = None
             self.sprite_colors = {}
+            self.is_roof = False
 
         self._update_computed_properties()
 
@@ -78,6 +80,7 @@ class Tile:
         self.color = tile_type.color
         self.bg_color = tile_type.bg_color
         self.sprite_colors = dict(tile_type.sprite_colors)
+        self.is_roof = tile_type.roof
         self._update_computed_properties()
 
     def _update_computed_properties(self):

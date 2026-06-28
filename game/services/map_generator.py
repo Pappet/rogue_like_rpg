@@ -1,6 +1,7 @@
 import json
 import os
 import random
+from dataclasses import dataclass
 
 import esper as _esper
 
@@ -38,6 +39,40 @@ STATION_TILES = {
     "jeweler": "station_jeweler",
 }
 
+# The roof tile laid over an open-shelter workshop (drawn as a cutaway overlay).
+SHELTER_ROOF = "roof_plank"
+
+# Natural ground a resource node's decoration is allowed to overpaint. Keeps
+# fields/rocks/lakes off of walls, doors, station tiles and building floors.
+DECOR_PAINTABLE = {
+    "floor_stone",
+    "floor_grass",
+    "floor_dirt",
+    "floor_sand",
+    "floor_mud",
+    "crop_field",
+}
+
+# Resource-node kind -> how it is dressed into a real map object, so harvest
+# nodes read as fields, rocky outcrops and ponds instead of lone glyphs:
+#   tile     — terrain painted around (and optionally under) the node
+#   radius   — Chebyshev radius of the patch
+#   blocking — if the decor tile is impassable, its four orthogonal neighbours
+#              are kept clear so the node stays reachable to bump
+#   fill_node— also paint the node's own tile (e.g. a fishing spot in the water)
+RESOURCE_DECOR = {
+    "grain_field": {"tile": "crop_field", "radius": 2, "blocking": False, "fill_node": True, "chance": 0.85},
+    "herb_patch": {"tile": "floor_grass", "radius": 2, "blocking": False, "fill_node": False, "chance": 0.6},
+    "iron_vein": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
+    "silver_vein": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
+    "timber_stand": {"tile": "tree_sapling", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.55},
+    "fishing_spot": {"tile": "water_shallow", "radius": 2, "blocking": True, "fill_node": True, "chance": 0.8},
+    "pasture": {"tile": "floor_grass", "radius": 2, "blocking": False, "fill_node": False, "chance": 0.7},
+    "salt_pan": {"tile": "floor_sand", "radius": 2, "blocking": False, "fill_node": True, "chance": 0.8},
+    "gem_vein": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
+    "coal_seam": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
+}
+
 # Light props placed by the generator. All burn dusk-to-dawn (night_only):
 # they reveal their surroundings via VisibilitySystem and get a warm glow
 # from the render pipeline once the day/night tint darkens.
@@ -56,6 +91,18 @@ def wilderness_map_id(settlement_id: str) -> str:
 def wilderness_arrival_pos() -> tuple[int, int]:
     """Where the player enters the wilderness (kept clear of features)."""
     return (WILDERNESS_SIZE // 2, WILDERNESS_SIZE - 3)
+
+
+@dataclass
+class HouseGenConfig:
+    """Configuration for procedural house generation."""
+
+    start_x: int
+    start_y: int
+    w: int
+    h: int
+    num_layers: int
+    style: str = "home"
 
 
 class MapGenerator:
@@ -85,6 +132,75 @@ class MapGenerator:
             LightSource(radius=props["radius"], night_only=True),
         )
 
+    def build_shelter(self, world, layers: list[MapLayer], spec: dict) -> None:
+        """Stamp an open-shelter workshop onto the village exterior.
+
+        An open shelter is a roofed but wall-less workspace: a timber floor with
+        corner posts, the crafting station in the middle, and a plank roof laid
+        on the layer *above* the ground. The roof is drawn over the world from
+        the street (so it reads as a building) but peels away the moment the
+        player walks beneath it (see MapContainer.roof_cutaway), showing off the
+        layered rendering without a separate interior map.
+
+        spec keys: ``station`` (station type), ``pos`` [x, y] top-left,
+        optional ``size`` [w, h] (default 4x4), optional ``light`` (default True).
+        """
+        ground = layers[0]
+        roof = layers[1]
+        x0, y0 = spec["pos"]
+        w, h = spec.get("size", [4, 4])
+        station_tile = STATION_TILES.get(spec["station"], "station_forge")
+
+        for yy in range(y0, y0 + h):
+            for xx in range(x0, x0 + w):
+                if not (0 <= yy < ground.height and 0 <= xx < ground.width):
+                    continue
+                # Open floor underfoot, a roof overhead.
+                ground.tiles[yy][xx].set_type("floor_wood")
+                roof.tiles[yy][xx].set_type(SHELTER_ROOF)
+
+        # Corner posts hold the roof up; the sides stay open to walk through.
+        for cx, cy in ((x0, y0), (x0 + w - 1, y0), (x0, y0 + h - 1), (x0 + w - 1, y0 + h - 1)):
+            if 0 <= cy < ground.height and 0 <= cx < ground.width:
+                ground.tiles[cy][cx].set_type("wall_wood")
+
+        # The workstation sits at the heart of the shelter.
+        sx, sy = x0 + w // 2, y0 + h // 2
+        if 0 <= sy < ground.height and 0 <= sx < ground.width:
+            ground.tiles[sy][sx].set_type(station_tile)
+
+        if spec.get("light", True):
+            lx, ly = get_nearest_walkable_tile(ground, x0 + w // 2, y0 + h - 1)
+            self.place_light(world, "lantern", lx, ly)
+
+    def _decorate_resource(self, layer: MapLayer, kind: str, nx: int, ny: int) -> None:
+        """Dress a resource node into a field / rocky outcrop / pond around (nx, ny)."""
+        spec = RESOURCE_DECOR.get(kind)
+        if spec is None:
+            return
+
+        def paint(x: int, y: int) -> None:
+            if not (0 <= y < layer.height and 0 <= x < layer.width):
+                return
+            tile = layer.tiles[y][x]
+            if tile.type_id in DECOR_PAINTABLE:
+                tile.set_type(spec["tile"])
+
+        if spec["fill_node"]:
+            paint(nx, ny)
+
+        r = spec["radius"]
+        for dy in range(-r, r + 1):
+            for dx in range(-r, r + 1):
+                if dx == 0 and dy == 0:
+                    continue
+                # Keep the four orthogonal neighbours of a blocking patch clear so
+                # there is always a tile to stand on and bump the node from.
+                if spec["blocking"] and abs(dx) + abs(dy) == 1:
+                    continue
+                if self._rng.random() < spec["chance"]:
+                    paint(nx + dx, ny + dy)
+
     def apply_terrain_variety(self, layer: MapLayer, chance: float, type_id_choices: list):
         """
         Adds random terrain variety to a MapLayer by randomly reassigning tile types.
@@ -106,12 +222,7 @@ class MapGenerator:
         self,
         world,
         map_container: MapContainer,
-        start_x: int,
-        start_y: int,
-        w: int,
-        h: int,
-        num_layers: int,
-        style: str = "home",
+        config: HouseGenConfig,
     ):
         """
         Populates a MapContainer with a house structure.
@@ -119,14 +230,10 @@ class MapGenerator:
         Args:
             world: The ECS world.
             map_container: The MapContainer to populate.
-            start_x, start_y: Top-left corner of the house.
-            w, h: Dimensions of the house.
-            num_layers: Number of floors.
-            style: Furnishing style ("home", "tavern" or "shop") — drives
-                wall material, windows and furniture placement.
+            config: Configuration for the house (dimensions, style, etc).
         """
         # Ensure we have enough layers in the container
-        while len(map_container.layers) < num_layers:
+        while len(map_container.layers) < config.num_layers:
             # Create a blank layer if needed
             tiles = []
             for y in range(map_container.height):
@@ -144,27 +251,27 @@ class MapGenerator:
                 map_id = mid
                 break
 
-        wall_id = HOUSE_WALL_MATERIAL.get(style, "wall_wood")
-        for z in range(num_layers):
+        wall_id = HOUSE_WALL_MATERIAL.get(config.style, "wall_wood")
+        for z in range(config.num_layers):
             layer = map_container.layers[z]
             # 1. Draw floor (filled rectangle of floorboards)
-            draw_rectangle(layer, start_x, start_y, w, h, "floor_wood", filled=True)
+            draw_rectangle(layer, config.start_x, config.start_y, config.w, config.h, "floor_wood", filled=True)
             # 2. Draw walls (hollow rectangle, material per style)
-            draw_rectangle(layer, start_x, start_y, w, h, wall_id, filled=False)
-            self._add_windows(layer, start_x, start_y, w, h)
+            draw_rectangle(layer, config.start_x, config.start_y, config.w, config.h, wall_id, filled=False)
+            self._add_windows(layer, config)
             if z == 0:
                 # Front door in the south wall (matches the exterior shell)
-                layer.tiles[start_y + h - 1][start_x + w // 2].set_type("door_wood")
+                layer.tiles[config.start_y + config.h - 1][config.start_x + config.w // 2].set_type("door_wood")
 
             # 3. Place stairs
             # Alternate positions to ensure they never overlap on the same layer
-            sx_up, sy_up = start_x + w - 2, start_y + 2
-            sx_down, sy_down = start_x + 2, start_y + 2
+            sx_up, sy_up = config.start_x + config.w - 2, config.start_y + 2
+            sx_down, sy_down = config.start_x + 2, config.start_y + 2
 
             pos_up = (sx_up, sy_up) if z % 2 == 0 else (sx_down, sy_down)
             pos_down = (sx_down, sy_down) if z % 2 == 0 else (sx_up, sy_up)
 
-            if z < num_layers - 1:
+            if z < config.num_layers - 1:
                 # Stairs Up
                 world.create_entity(
                     MapBound(),
@@ -183,21 +290,19 @@ class MapGenerator:
                     Name("Stairs Down"),
                 )
 
-        self._furnish_house(map_container, start_x, start_y, w, h, num_layers, style)
+        self._furnish_house(map_container, config)
 
     @staticmethod
-    def _add_windows(layer: MapLayer, start_x: int, start_y: int, w: int, h: int) -> None:
+    def _add_windows(layer: MapLayer, config: HouseGenConfig) -> None:
         """Cut windows into the north, west and east walls (every 3rd tile)."""
-        for x in range(start_x + 2, start_x + w - 2, 3):
-            layer.tiles[start_y][x].set_type("wall_window")
-        for y in range(start_y + 2, start_y + h - 2, 3):
-            layer.tiles[y][start_x].set_type("wall_window")
-            layer.tiles[y][start_x + w - 1].set_type("wall_window")
+        for x in range(config.start_x + 2, config.start_x + config.w - 2, 3):
+            layer.tiles[config.start_y][x].set_type("wall_window")
+        for y in range(config.start_y + 2, config.start_y + config.h - 2, 3):
+            layer.tiles[y][config.start_x].set_type("wall_window")
+            layer.tiles[y][config.start_x + config.w - 1].set_type("wall_window")
 
     @staticmethod
-    def _furnish_house(
-        map_container: MapContainer, start_x: int, start_y: int, w: int, h: int, num_layers: int, style: str
-    ) -> None:
+    def _furnish_house(map_container: MapContainer, config: HouseGenConfig) -> None:
         """Place furniture tiles according to the house style.
 
         Both stair corners and the entry tile in front of the door are
@@ -206,9 +311,9 @@ class MapGenerator:
         tiles, which keeps small houses from being overstuffed.
         """
         anchors = [
-            (start_x + w - 2, start_y + 2),
-            (start_x + 2, start_y + 2),
-            (start_x + w // 2, start_y + h - 2),
+            (config.start_x + config.w - 2, config.start_y + 2),
+            (config.start_x + 2, config.start_y + 2),
+            (config.start_x + config.w // 2, config.start_y + config.h - 2),
         ]
         reserved = set()
         for ax, ay in anchors:
@@ -217,7 +322,10 @@ class MapGenerator:
         def place(layer, x, y, type_id):
             if (x, y) in reserved:
                 return
-            if not (start_x < x < start_x + w - 1 and start_y < y < start_y + h - 1):
+            if not (
+                config.start_x < x < config.start_x + config.w - 1
+                and config.start_y < y < config.start_y + config.h - 1
+            ):
                 return
             tile = layer.tiles[y][x]
             if tile.walkable and tile._type_id == "floor_wood":
@@ -228,44 +336,44 @@ class MapGenerator:
             place(layer, x - 1, y, "furniture_chair")
             place(layer, x + 1, y, "furniture_chair")
 
-        cx, cy = start_x + w // 2, start_y + h // 2
-        for z in range(num_layers):
+        cx, cy = config.start_x + config.w // 2, config.start_y + config.h // 2
+        for z in range(config.num_layers):
             layer = map_container.layers[z]
             if z == 0:
-                if style == "tavern":
+                if config.style == "tavern":
                     # Bar counter along the north side, barrels behind it
-                    for x in range(start_x + 3, min(start_x + 7, start_x + w - 3)):
-                        place(layer, x, start_y + 2, "furniture_counter")
-                    place(layer, start_x + 1, start_y + 1, "furniture_barrel")
-                    place(layer, start_x + 1, start_y + 3, "furniture_barrel")
+                    for x in range(config.start_x + 3, min(config.start_x + 7, config.start_x + config.w - 3)):
+                        place(layer, x, config.start_y + 2, "furniture_counter")
+                    place(layer, config.start_x + 1, config.start_y + 1, "furniture_barrel")
+                    place(layer, config.start_x + 1, config.start_y + 3, "furniture_barrel")
                     table_with_chairs(layer, cx, cy)
-                    table_with_chairs(layer, start_x + 4, cy + 2)
-                    table_with_chairs(layer, start_x + w - 4, cy + 2)
-                elif style == "shop":
+                    table_with_chairs(layer, config.start_x + 4, cy + 2)
+                    table_with_chairs(layer, config.start_x + config.w - 4, cy + 2)
+                elif config.style == "shop":
                     # Sales counter mid-room, stocked shelves along the north wall
                     for x in range(cx - 2, cx + 2):
                         place(layer, x, cy, "furniture_counter")
-                    for x in range(start_x + 2, start_x + w - 2, 2):
-                        place(layer, x, start_y + 1, "furniture_shelf")
-                    place(layer, start_x + 1, start_y + h - 3, "furniture_barrel")
-                    place(layer, start_x + w - 2, start_y + h - 3, "furniture_barrel")
+                    for x in range(config.start_x + 2, config.start_x + config.w - 2, 2):
+                        place(layer, x, config.start_y + 1, "furniture_shelf")
+                    place(layer, config.start_x + 1, config.start_y + config.h - 3, "furniture_barrel")
+                    place(layer, config.start_x + config.w - 2, config.start_y + config.h - 3, "furniture_barrel")
                 else:  # home
-                    place(layer, start_x + 1, start_y + 1, "furniture_bed")
-                    place(layer, cx, start_y + 1, "fireplace")
+                    place(layer, config.start_x + 1, config.start_y + 1, "furniture_bed")
+                    place(layer, cx, config.start_y + 1, "fireplace")
                     table_with_chairs(layer, cx, cy)
-                    place(layer, start_x + 1, cy, "furniture_shelf")
+                    place(layer, config.start_x + 1, cy, "furniture_shelf")
             else:
-                if style == "tavern":
+                if config.style == "tavern":
                     # Guest rooms: a row of beds under the north windows
-                    for x in range(start_x + 2, start_x + w - 2, 3):
-                        place(layer, x, start_y + 1, "furniture_bed")
-                elif style == "shop":
+                    for x in range(config.start_x + 2, config.start_x + config.w - 2, 3):
+                        place(layer, x, config.start_y + 1, "furniture_bed")
+                elif config.style == "shop":
                     # Storage floor
-                    for x in range(start_x + 2, start_x + w - 2, 2):
-                        place(layer, x, start_y + 1, "furniture_barrel")
+                    for x in range(config.start_x + 2, config.start_x + config.w - 2, 2):
+                        place(layer, x, config.start_y + 1, "furniture_barrel")
                 else:
-                    place(layer, cx, start_y + 1, "furniture_bed")
-                    place(layer, cx + 1, start_y + 1, "furniture_shelf")
+                    place(layer, cx, config.start_y + 1, "furniture_bed")
+                    place(layer, cx + 1, config.start_y + 1, "furniture_shelf")
 
     def create_world(self, world, world_graph) -> None:
         """Build a map for every location on the world graph, then activate
@@ -280,7 +388,14 @@ class MapGenerator:
                 scenario_path = f"assets/data/scenarios/{location.scenario}.json"
                 self.create_scenario(world, scenario_path, map_id=location.id)
             elif location.type == "poi":
-                self.create_dungeon(world, map_id=location.id, seed=self._map_seed(location.id))
+                self.create_dungeon(
+                    world,
+                    map_id=location.id,
+                    seed=self._map_seed(location.id),
+                    monsters=location.monsters or None,
+                    cache=location.cache or None,
+                    resources=location.resources or None,
+                )
 
         start_id = world_graph.start_location_id
         self.map_service.set_active_map(start_id)
@@ -395,11 +510,18 @@ class MapGenerator:
             sx, sy = get_nearest_walkable_tile(village_layers[0], station["pos"][0], station["pos"][1])
             village_layers[0].tiles[sy][sx].set_type(STATION_TILES.get(station["type"], "station_forge"))
 
+        # Open-shelter workshops: roofed but wall-less workspaces wrapping a
+        # station, with the roof drawn as a cutaway overlay (multi-level reveal).
+        for shelter in config.get("shelters", []):
+            self.build_shelter(world, village_layers, shelter)
+
         # Scenario-authored resource nodes (grain field, ore vein): bump to
-        # harvest raw materials. Created as entities before freeze.
+        # harvest raw materials. Created as entities before freeze. Each node is
+        # then dressed into a real map object (field / outcrop / pond).
         for node in config.get("resources", []):
             rx, ry = get_nearest_walkable_tile(village_layers[0], node["pos"][0], node["pos"][1])
             create_resource_node(world, node["kind"], rx, ry, 0)
+            self._decorate_resource(village_layers[0], node["kind"], rx, ry)
 
         # --- SPAWN VILLAGE NPCS ---
         for npc in config.get("village_npcs", []):
@@ -433,7 +555,23 @@ class MapGenerator:
             self.map_service.register_map(h["id"], h_container)
 
             # Populate house interior
-            self.add_house_to_map(world, h_container, 0, 0, hi, hj, floors, style=h.get("style", "home"))
+            house_config = HouseGenConfig(
+                start_x=0,
+                start_y=0,
+                w=hi,
+                h=hj,
+                num_layers=floors,
+                style=h.get("style", "home"),
+            )
+            self.add_house_to_map(world, h_container, house_config)
+
+            # An enterable workshop carries its crafting station indoors: bump
+            # it inside to use the bench. Upper floors then show off the layered
+            # rendering as you climb (e.g. a mill's grinding floor above).
+            if h.get("station"):
+                station_tile = STATION_TILES.get(h["station"], "station_forge")
+                stx, sty = get_nearest_walkable_tile(h_container.layers[0], hi // 2, 2)
+                h_container.layers[0].tiles[sty][stx].set_type(station_tile)
 
             # --- SPAWN HOUSE NPCS ---
             for npc in h.get("npcs", []):
@@ -622,6 +760,9 @@ class MapGenerator:
         height: int = 30,
         seed: int | None = None,
         monster_density: float = 0.025,
+        monsters: list[str] | None = None,
+        cache: list[str] | None = None,
+        resources: list[str] | None = None,
     ) -> MapContainer:
         """Generate a small procedural dungeon for a POI (ROADMAP Phase F).
 
@@ -630,10 +771,18 @@ class MapGenerator:
         Spawns monsters and places a hidden cache in the last room — the
         secret the Investigate/perception mechanics can uncover.
 
+        ``monsters`` / ``cache`` / ``resources`` theme the place (see the POI
+        entries in world.json): the monster pool that guards it, the items in
+        its hidden cache, and any resource-node kinds to seed through its rooms
+        (e.g. ore and coal veins in the Abandoned Mine). Each falls back to the
+        generic dungeon defaults when empty.
+
         The map is registered and left frozen (like create_scenario);
         arrival_pos is the center of the first room.
         """
         from game.components import Hidden
+
+        cache = cache or ["steel_sword", "health_potion"]
 
         rng = random.Random(seed)
         tiles = [[Tile(type_id="wall_stone") for _ in range(width)] for _ in range(height)]
@@ -674,12 +823,20 @@ class MapGenerator:
             raise ValueError(f"Map id '{map_id}' is already registered.")
         self.map_service.register_map(map_id, container)
 
-        # 3. Monsters guard the place
-        SpawnService.spawn_monsters(world, container, density=monster_density)
+        # 3. Monsters guard the place (themed pool when the POI defines one)
+        SpawnService.spawn_monsters(world, container, density=monster_density, monsters=monsters)
+
+        # 3b. Resource nodes seeded through the middle rooms (themed POIs only,
+        # e.g. ore/coal/gem veins in the Abandoned Mine). Each goes at a room
+        # centre so its bump neighbours stay clear.
+        if resources and len(rooms) > 2:
+            for i, kind in enumerate(resources):
+                rx, ry = center(rooms[1 + (i % (len(rooms) - 2))])
+                create_resource_node(world, kind, rx, ry, 0)
 
         # 4. Hidden cache in the last room (Phase F secret)
         cx, cy = center(rooms[-1])
-        for template_id in ("steel_sword", "health_potion"):
+        for template_id in cache:
             item = ItemFactory.create_on_ground(world, template_id, cx, cy, 0)
             _esper.add_component(item, Hidden())
 

@@ -165,18 +165,20 @@ def test_bump_friendly_npc_talks():
 def test_bump_hostile_npc_fights_to_death_with_loot():
     h = _Harness()
     x, y = h.teleport_to_open_spot()
-    orc = EntityFactory.create(esper, "orc", x + 1, y, h.player_pos().layer)
+    # A boar is hostile and has a guaranteed venison drop, so the loot assertion
+    # stays deterministic without relying on any monster's (now sub-1.0) rates.
+    boar = EntityFactory.create(esper, "boar", x + 1, y, h.player_pos().layer)
 
     for _ in range(20):
-        if not esper.entity_exists(orc) or not esper.has_component(orc, AI):
+        if not esper.entity_exists(boar) or not esper.has_component(boar, AI):
             break
         h.key(pygame.K_RIGHT)
         h.frames()
     else:
-        raise AssertionError("orc did not die within 20 bump attacks")
+        raise AssertionError("boar did not die within 20 bump attacks")
 
     loot_here = [ent for ent, (pos, _) in esper.get_components(Position, Portable) if (pos.x, pos.y) == (x + 1, y)]
-    assert loot_here, "orc loot table (chance 1.0) should drop items at the death position"
+    assert loot_here, "a guaranteed loot drop (venison) should land at the death position"
 
 
 def test_portal_roundtrip():

@@ -36,6 +36,41 @@ class MapContainer:
         tile = self.get_tile(x, y, layer_idx)
         return tile.walkable if tile else False
 
+    def roof_cutaway(self, px: int, py: int, player_layer: int = 0) -> set[tuple[int, int]]:
+        """Tiles whose roof should be peeled away because the player stands under it.
+
+        Open-shelter workshops carry a roof on a layer above the player. While
+        the player is outside, that roof is drawn over the world (the structure
+        reads as a building). The moment the player steps onto a tile covered by
+        a roof, the *whole* connected roof footprint is hidden so the workstation
+        beneath shows through — a cutaway reveal.
+
+        Returns the set of (x, y) positions making up the roof directly above the
+        player, or an empty set when the player is not under any roof. Derived
+        from the live tiles (no stored state), so it survives save/load.
+        """
+        roof_layer = None
+        for i in range(player_layer + 1, len(self.layers)):
+            tile = self.get_tile(px, py, i)
+            if tile and tile.is_roof:
+                roof_layer = i
+                break
+        if roof_layer is None:
+            return set()
+
+        footprint: set[tuple[int, int]] = set()
+        stack = [(px, py)]
+        while stack:
+            x, y = stack.pop()
+            if (x, y) in footprint:
+                continue
+            tile = self.get_tile(x, y, roof_layer)
+            if not (tile and tile.is_roof):
+                continue
+            footprint.add((x, y))
+            stack.extend([(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)])
+        return footprint
+
     def on_exit(self, current_turn: int):
         """Updates the last visited turn and transitions VISIBLE tiles to SHROUDED."""
         self.last_visited_turn = current_turn

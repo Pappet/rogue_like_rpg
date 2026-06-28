@@ -22,11 +22,11 @@ class RenderPipeline:
         """
         self.ctx = ctx
 
-    def _player_layer(self) -> int:
+    def _player_pos(self) -> Position | None:
         try:
-            return esper.component_for_entity(self.ctx.player_entity, Position).layer
+            return esper.component_for_entity(self.ctx.player_entity, Position)
         except KeyError:
-            return 0
+            return None
 
     def draw(self, surface) -> None:
         ctx = self.ctx
@@ -34,17 +34,23 @@ class RenderPipeline:
         camera = ctx.camera
 
         surface.fill((0, 0, 0))
-        player_layer = self._player_layer()
+        player_pos = self._player_pos()
+        player_layer = player_pos.layer if player_pos else 0
         viewport_rect = pygame.Rect(camera.offset_x, camera.offset_y, camera.width, camera.height)
+
+        # Which roof (if any) is peeled away because the player walked under it.
+        roof_cutaway = set()
+        if ctx.map_container and player_pos:
+            roof_cutaway = ctx.map_container.roof_cutaway(player_pos.x, player_pos.y, player_layer)
 
         # 1. Render map (clipped to viewport)
         surface.set_clip(viewport_rect)
         if ctx.map_container:
-            ctx.render_service.render_map(surface, ctx.map_container, camera, player_layer)
+            ctx.render_service.render_map(surface, ctx.map_container, camera, player_layer, roof_cutaway)
 
         # 2. Render entities via ECS
         if systems.render_system:
-            systems.render_system.process(surface, player_layer)
+            systems.render_system.process(surface, player_layer, roof_cutaway)
 
         # 3. Debug overlay
         if ctx.debug_flags.master and systems.debug_render_system:

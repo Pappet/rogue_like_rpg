@@ -18,7 +18,8 @@ class RenderSystem(esper.Processor, MapAwareSystem):
         self.font = pygame.font.SysFont("monospace", TILE_SIZE)
         self.fct_font = pygame.font.SysFont("monospace", 20, bold=True)
 
-    def process(self, surface, player_layer=0):
+    def process(self, surface, player_layer=0, roof_cutaway=None):
+        roof_cutaway = roof_cutaway or set()
         # 1. Draw range highlight and targeting cursor
         for ent, targeting in esper.get_component(Targeting):
             self.draw_targeting_ui(surface, targeting)
@@ -43,6 +44,12 @@ class RenderSystem(esper.Processor, MapAwareSystem):
                         break
 
             if occluded:
+                continue
+
+            # Hidden beneath an intact roof: an open-shelter roof sits above the
+            # player's layer and hides whoever stands under it, until the player
+            # steps in and the footprint is peeled away (roof_cutaway).
+            if (pos.x, pos.y) not in roof_cutaway and self._under_roof(pos, player_layer):
                 continue
 
             # Check if entity's position is visible
@@ -124,6 +131,14 @@ class RenderSystem(esper.Processor, MapAwareSystem):
                 fct_surface = self.fct_font.render(fct.text, True, fct.color)
                 fct_surface.set_alpha(alpha)
                 surface.blit(fct_surface, (screen_x, screen_y))
+
+    def _under_roof(self, pos, player_layer) -> bool:
+        """True if a roof tile sits above this entity on a layer over the player."""
+        for i in range(player_layer + 1, len(self._map_container.layers)):
+            tile = self._map_container.get_tile(pos.x, pos.y, i)
+            if tile and tile.is_roof:
+                return True
+        return False
 
     def draw_targeting_ui(self, surface, targeting):
         # Select colors based on targeting mode

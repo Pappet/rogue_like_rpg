@@ -23,6 +23,10 @@ class TileType:
     color: tuple[int, int, int]
     base_description: str = ""
     occludes_below: bool = False
+    # A roof tile sits on a layer above the player and is drawn over the world
+    # as a "cutaway" overlay — visible from outside, peeled away when the
+    # player steps under the structure (open-shelter workshops).
+    roof: bool = False
     # Bumping into this (non-walkable) tile offers rest — e.g. a bed.
     provides_rest: bool = False
     # Bumping into this (non-walkable) tile opens a crafting station of this
