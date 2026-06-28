@@ -1,6 +1,7 @@
 import json
 import os
 import random
+from dataclasses import dataclass
 
 import esper as _esper
 
@@ -90,6 +91,18 @@ def wilderness_map_id(settlement_id: str) -> str:
 def wilderness_arrival_pos() -> tuple[int, int]:
     """Where the player enters the wilderness (kept clear of features)."""
     return (WILDERNESS_SIZE // 2, WILDERNESS_SIZE - 3)
+
+
+@dataclass
+class HouseGenConfig:
+    """Configuration for procedural house generation."""
+
+    start_x: int
+    start_y: int
+    w: int
+    h: int
+    num_layers: int
+    style: str = "home"
 
 
 class MapGenerator:
@@ -209,12 +222,7 @@ class MapGenerator:
         self,
         world,
         map_container: MapContainer,
-        start_x: int,
-        start_y: int,
-        w: int,
-        h: int,
-        num_layers: int,
-        style: str = "home",
+        config: HouseGenConfig,
     ):
         """
         Populates a MapContainer with a house structure.
@@ -222,14 +230,10 @@ class MapGenerator:
         Args:
             world: The ECS world.
             map_container: The MapContainer to populate.
-            start_x, start_y: Top-left corner of the house.
-            w, h: Dimensions of the house.
-            num_layers: Number of floors.
-            style: Furnishing style ("home", "tavern" or "shop") — drives
-                wall material, windows and furniture placement.
+            config: Configuration for the house (dimensions, style, etc).
         """
         # Ensure we have enough layers in the container
-        while len(map_container.layers) < num_layers:
+        while len(map_container.layers) < config.num_layers:
             # Create a blank layer if needed
             tiles = []
             for y in range(map_container.height):
@@ -247,27 +251,27 @@ class MapGenerator:
                 map_id = mid
                 break
 
-        wall_id = HOUSE_WALL_MATERIAL.get(style, "wall_wood")
-        for z in range(num_layers):
+        wall_id = HOUSE_WALL_MATERIAL.get(config.style, "wall_wood")
+        for z in range(config.num_layers):
             layer = map_container.layers[z]
             # 1. Draw floor (filled rectangle of floorboards)
-            draw_rectangle(layer, start_x, start_y, w, h, "floor_wood", filled=True)
+            draw_rectangle(layer, config.start_x, config.start_y, config.w, config.h, "floor_wood", filled=True)
             # 2. Draw walls (hollow rectangle, material per style)
-            draw_rectangle(layer, start_x, start_y, w, h, wall_id, filled=False)
-            self._add_windows(layer, start_x, start_y, w, h)
+            draw_rectangle(layer, config.start_x, config.start_y, config.w, config.h, wall_id, filled=False)
+            self._add_windows(layer, config)
             if z == 0:
                 # Front door in the south wall (matches the exterior shell)
-                layer.tiles[start_y + h - 1][start_x + w // 2].set_type("door_wood")
+                layer.tiles[config.start_y + config.h - 1][config.start_x + config.w // 2].set_type("door_wood")
 
             # 3. Place stairs
             # Alternate positions to ensure they never overlap on the same layer
-            sx_up, sy_up = start_x + w - 2, start_y + 2
-            sx_down, sy_down = start_x + 2, start_y + 2
+            sx_up, sy_up = config.start_x + config.w - 2, config.start_y + 2
+            sx_down, sy_down = config.start_x + 2, config.start_y + 2
 
             pos_up = (sx_up, sy_up) if z % 2 == 0 else (sx_down, sy_down)
             pos_down = (sx_down, sy_down) if z % 2 == 0 else (sx_up, sy_up)
 
-            if z < num_layers - 1:
+            if z < config.num_layers - 1:
                 # Stairs Up
                 world.create_entity(
                     MapBound(),
@@ -286,21 +290,19 @@ class MapGenerator:
                     Name("Stairs Down"),
                 )
 
-        self._furnish_house(map_container, start_x, start_y, w, h, num_layers, style)
+        self._furnish_house(map_container, config)
 
     @staticmethod
-    def _add_windows(layer: MapLayer, start_x: int, start_y: int, w: int, h: int) -> None:
+    def _add_windows(layer: MapLayer, config: HouseGenConfig) -> None:
         """Cut windows into the north, west and east walls (every 3rd tile)."""
-        for x in range(start_x + 2, start_x + w - 2, 3):
-            layer.tiles[start_y][x].set_type("wall_window")
-        for y in range(start_y + 2, start_y + h - 2, 3):
-            layer.tiles[y][start_x].set_type("wall_window")
-            layer.tiles[y][start_x + w - 1].set_type("wall_window")
+        for x in range(config.start_x + 2, config.start_x + config.w - 2, 3):
+            layer.tiles[config.start_y][x].set_type("wall_window")
+        for y in range(config.start_y + 2, config.start_y + config.h - 2, 3):
+            layer.tiles[y][config.start_x].set_type("wall_window")
+            layer.tiles[y][config.start_x + config.w - 1].set_type("wall_window")
 
     @staticmethod
-    def _furnish_house(
-        map_container: MapContainer, start_x: int, start_y: int, w: int, h: int, num_layers: int, style: str
-    ) -> None:
+    def _furnish_house(map_container: MapContainer, config: HouseGenConfig) -> None:
         """Place furniture tiles according to the house style.
 
         Both stair corners and the entry tile in front of the door are
@@ -309,9 +311,9 @@ class MapGenerator:
         tiles, which keeps small houses from being overstuffed.
         """
         anchors = [
-            (start_x + w - 2, start_y + 2),
-            (start_x + 2, start_y + 2),
-            (start_x + w // 2, start_y + h - 2),
+            (config.start_x + config.w - 2, config.start_y + 2),
+            (config.start_x + 2, config.start_y + 2),
+            (config.start_x + config.w // 2, config.start_y + config.h - 2),
         ]
         reserved = set()
         for ax, ay in anchors:
@@ -320,7 +322,10 @@ class MapGenerator:
         def place(layer, x, y, type_id):
             if (x, y) in reserved:
                 return
-            if not (start_x < x < start_x + w - 1 and start_y < y < start_y + h - 1):
+            if not (
+                config.start_x < x < config.start_x + config.w - 1
+                and config.start_y < y < config.start_y + config.h - 1
+            ):
                 return
             tile = layer.tiles[y][x]
             if tile.walkable and tile._type_id == "floor_wood":
@@ -331,44 +336,44 @@ class MapGenerator:
             place(layer, x - 1, y, "furniture_chair")
             place(layer, x + 1, y, "furniture_chair")
 
-        cx, cy = start_x + w // 2, start_y + h // 2
-        for z in range(num_layers):
+        cx, cy = config.start_x + config.w // 2, config.start_y + config.h // 2
+        for z in range(config.num_layers):
             layer = map_container.layers[z]
             if z == 0:
-                if style == "tavern":
+                if config.style == "tavern":
                     # Bar counter along the north side, barrels behind it
-                    for x in range(start_x + 3, min(start_x + 7, start_x + w - 3)):
-                        place(layer, x, start_y + 2, "furniture_counter")
-                    place(layer, start_x + 1, start_y + 1, "furniture_barrel")
-                    place(layer, start_x + 1, start_y + 3, "furniture_barrel")
+                    for x in range(config.start_x + 3, min(config.start_x + 7, config.start_x + config.w - 3)):
+                        place(layer, x, config.start_y + 2, "furniture_counter")
+                    place(layer, config.start_x + 1, config.start_y + 1, "furniture_barrel")
+                    place(layer, config.start_x + 1, config.start_y + 3, "furniture_barrel")
                     table_with_chairs(layer, cx, cy)
-                    table_with_chairs(layer, start_x + 4, cy + 2)
-                    table_with_chairs(layer, start_x + w - 4, cy + 2)
-                elif style == "shop":
+                    table_with_chairs(layer, config.start_x + 4, cy + 2)
+                    table_with_chairs(layer, config.start_x + config.w - 4, cy + 2)
+                elif config.style == "shop":
                     # Sales counter mid-room, stocked shelves along the north wall
                     for x in range(cx - 2, cx + 2):
                         place(layer, x, cy, "furniture_counter")
-                    for x in range(start_x + 2, start_x + w - 2, 2):
-                        place(layer, x, start_y + 1, "furniture_shelf")
-                    place(layer, start_x + 1, start_y + h - 3, "furniture_barrel")
-                    place(layer, start_x + w - 2, start_y + h - 3, "furniture_barrel")
+                    for x in range(config.start_x + 2, config.start_x + config.w - 2, 2):
+                        place(layer, x, config.start_y + 1, "furniture_shelf")
+                    place(layer, config.start_x + 1, config.start_y + config.h - 3, "furniture_barrel")
+                    place(layer, config.start_x + config.w - 2, config.start_y + config.h - 3, "furniture_barrel")
                 else:  # home
-                    place(layer, start_x + 1, start_y + 1, "furniture_bed")
-                    place(layer, cx, start_y + 1, "fireplace")
+                    place(layer, config.start_x + 1, config.start_y + 1, "furniture_bed")
+                    place(layer, cx, config.start_y + 1, "fireplace")
                     table_with_chairs(layer, cx, cy)
-                    place(layer, start_x + 1, cy, "furniture_shelf")
+                    place(layer, config.start_x + 1, cy, "furniture_shelf")
             else:
-                if style == "tavern":
+                if config.style == "tavern":
                     # Guest rooms: a row of beds under the north windows
-                    for x in range(start_x + 2, start_x + w - 2, 3):
-                        place(layer, x, start_y + 1, "furniture_bed")
-                elif style == "shop":
+                    for x in range(config.start_x + 2, config.start_x + config.w - 2, 3):
+                        place(layer, x, config.start_y + 1, "furniture_bed")
+                elif config.style == "shop":
                     # Storage floor
-                    for x in range(start_x + 2, start_x + w - 2, 2):
-                        place(layer, x, start_y + 1, "furniture_barrel")
+                    for x in range(config.start_x + 2, config.start_x + config.w - 2, 2):
+                        place(layer, x, config.start_y + 1, "furniture_barrel")
                 else:
-                    place(layer, cx, start_y + 1, "furniture_bed")
-                    place(layer, cx + 1, start_y + 1, "furniture_shelf")
+                    place(layer, cx, config.start_y + 1, "furniture_bed")
+                    place(layer, cx + 1, config.start_y + 1, "furniture_shelf")
 
     def create_world(self, world, world_graph) -> None:
         """Build a map for every location on the world graph, then activate
@@ -550,7 +555,15 @@ class MapGenerator:
             self.map_service.register_map(h["id"], h_container)
 
             # Populate house interior
-            self.add_house_to_map(world, h_container, 0, 0, hi, hj, floors, style=h.get("style", "home"))
+            house_config = HouseGenConfig(
+                start_x=0,
+                start_y=0,
+                w=hi,
+                h=hj,
+                num_layers=floors,
+                style=h.get("style", "home"),
+            )
+            self.add_house_to_map(world, h_container, house_config)
 
             # An enterable workshop carries its crafting station indoors: bump
             # it inside to use the bench. Upper floors then show off the layered
