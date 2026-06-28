@@ -391,12 +391,13 @@ class AISystem(esper.Processor):
         if not (0 <= layer_idx < len(map_container.layers)):
             return lambda x, y: False
 
+        layer_tiles = map_container.layers[layer_idx].tiles
+        height = len(layer_tiles)
+        width = len(layer_tiles[0]) if height > 0 else 0
+
         def is_transparent(x, y):
-            if 0 <= layer_idx < len(map_container.layers):
-                layer = map_container.layers[layer_idx]
-                if 0 <= y < len(layer.tiles) and 0 <= x < len(layer.tiles[y]):
-                    tile = layer.tiles[y][x]
-                    return tile.is_transparent
+            if 0 <= y < height and 0 <= x < width:
+                return layer_tiles[y][x].is_transparent
             return False
 
         return is_transparent
