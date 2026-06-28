@@ -121,7 +121,7 @@ class PickupWindow(UIWindow):
         if not self.items:
             theme.draw_text(
                 surface,
-                "There is nothing here to pick up.",
+                "There is nothing here to pick up. Explore to find items.",
                 self.font,
                 UI_THEME_INK_MUTED,
                 (list_rect.x + 12, list_rect.y + 14),
@@ -130,7 +130,11 @@ class PickupWindow(UIWindow):
             self._draw_list(surface, list_rect)
             self._draw_detail(surface, detail_rect)
 
-        hint_text = "[Up/Down] Select   [Enter] Take   [A] Take all   [Esc] Close"
+        if not self.items:
+            hint_text = "[Esc] Close"
+        else:
+            hint_text = "[Up/Down] Select   [Enter] Take   [A] Take all   [Esc] Close"
+
         theme.draw_text(
             surface,
             hint_text,
