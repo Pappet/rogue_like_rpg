@@ -3,6 +3,7 @@ import pygame
 
 from config import (
     UI_SPACING_X,
+    UI_THEME_COIN,
     UI_THEME_DANGER,
     UI_THEME_GOLD,
     UI_THEME_HP,
@@ -13,12 +14,13 @@ from config import (
     UI_THEME_MANA,
     UI_THEME_MANA_HI,
     UI_THEME_SELECT_EDGE,
+    UI_THEME_XP,
     GameStates,
 )
 from core.input_manager import InputCommand
 from core.ui import theme
 from core.ui.window_base import UIWindow
-from game.components import EffectiveStats, Skills, Stats
+from game.components import EffectiveStats, Inventory, Portable, Skills, Stats
 from game.services.skill_service import SKILLS, level_for_xp, progress_into_level
 
 # Reference ceiling for the attribute bars (purely visual scaling).
@@ -160,13 +162,33 @@ class CharacterWindow(UIWindow):
             y += 40
 
         theme.draw_divider(surface, rect.x + 14, rect.right - 14, y, ornament=False)
-        theme.draw_text(
+
+        cur_w = 0.0
+        inv_header = self.world.try_component(self.player_entity, Inventory)
+        if inv_header:
+            for item_id in inv_header.items:
+                port = self.world.try_component(item_id, Portable)
+                if port:
+                    cur_w += port.weight
+        max_w = stats.max_carry_weight
+        load = (cur_w / max_w) if max_w > 0 else 0.0
+
+        if load >= 1.0:
+            load_color = UI_THEME_DANGER
+        elif load >= 0.85:
+            load_color = UI_THEME_COIN
+        else:
+            load_color = UI_THEME_XP
+
+        y += 14
+        theme.draw_bar(
             surface,
-            f"Carry capacity: {stats.max_carry_weight} kg",
-            self.small_font,
-            UI_THEME_INK_DIM,
-            (x, y + 10),
-            shadow=False,
+            (x, y, bar_w, 22),
+            min(1.0, load),
+            load_color,
+            hi_color=theme.lighten(load_color, 0.4),
+            label=f"Load   {cur_w:.1f} / {max_w:.1f} kg",
+            font=self.small_font,
         )
 
     def _draw_skills(self, surface, rect):

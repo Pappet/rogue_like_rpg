@@ -25,3 +25,6 @@
 ## 2026-06-21 - Actionable Empty States and Context-Aware Hints
 **Learning:** Displaying non-actionable empty states (e.g., 'There is nothing here to pick up.') and generic footer hints (e.g., '[Enter] Take' when there are no items) increases cognitive load and frustration.
 **Action:** For Pygame UI windows, follow the convention of making empty states actionable (providing guidance on how to populate them) and making footer keyboard hints context-aware by dynamically hiding invalid inputs.
+## 2024-10-25 - Carry Capacity Visual Indicator
+**Learning:** Displaying carry capacity as static text requires the user to mentally compute their current load, creating unnecessary cognitive overhead.
+**Action:** Replace static magnitude/capacity numbers with visual progress bars (e.g., `theme.draw_bar`) with color thresholds (green -> amber -> red) for instant visual feedback on limits.
