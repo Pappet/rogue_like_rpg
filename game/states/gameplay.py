@@ -1,12 +1,12 @@
 import random
 
 import esper
-import pygame
 
-from config import UI_CRAFT_RECT, UI_MODAL_RECT, UI_REST_RECT, LogCategory
+from config import UI_CRAFT_RECT, UI_MODAL_RECT, UI_REST_RECT
 from core.rng import derive_seed
 from game.controllers.input_controller import InputController
 from game.controllers.render_pipeline import RenderPipeline
+from game.controllers.request_router import RequestRouter
 from game.controllers.turn_orchestrator import TurnOrchestrator
 from game.services import rest_service
 from game.services.crafting_service import CraftingService
@@ -39,6 +39,7 @@ class GameplayState(GameState):
         self.turn_orchestrator = None
         self.render_pipeline = None
         self.map_transition_service = None
+        self.requests = None
 
     @property
     def turn_system(self):
@@ -83,69 +84,48 @@ class GameplayState(GameState):
         # Run-seeded RNG for crafting quality rolls (reproducible per world).
         self._craft_rng = random.Random(derive_seed(ctx.world_seed, "crafting"))
 
-        # Event subscriptions (facts/requests dispatched by lower layers)
-        esper.set_handler("map_change_requested", self.map_transition_service.transition)
-        esper.set_handler("player_died", self._on_player_died)
-        esper.set_handler("dialogue_requested", self._on_dialogue_requested)
-        esper.set_handler("trade_requested", self._on_trade_requested)
-        esper.set_handler("quests_requested", self._on_quests_requested)
-        esper.set_handler("rest_requested", self._on_rest_requested)
-        esper.set_handler("craft_requested", self._on_craft_requested)
-        esper.set_handler("harvest_requested", self._on_harvest_requested)
-        esper.set_handler("pickup_choice_requested", self._on_pickup_choice_requested)
+        # Requests dispatched by lower layers, answered here (see RequestRouter).
+        # Re-entering gameplay rebuilds the collaborators above, so the previous
+        # run's subscriptions must go or both generations would fire.
+        if self.requests is not None:
+            self.requests.clear()
+        self.requests = RequestRouter(ctx.ui_stack)
+        self.requests.on("map_change_requested", self.map_transition_service.transition)
+        self.requests.on("player_died", self._on_player_died)
+        self.requests.on("harvest_requested", self._on_harvest_requested)
+        self.requests.modal("dialogue_requested", UI_MODAL_RECT, lambda rect, npc: DialogueWindow(rect, ctx, npc))
+        self.requests.modal(
+            "trade_requested", UI_MODAL_RECT, lambda rect, npc: TradeWindow(rect, ctx.player_entity, npc, ctx)
+        )
+        self.requests.modal(
+            "quests_requested", UI_MODAL_RECT, lambda rect, _giver: QuestWindow(rect, ctx, mode="giver")
+        )
+        self.requests.modal("rest_requested", UI_REST_RECT, self._rest_window)
+        self.requests.modal("craft_requested", UI_CRAFT_RECT, self._craft_window)
+        self.requests.modal(
+            "pickup_choice_requested",
+            UI_MODAL_RECT,
+            lambda rect, items: PickupWindow(rect, items, self.input_controller.actions, ctx.input_manager),
+        )
 
     def _on_player_died(self):
         """Handle the player_died event by transitioning to GAME_OVER state."""
         self.done = True
         self.next_state = "GAME_OVER"
 
-    def _on_dialogue_requested(self, npc_entity):
-        """Open the conversation window after bumping a friendly/neutral NPC."""
-        if self.ui_stack.is_active():
-            return
-        rect = pygame.Rect(*UI_MODAL_RECT)
-        self.ui_stack.push(DialogueWindow(rect, self.ctx, npc_entity))
-
-    def _on_quests_requested(self, giver_entity):
-        """Open the quest window after bumping a quest giver."""
-        if self.ui_stack.is_active():
-            return
-        rect = pygame.Rect(*UI_MODAL_RECT)
-        self.ui_stack.push(QuestWindow(rect, self.ctx, mode="giver"))
-
-    def _on_trade_requested(self, merchant_entity):
-        """Open the trade window after bumping into a merchant."""
-        if self.ui_stack.is_active():
-            return
-        rect = pygame.Rect(*UI_MODAL_RECT)
-        self.ui_stack.push(TradeWindow(rect, self.ctx.player_entity, merchant_entity, self.ctx))
-
-    def _on_rest_requested(self, payload=None):
-        """Open the rest/sleep duration picker (bumping a bed or innkeeper)."""
-        if self.ui_stack.is_active():
-            return
-        options = rest_service.sleep_options(self.ctx.world_clock)
-        rect = pygame.Rect(*UI_REST_RECT)
-        self.ui_stack.push(RestWindow(rect, "Rest", options, self.ctx.input_manager, self.rest))
-
-    def _on_craft_requested(self, payload=None):
-        """Open the crafting bench after bumping a station tile (forge, mill...)."""
-        if self.ui_stack.is_active():
-            return
-        station = (payload or {}).get("station", "")
-        rect = pygame.Rect(*UI_CRAFT_RECT)
-        self.ui_stack.push(CraftWindow(rect, self.ctx.player_entity, station, self.ctx, self._craft))
-
     def _on_harvest_requested(self, node_entity):
         """Harvest a resource node the player bumped (immediate, no window)."""
         GatherService.harvest(self.ctx, node_entity)
 
-    def _on_pickup_choice_requested(self, items):
-        """Open the pickup chooser when a tile holds more than one item."""
-        if self.ui_stack.is_active():
-            return
-        rect = pygame.Rect(*UI_MODAL_RECT)
-        self.ui_stack.push(PickupWindow(rect, items, self.input_controller.actions, self.ctx.input_manager))
+    def _rest_window(self, rect, _payload):
+        """The rest/sleep duration picker (bumping a bed or an innkeeper)."""
+        options = rest_service.sleep_options(self.ctx.world_clock)
+        return RestWindow(rect, "Rest", options, self.ctx.input_manager, self.rest)
+
+    def _craft_window(self, rect, payload):
+        """The crafting bench for the station tile the player bumped."""
+        station = (payload or {}).get("station", "")
+        return CraftWindow(rect, self.ctx.player_entity, station, self.ctx, self._craft)
 
     def _craft(self, recipe):
         """CraftWindow callback: perform the craft, then fast-forward the clock.
@@ -161,18 +141,9 @@ class GameplayState(GameState):
         """Fast-forward game time for a chosen rest/wait duration.
 
         Used as the RestWindow callback for both the ACTIONS-list 'Wait' and
-        bed/innkeeper sleeping. Reports the new time and any interruption.
+        bed/innkeeper sleeping.
         """
-        result = self.turn_orchestrator.advance_turns(ticks)
-        clock = self.ctx.world_clock
-        if result["elapsed"] <= 0:
-            esper.dispatch_event("log_message", "[color=red]You can't rest right now.[/color]", None, LogCategory.ALERT)
-            return
-        esper.dispatch_event("log_message", f"Time passes... it is now {clock.hour:02d}:{clock.minute:02d}.")
-        if result["interrupted"]:
-            esper.dispatch_event(
-                "log_message", "[color=red]Something interrupts your rest![/color]", None, LogCategory.ALERT
-            )
+        rest_service.report(self.ctx.world_clock, self.turn_orchestrator.advance_turns(ticks))
 
     def get_event(self, event):
         if not self.ctx:
