@@ -12,10 +12,14 @@ selection reacts to the tier (DialogueService conditions).
 
 import logging
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import esper
 
 from game.components import AIBehaviorState, Alignment, Animal, PlayerTag
+
+if TYPE_CHECKING:  # pragma: no cover - typing only, avoids a runtime import cycle
+    from game_context import GameContext
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +39,7 @@ PRICE_SLOPE = 0.002
 class ReputationService:
     """Tracks and adjusts the player's standing per settlement."""
 
-    ctx: object = None
+    ctx: "GameContext | None" = None
     values: dict[str, int] = field(default_factory=dict)
 
     def __post_init__(self):

@@ -4,6 +4,8 @@ Pure data — no imports from the builders, so every module in the package can
 depend on this one without a cycle.
 """
 
+from typing import TypedDict
+
 WILDERNESS_SIZE = 40
 
 # House style -> wall material for both the exterior shell and the interior.
@@ -37,6 +39,7 @@ DECOR_PAINTABLE = {
     "crop_field",
 }
 
+
 # Resource-node kind -> how it is dressed into a real map object, so harvest
 # nodes read as fields, rocky outcrops and ponds instead of lone glyphs:
 #   tile     — terrain painted around (and optionally under) the node
@@ -44,7 +47,17 @@ DECOR_PAINTABLE = {
 #   blocking — if the decor tile is impassable, its four orthogonal neighbours
 #              are kept clear so the node stays reachable to bump
 #   fill_node— also paint the node's own tile (e.g. a fishing spot in the water)
-RESOURCE_DECOR = {
+class ResourceDecorSpec(TypedDict):
+    """How one resource-node kind is dressed into terrain."""
+
+    tile: str
+    radius: int
+    blocking: bool
+    fill_node: bool
+    chance: float
+
+
+RESOURCE_DECOR: dict[str, ResourceDecorSpec] = {
     "grain_field": {"tile": "crop_field", "radius": 2, "blocking": False, "fill_node": True, "chance": 0.85},
     "herb_patch": {"tile": "floor_grass", "radius": 2, "blocking": False, "fill_node": False, "chance": 0.6},
     "iron_vein": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
@@ -57,10 +70,20 @@ RESOURCE_DECOR = {
     "coal_seam": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
 }
 
+
 # Light props placed by the generator. All burn dusk-to-dawn (night_only):
 # they reveal their surroundings via VisibilitySystem and get a warm glow
 # from the render pipeline once the day/night tint darkens.
-LIGHT_PROPS = {
+class LightProps(TypedDict):
+    """A placeable light prop: glyph, tint, light radius and display name."""
+
+    glyph: str
+    color: tuple[int, int, int]
+    radius: int
+    name: str
+
+
+LIGHT_PROPS: dict[str, LightProps] = {
     "torch": {"glyph": "†", "color": (255, 190, 110), "radius": 4, "name": "Torch"},
     "lantern": {"glyph": "¤", "color": (255, 215, 130), "radius": 4, "name": "Lantern"},
     "campfire": {"glyph": "♨", "color": (255, 150, 60), "radius": 6, "name": "Campfire"},

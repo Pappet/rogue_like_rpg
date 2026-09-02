@@ -103,6 +103,8 @@ def add_house_to_map(
         if mcon == map_container:
             map_id = mid
             break
+    if map_id is None:
+        raise ValueError("add_house_to_map needs a registered container — its stairs portal targets it.")
 
     wall_id = HOUSE_WALL_MATERIAL.get(config.style, "wall_wood")
     for z in range(config.num_layers):

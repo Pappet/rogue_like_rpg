@@ -289,7 +289,7 @@ class TravelEncounterService:
     def _spawn_groups(self, template: EncounterTemplate, container: MapContainer, cy: int) -> None:
         """Spawn the encounter's NPC groups per their placement keyword."""
         layer = container.layers[0]
-        ax, _ = container.arrival_pos
+        ax, _ = container.arrival_pos or (container.width // 2, 0)
         mid_x = container.width // 2
         for spawn in template.spawns:
             side = spawn.get("skirmish_side")

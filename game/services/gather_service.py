@@ -52,6 +52,12 @@ RESOURCE_NODES: dict[str, tuple] = {
 }
 
 
+def _item_name(item_id: str) -> str:
+    """Display name of an item template, falling back to its id."""
+    template = item_registry.get(item_id)
+    return template.name if template else item_id
+
+
 def create_resource_node(world, kind: str, x: int, y: int, layer: int = 0) -> int:
     """Spawn a harvestable node entity of the given kind at (x, y)."""
     item, skill, glyph, color, name, respawn = RESOURCE_NODES[kind]
@@ -61,9 +67,7 @@ def create_resource_node(world, kind: str, x: int, y: int, layer: int = 0) -> in
         Blocker(),
         Renderable(glyph, SpriteLayer.ENTITIES.value, color),
         Name(name),
-        Description(
-            base=f"A {name.lower()}. Bump it to gather {item_registry.get(item).name if item_registry.get(item) else item}."
-        ),
+        Description(base=f"A {name.lower()}. Bump it to gather {_item_name(item)}."),
         ResourceNode(item=item, skill=skill, respawn_ticks=respawn),
     )
 
@@ -123,7 +127,7 @@ class GatherService:
 
         node.ready_at = now + node.respawn_ticks
         SkillService.grant(esper, player, node.skill, GATHER_XP_PER_HARVEST)
-        item_name = item_registry.get(node.item).name if item_registry.get(node.item) else node.item
+        item_name = _item_name(node.item)
         suffix = f" ×{gathered}" if gathered > 1 else ""
         esper.dispatch_event("log_message", f"You gather {item_name}{suffix}.", None, LogCategory.LOOT)
         return True

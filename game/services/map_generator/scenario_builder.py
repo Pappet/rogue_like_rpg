@@ -46,8 +46,11 @@ def create_world(gen, world, world_graph) -> None:
             )
 
     start_id = world_graph.start_location_id
+    start_map = gen.map_service.get_map(start_id)
+    if start_map is None:
+        raise ValueError(f"start location '{start_id}' has no generated map")
     gen.map_service.set_active_map(start_id)
-    gen.map_service.get_map(start_id).thaw(world)
+    start_map.thaw(world)
 
 
 def create_scenario(gen, world, scenario_path: str, map_id: str | None = None) -> MapContainer:

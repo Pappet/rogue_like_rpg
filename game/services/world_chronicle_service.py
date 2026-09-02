@@ -27,8 +27,12 @@ import json
 import logging
 import random
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from config import SIM_EVENT_CHANCE_PER_HOUR, TICKS_PER_HOUR
+
+if TYPE_CHECKING:  # pragma: no cover - typing only, avoids a runtime import cycle
+    from game_context import GameContext
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +70,7 @@ class PendingEscalation:
 class WorldChronicleService:
     """Records and generates per-location world events."""
 
-    ctx: object = None
+    ctx: "GameContext | None" = None
     events: list[ChronicleEvent] = field(default_factory=list)
     templates: list[EventTemplate] = field(default_factory=list)
     last_processed_hour: int = 0

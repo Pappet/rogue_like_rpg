@@ -74,7 +74,7 @@ class ItemFactory:
             world.add_component(
                 entity,
                 Consumable(
-                    effect_type=template.consumable.get("effect_type"),
+                    effect_type=template.consumable.get("effect_type", ""),
                     amount=template.consumable.get("amount", 0),
                     consumed_on_use=template.consumable.get("consumed_on_use", True),
                 ),

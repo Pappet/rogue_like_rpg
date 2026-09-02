@@ -102,7 +102,7 @@ class MapContainer:
                         tile.visibility_state = VisibilityState.FORGOTTEN
                         tile.rounds_since_seen = 1000  # Ensure it stays forgotten
 
-    def freeze(self, world, exclude_entities: list[int] = None):
+    def freeze(self, world, exclude_entities: list[int] | None = None):
         """Removes entities from the world and stores them in this container."""
         if exclude_entities is None:
             exclude_entities = []

@@ -65,10 +65,10 @@ class MessageLog:
         self.rect = rect
         self.font = font
         self.max_messages = max_messages
-        self.messages = []
+        self.messages: list[list[tuple[str, tuple[int, int, int]]]] = []
         self.line_height = self.font.get_linesize()
 
-    def add_message(self, text: str, color: str = None, category: LogCategory | None = None):
+    def add_message(self, text: str, color: str | None = None, category: LogCategory | None = None):
         default_color = COLOR_WHITE
         if category and category in LOG_COLORS:
             default_color = LOG_COLORS[category]

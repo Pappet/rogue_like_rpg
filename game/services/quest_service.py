@@ -24,12 +24,16 @@ import json
 import logging
 import random
 from dataclasses import asdict, dataclass, field
+from typing import TYPE_CHECKING
 
 import esper
 
 from config import PROSPERITY_QUEST_GAIN, LogCategory
 from game.components import Equipment, Inventory, PlayerTag, Position, Purse, TemplateId
 from game.content.item_registry import item_registry
+
+if TYPE_CHECKING:  # pragma: no cover - typing only, avoids a runtime import cycle
+    from game_context import GameContext
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +81,7 @@ class Quest:
 class QuestService:
     """Owns all quests of a session and tracks their progress."""
 
-    ctx: object = None
+    ctx: "GameContext | None" = None
     quests: list[Quest] = field(default_factory=list)
     rng: random.Random = field(default_factory=random.Random)
 
@@ -255,7 +259,8 @@ class QuestService:
         for quest in self.quests:
             if quest.state == "active" and quest.quest_type == "visit" and quest.target.get("location") == location_id:
                 quest.state = "turned_in"
-                purse = esper.try_component(self.ctx.player_entity, Purse) if self.ctx else None
+                player = self._player()
+                purse = esper.try_component(player, Purse) if player is not None else None
                 if purse is not None:
                     purse.gold += quest.reward_gold
                 esper.dispatch_event(
@@ -421,13 +426,15 @@ class QuestService:
         needed = quest.target["count"] - quest.progress
         alive = sum(
             1
-            for _ent, (tid,) in esper.get_components(TemplateId)
+            for _ent, tid in esper.get_component(TemplateId)
             if tid.id == template and esper.has_component(_ent, Position)
         )
         missing = needed - alive
         if missing <= 0:
             return
-        container = self.ctx.map_service.get_active_map()
+        container = self.ctx.map_service.get_active_map() if self.ctx else None
+        if container is None:
+            return
         layer = container.layers[0]
         for _ in range(missing):
             x = self.rng.randint(2, container.width - 3)
@@ -438,12 +445,17 @@ class QuestService:
 
     # --- Player inventory helpers ---------------------------------------------------
 
+    def _player(self) -> int | None:
+        """The player entity, or None when the service runs without a context."""
+        return self.ctx.player_entity if self.ctx else None
+
     def _player_items_of(self, template_id: str) -> list[int]:
-        inventory = esper.try_component(self.ctx.player_entity, Inventory) if self.ctx else None
+        player = self._player()
+        inventory = esper.try_component(player, Inventory) if player is not None else None
         if inventory is None:
             return []
-        equipment = esper.try_component(self.ctx.player_entity, Equipment) if self.ctx else None
-        equipped_ids: set[int] = set(equipment.slots.values()) if equipment else set()
+        equipment = esper.try_component(player, Equipment) if player is not None else None
+        equipped_ids: set[int] = {e for e in equipment.slots.values() if e is not None} if equipment else set()
         result = []
         for item_ent in inventory.items:
             if item_ent in equipped_ids:
@@ -460,7 +472,10 @@ class QuestService:
         items = self._player_items_of(template_id)
         if len(items) < count:
             return False
-        inventory = esper.component_for_entity(self.ctx.player_entity, Inventory)
+        player = self._player()
+        if player is None:
+            return False
+        inventory = esper.component_for_entity(player, Inventory)
         for item_ent in items[:count]:
             inventory.items.remove(item_ent)
             esper.delete_entity(item_ent)

@@ -41,10 +41,11 @@ python -m pytest tests/ -q --cov --cov-report=term
 State cleanup between tests is automatic: the autouse fixture in `tests/conftest.py` calls `reset_world()` and `default_content.clear_all()` before every test. Tests load the JSON content they need themselves.
 
 CI (`.github/workflows/ci.yml`) runs on every PR and push to `main`:
-`ruff check`, `ruff format --check` and the full test suite on Python 3.10
-and 3.12 (headless SDL). All three must be green before merging. Ruff is
-pinned there — bump the version deliberately and carry the resulting reformat
-in the same commit, so a new ruff release cannot turn CI red on its own.
+`ruff check`, `ruff format --check`, `mypy` and the full test suite on Python
+3.10 and 3.12 (headless SDL). All of them must be green before merging. Ruff
+and mypy are pinned there — bump a version deliberately and carry the
+resulting reformat or fixes in the same commit, so a new tool release cannot
+turn CI red on its own.
 
 **Coverage gate:** the test job measures coverage over `core/`, `game/`,
 `config/`, `bootstrap.py`, `game_context.py` and `main.py`, and fails below
@@ -52,6 +53,14 @@ in the same commit, so a new ruff release cannot turn CI red on its own.
 figure is ~90%; the gate sits at 88 so an ordinary refactor has room while a
 real regression trips it. Raise the gate when coverage climbs — never lower
 it to make a red build green; add the missing test instead.
+
+**Type checking:** `mypy` covers `core/` and `game/services/` — scope and
+strictness live in `[tool.mypy]` (`pyproject.toml`), so a local bare `mypy`
+checks exactly what CI checks. It runs loose for now (`check_untyped_defs =
+false`: bodies of unannotated functions are skipped). Tighten it by annotating
+a module and adding a per-module override, never by widening an ignore. When
+widening `files` to a new package, fix that package's errors in the same
+commit.
 
 ## Planning
 
