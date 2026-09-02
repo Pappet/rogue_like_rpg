@@ -1,12 +1,18 @@
+"""The MapGenerator facade.
+
+Keeps the public generation API in one place and delegates the actual work to
+the domain builders in this package. Shared state is deliberately tiny:
+``map_service``, the run ``seed`` and the ``_rng`` derived from it.
+"""
+
 import json
-import os
 import random
 
-import esper as _esper
+import esper
 
 from config import SpriteLayer
 from core.rng import derive_seed
-from game.components import LightSource, MapBound, Name, Portal, Position, Renderable
+from game.components import Hidden, MapBound, Name, Portal, Position, Renderable
 from game.content.entity_factory import EntityFactory
 from game.content.item_factory import ItemFactory
 from game.map.map_container import MapContainer
@@ -15,71 +21,19 @@ from game.map.map_layer import MapLayer
 from game.map.tile import Tile, VisibilityState
 from game.services.gather_service import create_resource_node
 from game.services.housing_service import HousingService
+from game.services.map_generator import map_tools
+from game.services.map_generator.constants import (
+    DECOR_PAINTABLE,
+    HOUSE_WALL_MATERIAL,
+    RESOURCE_DECOR,
+    SHELTER_ROOF,
+    STATION_TILES,
+    WILDERNESS_SIZE,
+)
+from game.services.map_generator.prop_entities import place_light
 from game.services.map_service import MapService
 from game.services.social_service import SocialService
 from game.services.spawn_service import SpawnService
-
-WILDERNESS_SIZE = 40
-
-# House style -> wall material for both the exterior shell and the interior.
-HOUSE_WALL_MATERIAL = {"home": "wall_wood", "tavern": "wall_wood", "shop": "wall_stone"}
-
-# Crafting-station type -> the tile id stamped onto the map (ROADMAP Phase H).
-STATION_TILES = {
-    "forge": "station_forge",
-    "anvil": "station_anvil",
-    "mill": "station_mill",
-    "oven": "station_oven",
-    "kitchen": "station_kitchen",
-    "tannery": "station_tannery",
-    "loom": "station_loom",
-    "sawmill": "station_sawmill",
-    "herbalist": "station_herbalist",
-    "jeweler": "station_jeweler",
-}
-
-# The roof tile laid over an open-shelter workshop (drawn as a cutaway overlay).
-SHELTER_ROOF = "roof_plank"
-
-# Natural ground a resource node's decoration is allowed to overpaint. Keeps
-# fields/rocks/lakes off of walls, doors, station tiles and building floors.
-DECOR_PAINTABLE = {
-    "floor_stone",
-    "floor_grass",
-    "floor_dirt",
-    "floor_sand",
-    "floor_mud",
-    "crop_field",
-}
-
-# Resource-node kind -> how it is dressed into a real map object, so harvest
-# nodes read as fields, rocky outcrops and ponds instead of lone glyphs:
-#   tile     — terrain painted around (and optionally under) the node
-#   radius   — Chebyshev radius of the patch
-#   blocking — if the decor tile is impassable, its four orthogonal neighbours
-#              are kept clear so the node stays reachable to bump
-#   fill_node— also paint the node's own tile (e.g. a fishing spot in the water)
-RESOURCE_DECOR = {
-    "grain_field": {"tile": "crop_field", "radius": 2, "blocking": False, "fill_node": True, "chance": 0.85},
-    "herb_patch": {"tile": "floor_grass", "radius": 2, "blocking": False, "fill_node": False, "chance": 0.6},
-    "iron_vein": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
-    "silver_vein": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
-    "timber_stand": {"tile": "tree_sapling", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.55},
-    "fishing_spot": {"tile": "water_shallow", "radius": 2, "blocking": True, "fill_node": True, "chance": 0.8},
-    "pasture": {"tile": "floor_grass", "radius": 2, "blocking": False, "fill_node": False, "chance": 0.7},
-    "salt_pan": {"tile": "floor_sand", "radius": 2, "blocking": False, "fill_node": True, "chance": 0.8},
-    "gem_vein": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
-    "coal_seam": {"tile": "rock_rough", "radius": 1, "blocking": True, "fill_node": False, "chance": 0.7},
-}
-
-# Light props placed by the generator. All burn dusk-to-dawn (night_only):
-# they reveal their surroundings via VisibilitySystem and get a warm glow
-# from the render pipeline once the day/night tint darkens.
-LIGHT_PROPS = {
-    "torch": {"glyph": "†", "color": (255, 190, 110), "radius": 4, "name": "Torch"},
-    "lantern": {"glyph": "¤", "color": (255, 215, 130), "radius": 4, "name": "Lantern"},
-    "campfire": {"glyph": "♨", "color": (255, 150, 60), "radius": 6, "name": "Campfire"},
-}
 
 
 def wilderness_map_id(settlement_id: str) -> str:
@@ -110,14 +64,7 @@ class MapGenerator:
     @staticmethod
     def place_light(world, light_type: str, x: int, y: int, layer: int = 0) -> int:
         """Create a non-blocking light prop entity (torch/lantern/campfire)."""
-        props = LIGHT_PROPS[light_type]
-        return world.create_entity(
-            MapBound(),
-            Position(x, y, layer),
-            Renderable(props["glyph"], SpriteLayer.DECOR_BOTTOM.value, props["color"]),
-            Name(props["name"]),
-            LightSource(radius=props["radius"], night_only=True),
-        )
+        return place_light(world, light_type, x, y, layer)
 
     def build_shelter(self, world, layers: list[MapLayer], spec: dict) -> None:
         """Stamp an open-shelter workshop onto the village exterior.
@@ -189,21 +136,8 @@ class MapGenerator:
                     paint(nx + dx, ny + dy)
 
     def apply_terrain_variety(self, layer: MapLayer, chance: float, type_id_choices: list):
-        """
-        Adds random terrain variety to a MapLayer by randomly reassigning tile types.
-
-        Args:
-            layer:            The MapLayer to vary.
-            chance:           Probability (0-1) of replacing each floor tile.
-            type_id_choices:  List of registry type_ids to randomly choose from.
-        """
-        for y in range(layer.height):
-            for x in range(layer.width):
-                tile = layer.tiles[y][x]
-                # Only apply to walkable ground tiles (floor_stone equivalent).
-                if tile.walkable and self._rng.random() < chance:
-                    type_id = self._rng.choice(type_id_choices)
-                    tile.set_type(type_id)
+        """Scatter terrain variety across a ground layer (see map_tools)."""
+        map_tools.apply_terrain_variety(layer, chance, type_id_choices, self._rng)
 
     def add_house_to_map(
         self,
@@ -767,8 +701,6 @@ class MapGenerator:
         The map is registered and left frozen (like create_scenario);
         arrival_pos is the center of the first room.
         """
-        from game.components import Hidden
-
         cache = cache or ["steel_sword", "health_potion"]
 
         rng = random.Random(seed)
@@ -825,72 +757,15 @@ class MapGenerator:
         cx, cy = center(rooms[-1])
         for template_id in cache:
             item = ItemFactory.create_on_ground(world, template_id, cx, cy, 0)
-            _esper.add_component(item, Hidden())
+            esper.add_component(item, Hidden())
 
         container.freeze(world)
         return container
 
     def create_sample_map(self, width: int, height: int, map_id: str | None = None) -> MapContainer:
         """Creates a sample map for testing and optionally registers it."""
-        tiles = []
-        for y in range(height):
-            row = []
-            for x in range(width):
-                # Determine tile type based on position
-                is_border = x == 0 or x == width - 1 or y == 0 or y == height - 1
-                is_internal_wall = (x == 10 and 5 < y < 15) or (y == 10 and 5 < x < 15)
-
-                if is_border or is_internal_wall:
-                    tile = Tile(type_id="wall_stone")
-                else:
-                    tile = Tile(type_id="floor_stone")
-
-                # Add some random decor (preserved as sprite override)
-                if x == 5 and y == 5:
-                    tile.sprites[SpriteLayer.DECOR_BOTTOM] = "T"
-
-                row.append(tile)
-            tiles.append(row)
-
-        layer = MapLayer(tiles)
-        container = MapContainer([layer])
-
-        if map_id:
-            self.map_service.register_map(map_id, container)
-
-        return container
+        return map_tools.create_sample_map(self.map_service, width, height, map_id)
 
     def load_prefab(self, world, layer: MapLayer, filepath: str, ox: int = 0, oy: int = 0) -> None:
-        """Stamp a prefab JSON file onto an existing MapLayer at an offset.
-
-        The prefab defines a 2D tile grid plus optional entity spawn points.
-        Tiles are mutated in-place via set_type(), preserving per-instance
-        state such as visibility_state.
-
-        Args:
-            world:    The ECS world (used to spawn entities).
-            layer:    The MapLayer to stamp tiles onto.
-            filepath: Path to the prefab JSON file.
-            ox:       X offset for placement on the layer.
-            oy:       Y offset for placement on the layer.
-
-        Raises:
-            FileNotFoundError: If filepath does not exist.
-        """
-        if not os.path.exists(filepath):
-            raise FileNotFoundError(f"Prefab file not found: '{filepath}'")
-
-        with open(filepath) as f:
-            data = json.load(f)
-
-        tiles_grid = data["tiles"]
-        for row_idx, row in enumerate(tiles_grid):
-            for col_idx, type_id in enumerate(row):
-                tx = ox + col_idx
-                ty = oy + row_idx
-                if 0 <= ty < layer.height and 0 <= tx < layer.width:
-                    layer.tiles[ty][tx].set_type(type_id)
-
-        for spawn in data.get("entities", []):
-            nx, ny = get_nearest_walkable_tile(layer, ox + spawn["x"], oy + spawn["y"])
-            EntityFactory.create(world, spawn["template_id"], nx, ny)
+        """Stamp a prefab JSON file onto an existing MapLayer at an offset."""
+        map_tools.load_prefab(world, layer, filepath, ox, oy)
