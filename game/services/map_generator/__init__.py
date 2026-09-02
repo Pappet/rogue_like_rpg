@@ -16,12 +16,9 @@ from game.services.map_generator.constants import (
     STATION_TILES,
     WILDERNESS_SIZE,
 )
-from game.services.map_generator.generator import (
-    MapGenerator,
-    wilderness_arrival_pos,
-    wilderness_map_id,
-)
+from game.services.map_generator.generator import MapGenerator
 from game.services.map_generator.prop_entities import place_light
+from game.services.map_generator.wilderness_builder import wilderness_arrival_pos, wilderness_map_id
 
 __all__ = [
     "DECOR_PAINTABLE",
