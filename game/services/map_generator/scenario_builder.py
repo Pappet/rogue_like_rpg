@@ -55,6 +55,11 @@ def create_scenario(gen, world, scenario_path: str, map_id: str | None = None) -
     All maps are registered with the MapService and left frozen — the
     caller decides which map becomes active (see create_world()).
 
+    The phase order below is load-bearing in two ways: entities must be created
+    while their map is the one being frozen, and the terrain/decoration phases
+    draw from ``gen._rng`` in sequence, so reordering them regenerates every
+    world (guarded by the terrain fingerprints in verify_world_seed).
+
     Args:
         world: The ECS world.
         scenario_path: Path to the scenario JSON file.
@@ -69,40 +74,61 @@ def create_scenario(gen, world, scenario_path: str, map_id: str | None = None) -
 
     map_id = map_id or config["id"]
 
-    def create_empty_layer(width, height, fill_type_id: str | None = None):
-        tiles = []
-        for y in range(height):
-            row = []
-            for x in range(width):
-                if fill_type_id:
-                    tile = Tile(type_id=fill_type_id)
-                else:
-                    tile = Tile(type_id="floor_stone")
-                row.append(tile)
-            tiles.append(row)
-        return MapLayer(tiles)
+    container, layers = _build_exterior(gen, config, map_id)
+    _stamp_structures(gen, world, config, layers)
+    _stamp_features(gen, world, config, layers)
+    _spawn_npcs(gen, world, config, layers, map_id)
 
+    # Settlements are civilized ground: no random monster spawns here.
+    # Wildlife and monsters live in the settlement's wilderness map.
+    wild_portal_pos = None
+    if config.get("biome"):
+        wild_portal_pos = _add_wilderness_portal(world, container, map_id)
+
+    container.freeze(world)
+
+    _build_interiors(gen, world, config, map_id)
+    _ensure_wilderness(gen, world, config, map_id, wild_portal_pos)
+
+    return container
+
+
+def _empty_layer(width: int, height: int, fill_type_id: str | None = None) -> MapLayer:
+    """A flat layer of one tile type (floor_stone unless told otherwise)."""
+    tiles = []
+    for _y in range(height):
+        row = []
+        for _x in range(width):
+            row.append(Tile(type_id=fill_type_id or "floor_stone"))
+        tiles.append(row)
+    return MapLayer(tiles)
+
+
+def _build_exterior(gen, config: dict, map_id: str) -> tuple[MapContainer, list[MapLayer]]:
+    """Phase 1 — the three exterior layers, registered and terrain-varied."""
     v_width = config["dimensions"]["width"]
     v_height = config["dimensions"]["height"]
-    base_layer = config["base_layer"]
 
-    village_layers = [
-        create_empty_layer(v_width, v_height, base_layer),  # Layer 0: Ground
-        create_empty_layer(v_width, v_height),  # Layer 1
-        create_empty_layer(v_width, v_height),  # Layer 2
+    layers = [
+        _empty_layer(v_width, v_height, config["base_layer"]),  # Layer 0: Ground
+        _empty_layer(v_width, v_height),  # Layer 1
+        _empty_layer(v_width, v_height),  # Layer 2
     ]
     arrival = config.get("arrival_pos")
-    village_container = MapContainer(village_layers, arrival_pos=tuple(arrival) if arrival else None)
+    container = MapContainer(layers, arrival_pos=tuple(arrival) if arrival else None)
     if gen.map_service.get_map(map_id) is not None:
         raise ValueError(f"Map id '{map_id}' is already registered — scenario ids must be unique.")
-    gen.map_service.register_map(map_id, village_container)
+    gen.map_service.register_map(map_id, container)
 
-    # Apply terrain variety to ground
     tv = config.get("terrain_variety")
     if tv:
-        gen.apply_terrain_variety(village_layers[0], tv["chance"], tv["choices"])
+        gen.apply_terrain_variety(layers[0], tv["chance"], tv["choices"])
 
-    # 1. Create Village Portals (while Village is active in terms of entity creation)
+    return container, layers
+
+
+def _stamp_structures(gen, world, config: dict, layers: list[MapLayer]) -> None:
+    """Phase 2 — building shells on the street: roof, walls, door, portal, torch."""
     for h in config.get("structures", []):
         vx, vy = h["v_pos"]
         vw, vh = h["v_size"]
@@ -110,22 +136,22 @@ def create_scenario(gen, world, scenario_path: str, map_id: str | None = None) -
         wall_id = HOUSE_WALL_MATERIAL.get(style, "wall_wood")
         # Thatched roof over the footprint (non-walkable, so nothing
         # spawns or walks inside the shell), framed by the house walls.
-        draw_rectangle(village_layers[0], vx, vy, vw, vh, "roof_thatch", filled=True)
-        draw_rectangle(village_layers[0], vx, vy, vw, vh, wall_id, filled=False)
+        draw_rectangle(layers[0], vx, vy, vw, vh, "roof_thatch", filled=True)
+        draw_rectangle(layers[0], vx, vy, vw, vh, wall_id, filled=False)
 
         # You can see a house's roof from the street even though FOV
         # never reaches behind its walls: start the footprint SHROUDED
         # so houses read as buildings instead of black holes.
         for ry in range(vy, vy + vh):
             for rx in range(vx, vx + vw):
-                village_layers[0].tiles[ry][rx].visibility_state = VisibilityState.SHROUDED
+                layers[0].tiles[ry][rx].visibility_state = VisibilityState.SHROUDED
 
         # Front door in the south wall, a window on either side
         door_vx, door_vy = vx + vw // 2, vy + vh - 1
-        village_layers[0].tiles[door_vy][door_vx].set_type("door_wood")
+        layers[0].tiles[door_vy][door_vx].set_type("door_wood")
         for wx in (door_vx - 2, door_vx + 2):
             if vx < wx < vx + vw - 1:
-                village_layers[0].tiles[door_vy][wx].set_type("wall_window")
+                layers[0].tiles[door_vy][wx].set_type("wall_window")
 
         # Portal into the house sits on the doorstep
         world.create_entity(
@@ -137,61 +163,60 @@ def create_scenario(gen, world, scenario_path: str, map_id: str | None = None) -
         )
 
         # A torch burns beside every front door after dark
-        tx, ty = get_nearest_walkable_tile(village_layers[0], door_vx + 1, door_vy + 1)
+        tx, ty = get_nearest_walkable_tile(layers[0], door_vx + 1, door_vy + 1)
         gen.place_light(world, "torch", tx, ty)
 
+
+def _stamp_features(gen, world, config: dict, layers: list[MapLayer]) -> None:
+    """Phase 3 — lights, crafting stations, open shelters and resource nodes."""
     # Scenario-authored lights (village squares, gates, campfires)
     for light in config.get("lights", []):
         lx, ly = light["pos"]
-        lx, ly = get_nearest_walkable_tile(village_layers[0], lx, ly)
+        lx, ly = get_nearest_walkable_tile(layers[0], lx, ly)
         gen.place_light(world, light["type"], lx, ly)
 
     # Scenario-authored crafting stations (forge, mill, oven, ...): the
     # player bumps the (non-walkable) station tile to open its bench.
     for station in config.get("stations", []):
-        sx, sy = get_nearest_walkable_tile(village_layers[0], station["pos"][0], station["pos"][1])
-        village_layers[0].tiles[sy][sx].set_type(STATION_TILES.get(station["type"], "station_forge"))
+        sx, sy = get_nearest_walkable_tile(layers[0], station["pos"][0], station["pos"][1])
+        layers[0].tiles[sy][sx].set_type(STATION_TILES.get(station["type"], "station_forge"))
 
     # Open-shelter workshops: roofed but wall-less workspaces wrapping a
     # station, with the roof drawn as a cutaway overlay (multi-level reveal).
     for shelter in config.get("shelters", []):
-        gen.build_shelter(world, village_layers, shelter)
+        gen.build_shelter(world, layers, shelter)
 
     # Scenario-authored resource nodes (grain field, ore vein): bump to
     # harvest raw materials. Created as entities before freeze. Each node is
     # then dressed into a real map object (field / outcrop / pond).
     for node in config.get("resources", []):
-        rx, ry = get_nearest_walkable_tile(village_layers[0], node["pos"][0], node["pos"][1])
+        rx, ry = get_nearest_walkable_tile(layers[0], node["pos"][0], node["pos"][1])
         create_resource_node(world, node["kind"], rx, ry, 0)
-        gen._decorate_resource(village_layers[0], node["kind"], rx, ry)
+        gen._decorate_resource(layers[0], node["kind"], rx, ry)
 
-    # --- SPAWN VILLAGE NPCS ---
+
+def _spawn_npcs(gen, world, config: dict, layers: list[MapLayer], map_id: str) -> None:
+    """Phase 4 — the exterior crowd, then housing and social identity."""
     for npc in config.get("village_npcs", []):
-        nx, ny = get_nearest_walkable_tile(village_layers[0], npc["pos"][0], npc["pos"][1])
+        nx, ny = get_nearest_walkable_tile(layers[0], npc["pos"][0], npc["pos"][1])
         EntityFactory.create(world, npc["type"], nx, ny, merchant_override=npc.get("merchant"))
 
     # Capacity-based housing: hand out beds, send the rest to the hearth,
     # and tell everyone where the village's social centre is (Living
     # Village). Only this scenario's exterior NPCs are live right now.
-    HousingService.assign(world, config, village_layers[0])
+    HousingService.assign(world, config, layers[0])
 
     # Individual identity: name the common folk and wire their friendships
     # and rivalries (Phase L slice 3), so gossip names real people.
     SocialService.assign(world, seed=gen._map_seed(map_id))
 
-    # Settlements are civilized ground: no random monster spawns here.
-    # Wildlife and monsters live in the settlement's wilderness map.
-    wild_portal_pos = None
-    if config.get("biome"):
-        wild_portal_pos = _add_wilderness_portal(world, village_container, map_id)
 
-    village_container.freeze(world)
-
-    # 2. Create House interiors
+def _build_interiors(gen, world, config: dict, map_id: str) -> None:
+    """Phase 5 — one interior map per structure, each registered and frozen."""
     for h in config.get("structures", []):
         hi, hj = h["h_size"]
         floors = h["floors"]
-        h_container = MapContainer([create_empty_layer(hi, hj) for _ in range(floors)])
+        h_container = MapContainer([_empty_layer(hi, hj) for _ in range(floors)])
         if gen.map_service.get_map(h["id"]) is not None:
             raise ValueError(f"Map id '{h['id']}' is already registered — structure ids must be unique.")
         gen.map_service.register_map(h["id"], h_container)
@@ -232,7 +257,9 @@ def create_scenario(gen, world, scenario_path: str, map_id: str | None = None) -
         # Houses are people's homes — nothing hostile spawns indoors.
         h_container.freeze(world)
 
-    # 3. The surrounding wilderness, flavored by the settlement's biome
+
+def _ensure_wilderness(gen, world, config: dict, map_id: str, wild_portal_pos: tuple[int, int] | None) -> None:
+    """Phase 6 — the surrounding wilderness, flavored by the settlement's biome."""
     if config.get("biome") and wild_portal_pos is not None:
         gen.create_wilderness(
             world,
@@ -241,8 +268,6 @@ def create_scenario(gen, world, scenario_path: str, map_id: str | None = None) -
             return_pos=wild_portal_pos,
             seed=gen._map_seed(wilderness_map_id(map_id)),
         )
-
-    return village_container
 
 
 def _add_wilderness_portal(world, container: MapContainer, settlement_id: str) -> tuple[int, int]:
