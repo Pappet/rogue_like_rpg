@@ -18,6 +18,7 @@ from game.services.map_generator import (
     scenario_builder,
     wilderness_builder,
 )
+from game.services.map_generator.house_builder import HouseGenConfig
 from game.services.map_generator.prop_entities import place_light
 from game.services.map_service import MapService
 
@@ -54,21 +55,9 @@ class MapGenerator:
         """Scatter terrain variety across a ground layer (see map_tools)."""
         map_tools.apply_terrain_variety(layer, chance, type_id_choices, self._rng)
 
-    def add_house_to_map(
-        self,
-        world,
-        map_container: MapContainer,
-        start_x: int,
-        start_y: int,
-        w: int,
-        h: int,
-        num_layers: int,
-        style: str = "home",
-    ):
+    def add_house_to_map(self, world, map_container: MapContainer, config: HouseGenConfig):
         """Populate a MapContainer with a house structure (see house_builder)."""
-        house_builder.add_house_to_map(
-            world, self.map_service, map_container, start_x, start_y, w, h, num_layers, style
-        )
+        house_builder.add_house_to_map(world, self.map_service, map_container, config)
 
     def create_world(self, world, world_graph) -> None:
         """Build a map for every world-graph location, then activate the start

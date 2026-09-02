@@ -18,12 +18,24 @@ from config import (
     UI_THEME_INK_DIM,
     UI_THEME_INK_MUTED,
     UI_THEME_SELECT_EDGE,
+    UI_THEME_XP,
     GameStates,
 )
 from core.input_manager import InputCommand
 from core.ui import theme
 from core.ui.window_base import UIWindow
-from game.components import Description, Equipment, Inventory, ItemMaterial, Merchant, Name, Portable, Purse, Stats
+from game.components import (
+    Description,
+    Equipment,
+    Inventory,
+    ItemMaterial,
+    Merchant,
+    Name,
+    Portable,
+    Purse,
+    Stats,
+    Value,
+)
 from game.content.item_registry import item_registry
 from game.services.trade_service import TradeService
 
@@ -98,7 +110,8 @@ class TradeWindow(UIWindow):
             if not tpl:
                 return tid, "", ""
             price = TradeService.buy_price(tid, self._economy(), self._location_id(), self._reputation())
-            return tpl.name, tpl.description, self._stats_line(tpl.material, tpl.weight, "Buy", price)
+            base_value = tpl.value if tpl else 0
+            return tpl.name, tpl.description, self._stats_line(tpl.material, tpl.weight, base_value, "Buy", price)
 
         items = self._player_items()
         if not items or self.selected_idx >= len(items):
@@ -111,18 +124,23 @@ class TradeWindow(UIWindow):
         price = TradeService.sell_price(ent, self._economy(), self._location_id(), self._reputation())
         material = material_c.material if material_c else ""
         weight = port_c.weight if port_c else 0.0
+        value_c = self.world.try_component(ent, Value)
+        base_value = value_c.amount if value_c else 0
         return (
             name_c.name if name_c else f"Item {ent}",
             desc_c.get(None) if desc_c else "",
-            self._stats_line(material, weight, "Sell", price),
+            self._stats_line(material, weight, base_value, "Sell", price),
         )
 
     @staticmethod
-    def _stats_line(material: str, weight: float, price_label: str, price: int) -> str:
+    def _stats_line(material: str, weight: float, base_value: int, price_label: str, price: int) -> str:
         parts = []
         if material:
             parts.append(f"Material: {material}")
-        parts.append(f"Weight: {weight:g} kg")
+        if weight > 0.0:
+            parts.append(f"Weight: {weight:g} kg")
+        if base_value > 0:
+            parts.append(f"Value: {base_value}g")
         parts.append(f"{price_label}: {price}g")
         return "   ·   ".join(parts)
 
@@ -226,14 +244,22 @@ class TradeWindow(UIWindow):
 
         # Player carry weight, right-aligned in the "Your Goods" header band
         cur_w, max_w = self._player_carry()
-        theme.draw_text(
+        load = (cur_w / max_w) if max_w > 0 else 0.0
+        if load >= 1.0:
+            load_color = UI_THEME_DANGER
+        elif load >= 0.85:
+            load_color = UI_THEME_COIN
+        else:
+            load_color = UI_THEME_XP
+        bar_w = 190
+        theme.draw_bar(
             surface,
-            f"Weight {cur_w:.1f}/{max_w:.1f} kg",
-            self.small_font,
-            UI_THEME_INK_DIM,
-            (box_x + box_width - pad - 4, box_y + 56),
-            anchor="topright",
-            shadow=False,
+            (box_x + box_width - pad - bar_w - 4, box_y + 46, bar_w, 18),
+            min(1.0, load),
+            load_color,
+            hi_color=theme.lighten(load_color, 0.4),
+            label=f"{cur_w:.1f}/{max_w:.1f} kg",
+            font=self.small_font,
         )
 
         # Active-pane frame glow

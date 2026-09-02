@@ -18,6 +18,7 @@ from game.map.tile import Tile, VisibilityState
 from game.services.gather_service import create_resource_node
 from game.services.housing_service import HousingService
 from game.services.map_generator.constants import HOUSE_WALL_MATERIAL, STATION_TILES
+from game.services.map_generator.house_builder import HouseGenConfig
 from game.services.map_generator.wilderness_builder import wilderness_arrival_pos, wilderness_map_id
 from game.services.social_service import SocialService
 
@@ -222,7 +223,11 @@ def _build_interiors(gen, world, config: dict, map_id: str) -> None:
         gen.map_service.register_map(h["id"], h_container)
 
         # Populate house interior
-        gen.add_house_to_map(world, h_container, 0, 0, hi, hj, floors, style=h.get("style", "home"))
+        gen.add_house_to_map(
+            world,
+            h_container,
+            HouseGenConfig(start_x=0, start_y=0, w=hi, h=hj, num_layers=floors, style=h.get("style", "home")),
+        )
 
         # An enterable workshop carries its crafting station indoors: bump
         # it inside to use the bench. Upper floors then show off the layered

@@ -13,7 +13,7 @@ from game.content.resource_loader import ResourceLoader
 from game.map.map_container import MapContainer
 from game.map.map_layer import MapLayer
 from game.map.tile import Tile
-from game.services.map_generator import MapGenerator
+from game.services.map_generator import HouseGenConfig, MapGenerator
 from game.services.map_service import MapService
 
 TILE_FILE = "assets/data/tile_types.json"
@@ -34,7 +34,8 @@ def test_add_house_to_map():
     map_service.register_map("TestMap", container)
 
     # Add a house: start=(5,5), size=(6,6), 2 floors
-    MapGenerator(map_service).add_house_to_map(world, container, 5, 5, 6, 6, 2)
+    config = HouseGenConfig(start_x=5, start_y=5, w=6, h=6, num_layers=2)
+    MapGenerator(map_service).add_house_to_map(world, container, config)
 
     # Verify layers (second layer auto-created by add_house_to_map)
     assert len(container.layers) == 2

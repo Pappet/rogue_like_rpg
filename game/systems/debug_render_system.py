@@ -60,15 +60,28 @@ class DebugRenderSystem(MapAwareSystem):
         surface.blit(self.overlay, (self.camera.offset_x, self.camera.offset_y))
 
     def _render_npc_fov(self, player_layer):
+        # Cache layer dimensions and tiles for the transparency function
+        height = 0
+        width = 0
+        tiles = None
+
+        if self._map_container and 0 <= player_layer < len(self._map_container.layers):
+            layer_obj = self._map_container.layers[player_layer]
+            tiles = layer_obj.tiles
+            height = len(tiles)
+            width = len(tiles[0]) if height > 0 else 0
+
+        # Transparency function for shadowcasting, optimized with cached bounds
+        def transparency_func(x, y):
+            if tiles is not None and 0 <= y < height and 0 <= x < width:
+                return tiles[y][x].is_transparent
+            return False
+
         # Iterate over all entities with Position, Stats (for perception), and AIBehaviorState
         for ent, (pos, stats, ai) in esper.get_components(Position, Stats, AIBehaviorState):
             # Only process NPCs on the player's current layer
             if pos.layer != player_layer:
                 continue
-
-            # Transparency function for shadowcasting (layer bound per iteration)
-            def transparency_func(x, y, layer=pos.layer):
-                return self._is_transparent(x, y, layer)
 
             # Optimization: Only process entities within the self.camera viewport (plus margin)
             margin = 10  # Margin to ensure we catch NPCs just off-screen whose FOV enters screen

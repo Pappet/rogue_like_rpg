@@ -17,12 +17,14 @@ from game.services.map_generator.constants import (
     WILDERNESS_SIZE,
 )
 from game.services.map_generator.generator import MapGenerator
+from game.services.map_generator.house_builder import HouseGenConfig
 from game.services.map_generator.prop_entities import place_light
 from game.services.map_generator.wilderness_builder import wilderness_arrival_pos, wilderness_map_id
 
 __all__ = [
     "DECOR_PAINTABLE",
     "HOUSE_WALL_MATERIAL",
+    "HouseGenConfig",
     "LIGHT_PROPS",
     "MapGenerator",
     "RESOURCE_DECOR",
