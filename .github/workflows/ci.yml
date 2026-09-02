@@ -21,7 +21,11 @@ jobs:
           python-version: "3.12"
 
       - name: Install ruff
-        run: pip install ruff
+        # Pinned: an unpinned ruff means a new release can turn CI red without
+        # a single code change. It did — a ruff release started formatting
+        # Python blocks inside Markdown, failing two untouched docs files.
+        # Bump this deliberately, with the reformat in the same commit.
+        run: pip install ruff==0.15.4
 
       - name: ruff check
         run: ruff check .
