@@ -38,7 +38,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "verify_*.py"]
 
 [tool.coverage.run]
-source = ["core", "game", "config", "bootstrap.py", "game_context.py", "main.py"]
+# Module names, not paths: coverage never measured the three root modules
+# while they were listed as "bootstrap.py" etc.
+source = ["core", "game", "config", "bootstrap", "game_context", "main"]
 omit = ["tests/*"]
 
 [tool.coverage.report]

@@ -4,6 +4,7 @@ import esper
 import pygame
 
 from config import TILE_SIZE, SpriteLayer
+from core.ui import theme
 from game.components import FCT, AIBehaviorState, AIState, Hidden, Position, Renderable, Targeting
 from game.map.tile import VisibilityState
 from game.systems.map_aware_system import MapAwareSystem
@@ -15,8 +16,8 @@ class RenderSystem(esper.Processor, MapAwareSystem):
         MapAwareSystem.__init__(self)
         self.camera = camera
         pygame.font.init()
-        self.font = pygame.font.SysFont("monospace", TILE_SIZE)
-        self.fct_font = pygame.font.SysFont("monospace", 20, bold=True)
+        self.font = theme.get_mono_font(TILE_SIZE)
+        self.fct_font = theme.get_mono_font(20, bold=True)
 
     def process(self, surface, player_layer=0, roof_cutaway=None):
         roof_cutaway = roof_cutaway or set()
