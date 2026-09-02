@@ -36,3 +36,19 @@ line-ending = "auto"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "verify_*.py"]
+
+[tool.coverage.run]
+source = ["core", "game", "config", "bootstrap.py", "game_context.py", "main.py"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+# The gate sits just under the current figure: a real regression trips it,
+# an ordinary refactor does not. Raise it when coverage climbs, never lower
+# it to make a red build green.
+fail_under = 88
+show_missing = true
+skip_covered = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
