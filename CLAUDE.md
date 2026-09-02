@@ -33,13 +33,25 @@ python -m pytest tests/ -v
 
 # Run a single test
 python -m pytest tests/verify_ai_system.py -v
+
+# Run with the coverage gate (what CI does)
+python -m pytest tests/ -q --cov --cov-report=term
 ```
 
 State cleanup between tests is automatic: the autouse fixture in `tests/conftest.py` calls `reset_world()` and `default_content.clear_all()` before every test. Tests load the JSON content they need themselves.
 
 CI (`.github/workflows/ci.yml`) runs on every PR and push to `main`:
 `ruff check`, `ruff format --check` and the full test suite on Python 3.10
-and 3.12 (headless SDL). All three must be green before merging.
+and 3.12 (headless SDL). All three must be green before merging. Ruff is
+pinned there — bump the version deliberately and carry the resulting reformat
+in the same commit, so a new ruff release cannot turn CI red on its own.
+
+**Coverage gate:** the test job measures coverage over `core/`, `game/`,
+`config/`, `bootstrap.py`, `game_context.py` and `main.py`, and fails below
+`fail_under` in `[tool.coverage.report]` (`pyproject.toml`). The current
+figure is ~90%; the gate sits at 88 so an ordinary refactor has room while a
+real regression trips it. Raise the gate when coverage climbs — never lower
+it to make a red build green; add the missing test instead.
 
 ## Planning
 
