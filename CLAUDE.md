@@ -213,7 +213,17 @@ is neutral constants, usable by both.
     │   ├── system_initializer.py    # build_systems() / register_processors()
     │   ├── player_action_service.py # Player game rules (move, pickup, portal, wait, targeting)
     │   ├── map_service.py           # Map registry + active map management
-    │   ├── map_generator.py         # Village scenario, terrain, prefab loading
+    │   ├── map_generator/           # Map generation package (facade + builders)
+    │   │   ├── __init__.py          # Public API re-exports (MapGenerator, tables)
+    │   │   ├── generator.py         # MapGenerator facade: delegates to the builders
+    │   │   ├── constants.py         # STATION_TILES, RESOURCE_DECOR, LIGHT_PROPS, ...
+    │   │   ├── scenario_builder.py  # Settlement scenarios (6 ordered build phases)
+    │   │   ├── house_builder.py     # House interiors + open-shelter workshops
+    │   │   ├── wilderness_builder.py# Biome wilderness + wilderness_map_id()
+    │   │   ├── dungeon_builder.py   # Procedural POI dungeons
+    │   │   ├── resource_decor.py    # Dressing resource nodes into map objects
+    │   │   ├── prop_entities.py     # place_light (torch/lantern/campfire)
+    │   │   └── map_tools.py         # Terrain variety, prefab stamping, sample map
     │   ├── map_transition_service.py# Map transition (freeze/thaw, set_map fan-out)
     │   ├── world_graph_service.py   # World graph: locations, routes, current location
     │   ├── world_simulation_service.py # Off-screen sim: schedule reconciliation on arrival
@@ -545,6 +555,19 @@ class MapAwareSystem:
 - `freeze()` / `thaw()` serializes entities when switching maps — player party excluded via `get_entity_closure()`
 - Tile types come from `TileRegistry` — use `Tile(type_id="floor_stone")`, never hardcode tile properties
 - Prefabs are JSON files stamped onto existing layers via `MapService.load_prefab()`
+- **Map generation lives in the `map_generator/` package**, split by domain.
+  `MapGenerator` (`generator.py`) is a thin facade with the public API; the
+  real work sits in one builder module per domain. A new generation feature
+  goes into the matching builder — settlement content into
+  `scenario_builder.py` (add a phase or extend one of the six), buildings into
+  `house_builder.py`, and so on. Only add a facade method when it is a new
+  *public* entry point. **The build order inside `create_scenario` is
+  load-bearing**: entities must be created while their map is the one being
+  frozen, and terrain variety plus resource decoration draw from the
+  generator's single run-seeded `_rng` in sequence. Reordering them silently
+  regenerates every world for a given seed, which is why
+  `tests/verify_world_seed.py` pins golden terrain fingerprints — if those
+  fail, you changed world generation, not just structure.
 
 ### Data-Driven Content
 
