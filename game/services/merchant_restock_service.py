@@ -14,11 +14,16 @@ away".
 
 import logging
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import esper
 
 from config import RESTOCK_MIN_ECON_STOCK, TICKS_PER_HOUR
 from game.components import Merchant
+
+if TYPE_CHECKING:  # pragma: no cover - typing only, avoids a runtime import cycle
+    from game.services.economy_service import EconomyService
+    from game.services.world_graph_service import WorldGraphService
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +33,8 @@ logger = logging.getLogger(__name__)
 class MerchantRestockService:
     """Refills live merchants' stock toward their base menu, gated by economy."""
 
-    economy: object = None
-    world_graph: object = None
+    economy: "EconomyService | None" = None
+    world_graph: "WorldGraphService | None" = None
     last_hour: int = 0
 
     def on_clock_tick(self, clock_state: dict) -> None:

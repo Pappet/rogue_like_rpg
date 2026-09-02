@@ -154,6 +154,8 @@ class EconomyService:
     def consumes(self, location_id: str | None, item_id: str) -> bool:
         """True if the settlement uses this good up — by direct consumption
         or as an input of local production. Drives generated requests."""
+        if location_id is None:
+            return False
         if self.rates_per_day.get(location_id, {}).get(item_id, 0.0) < 0:
             return True
         return any(item_id in inputs for inputs in self.production_inputs.get(location_id, {}).values())
@@ -188,7 +190,7 @@ class EconomyService:
 
     def prosperity_tier(self, location_id: str | None) -> str:
         """'struggling' | 'stable' | 'thriving' — for dialogue and arrival log."""
-        level = self.prosperity.get(location_id, PROSPERITY_START)
+        level = self.prosperity.get(location_id, PROSPERITY_START) if location_id else PROSPERITY_START
         if level < PROSPERITY_LOW:
             return "struggling"
         if level > PROSPERITY_HIGH:

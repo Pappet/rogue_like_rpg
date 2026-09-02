@@ -34,7 +34,7 @@ class EntityTemplate:
     description: str = ""
     wounded_text: str = ""
     wounded_threshold: float = 0.5
-    loot_table: list = None  # List of [template_id, chance] pairs
+    loot_table: list | None = None  # List of [template_id, chance] pairs
     schedule_id: str | None = None
     home_pos: tuple[int, int] | None = None
     merchant: dict | None = None  # {"stock": [item ids], "gold": int}

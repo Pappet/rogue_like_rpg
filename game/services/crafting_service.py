@@ -71,7 +71,7 @@ class CraftingService:
         converted), False if the player lacked materials. Does NOT advance the
         clock — the caller does that on success.
         """
-        rng = rng or random
+        rng = rng or random.Random()
         inventory = world.try_component(player_entity, Inventory)
         if inventory is None or not CraftingService.can_craft(world, player_entity, recipe):
             world.dispatch_event("log_message", "You lack the materials for that.", None, LogCategory.ALERT)

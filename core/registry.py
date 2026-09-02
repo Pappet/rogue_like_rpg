@@ -5,9 +5,16 @@ Each content domain subclasses Registry and exposes a module-level default
 instance; injectable for tests that need isolated content.
 """
 
-from typing import Generic, TypeVar
+from typing import Generic, Protocol, TypeVar
 
-T = TypeVar("T")
+
+class _HasId(Protocol):
+    """What Registry needs of a template: a string id to key it by."""
+
+    id: str
+
+
+T = TypeVar("T", bound=_HasId)
 
 
 class Registry(Generic[T]):
