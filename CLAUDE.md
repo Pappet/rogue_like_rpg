@@ -38,8 +38,16 @@ python -m pytest tests/verify_ai_system.py -v
 State cleanup between tests is automatic: the autouse fixture in `tests/conftest.py` calls `reset_world()` and `default_content.clear_all()` before every test. Tests load the JSON content they need themselves.
 
 CI (`.github/workflows/ci.yml`) runs on every PR and push to `main`:
-`ruff check`, `ruff format --check` and the full test suite on Python 3.10
-and 3.12 (headless SDL). All three must be green before merging.
+`ruff check`, `ruff format --check`, `mypy` and the full test suite on Python
+3.10 and 3.12 (headless SDL). All of them must be green before merging.
+
+**Type checking:** `mypy` covers `core/` and `game/services/` — scope and
+strictness live in `[tool.mypy]` (`pyproject.toml`), so a local bare `mypy`
+checks exactly what CI checks. It runs loose for now (`check_untyped_defs =
+false`: bodies of unannotated functions are skipped). Tighten it by annotating
+a module and adding a per-module override, never by widening an ignore. When
+widening `files` to a new package, fix that package's errors in the same
+commit. The pinned mypy version is bumped deliberately, like ruff's.
 
 ## Planning
 
