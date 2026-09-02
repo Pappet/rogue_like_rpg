@@ -10,6 +10,7 @@ from config import (
     SpriteLayer,
 )
 from core.camera import Camera
+from core.ui import theme
 from game.map.map_container import MapContainer
 from game.map.tile import VisibilityState
 
@@ -42,7 +43,7 @@ def _variation_factor(x: int, y: int) -> float:
 class RenderService:
     def __init__(self):
         pygame.font.init()
-        self.font = pygame.font.SysFont("monospace", TILE_SIZE)
+        self.font = theme.get_mono_font(TILE_SIZE)
         self.tint_surface = None
         self._glyph_cache: dict[tuple[str, tuple], pygame.Surface] = {}
         self._glow_cache: dict[tuple[int, float], pygame.Surface] = {}

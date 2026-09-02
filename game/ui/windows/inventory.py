@@ -56,7 +56,7 @@ class InventoryWindow(UIWindow):
         self.scroll_offset = 0
         self.title_font = theme.get_font(38, display=True)
         self.font = theme.get_font(26)
-        self.icon_font = pygame.font.SysFont("monospace", 24, bold=True)
+        self.icon_font = theme.get_mono_font(24, bold=True)
         self.small_font = theme.get_font(20)
         self.wants_to_close = False
 

@@ -270,12 +270,14 @@ is neutral constants, usable by both.
     │   ├── faction_service.py       # Faction relations matrix + player faction standing
     │   ├── quest_service.py         # Authored + generated quests, progress, turn-in
     │   ├── rumor_service.py         # Smalltalk: directions (Wegauskunft) + rumors/leads about other places
-    │   ├── rest_service.py          # Wait/sleep duration presets + time math
+    │   ├── travel_service.py        # Overworld journeys + road-encounter rules
+    │   ├── rest_service.py          # Wait/sleep presets, time math, rest reporting
     │   ├── consumable_service.py    # Item consumption logic
     │   └── equipment_service.py     # Equipment slot logic
     ├── controllers/                 # Gameplay orchestration (driven by states)
     │   ├── input_controller.py      # InputCommand → PlayerActionService / UI (esper-free!)
     │   ├── turn_orchestrator.py     # esper.process + enemy-turn phase systems
+    │   ├── request_router.py        # *_requested events → windows (owns subscriptions)
     │   └── render_pipeline.py       # map → entities → debug → tint → HUD → windows
     ├── states/                      # Thin state machine states
     │   ├── base.py                  # GameState base class
@@ -283,6 +285,8 @@ is neutral constants, usable by both.
     │   ├── gameplay.py              # GameplayState (delegates to controllers)
     │   ├── world_map.py             # WorldMapState
     │   └── game_over.py             # GameOver
+    ├── ui/
+    │   └── world_map_renderer.py    # Draws the overworld screen for WorldMapState
     └── ui/windows/
         ├── inventory.py             # Inventory window
         ├── character.py             # Character sheet window
@@ -434,6 +438,16 @@ The chain is always: key → `InputCommand` → `InputController` →
 Follow the Event Policy (above). Default to a direct call. Dispatch an
 event only for facts (`*_died`, `log_message`) or sanctioned requests
 (`*_requested`). New event names must be past tense or `*_requested`.
+
+A `*_requested` event that opens a window is registered on the
+`RequestRouter` (`game/controllers/request_router.py`) in
+`GameplayState.startup()` — one `requests.modal(event, rect, factory)` line,
+not a new handler method. The router also owns the two esper subscription
+traps: `set_handler` keeps only a **weak** reference (so a handler nothing
+holds is collected and the event silently stops arriving), and
+`remove_handler` cannot remove a bound method at all. A state that
+re-registers must `clear()` first, or the previous generation of handlers
+keeps firing alongside the new one.
 
 ### Step 2: Verify and commit
 

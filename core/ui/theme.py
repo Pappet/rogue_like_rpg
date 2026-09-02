@@ -72,6 +72,9 @@ def truncate_text(text: str, font: pygame.font.Font, max_width: int, ellipsis: s
     return (text.rstrip() + ellipsis) if text else ellipsis
 
 
+_FONT_STACK_MONO = "monospace"
+
+
 def get_font(size: int, *, bold: bool = False, italic: bool = False, display: bool = False) -> pygame.font.Font:
     """Return a cached serif font. ``display=True`` uses the title stack."""
     key = (size, bold, italic, display)
@@ -79,6 +82,23 @@ def get_font(size: int, *, bold: bool = False, italic: bool = False, display: bo
     if font is None:
         stack = _FONT_STACK_DISPLAY if display else _FONT_STACK_BODY
         font = pygame.font.SysFont(stack, size, bold=bold, italic=italic)
+        _font_cache[key] = font
+    return font
+
+
+def get_mono_font(size: int, *, bold: bool = False) -> pygame.font.Font:
+    """Return a cached monospace font.
+
+    Map glyphs, item icons and debug overlays need a fixed-width face, which
+    the serif stacks above cannot give them. Routing those through here (rather
+    than calling ``pygame.font.SysFont`` at each site) shares one cache and,
+    importantly, lets ``reset_caches()`` drop them — a Font outliving a
+    ``pygame.quit()`` holds a stale SDL handle.
+    """
+    key = ("mono", size, bold)
+    font = _font_cache.get(key)
+    if font is None:
+        font = pygame.font.SysFont(_FONT_STACK_MONO, size, bold=bold)
         _font_cache[key] = font
     return font
 
