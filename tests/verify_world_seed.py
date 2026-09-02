@@ -8,6 +8,7 @@ import os
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
+import hashlib
 import random
 
 import esper
@@ -29,6 +30,13 @@ def _load_content():
 def _terrain_grid(map_service, map_id):
     container = map_service.get_map(map_id)
     return [[t._type_id for t in row] for row in container.layers[0].tiles]
+
+
+def _terrain_hash(map_service, map_id):
+    """Stable fingerprint of a map's ground layer, comparable across versions."""
+    grid = _terrain_grid(map_service, map_id)
+    payload = "|".join("".join(t + "," for t in row) for row in grid)
+    return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
 def _build_village(seed):
@@ -80,6 +88,36 @@ def test_dungeons_derive_from_the_world_seed():
         gen.create_dungeon(esper, "Old Ruins", seed=gen._map_seed("Old Ruins"))
         grids.append(_terrain_grid(map_service, "Old Ruins"))
     assert grids[0] == grids[1]
+
+
+# ---------------------------------------------------------------------------
+# Cross-version stability
+#
+# The determinism tests above compare two runs of the *same* code, so a
+# refactor that merely reorders the generator's RNG draws stays green while
+# silently regenerating every world. These golden fingerprints pin the actual
+# output: they must only ever change together with a deliberate,
+# world-altering generation change.
+# ---------------------------------------------------------------------------
+
+GOLDEN_VILLAGE_SEED_1234 = "07ce36218a5d8b03"
+GOLDEN_WILDERNESS_SEED_1234 = "c8240e9018f6f534"
+GOLDEN_DUNGEON_SEED_777 = "7913ac6d0647f199"
+
+
+def test_settlement_terrain_is_stable_across_refactors():
+    _load_content()
+    map_service = _build_village(seed=1234)
+    assert _terrain_hash(map_service, "Village") == GOLDEN_VILLAGE_SEED_1234
+    assert _terrain_hash(map_service, wilderness_map_id("Village")) == GOLDEN_WILDERNESS_SEED_1234
+
+
+def test_dungeon_terrain_is_stable_across_refactors():
+    _load_content()
+    map_service = MapService()
+    gen = MapGenerator(map_service, seed=777)
+    gen.create_dungeon(esper, "Old Ruins", seed=gen._map_seed("Old Ruins"))
+    assert _terrain_hash(map_service, "Old Ruins") == GOLDEN_DUNGEON_SEED_777
 
 
 # ---------------------------------------------------------------------------
