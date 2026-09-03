@@ -1,5 +1,6 @@
 import esper
 
+from config.enums import GameEvent
 from game.components import Equipment, Equippable, Name
 
 
@@ -30,10 +31,10 @@ def equip_item(world, entity, item_id):
             old_item_name = (
                 world.component_for_entity(old_item_id, Name).name if world.has_component(old_item_id, Name) else "item"
             )
-            esper.dispatch_event("log_message", f"You unequip the {old_item_name}.")
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, f"You unequip the {old_item_name}.")
 
         equipment.slots[slot] = item_id
-        esper.dispatch_event("log_message", f"You equip the {item_name}.")
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, f"You equip the {item_name}.")
 
 
 def unequip_item(world, entity, slot):
@@ -48,4 +49,4 @@ def unequip_item(world, entity, slot):
         item_id = equipment.slots[slot]
         item_name = world.component_for_entity(item_id, Name).name if world.has_component(item_id, Name) else "item"
         equipment.slots[slot] = None
-        esper.dispatch_event("log_message", f"You unequip the {item_name}.")
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, f"You unequip the {item_name}.")

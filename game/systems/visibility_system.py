@@ -1,5 +1,6 @@
 import esper
 
+from config.enums import GameEvent
 from core.visibility_service import VisibilityService
 from game.components import EffectiveStats, Hidden, LightSource, Name, PlayerTag, Position, Stats
 from game.map.tile import VisibilityState
@@ -139,4 +140,4 @@ class VisibilitySystem(esper.Processor, MapAwareSystem):
                 esper.remove_component(ent, Hidden)
                 name = esper.try_component(ent, Name)
                 what = name.name if name else "something"
-                esper.dispatch_event("log_message", f"[color=cyan]You notice something hidden: {what}![/color]")
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=cyan]You notice something hidden: {what}![/color]")

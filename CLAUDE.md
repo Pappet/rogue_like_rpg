@@ -152,6 +152,14 @@ within the same layer.
 
 Whoever dispatches an event must not rely on a handler being registered.
 
+**Event names are `GameEvent` members** (`config/enums.py`), never bare
+string literals. A name is a wire between a `dispatch_event` and a
+`set_handler` that nothing else connects — spelled as two independent
+literals, a typo on either end is a silent no-op. `GameEvent` derives from
+`str`, so it stays drop-in compatible with esper's string-keyed registry.
+`tests/verify_events.py` fails the build if a literal creeps back in, and if
+a member is declared but never dispatched.
+
 ## Project Structure
 
 **Layering rule (machine-checked by `tests/verify_layering.py`):**

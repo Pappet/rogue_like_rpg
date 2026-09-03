@@ -17,7 +17,7 @@ import os
 
 import esper
 
-from config import SAVE_FILE, LogCategory
+from config import SAVE_FILE, GameEvent, LogCategory
 from game.components import Equipment, Inventory, Position
 from game.services.party_service import get_entity_closure
 from game.services.save_serialization import (
@@ -81,7 +81,7 @@ class SaveService:
         with open(filepath, "w") as f:
             json.dump(data, f)
         logger.info("Game saved to %s", filepath)
-        esper.dispatch_event("log_message", "Game saved.", None, LogCategory.SYSTEM)
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, "Game saved.", None, LogCategory.SYSTEM)
         return True
 
     @staticmethod
@@ -179,5 +179,5 @@ class SaveService:
             pass
 
         logger.info("Game loaded from %s", filepath)
-        esper.dispatch_event("log_message", "Game loaded.", None, LogCategory.SYSTEM)
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, "Game loaded.", None, LogCategory.SYSTEM)
         return True

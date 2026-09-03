@@ -9,7 +9,7 @@ import logging
 
 import esper
 
-from config import GameStates, LogCategory
+from config import GameEvent, GameStates, LogCategory
 from game.components import (
     Action,
     ActionList,
@@ -113,13 +113,13 @@ class PlayerActionService:
         """
         items_here = self.items_at_player()
         if not items_here:
-            esper.dispatch_event("log_message", "There is nothing here to pick up.", None, LogCategory.ALERT)
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, "There is nothing here to pick up.", None, LogCategory.ALERT)
             return False
 
         if len(items_here) == 1:
             return self.pickup_specific(items_here[0])
 
-        esper.dispatch_event("pickup_choice_requested", items_here)
+        esper.dispatch_event(GameEvent.PICKUP_CHOICE_REQUESTED, items_here)
         return False
 
     def pickup_specific(self, item_ent: int, end_turn: bool = True) -> bool:
@@ -142,13 +142,15 @@ class PlayerActionService:
             item_name = "item"
 
         if self._current_carry_weight(inventory) + portable.weight > stats.max_carry_weight:
-            esper.dispatch_event("log_message", f"The {item_name} is too heavy to carry.", None, LogCategory.ALERT)
+            esper.dispatch_event(
+                GameEvent.LOG_MESSAGE, f"The {item_name} is too heavy to carry.", None, LogCategory.ALERT
+            )
             return False
 
         esper.remove_component(item_ent, Position)
         inventory.items.append(item_ent)
 
-        esper.dispatch_event("log_message", f"You pick up the {item_name}.", None, LogCategory.LOOT)
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, f"You pick up the {item_name}.", None, LogCategory.LOOT)
         if end_turn:
             self._turn_system.end_player_turn()
         return True
@@ -178,7 +180,7 @@ class PlayerActionService:
 
     def wait(self) -> None:
         """Wait a turn and end player turn."""
-        esper.dispatch_event("log_message", "You wait...")
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, "You wait...")
         self._turn_system.end_player_turn()
 
     def get_selected_action(self):

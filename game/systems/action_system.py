@@ -3,7 +3,7 @@ import math
 
 import esper
 
-from config import GameStates, LogCategory
+from config import GameEvent, GameStates, LogCategory
 from game.components import (
     AIBehaviorState,
     AIState,
@@ -84,7 +84,7 @@ class ActionSystem(esper.Processor, MapAwareSystem):
     def perform_action(self, entity, action):
         """Executes a non-targeting action."""
         if action.name == "Wait":
-            esper.dispatch_event("log_message", "You wait...")
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, "You wait...")
             if self.turn_system:
                 self.turn_system.end_player_turn()
             return True
@@ -97,9 +97,9 @@ class ActionSystem(esper.Processor, MapAwareSystem):
             for p_ent, (p_pos, portal) in esper.get_components(Position, Portal):
                 if p_pos.x == pos.x and p_pos.y == pos.y and p_pos.layer == pos.layer:
                     portal_found = True
-                    esper.dispatch_event("log_message", f"You enter the {portal.name}...")
+                    esper.dispatch_event(GameEvent.LOG_MESSAGE, f"You enter the {portal.name}...")
                     esper.dispatch_event(
-                        "map_change_requested",
+                        GameEvent.MAP_CHANGE_REQUESTED,
                         {
                             "target_map_id": portal.target_map_id,
                             "target_x": portal.target_x,
@@ -114,7 +114,7 @@ class ActionSystem(esper.Processor, MapAwareSystem):
                     break
 
             if not portal_found:
-                esper.dispatch_event("log_message", "There is no portal here.", None, LogCategory.ALERT)
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, "There is no portal here.", None, LogCategory.ALERT)
                 return False
             return True
 
@@ -266,7 +266,7 @@ class ActionSystem(esper.Processor, MapAwareSystem):
         if targeting.action.targeting_mode != "inspect":
             attack_target = self._target_with_stats(entity, targeting.target_x, targeting.target_y)
             if attack_target is None:
-                esper.dispatch_event("log_message", "No target there.", None, LogCategory.ALERT)
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, "No target there.", None, LogCategory.ALERT)
                 self.cancel_targeting(entity)
                 return False
 
@@ -296,12 +296,12 @@ class ActionSystem(esper.Processor, MapAwareSystem):
                 tile_desc = ""
 
             # Always dispatch tile name in yellow
-            esper.dispatch_event("log_message", f"[color=yellow]{tile_name}[/color]")
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=yellow]{tile_name}[/color]")
 
             # For VISIBLE tiles: dispatch description and entity info
             if tile_visibility == VisibilityState.VISIBLE:
                 if tile_desc:
-                    esper.dispatch_event("log_message", tile_desc)
+                    esper.dispatch_event(GameEvent.LOG_MESSAGE, tile_desc)
 
                 # List all entities at the target position
                 for ent, (pos,) in esper.get_components(Position):
@@ -317,9 +317,9 @@ class ActionSystem(esper.Processor, MapAwareSystem):
                     detailed_desc = ActionSystem.get_detailed_description(esper, ent)
 
                     # Show name in yellow
-                    esper.dispatch_event("log_message", f"[color=yellow]{name_comp.name}[/color]")
+                    esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=yellow]{name_comp.name}[/color]")
                     if detailed_desc:
-                        esper.dispatch_event("log_message", detailed_desc)
+                        esper.dispatch_event(GameEvent.LOG_MESSAGE, detailed_desc)
         else:
             # Attack ability: hand the hit to the CombatSystem with the
             # action's power multiplier (G5)
@@ -348,6 +348,6 @@ class ActionSystem(esper.Processor, MapAwareSystem):
             behavior.state = AIState.IDLE
             name_comp = esper.try_component(target_entity, Name)
             if name_comp:
-                esper.dispatch_event("log_message", f"The {name_comp.name} wakes up!", None, LogCategory.ALERT)
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, f"The {name_comp.name} wakes up!", None, LogCategory.ALERT)
             else:
-                esper.dispatch_event("log_message", "Something wakes up!", None, LogCategory.ALERT)
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, "Something wakes up!", None, LogCategory.ALERT)

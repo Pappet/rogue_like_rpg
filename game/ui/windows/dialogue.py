@@ -30,6 +30,7 @@ from config import (
     UI_THEME_INK,
     UI_THEME_INK_DIM,
     UI_THEME_INK_MUTED,
+    GameEvent,
     GameStates,
 )
 from core.input_manager import InputCommand
@@ -131,7 +132,7 @@ class DialogueWindow(UIWindow):
             line = rumors.directions() if rumors else None
             if line:
                 self._say_npc(line)
-                esper.dispatch_event("log_message", f"[color=yellow]{self.name}:[/color] {line}")
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=yellow]{self.name}:[/color] {line}")
             else:
                 self._say_npc("I've already told you every road I know, friend.")
         elif topic == _NEWS:
@@ -139,7 +140,7 @@ class DialogueWindow(UIWindow):
             line = rumors.ask_news() if rumors else None
             if line:
                 self._say_npc(line)
-                esper.dispatch_event("log_message", f"[color=yellow]{self.name}:[/color] {line}")
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=yellow]{self.name}:[/color] {line}")
             else:
                 self._say_npc("Nothing new reaches my ears these days.")
         elif topic == _SMALLTALK:

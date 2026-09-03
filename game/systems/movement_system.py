@@ -1,5 +1,6 @@
 import esper
 
+from config.enums import GameEvent
 from game.components import Blocker, MovementRequest, PlayerTag, Position
 from game.services.interaction_resolver import InteractionResolver, InteractionType
 from game.systems.map_aware_system import MapAwareSystem
@@ -32,7 +33,7 @@ class MovementSystem(esper.Processor, MapAwareSystem):
             # Bumping a bed (a non-walkable "rest" tile) offers sleep — but
             # only for the player; NPCs just treat it as a wall.
             if not blocker_ent and self._provides_rest(new_x, new_y, pos.layer) and esper.has_component(ent, PlayerTag):
-                esper.dispatch_event("rest_requested", {"source": "bed"})
+                esper.dispatch_event(GameEvent.REST_REQUESTED, {"source": "bed"})
                 esper.remove_component(ent, MovementRequest)
                 continue
 
@@ -40,7 +41,7 @@ class MovementSystem(esper.Processor, MapAwareSystem):
             # player only; to NPCs the station is just a wall.
             station = self._crafting_station(new_x, new_y, pos.layer)
             if not blocker_ent and station and esper.has_component(ent, PlayerTag):
-                esper.dispatch_event("craft_requested", {"station": station})
+                esper.dispatch_event(GameEvent.CRAFT_REQUESTED, {"station": station})
                 esper.remove_component(ent, MovementRequest)
                 continue
 

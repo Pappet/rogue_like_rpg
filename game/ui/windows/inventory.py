@@ -13,6 +13,7 @@ from config import (
     UI_THEME_INK_MUTED,
     UI_THEME_SELECT_EDGE,
     UI_THEME_XP,
+    GameEvent,
     GameStates,
     SpriteLayer,
 )
@@ -142,7 +143,7 @@ class InventoryWindow(UIWindow):
             except KeyError:
                 item_name = "item"
 
-            esper.dispatch_event("log_message", f"You drop the {item_name}.")
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, f"You drop the {item_name}.")
 
             # Adjust selected index if it's now out of bounds
             self._clamp_selection()

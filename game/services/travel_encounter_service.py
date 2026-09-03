@@ -35,6 +35,7 @@ from config import (
     TRAVEL_ENCOUNTER_MIN_PROGRESS,
     TRAVEL_MERCHANT_EVENT_MAX_AGE_TICKS,
     TRAVEL_MERCHANT_RUMOR_CHANCE,
+    GameEvent,
     LogCategory,
     SpriteLayer,
 )
@@ -93,7 +94,7 @@ class TravelEncounterService:
         # Active chronicle-caused bandit ambush: clearing it makes the
         # road safe again (cancels the caravan_raided escalation, G4).
         self._bandit_hunt: dict | None = None
-        esper.set_handler("entity_died", self.on_entity_died)
+        esper.set_handler(GameEvent.ENTITY_DIED, self.on_entity_died)
 
     def load_templates(self, filepath: str) -> None:
         """Load the encounter pool from a JSON file."""
@@ -264,7 +265,7 @@ class TravelEncounterService:
         if chronicle is not None:
             chronicle.cancel_escalations(hunt["destination_id"], BANDITS_SPOTTED_EVENT_ID)
         esper.dispatch_event(
-            "log_message",
+            GameEvent.LOG_MESSAGE,
             f"The road to {hunt['destination_id']} is safe again — its caravans will get through.",
             None,
             LogCategory.SYSTEM,

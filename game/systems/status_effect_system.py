@@ -9,7 +9,7 @@ import logging
 
 import esper
 
-from config import LogCategory
+from config import GameEvent, LogCategory
 from game.components import FCT, Bleeding, EffectiveStats, MapBound, Name, PlayerTag, Position, Stats
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class StatusEffectSystem:
             name = esper.try_component(ent, Name)
             display = name.name if name else f"Entity {ent}"
             category = LogCategory.DAMAGE_RECEIVED if esper.has_component(ent, PlayerTag) else LogCategory.SYSTEM
-            esper.dispatch_event("log_message", f"{display} bleeds for {damage} damage.", None, category)
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, f"{display} bleeds for {damage} damage.", None, category)
             self._spawn_fct(ent, str(damage))
 
             bleeding.turns_left -= 1
@@ -37,7 +37,7 @@ class StatusEffectSystem:
                 esper.remove_component(ent, Bleeding)
 
             if (eff.hp if eff is not None else stats.hp) <= 0:
-                esper.dispatch_event("entity_died", ent, None)
+                esper.dispatch_event(GameEvent.ENTITY_DIED, ent, None)
 
     @staticmethod
     def _spawn_fct(entity: int, text: str) -> None:

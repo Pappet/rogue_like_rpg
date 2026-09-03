@@ -9,12 +9,12 @@ advance and map-aware system re-pointing all reuse MapTransitionService.
 
 import esper
 
-from config import TICKS_PER_HOUR
+from config import TICKS_PER_HOUR, GameEvent
 
 
 def _go(target_map_id: str, x: int, y: int, travel_ticks: int) -> None:
     esper.dispatch_event(
-        "map_change_requested",
+        GameEvent.MAP_CHANGE_REQUESTED,
         {
             "target_map_id": target_map_id,
             "target_x": x,
@@ -45,15 +45,15 @@ def travel_to(ctx, destination, travel_ticks: int) -> bool:
         ax, ay = road_map.arrival_pos
         _go(encounter["map_id"], ax, ay, encounter["elapsed_ticks"])
         esper.dispatch_event(
-            "log_message",
+            GameEvent.LOG_MESSAGE,
             f"You set out for [color=yellow]{destination.name}[/color] ({hours:.0f}h on the road).",
         )
-        esper.dispatch_event("log_message", f"[color=orange]{encounter['message']}[/color]")
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=orange]{encounter['message']}[/color]")
     else:
         ax, ay = target_map.arrival_pos or (1, 1)
         _go(destination.id, ax, ay, travel_ticks)
         esper.dispatch_event(
-            "log_message",
+            GameEvent.LOG_MESSAGE,
             f"You travel to [color=yellow]{destination.name}[/color] ({hours:.0f}h on the road).",
         )
     return True

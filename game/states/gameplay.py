@@ -2,7 +2,7 @@ import random
 
 import esper
 
-from config import UI_CRAFT_RECT, UI_MODAL_RECT, UI_REST_RECT
+from config import UI_CRAFT_RECT, UI_MODAL_RECT, UI_REST_RECT, GameEvent
 from core.rng import derive_seed
 from game.controllers.input_controller import InputController
 from game.controllers.render_pipeline import RenderPipeline
@@ -67,9 +67,9 @@ class GameplayState(GameState):
         # Welcome lines are dispatched only after the log handler is live (above)
         # so they actually land in the chronicle, and only on a fresh run.
         if fresh_start:
-            esper.dispatch_event("log_message", "Welcome [color=green]Traveler[/color] to the dungeon!")
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, "Welcome [color=green]Traveler[/color] to the dungeon!")
             esper.dispatch_event(
-                "log_message",
+                GameEvent.LOG_MESSAGE,
                 "Speak with the townsfolk (bump into them) to learn the roads and hear rumors.",
             )
         systems.render_system = RenderSystem(ctx.camera)
@@ -90,20 +90,22 @@ class GameplayState(GameState):
         if self.requests is not None:
             self.requests.clear()
         self.requests = RequestRouter(ctx.ui_stack)
-        self.requests.on("map_change_requested", self.map_transition_service.transition)
-        self.requests.on("player_died", self._on_player_died)
-        self.requests.on("harvest_requested", self._on_harvest_requested)
-        self.requests.modal("dialogue_requested", UI_MODAL_RECT, lambda rect, npc: DialogueWindow(rect, ctx, npc))
+        self.requests.on(GameEvent.MAP_CHANGE_REQUESTED, self.map_transition_service.transition)
+        self.requests.on(GameEvent.PLAYER_DIED, self._on_player_died)
+        self.requests.on(GameEvent.HARVEST_REQUESTED, self._on_harvest_requested)
         self.requests.modal(
-            "trade_requested", UI_MODAL_RECT, lambda rect, npc: TradeWindow(rect, ctx.player_entity, npc, ctx)
+            GameEvent.DIALOGUE_REQUESTED, UI_MODAL_RECT, lambda rect, npc: DialogueWindow(rect, ctx, npc)
         )
         self.requests.modal(
-            "quests_requested", UI_MODAL_RECT, lambda rect, _giver: QuestWindow(rect, ctx, mode="giver")
+            GameEvent.TRADE_REQUESTED, UI_MODAL_RECT, lambda rect, npc: TradeWindow(rect, ctx.player_entity, npc, ctx)
         )
-        self.requests.modal("rest_requested", UI_REST_RECT, self._rest_window)
-        self.requests.modal("craft_requested", UI_CRAFT_RECT, self._craft_window)
         self.requests.modal(
-            "pickup_choice_requested",
+            GameEvent.QUESTS_REQUESTED, UI_MODAL_RECT, lambda rect, _giver: QuestWindow(rect, ctx, mode="giver")
+        )
+        self.requests.modal(GameEvent.REST_REQUESTED, UI_REST_RECT, self._rest_window)
+        self.requests.modal(GameEvent.CRAFT_REQUESTED, UI_CRAFT_RECT, self._craft_window)
+        self.requests.modal(
+            GameEvent.PICKUP_CHOICE_REQUESTED,
             UI_MODAL_RECT,
             lambda rect, items: PickupWindow(rect, items, self.input_controller.actions, ctx.input_manager),
         )
