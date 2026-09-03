@@ -905,7 +905,8 @@ Der komplexeste Workflow — eine neue Siedlung erfordert **2 Pflicht-Dateien**
     "rates_per_day": {
       "item_id": float,                                                   // +Produktion / -Verbrauch
       "item_id": {"per_day": float, "requires": {"input_item_id": count}} // verarbeitete Güter
-    }
+    },
+    "treasury": int (optional, Start der Stadtkasse; Default 200)
   } (optional),
   "biome": "biome_id" (optional, aktiviert Wildnis-Map via Portal),
   "stations":  [{"type": "forge|...", "pos": [x, y]}] (optional, lose Stationen),
@@ -936,6 +937,14 @@ Der komplexeste Workflow — eine neue Siedlung erfordert **2 Pflicht-Dateien**
 8. `resources[].kind` muss ein `RESOURCE_NODES`-Key sein; `MapGenerator`
    dekoriert den Knoten (Feld/Fels/Teich) und hält die vier orthogonalen
    Nachbarn frei (bump-erreichbar).
+9. `treasury` ist die Stadtkasse (`EconomyService.treasury`). Sie wird durch
+   den Marktzoll (6 % jedes Handels, kaufen wie verkaufen) gefüllt und
+   bezahlt die Quest-Belohnungen des Mayors — Gold wird nicht mehr aus dem
+   Nichts geprägt. Generierte Quest-Angebote deckeln sich an der Kasse. Aus
+   dem Startwert wird intern ein `treasury_cap` (Faktor 2) abgeleitet; über
+   dem Cap gibt eine Stadt Überschüsse für Importe aus. Siedlungen ohne
+   Weltgraph-Eintrag nehmen nicht am Inter-Settlement-Handel teil. Ältere
+   Saves ohne `treasury` fallen auf die Szenario-Defaults zurück.
 
 ### Schritt 2: Weltgraph `assets/data/world.json`
 
@@ -991,7 +1000,8 @@ route-verbunden sein (sonst kann keine Guide-Quest dorthin zeigen).
   ],
   "economy": {
     "stock": {"wool": 8, "cloth": 4, "bread": 6},
-    "rates_per_day": {"cloth": {"per_day": 2, "requires": {"wool": 2}}, "bread": -1.5}
+    "rates_per_day": {"cloth": {"per_day": 2, "requires": {"wool": 2}}, "bread": -1.5},
+    "treasury": 180
   },
   "biome": "plains",
   "resources": [{"kind": "pasture", "pos": [38, 30]}],

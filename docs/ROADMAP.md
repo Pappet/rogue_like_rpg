@@ -291,7 +291,7 @@ shortages still bite. Verified by `tests/verify_gathering.py` and
 
 ---
 
-### Phase L — Quest Chains & Reactive Dialogue ✅ (slice 1)
+### Phase L — Quest Chains & Reactive Dialogue ✅ (done)
 
 *Quests gain memory: stages unlock in sequence and givers acknowledge them.*
 
@@ -334,12 +334,40 @@ generalised from `Skirmisher`, faction-priced trade, and joinable factions.)
 
 **All seven roadmap phases plus crafting (H), progression (I), craft
 quality/quantity (J), raw-material supply (K) and quest chains (L) are
-complete.** Candidates for the next planning round (still building toward the
-"deepen the world" goal): NPC↔NPC gossip & relationships (deferred from
-Phase D), a real faction model (relations matrix, faction reputation), binding
-quests to a specific giver NPC, combat scaling from the `combat` skill,
-multiple save slots, deeper dungeon levels with stairs, and a walkable
-overworld.
+complete** — including Phase L's later slices 2–4 (gossip, named townsfolk
+with relationships, the faction model), so those are *not* open candidates
+anymore.
+
+**Shipped since Phase L (June–September 2026)** — no new phase letter, the
+round deepened the economy and hardened the engine:
+
+- **Settlement treasury & market toll** (`ed3521c`): every settlement owns a
+  `treasury`; a 6% toll on every trade fills it, and quest rewards are paid
+  from the giver's till instead of minting gold. Generated quest offers cap
+  themselves against the treasury, so quest density follows prosperity.
+- **Inter-settlement trade** (`900a9df`): settlements ship surpluses abroad
+  and buy back what they cannot make, under reserve/spread/pace rules that
+  keep the money supply bounded and every town alive over a simulated year
+  (`tests/verify_economy.py`).
+- **Guide quests & two-tier location discovery** (`a0ded89`, `a9e5280`):
+  places are `heard` (a lead) vs. `discovered` (travelable); roads are
+  revealed by asking locals, and a friendly settlement's shortage becomes a
+  deliver quest *offered here, turned in there* — accepting it reveals the
+  road.
+- **Event-policy hardening** (`7fb4422`, `12c19c6`, `1a08ad9`): every esper
+  event name is a `GameEvent` enum member, `*_requested` windows are wired
+  through a `RequestRouter` (weak-ref/clear traps owned in one place), and
+  the world chronicle is pruned instead of growing forever.
+- **CI & tooling** (`e058b7a`, `53b8447`, `35e2768`, `bd63e82`, `8c19962`):
+  mypy over `core/` + `game/services/`, coverage gated at 88%, pre-commit
+  hooks matching CI, `map_generator` decomposed into a package with golden
+  terrain fingerprints, and spawns never land on an occupied tile.
+
+Candidates for the next planning round (still building toward the
+"deepen the world" goal): faction-driven on-map brawls generalised from
+`Skirmisher`, faction-priced trade, joinable factions, binding quests to a
+specific giver NPC, combat scaling from the `combat` skill, multiple save
+slots, deeper dungeon levels with stairs, and a walkable overworld.
 
 ## 4. Recommended order & why
 
