@@ -6,8 +6,16 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 import esper
 import pygame
+import pytest
 
-from config import ECON_MAX_STOCK, ECON_PRICE_FACTOR_MAX, ECON_PRICE_FACTOR_MIN, TICKS_PER_HOUR
+from config import (
+    ECON_EQUILIBRIUM_STOCK,
+    ECON_MAX_STOCK,
+    ECON_PRICE_FACTOR_MAX,
+    ECON_PRICE_FACTOR_MIN,
+    PROSPERITY_COMFORT_DRIFT,
+    TICKS_PER_HOUR,
+)
 from game.components import Inventory, Purse
 from game.content.resource_loader import ResourceLoader
 from game.services.economy_service import EconomyService
@@ -193,3 +201,50 @@ def test_every_settlement_starts_with_a_declared_till():
     assert settlements, "no settlements loaded"
     for location_id in settlements:
         assert economy.treasury_balance(location_id) > 0, f"{location_id} has no treasury"
+
+
+# ---------------------------------------------------------------------------
+# Prosperity recovery
+# ---------------------------------------------------------------------------
+
+
+def _town(stock: dict) -> EconomyService:
+    economy = EconomyService()
+    economy.stocks = {"Village": dict(stock)}
+    economy.rates_per_day = {"Village": {"bread": -1.0, "venison": -1.0}}
+    economy.prosperity = {"Village": 0.0}
+    return economy
+
+
+def test_a_town_that_is_no_longer_starving_recovers():
+    """The regression this guards: recovery used to need *full* stocks.
+
+    A settlement between the shortage level and equilibrium matched neither
+    branch, so one that clawed its way out of famine to half stocks sat at
+    prosperity 0 for good and the tier stopped meaning anything.
+    """
+    economy = _town({"bread": 2.5, "venison": 2.5})  # above shortage, below plenty
+    economy._drift_prosperity(hours=24)
+    assert economy.prosperity["Village"] > 0.0
+
+
+def test_recovery_is_faster_the_better_stocked_the_town_is():
+    poor = _town({"bread": 1.0, "venison": 1.0})
+    rich = _town({"bread": 20.0, "venison": 20.0})
+
+    poor._drift_prosperity(hours=24)
+    rich._drift_prosperity(hours=24)
+
+    assert 0.0 < poor.prosperity["Village"] < rich.prosperity["Village"]
+
+
+def test_full_stocks_still_recover_at_the_old_rate():
+    economy = _town({"bread": ECON_EQUILIBRIUM_STOCK, "venison": ECON_EQUILIBRIUM_STOCK})
+    economy._drift_prosperity(hours=10)
+    assert economy.prosperity["Village"] == pytest.approx(PROSPERITY_COMFORT_DRIFT * 10)
+
+
+def test_a_shortage_still_outweighs_everything_else():
+    economy = _town({"bread": 0.0, "venison": 20.0})  # one good empty
+    economy._drift_prosperity(hours=24)
+    assert economy.prosperity["Village"] == 0.0  # clamped at the floor, i.e. it fell

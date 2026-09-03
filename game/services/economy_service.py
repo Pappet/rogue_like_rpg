@@ -175,7 +175,16 @@ class EconomyService:
         return goods
 
     def _drift_prosperity(self, hours: int) -> None:
-        """Persistent shortages pull a settlement down; plenty lifts it."""
+        """Persistent shortages pull a settlement down; supply lifts it back.
+
+        Recovery is proportional to how well stocked the town is, measured
+        against ECON_EQUILIBRIUM_STOCK. That matters: an earlier version only
+        recovered when *every* consumed good was at full equilibrium, and
+        punished any good at or below the shortage level, which left a dead
+        band in between. A settlement that clawed its way out of famine to half
+        stocks matched neither branch and sat at prosperity 0 forever, so the
+        tier stopped saying anything about the settlement.
+        """
         for location_id in self.prosperity:
             consumed = self._consumed_goods(location_id)
             if not consumed:
@@ -184,10 +193,9 @@ class EconomyService:
             shortages = sum(1 for i in consumed if stock.get(i, 0.0) <= PROSPERITY_SHORTAGE_LEVEL)
             if shortages:
                 delta = PROSPERITY_SHORTAGE_DRIFT * shortages * hours
-            elif all(stock.get(i, 0.0) >= ECON_EQUILIBRIUM_STOCK for i in consumed):
-                delta = PROSPERITY_COMFORT_DRIFT * hours
             else:
-                continue
+                supply = sum(min(1.0, stock.get(i, 0.0) / ECON_EQUILIBRIUM_STOCK) for i in consumed) / len(consumed)
+                delta = PROSPERITY_COMFORT_DRIFT * supply * hours
             self.adjust_prosperity(location_id, delta)
 
     def adjust_prosperity(self, location_id: str, delta: float) -> None:
