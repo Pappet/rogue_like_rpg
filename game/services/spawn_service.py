@@ -1,5 +1,8 @@
 import random
 
+import esper
+
+from game.components import Position
 from game.content.entity_factory import EntityFactory
 from game.map.map_container import MapContainer
 
@@ -12,6 +15,10 @@ class SpawnService:
         ``monsters`` is the pool to draw from (each spawn picks one at random);
         it defaults to the generic dungeon trio when not given, so POIs can pass
         a themed pool (skeletons for a crypt, bandits for a camp, ...).
+
+        A candidate tile must be walkable *and* free of entities on that
+        layer — walkable alone would let a monster appear on a Blocker,
+        a resource node or an NPC already standing there.
         """
         monsters = monsters or ["orc", "goblin", "troll"]
 
@@ -19,14 +26,17 @@ class SpawnService:
             # Calculate how many monsters to spawn on this layer
             target_count = int(layer.width * layer.height * density)
 
-            # Find all walkable tiles
+            # Tiles already holding any positioned entity are not spawn candidates.
+            occupied = {(pos.x, pos.y, pos.layer) for _, pos in esper.get_component(Position)}
+
+            # Find all free walkable tiles
             walkable_tiles = []
             for y in range(layer.height):
                 for x in range(layer.width):
                     # Don't spawn on the typical player start position
                     if x == 1 and y == 1 and layer_idx == 0:
                         continue
-                    if layer.tiles[y][x].walkable:
+                    if layer.tiles[y][x].walkable and (x, y, layer_idx) not in occupied:
                         walkable_tiles.append((x, y))
 
             # Spawn random monsters at random valid locations
@@ -34,3 +44,4 @@ class SpawnService:
             for x, y in tiles_to_spawn:
                 monster_type = random.choice(monsters)
                 EntityFactory.create(world, monster_type, x, y, layer_idx)
+                occupied.add((x, y, layer_idx))

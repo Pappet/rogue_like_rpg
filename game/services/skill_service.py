@@ -12,7 +12,7 @@ character sheet. SkillService is the sole writer of skill XP.
 
 import logging
 
-from config import SKILL_BASE_XP, SKILL_MAX_LEVEL, SKILL_XP_GROWTH
+from config import SKILL_BASE_XP, SKILL_MAX_LEVEL, SKILL_XP_GROWTH, GameEvent
 from game.components import Skills
 
 logger = logging.getLogger(__name__)
@@ -104,7 +104,9 @@ class SkillService:
         skills.xp[skill_id] = skills.xp.get(skill_id, 0) + amount
         after = level_for_xp(skills.xp[skill_id])
         if after > before:
-            world.dispatch_event("log_message", f"[color=green]Your {SKILLS[skill_id]} rose to level {after}![/color]")
-            world.dispatch_event("skill_increased", entity, skill_id, after)
+            world.dispatch_event(
+                GameEvent.LOG_MESSAGE, f"[color=green]Your {SKILLS[skill_id]} rose to level {after}![/color]"
+            )
+            world.dispatch_event(GameEvent.SKILL_INCREASED, entity, skill_id, after)
             return True
         return False

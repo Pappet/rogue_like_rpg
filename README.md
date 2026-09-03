@@ -34,7 +34,8 @@ trade along price differences, craft, and fight your way through the wilds.
 
 - ⚔️ **Turn-based combat** with critical hits, bleeding, floating combat text and loot drops
 - 🎒 **Inventory & equipment** with weight limits and gear slots
-- 💰 **Trade & economy** — per-settlement stock drives prices; haul goods for profit
+- 💰 **Trade & economy** — per-settlement stock drives prices; haul goods for profit. Every town runs its own **treasury**: a market toll on your trades fills it, quest rewards are paid out of it, and shortage quests dry up when a town is broke
+- 🚚 **Inter-settlement trade** — settlements ship their surpluses to neighbours and buy back what they cannot make (Brackenfen's ore feeds Eastmoor's anvil), so the world's goods actually balance
 - 🔧 **Crafting** at stations (forge, anvil, mill, oven, tannery, herbalist, jeweler) with skill-based quality/quantity
 - ⛏️ **Gathering** from resource nodes (herbs, ore, grain) that respawn over time
 - 📈 **Learn-by-doing skills** — crafting, gathering and combat train with use
@@ -125,6 +126,12 @@ GameController ──▶ GameState (TitleScreen, GameplayState, WorldMapState, G
 - **Render systems** — called during `draw()` (RenderSystem, UISystem, DebugRenderSystem)
 - **Event systems** — react to events only, no process loop (DeathSystem)
 
+Events follow a "facts up, commands down" policy: facts are broadcast via
+`dispatch_event` (past-tense names like `entity_died`), commands are direct
+calls down the layers. Event names are `GameEvent` enum members, never bare
+strings; window-opening requests travel back up as sanctioned `*_requested`
+events through a `RequestRouter`.
+
 A machine-checked layering rule keeps `core/` game-agnostic: it must never
 import from `game/`. All game content is **data-driven** via JSON in
 `assets/data/`.
@@ -141,9 +148,15 @@ python -m pytest tests/ -q
 python -m pytest tests/verify_ai_system.py -v
 ```
 
-CI (`.github/workflows/ci.yml`) runs `ruff check`, `ruff format --check` and
-the full suite on Python 3.10 and 3.12 (headless SDL) for every PR and push to
-`main`.
+CI (`.github/workflows/ci.yml`) runs `ruff check`, `ruff format --check`,
+`mypy` and the full suite **with a coverage gate** on Python 3.10 and 3.12
+(headless SDL) for every PR and push to `main`. The gate fails below 88%
+(over `core/`, `game/`, `config/` and the entry points) — raise it when
+coverage climbs, never lower it to make a red build green.
+
+The same checks run locally via [pre-commit](https://pre-commit.com/)
+(`pre-commit install` once): ruff, mypy and the boot smoke test. Tool versions
+are pinned in CI, so a fresh tool release cannot turn the build red on its own.
 
 ## Project Structure
 
@@ -159,14 +172,15 @@ the full suite on Python 3.10 and 3.12 (headless SDL) for every PR and push to
 ├── game/                    # Game layer (may use core/)
 │   ├── components.py        # All ECS component dataclasses
 │   ├── systems/             # 17 ECS systems
-│   ├── services/            # 32 game-rule / world services
+│   ├── services/            # 33 game-rule / world services
+│   │   └── map_generator/   # Generation package: facade + builders per domain
 │   ├── content/             # Registries, factories, ContentDatabase
-│   ├── map/                 # Tile, MapLayer, MapContainer, generation
-│   ├── controllers/         # InputController, TurnOrchestrator, RenderPipeline
+│   ├── map/                 # Tile, MapLayer, MapContainer
+│   ├── controllers/         # InputController, TurnOrchestrator, RenderPipeline, RequestRouter
 │   ├── states/              # TitleScreen, GameplayState, WorldMapState, GameOver
-│   └── ui/windows/          # 7 modal windows (inventory, trade, crafting, ...)
+│   └── ui/windows/          # 9 modal windows (inventory, trade, crafting, dialogue, ...)
 ├── assets/data/             # JSON game content (+ prefabs/, scenarios/)
-├── tests/                   # 93 test files (verify_*.py + test_smoke.py)
+├── tests/                   # 101 test files (verify_*.py + test_smoke.py)
 └── docs/                    # ROADMAP, DEV_JOURNAL, ARCHITECTURE_CONCEPT, CONTENT_GUIDE, ...
 ```
 

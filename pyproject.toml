@@ -36,3 +36,33 @@ line-ending = "auto"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "verify_*.py"]
+
+[tool.coverage.run]
+# Module names, not paths: coverage never measured the three root modules
+# while they were listed as "bootstrap.py" etc.
+source = ["core", "game", "config", "bootstrap", "game_context", "main"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+# The gate sits just under the current figure: a real regression trips it,
+# an ordinary refactor does not. Raise it when coverage climbs, never lower
+# it to make a red build green.
+fail_under = 88
+show_missing = true
+skip_covered = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.mypy]
+python_version = "3.10"
+# Scoped on purpose: core/ and the service layer carry the game's rules and are
+# the layers worth type-checking first. Widen this list a package at a time.
+files = ["core", "game", "bootstrap.py", "game_context.py", "main.py"]
+# pygame, esper and pathfinding ship no stubs.
+ignore_missing_imports = true
+# Loose to start: bodies of unannotated functions are not checked. The way to
+# tighten is per module below, not by loosening a rule that already passes.
+check_untyped_defs = false
+warn_unused_ignores = true

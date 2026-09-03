@@ -20,6 +20,7 @@ and to the player — the missing matrix the world has lacked.
 import json
 import logging
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import esper
 
@@ -31,8 +32,12 @@ from config import (
     FACTION_MAX,
     FACTION_MIN,
     FACTION_TRUSTED,
+    GameEvent,
 )
 from game.components import AIBehaviorState, Alignment, Animal, Corpse, Faction, PlayerTag, TemplateId
+
+if TYPE_CHECKING:  # pragma: no cover - typing only, avoids a runtime import cycle
+    from game_context import GameContext
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +47,12 @@ logger = logging.getLogger(__name__)
 class FactionService:
     """Owns the faction relations matrix and the player's standing per faction."""
 
-    ctx: object = None
+    ctx: "GameContext | None" = None
     relations: dict[str, dict[str, str]] = field(default_factory=dict)
     standing: dict[str, int] = field(default_factory=dict)
 
     def __post_init__(self):
-        esper.set_handler("entity_died", self.on_entity_died)
+        esper.set_handler(GameEvent.ENTITY_DIED, self.on_entity_died)
 
     # --- Loading ------------------------------------------------------------
 

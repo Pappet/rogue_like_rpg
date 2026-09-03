@@ -188,6 +188,7 @@
   }
  ],
  "economy": {
+  "treasury": 180,
   "stock": {
    "wool": 14,
    "cloth": 6,
@@ -217,7 +218,7 @@
      "cloth": 1
     }
    },
-   "bread": -1.5,
+   "bread": -1,
    "health_potion": -0.5,
    "cheese": 1
   }

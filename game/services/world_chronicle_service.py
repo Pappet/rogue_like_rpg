@@ -27,8 +27,17 @@ import json
 import logging
 import random
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from config import SIM_EVENT_CHANCE_PER_HOUR, TICKS_PER_HOUR
+from config import (
+    CHRONICLE_MAX_CATCHUP_HOURS,
+    CHRONICLE_RETENTION_TICKS,
+    SIM_EVENT_CHANCE_PER_HOUR,
+    TICKS_PER_HOUR,
+)
+
+if TYPE_CHECKING:  # pragma: no cover - typing only, avoids a runtime import cycle
+    from game_context import GameContext
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +75,7 @@ class PendingEscalation:
 class WorldChronicleService:
     """Records and generates per-location world events."""
 
-    ctx: object = None
+    ctx: "GameContext | None" = None
     events: list[ChronicleEvent] = field(default_factory=list)
     templates: list[EventTemplate] = field(default_factory=list)
     last_processed_hour: int = 0
@@ -106,14 +115,42 @@ class WorldChronicleService:
         absolute_hour = clock_state["total_ticks"] // TICKS_PER_HOUR
         if absolute_hour <= self.last_processed_hour:
             return
-        for hour_index in range(self.last_processed_hour + 1, absolute_hour + 1):
+        first_hour = self.last_processed_hour + 1
+        # A single tick can jump the clock far (travel, sleep, a loaded save).
+        # Rolling every skipped hour would be unbounded work producing events
+        # too old for any consumer to read, so skip ahead. Escalations that
+        # came due in the skipped span are not lost: _fire_due_escalations
+        # takes everything due *up to* the hour it is given, so the first
+        # simulated hour settles the whole backlog as current news.
+        if absolute_hour - self.last_processed_hour > CHRONICLE_MAX_CATCHUP_HOURS:
+            first_hour = absolute_hour - CHRONICLE_MAX_CATCHUP_HOURS + 1
+        for hour_index in range(first_hour, absolute_hour + 1):
             self._roll_hour(hour_index)
             self._fire_due_escalations(hour_index)
         self.last_processed_hour = absolute_hour
+        self.prune(absolute_hour * TICKS_PER_HOUR)
+
+    def prune(self, now_tick: int) -> int:
+        """Drop events too old for any consumer to read. Returns how many.
+
+        The log is append-only, read by four consumers and serialized whole
+        into every save. All four already filter by age at read time
+        (CHRONICLE_RETENTION_TICKS sits above the widest of those windows), so
+        anything older is memory and save weight nobody can reach.
+        """
+        cutoff = now_tick - CHRONICLE_RETENTION_TICKS
+        if cutoff <= 0:
+            return 0
+        before = len(self.events)
+        self.events = [e for e in self.events if e.tick > cutoff]
+        dropped = before - len(self.events)
+        if dropped:
+            logger.debug("Chronicle: pruned %d event(s) older than tick %d.", dropped, cutoff)
+        return dropped
 
     def _roll_hour(self, hour_index: int) -> None:
         rollable = [t for t in self.templates if t.weight > 0]
-        if not rollable or self.ctx is None or self.ctx.world_graph is None:
+        if not rollable or self.ctx is None:
             return
         graph = self.ctx.world_graph
         for location in graph.locations.values():
@@ -218,3 +255,5 @@ class WorldChronicleService:
             for e in data.get("events", [])
         ]
         self.pending_escalations = [PendingEscalation(**p) for p in data.get("pending_escalations", [])]
+        # A save written before pruning existed can carry an unbounded log.
+        self.prune(self.last_processed_hour * TICKS_PER_HOUR)

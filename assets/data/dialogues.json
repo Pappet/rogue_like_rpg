@@ -1,485 +1,504 @@
 {
- "innkeeper": {
-  "default": [
-   "Weary from the road? I've a bed upstairs whenever you need it.",
-   "Rest as long as you like — the fire stays warm.",
-   "A quiet room and a sound sleep, that's what I offer.",
-   "Sleep here and you'll wake to a brighter day."
+  "innkeeper": {
+    "default": [
+      "Weary from the road? I've a bed upstairs whenever you need it.",
+      "Rest as long as you like — the fire stays warm.",
+      "A quiet room and a sound sleep, that's what I offer.",
+      "Sleep here and you'll wake to a brighter day."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "phase": "night"
+        },
+        "lines": [
+          "Late to be wandering. The bed's still warm if you want it.",
+          "Most folk are abed — you'd do well to join them."
+        ]
+      },
+      {
+        "when": {
+          "prosperity": "struggling"
+        },
+        "lines": [
+          "Quiet rooms these days. Times are hard on travelers.",
+          "Half my beds sit empty. Stay a while — it helps."
+        ]
+      }
+    ]
+  },
+  "villager": {
+    "default": [
+      "Good day, traveler!",
+      "The harvest was good this year.",
+      "Have you seen the guards today?",
+      "I heard strange noises from the woods last night...",
+      "Welcome to our village!"
+    ],
+    "conditional": [
+      {
+        "when": {
+          "rep": "beloved"
+        },
+        "lines": [
+          "Always a pleasure to see you, friend!",
+          "Our hero returns! What can we do for you?",
+          "You are welcome at my table any time."
+        ]
+      },
+      {
+        "when": {
+          "rep": "notorious"
+        },
+        "lines": [
+          "Stay away from me!",
+          "I know what you did. Everyone knows.",
+          "We don't want your kind here."
+        ]
+      },
+      {
+        "when": {
+          "prosperity": "struggling"
+        },
+        "lines": [
+          "Hard times, traveler. The larders are thin.",
+          "If things don't turn around soon, folk will start leaving.",
+          "We could use any help we can get."
+        ]
+      },
+      {
+        "when": {
+          "prosperity": "thriving"
+        },
+        "lines": [
+          "Never seen the village do so well!",
+          "Good times — the stalls are full and so are the bellies."
+        ]
+      },
+      {
+        "when": {
+          "phase": "night"
+        },
+        "lines": [
+          "You're up late, traveler.",
+          "Quiet night, isn't it?"
+        ]
+      },
+      {
+        "when": {
+          "activity": "WORK"
+        },
+        "lines": [
+          "Can't chat long — work to do.",
+          "These fields won't tend themselves."
+        ]
+      }
+    ]
+  },
+  "guard": {
+    "default": [
+      "Move along, citizen.",
+      "Stay out of trouble.",
+      "The roads aren't safe at night.",
+      "I'm keeping watch. No need to worry.",
+      "Report anything suspicious to me."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "guards": "hostile"
+        },
+        "lines": [
+          "You've a nerve showing your face to the watch.",
+          "Murderer. The next blade you see will be mine.",
+          "Step wrong and I'll cut you down where you stand."
+        ]
+      },
+      {
+        "when": {
+          "guards": "trusted"
+        },
+        "lines": [
+          "The watch is glad to have you, friend.",
+          "You've earned our respect. Walk easy.",
+          "Any trouble, and the guard stands with you."
+        ]
+      }
+    ]
+  },
+  "shopkeeper": {
+    "default": [
+      "Looking to buy something?",
+      "I just got a new shipment in!",
+      "Best prices in the village, I guarantee it.",
+      "Come back anytime!",
+      "Trade keeps the village alive."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "prosperity": "struggling"
+        },
+        "lines": [
+          "Shelves are half empty — deliveries keep getting raided.",
+          "Business is terrible. Bring me goods and I'll pay fairly."
+        ]
+      },
+      {
+        "when": {
+          "rep": "beloved"
+        },
+        "lines": [
+          "For you? Special prices, of course!",
+          "My best customer! Come in, come in."
+        ]
+      },
+      {
+        "when": {
+          "rep": "notorious"
+        },
+        "lines": [
+          "Your coin is good, but I'm watching you.",
+          "Buy something or get out."
+        ]
+      }
+    ]
+  },
+  "mayor": {
+    "default": [
+      "Welcome to our humble village.",
+      "I try my best to keep the peace around here.",
+      "Please, cause no trouble during your stay.",
+      "The recent monster attacks have been concerning.",
+      "If you can help defend us, you'll be well rewarded."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "quest": "ready"
+        },
+        "lines": [
+          "You've done it? Step inside — let's settle what you're owed.",
+          "Back already, and with good news I hope. Come, come.",
+          "Word reached me before you did. The council is grateful."
+        ]
+      },
+      {
+        "when": {
+          "quest": "active"
+        },
+        "lines": [
+          "Any progress on the matter we discussed?",
+          "The task still stands, and folk are counting on you.",
+          "No news yet? The errand won't run itself, traveler."
+        ]
+      },
+      {
+        "when": {
+          "treasury": "empty"
+        },
+        "lines": [
+          "I'll be plain with you: the town chest is bare. I can promise little.",
+          "Every coin the market brings in went out again the same week.",
+          "We'd hire help gladly, if we had a copper to hire it with."
+        ]
+      },
+      {
+        "when": {
+          "treasury": "full"
+        },
+        "lines": [
+          "The market's been kind this season — the chest can bear an errand or two.",
+          "Tolls have come in well. Honest work here will be honestly paid."
+        ]
+      }
+    ]
+  },
+  "blacksmith": {
+    "default": [
+      "Need some steel forged?",
+      "My blades never dull.",
+      "Strike while the iron is hot!",
+      "Armor or weapons, you name it, I can craft it.",
+      "Keep your gear in good condition out there."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "prosperity": "struggling"
+        },
+        "lines": [
+          "Iron's dear and coal's dearer. Hard to keep the fire lit.",
+          "Folk can't pay for good steel in lean times like these."
+        ]
+      },
+      {
+        "when": {
+          "rep": "beloved"
+        },
+        "lines": [
+          "For you I'll put an edge on it that bites twice.",
+          "Always glad of your custom — finest work for the finest sort."
+        ]
+      },
+      {
+        "when": {
+          "phase": "night"
+        },
+        "lines": [
+          "Forge is cold this hour. Come back at dawn.",
+          "Even a smith sleeps, stranger."
+        ]
+      }
+    ]
+  },
+  "_default": [
+    "...",
+    "They nod at you.",
+    "They don't seem interested in talking."
   ],
-  "conditional": [
-   {
-    "when": {
-     "phase": "night"
-    },
-    "lines": [
-     "Late to be wandering. The bed's still warm if you want it.",
-     "Most folk are abed — you'd do well to join them."
-    ]
-   },
-   {
-    "when": {
-     "prosperity": "struggling"
-    },
-    "lines": [
-     "Quiet rooms these days. Times are hard on travelers.",
-     "Half my beds sit empty. Stay a while — it helps."
-    ]
-   }
-  ]
- },
- "villager": {
-  "default": [
-   "Good day, traveler!",
-   "The harvest was good this year.",
-   "Have you seen the guards today?",
-   "I heard strange noises from the woods last night...",
-   "Welcome to our village!"
+  "_gossip": [
+    "Have you seen {subject} about? Keeping to themselves lately.",
+    "{subject} swears the harvest will be better next year.",
+    "They say {subject} fancies someone across the square.",
+    "Word is {subject} had words with the mayor again.",
+    "Cold nights lately. My old bones feel every one.",
+    "The work's hard, but the roof holds, eh?",
+    "Heard the price of bread again? Robbery, I call it.",
+    "Quiet today. Quiet's good. Quiet means no wolves.",
+    "They say the roads east are busier of late. More carts, more coin.",
+    "A peddler swore he saw a light burning in the old ruins. Drink talking, surely.",
+    "If {subject} would mend that fence, my goats would stop wandering.",
+    "Heard the harbor folk landed a record catch. Fish for everyone, they say.",
+    "The weavers' cloaks are the warmest thing I ever owned, mind you."
   ],
-  "conditional": [
-   {
-    "when": {
-     "rep": "beloved"
-    },
-    "lines": [
-     "Always a pleasure to see you, friend!",
-     "Our hero returns! What can we do for you?",
-     "You are welcome at my table any time."
-    ]
-   },
-   {
-    "when": {
-     "rep": "notorious"
-    },
-    "lines": [
-     "Stay away from me!",
-     "I know what you did. Everyone knows.",
-     "We don't want your kind here."
-    ]
-   },
-   {
-    "when": {
-     "prosperity": "struggling"
-    },
-    "lines": [
-     "Hard times, traveler. The larders are thin.",
-     "If things don't turn around soon, folk will start leaving.",
-     "We could use any help we can get."
-    ]
-   },
-   {
-    "when": {
-     "prosperity": "thriving"
-    },
-    "lines": [
-     "Never seen the village do so well!",
-     "Good times — the stalls are full and so are the bellies."
-    ]
-   },
-   {
-    "when": {
-     "phase": "night"
-    },
-    "lines": [
-     "You're up late, traveler.",
-     "Quiet night, isn't it?"
-    ]
-   },
-   {
-    "when": {
-     "activity": "WORK"
-    },
-    "lines": [
-     "Can't chat long — work to do.",
-     "These fields won't tend themselves."
-    ]
-   }
-  ]
- },
- "guard": {
-  "default": [
-   "Move along, citizen.",
-   "Stay out of trouble.",
-   "The roads aren't safe at night.",
-   "I'm keeping watch. No need to worry.",
-   "Report anything suspicious to me."
+  "_gossip_friend": [
+    "Good soul, {subject}. Always lends a hand at harvest.",
+    "I'd trust {subject} with my last coin, and gladly.",
+    "{subject} sat with me through the fever last winter. Never forget that.",
+    "If you need help, ask {subject} — kindest in the village.",
+    "{subject} and I go back years. Salt of the earth, that one."
   ],
-  "conditional": [
-   {
-    "when": {
-     "guards": "hostile"
-    },
-    "lines": [
-     "You've a nerve showing your face to the watch.",
-     "Murderer. The next blade you see will be mine.",
-     "Step wrong and I'll cut you down where you stand."
-    ]
-   },
-   {
-    "when": {
-     "guards": "trusted"
-    },
-    "lines": [
-     "The watch is glad to have you, friend.",
-     "You've earned our respect. Walk easy.",
-     "Any trouble, and the guard stands with you."
-    ]
-   }
-  ]
- },
- "shopkeeper": {
-  "default": [
-   "Looking to buy something?",
-   "I just got a new shipment in!",
-   "Best prices in the village, I guarantee it.",
-   "Come back anytime!",
-   "Trade keeps the village alive."
+  "_gossip_rival": [
+    "Don't get me started on {subject}. Still owes me for the spring market.",
+    "{subject}? Wouldn't share water in a drought, that one.",
+    "Mark my words, {subject} shorted me on the last trade.",
+    "I've no quarrel with anyone — save {subject}, and they know why.",
+    "Keep your purse shut around {subject}, is all I'll say."
   ],
-  "conditional": [
-   {
-    "when": {
-     "prosperity": "struggling"
-    },
-    "lines": [
-     "Shelves are half empty — deliveries keep getting raided.",
-     "Business is terrible. Bring me goods and I'll pay fairly."
+  "hunter": {
+    "default": [
+      "Tracks everywhere this season. Wolves, mostly.",
+      "A clean shot and a quiet step — that's all the trade needs.",
+      "The wilds give to those who respect them."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "phase": "night"
+        },
+        "lines": [
+          "Night hunts are for owls, not people."
+        ]
+      }
     ]
-   },
-   {
-    "when": {
-     "rep": "beloved"
-    },
-    "lines": [
-     "For you? Special prices, of course!",
-     "My best customer! Come in, come in."
+  },
+  "farmer": {
+    "default": [
+      "The fields don't wait for anyone.",
+      "Rain when we need sun, sun when we need rain. Always the way.",
+      "Buy local, stranger. Keeps us all fed."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "prosperity": "struggling"
+        },
+        "lines": [
+          "Blight on the near field and prices low. Lean year.",
+          "If the rains fail again we'll be eating the seed corn."
+        ]
+      },
+      {
+        "when": {
+          "prosperity": "thriving"
+        },
+        "lines": [
+          "Barns are full and the stock is fat. Can't complain.",
+          "Best yield in years — the granary's nigh bursting."
+        ]
+      },
+      {
+        "when": {
+          "activity": "WORK"
+        },
+        "lines": [
+          "Mind the furrows — I've just sown there.",
+          "No rest for a farmer till the light goes."
+        ]
+      }
     ]
-   },
-   {
-    "when": {
-     "rep": "notorious"
-    },
-    "lines": [
-     "Your coin is good, but I'm watching you.",
-     "Buy something or get out."
+  },
+  "herbalist": {
+    "default": [
+      "Sage for the lungs, yarrow for the blood.",
+      "Fresh salves, just stirred. Better than any town potion.",
+      "If it grows in the swamp, I can brew with it."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "prosperity": "struggling"
+        },
+        "lines": [
+          "Half my customers can't pay — I trade for eggs now."
+        ]
+      }
     ]
-   }
-  ]
- },
- "mayor": {
-  "default": [
-   "Welcome to our humble village.",
-   "I try my best to keep the peace around here.",
-   "Please, cause no trouble during your stay.",
-   "The recent monster attacks have been concerning.",
-   "If you can help defend us, you'll be well rewarded."
-  ],
-  "conditional": [
-   {
-    "when": {
-     "quest": "ready"
-    },
-    "lines": [
-     "You've done it? Step inside — let's settle what you're owed.",
-     "Back already, and with good news I hope. Come, come.",
-     "Word reached me before you did. The council is grateful."
+  },
+  "ore_digger": {
+    "default": [
+      "Bog iron's good iron, whatever the city smiths say.",
+      "Knee-deep in the mire all day — someone has to be.",
+      "The smithy in Eastmoor buys every lump we haul."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "prosperity": "struggling"
+        },
+        "lines": [
+          "Seam's playing out and the smiths pay less. Grim work.",
+          "Knee-deep for half what the ore fetched last year."
+        ]
+      },
+      {
+        "when": {
+          "phase": "night"
+        },
+        "lines": [
+          "You don't go down the bog-shafts after dark. Not if you're wise."
+        ]
+      }
     ]
-   },
-   {
-    "when": {
-     "quest": "active"
-    },
-    "lines": [
-     "Any progress on the matter we discussed?",
-     "The task still stands, and folk are counting on you.",
-     "No news yet? The errand won't run itself, traveler."
+  },
+  "fisher": {
+    "default": [
+      "Tide's turning. The marsh gives up her fish if you're patient.",
+      "Salt and fish, fish and salt. It's a living, stranger.",
+      "Cook what you catch before it turns, that's my advice.",
+      "The harbor traders pay in coin from a dozen roads."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "prosperity": "struggling"
+        },
+        "lines": [
+          "Nets come up empty more days than not lately.",
+          "Lean catch, lean coin. The marsh is stingy this season."
+        ]
+      },
+      {
+        "when": {
+          "prosperity": "thriving"
+        },
+        "lines": [
+          "Boats come in heavy every dawn. Good days.",
+          "Fish near jump in the boat this season."
+        ]
+      },
+      {
+        "when": {
+          "phase": "night"
+        },
+        "lines": [
+          "Tide's wrong for fishing now. I'm for my bed."
+        ]
+      }
     ]
-   }
-  ]
- },
- "blacksmith": {
-  "default": [
-   "Need some steel forged?",
-   "My blades never dull.",
-   "Strike while the iron is hot!",
-   "Armor or weapons, you name it, I can craft it.",
-   "Keep your gear in good condition out there."
-  ],
-  "conditional": [
-   {
-    "when": {
-     "prosperity": "struggling"
-    },
-    "lines": [
-     "Iron's dear and coal's dearer. Hard to keep the fire lit.",
-     "Folk can't pay for good steel in lean times like these."
+  },
+  "weaver": {
+    "default": [
+      "Spin the wool, weave the cloth, stitch the cloak. Same as ever.",
+      "A good loom outlasts three weavers, my mother used to say.",
+      "Cloth keeps a body warmer than mail, and lighter too.",
+      "Bring me wool and I'll send you off in something fit for the road."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "rep": "beloved"
+        },
+        "lines": [
+          "For our friend? I'll throw in a hood, no charge.",
+          "Always glad to dress a hero for the road."
+        ]
+      },
+      {
+        "when": {
+          "prosperity": "struggling"
+        },
+        "lines": [
+          "Wool's scarce and the looms sit half-idle.",
+          "Hard to sell a fine cloak when no one's coin to spare."
+        ]
+      }
     ]
-   },
-   {
-    "when": {
-     "rep": "beloved"
-    },
-    "lines": [
-     "For you I'll put an edge on it that bites twice.",
-     "Always glad of your custom — finest work for the finest sort."
+  },
+  "lumberjack": {
+    "default": [
+      "Timber! ...Ah, you're fine. Mind where you stand, though.",
+      "Green wood's no good. Let it season, then it'll serve.",
+      "Every plank in three towns came off our saws.",
+      "Axe work keeps the cold out better than any fire."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "phase": "night"
+        },
+        "lines": [
+          "No felling after dark — that's how a man loses a leg.",
+          "Saws are quiet now. Even the timber rests."
+        ]
+      },
+      {
+        "when": {
+          "prosperity": "thriving"
+        },
+        "lines": [
+          "Wagons can't haul the planks fast enough. Boom times.",
+          "Whole forest's coming down to lumber — orders are that thick."
+        ]
+      }
     ]
-   },
-   {
-    "when": {
-     "phase": "night"
-    },
-    "lines": [
-     "Forge is cold this hour. Come back at dawn.",
-     "Even a smith sleeps, stranger."
+  },
+  "traveling_merchant": {
+    "default": [
+      "Roads are long, purses are short. Let's fix one of those.",
+      "Everything you see is for sale. Almost everything.",
+      "I hear all sorts of things on the road, friend."
+    ],
+    "conditional": [
+      {
+        "when": {
+          "rep": "notorious"
+        },
+        "lines": [
+          "I deal with all sorts — but I count my coins twice around you.",
+          "Your reputation rides ahead of you. Cash only, friend."
+        ]
+      },
+      {
+        "when": {
+          "rep": "beloved"
+        },
+        "lines": [
+          "For one so well spoken-of? A discount, just this once.",
+          "Ah, the hero! Sit — let me show you the good stock."
+        ]
+      }
     ]
-   }
-  ]
- },
- "_default": [
-  "...",
-  "They nod at you.",
-  "They don't seem interested in talking."
- ],
- "_gossip": [
-  "Have you seen {subject} about? Keeping to themselves lately.",
-  "{subject} swears the harvest will be better next year.",
-  "They say {subject} fancies someone across the square.",
-  "Word is {subject} had words with the mayor again.",
-  "Cold nights lately. My old bones feel every one.",
-  "The work's hard, but the roof holds, eh?",
-  "Heard the price of bread again? Robbery, I call it.",
-  "Quiet today. Quiet's good. Quiet means no wolves.",
-  "They say the roads east are busier of late. More carts, more coin.",
-  "A peddler swore he saw a light burning in the old ruins. Drink talking, surely.",
-  "If {subject} would mend that fence, my goats would stop wandering.",
-  "Heard the harbor folk landed a record catch. Fish for everyone, they say.",
-  "The weavers' cloaks are the warmest thing I ever owned, mind you."
- ],
- "_gossip_friend": [
-  "Good soul, {subject}. Always lends a hand at harvest.",
-  "I'd trust {subject} with my last coin, and gladly.",
-  "{subject} sat with me through the fever last winter. Never forget that.",
-  "If you need help, ask {subject} — kindest in the village.",
-  "{subject} and I go back years. Salt of the earth, that one."
- ],
- "_gossip_rival": [
-  "Don't get me started on {subject}. Still owes me for the spring market.",
-  "{subject}? Wouldn't share water in a drought, that one.",
-  "Mark my words, {subject} shorted me on the last trade.",
-  "I've no quarrel with anyone — save {subject}, and they know why.",
-  "Keep your purse shut around {subject}, is all I'll say."
- ],
- "hunter": {
-  "default": [
-   "Tracks everywhere this season. Wolves, mostly.",
-   "A clean shot and a quiet step — that's all the trade needs.",
-   "The wilds give to those who respect them."
-  ],
-  "conditional": [
-   {
-    "when": {
-     "phase": "night"
-    },
-    "lines": [
-     "Night hunts are for owls, not people."
-    ]
-   }
-  ]
- },
- "farmer": {
-  "default": [
-   "The fields don't wait for anyone.",
-   "Rain when we need sun, sun when we need rain. Always the way.",
-   "Buy local, stranger. Keeps us all fed."
-  ],
-  "conditional": [
-   {
-    "when": {
-     "prosperity": "struggling"
-    },
-    "lines": [
-     "Blight on the near field and prices low. Lean year.",
-     "If the rains fail again we'll be eating the seed corn."
-    ]
-   },
-   {
-    "when": {
-     "prosperity": "thriving"
-    },
-    "lines": [
-     "Barns are full and the stock is fat. Can't complain.",
-     "Best yield in years — the granary's nigh bursting."
-    ]
-   },
-   {
-    "when": {
-     "activity": "WORK"
-    },
-    "lines": [
-     "Mind the furrows — I've just sown there.",
-     "No rest for a farmer till the light goes."
-    ]
-   }
-  ]
- },
- "herbalist": {
-  "default": [
-   "Sage for the lungs, yarrow for the blood.",
-   "Fresh salves, just stirred. Better than any town potion.",
-   "If it grows in the swamp, I can brew with it."
-  ],
-  "conditional": [
-   {
-    "when": {
-     "prosperity": "struggling"
-    },
-    "lines": [
-     "Half my customers can't pay — I trade for eggs now."
-    ]
-   }
-  ]
- },
- "ore_digger": {
-  "default": [
-   "Bog iron's good iron, whatever the city smiths say.",
-   "Knee-deep in the mire all day — someone has to be.",
-   "The smithy in Eastmoor buys every lump we haul."
-  ],
-  "conditional": [
-   {
-    "when": {
-     "prosperity": "struggling"
-    },
-    "lines": [
-     "Seam's playing out and the smiths pay less. Grim work.",
-     "Knee-deep for half what the ore fetched last year."
-    ]
-   },
-   {
-    "when": {
-     "phase": "night"
-    },
-    "lines": [
-     "You don't go down the bog-shafts after dark. Not if you're wise."
-    ]
-   }
-  ]
- },
- "fisher": {
-  "default": [
-   "Tide's turning. The marsh gives up her fish if you're patient.",
-   "Salt and fish, fish and salt. It's a living, stranger.",
-   "Cook what you catch before it turns, that's my advice.",
-   "The harbor traders pay in coin from a dozen roads."
-  ],
-  "conditional": [
-   {
-    "when": {
-     "prosperity": "struggling"
-    },
-    "lines": [
-     "Nets come up empty more days than not lately.",
-     "Lean catch, lean coin. The marsh is stingy this season."
-    ]
-   },
-   {
-    "when": {
-     "prosperity": "thriving"
-    },
-    "lines": [
-     "Boats come in heavy every dawn. Good days.",
-     "Fish near jump in the boat this season."
-    ]
-   },
-   {
-    "when": {
-     "phase": "night"
-    },
-    "lines": [
-     "Tide's wrong for fishing now. I'm for my bed."
-    ]
-   }
-  ]
- },
- "weaver": {
-  "default": [
-   "Spin the wool, weave the cloth, stitch the cloak. Same as ever.",
-   "A good loom outlasts three weavers, my mother used to say.",
-   "Cloth keeps a body warmer than mail, and lighter too.",
-   "Bring me wool and I'll send you off in something fit for the road."
-  ],
-  "conditional": [
-   {
-    "when": {
-     "rep": "beloved"
-    },
-    "lines": [
-     "For our friend? I'll throw in a hood, no charge.",
-     "Always glad to dress a hero for the road."
-    ]
-   },
-   {
-    "when": {
-     "prosperity": "struggling"
-    },
-    "lines": [
-     "Wool's scarce and the looms sit half-idle.",
-     "Hard to sell a fine cloak when no one's coin to spare."
-    ]
-   }
-  ]
- },
- "lumberjack": {
-  "default": [
-   "Timber! ...Ah, you're fine. Mind where you stand, though.",
-   "Green wood's no good. Let it season, then it'll serve.",
-   "Every plank in three towns came off our saws.",
-   "Axe work keeps the cold out better than any fire."
-  ],
-  "conditional": [
-   {
-    "when": {
-     "phase": "night"
-    },
-    "lines": [
-     "No felling after dark — that's how a man loses a leg.",
-     "Saws are quiet now. Even the timber rests."
-    ]
-   },
-   {
-    "when": {
-     "prosperity": "thriving"
-    },
-    "lines": [
-     "Wagons can't haul the planks fast enough. Boom times.",
-     "Whole forest's coming down to lumber — orders are that thick."
-    ]
-   }
-  ]
- },
- "traveling_merchant": {
-  "default": [
-   "Roads are long, purses are short. Let's fix one of those.",
-   "Everything you see is for sale. Almost everything.",
-   "I hear all sorts of things on the road, friend."
-  ],
-  "conditional": [
-   {
-    "when": {
-     "rep": "notorious"
-    },
-    "lines": [
-     "I deal with all sorts — but I count my coins twice around you.",
-     "Your reputation rides ahead of you. Cash only, friend."
-    ]
-   },
-   {
-    "when": {
-     "rep": "beloved"
-    },
-    "lines": [
-     "For one so well spoken-of? A discount, just this once.",
-     "Ah, the hero! Sit — let me show you the good stock."
-    ]
-   }
-  ]
- }
+  }
 }

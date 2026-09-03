@@ -9,6 +9,7 @@ from config import (
     DEBUG_NPC_FOV_COLOR,
     TILE_SIZE,
 )
+from core.ui import theme
 from core.visibility_service import VisibilityService
 from game.components import AIBehaviorState, AIState, ChaseData, Position, Stats
 from game.map.tile import VisibilityState
@@ -21,7 +22,7 @@ class DebugRenderSystem(MapAwareSystem):
         self.camera = camera
         if not pygame.font.get_init():
             pygame.font.init()
-        self.font = pygame.font.SysFont("monospace", DEBUG_FONT_SIZE)
+        self.font = theme.get_mono_font(DEBUG_FONT_SIZE)
         # Create overlay surface with camera dimensions and transparency
         self.overlay = pygame.Surface((camera.width, camera.height), pygame.SRCALPHA)
 

@@ -23,6 +23,7 @@ from config import (
     GOSSIP_HEAR_RADIUS,
     GOSSIP_PAIR_RADIUS,
     GOSSIP_TOPICAL_CHANCE,
+    GameEvent,
     LogCategory,
 )
 from game.components import AIBehaviorState, AIState, Alignment, Corpse, Name, PlayerTag, Position, Relationships
@@ -87,7 +88,7 @@ class GossipSystem:
             return
 
         esper.dispatch_event(
-            "log_message",
+            GameEvent.LOG_MESSAGE,
             f'[color=grey]{n1} to {n2}: "{line}"[/color]',
             None,
             LogCategory.SYSTEM,

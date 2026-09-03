@@ -8,8 +8,12 @@ generated request exists somewhere before ever traveling there.
 
 import random
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from config import TICKS_PER_HOUR
+
+if TYPE_CHECKING:  # pragma: no cover - typing only, avoids a runtime import cycle
+    from game_context import GameContext
 
 RUMOR_CHANCE = 0.35
 RUMOR_EVENT_MAX_AGE_TICKS = 4 * 24 * TICKS_PER_HOUR
@@ -19,7 +23,7 @@ RUMOR_EVENT_MAX_AGE_TICKS = 4 * 24 * TICKS_PER_HOUR
 class RumorService:
     """Produces rumor lines from the world's simulation state."""
 
-    ctx: object = None
+    ctx: "GameContext | None" = None
     rng: random.Random = field(default_factory=random.Random)
 
     def directions(self) -> str | None:
@@ -95,7 +99,7 @@ class RumorService:
         return None
 
     def _candidates(self) -> list[str]:
-        if self.ctx is None or self.ctx.world_graph is None:
+        if self.ctx is None:
             return []
         here = self.ctx.world_graph.current_location_id
         rumors: list[str] = []

@@ -154,6 +154,7 @@
   }
  ],
  "economy": {
+  "treasury": 220,
   "stock": {
    "health_potion": 14,
    "leather_armor": 8,
@@ -169,10 +170,10 @@
   "rates_per_day": {
    "health_potion": 3,
    "iron_sword": -0.5,
-   "venison": -1.5,
+   "venison": 2,
    "iron_ore": 2,
    "silver_ore": 1,
-   "bread": -1,
+   "bread": -0.75,
    "hide": 1.5,
    "leather": {
     "per_day": 1,

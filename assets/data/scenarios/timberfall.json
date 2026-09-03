@@ -180,6 +180,7 @@
   }
  ],
  "economy": {
+  "treasury": 180,
   "stock": {
    "log": 14,
    "plank": 8,
@@ -209,9 +210,9 @@
      "plank": 3
     }
    },
-   "bread": -1.5,
+   "bread": -1,
    "health_potion": -0.5,
-   "venison": -1
+   "venison": 2.5
   }
  },
  "biome": "forest",

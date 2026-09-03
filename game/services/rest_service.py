@@ -1,12 +1,14 @@
 """Rest/wait duration options and time math (QoL: passing time).
 
-Stateless helpers that turn the world clock into the set of selectable
-durations (in ticks) shown by the RestWindow. The actual fast-forward of
-game time is driven by ``TurnOrchestrator.advance_turns``; this module only
-decides *how long* each preset skips.
+Stateless helpers around passing time: which durations the RestWindow offers
+(in ticks), and what the player is told once a rest is over. The fast-forward
+itself belongs to ``TurnOrchestrator.advance_turns`` — this module decides
+*how long* each preset skips and reports *what happened*.
 """
 
-from config import DAY_START, TICKS_PER_HOUR
+import esper
+
+from config import DAY_START, TICKS_PER_HOUR, GameEvent, LogCategory
 
 # Full daylight — the hour "Sleep until morning" targets.
 MORNING_HOUR = DAY_START
@@ -48,3 +50,21 @@ def sleep_options(clock) -> list[tuple[str, int]]:
     if TICKS_PER_HOUR // 2 <= until_morning <= 14 * TICKS_PER_HOUR:
         options.append((f"Sleep until morning ({MORNING_HOUR:02d}:00)", until_morning))
     return options
+
+
+def report(clock, result: dict) -> None:
+    """Tell the player what a completed rest actually did.
+
+    ``result`` is what ``TurnOrchestrator.advance_turns`` returns: how many
+    ticks really elapsed, and whether something cut the rest short.
+    """
+    if result["elapsed"] <= 0:
+        esper.dispatch_event(
+            GameEvent.LOG_MESSAGE, "[color=red]You can't rest right now.[/color]", None, LogCategory.ALERT
+        )
+        return
+    esper.dispatch_event(GameEvent.LOG_MESSAGE, f"Time passes... it is now {clock.hour:02d}:{clock.minute:02d}.")
+    if result["interrupted"]:
+        esper.dispatch_event(
+            GameEvent.LOG_MESSAGE, "[color=red]Something interrupts your rest![/color]", None, LogCategory.ALERT
+        )

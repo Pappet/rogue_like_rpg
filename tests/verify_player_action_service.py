@@ -4,10 +4,9 @@ These run against the real esper world but mock all systems — no map,
 no Pygame, no registries needed.
 """
 
-from unittest.mock import MagicMock
-
 import esper
 import pytest
+from conftest import make_test_context
 
 from game.components import (
     Action,
@@ -20,32 +19,10 @@ from game.components import (
     Stats,
 )
 from game.services.player_action_service import PlayerActionService
-from game_context import GameContext, Systems
 
 
 def _make_ctx(player_entity):
-    systems = Systems(
-        turn_system=MagicMock(),
-        equipment_system=MagicMock(),
-        visibility_system=MagicMock(),
-        action_system=MagicMock(),
-        movement_system=MagicMock(),
-        combat_system=MagicMock(),
-        fct_system=MagicMock(),
-        death_system=MagicMock(),
-        ai_system=MagicMock(),
-        schedule_system=MagicMock(),
-    )
-    return GameContext(
-        map_service=MagicMock(),
-        render_service=MagicMock(),
-        world_clock=MagicMock(),
-        input_manager=MagicMock(),
-        ui_stack=MagicMock(),
-        camera=MagicMock(),
-        systems=systems,
-        player_entity=player_entity,
-    )
+    return make_test_context(player_entity=player_entity)
 
 
 def _make_player(**stat_overrides):

@@ -16,7 +16,7 @@ import contextlib
 import logging
 import random
 
-from config import LogCategory
+from config import GameEvent, LogCategory
 from game.components import Equipment, Inventory, Name, Portable, Stats, TemplateId
 from game.content.item_factory import ItemFactory
 from game.content.item_registry import item_registry
@@ -71,10 +71,10 @@ class CraftingService:
         converted), False if the player lacked materials. Does NOT advance the
         clock — the caller does that on success.
         """
-        rng = rng or random
+        rng = rng or random.Random()
         inventory = world.try_component(player_entity, Inventory)
         if inventory is None or not CraftingService.can_craft(world, player_entity, recipe):
-            world.dispatch_event("log_message", "You lack the materials for that.", None, LogCategory.ALERT)
+            world.dispatch_event(GameEvent.LOG_MESSAGE, "You lack the materials for that.", None, LogCategory.ALERT)
             return False
 
         # Remove the input item entities from the inventory (and the world).
@@ -113,7 +113,7 @@ class CraftingService:
             out_name = template.name if template else recipe.output
             qty_suffix = f" ×{count}" if count > 1 else ""
             message = f"You craft {out_name}{qty_suffix}."
-        world.dispatch_event("log_message", message, None, LogCategory.LOOT)
+        world.dispatch_event(GameEvent.LOG_MESSAGE, message, None, LogCategory.LOOT)
 
         # Learn-by-doing: the craft trains the station's skill (Phase I). The
         # longer the work, the more it teaches.

@@ -9,6 +9,7 @@ from config import (
     COMBAT_CRIT_MULTIPLIER,
     COMBAT_DAMAGE_VARIANCE,
     COMBAT_MIN_DAMAGE,
+    GameEvent,
     LogCategory,
 )
 from game.components import (
@@ -88,7 +89,7 @@ class CombatSystem(esper.Processor):
                 # Dispatch log message
                 if is_crit:
                     esper.dispatch_event(
-                        "log_message",
+                        GameEvent.LOG_MESSAGE,
                         f"{attacker_name} lands a critical hit on {target_name} for {damage} damage — it bleeds!",
                         None,
                         category,
@@ -96,19 +97,25 @@ class CombatSystem(esper.Processor):
                     self._spawn_fct(target, f"{damage}!", (255, 160, 0))
                 elif damage > 0:
                     esper.dispatch_event(
-                        "log_message", f"{attacker_name} hits {target_name} for {damage} damage.", None, category
+                        GameEvent.LOG_MESSAGE,
+                        f"{attacker_name} hits {target_name} for {damage} damage.",
+                        None,
+                        category,
                     )
                     self._spawn_fct(target, str(damage), (255, 0, 0))
                 else:
                     esper.dispatch_event(
-                        "log_message", f"{attacker_name} attacks {target_name} but deals no damage.", None, category
+                        GameEvent.LOG_MESSAGE,
+                        f"{attacker_name} attacks {target_name} but deals no damage.",
+                        None,
+                        category,
                     )
                     self._spawn_fct(target, "0", (200, 200, 200))
 
                 # Death Check
                 # Use effective HP for death check to account for bonuses
                 if target_eff.hp <= 0:
-                    esper.dispatch_event("entity_died", target, attacker)
+                    esper.dispatch_event(GameEvent.ENTITY_DIED, target, attacker)
 
             # Remove AttackIntent
             esper.remove_component(attacker, AttackIntent)

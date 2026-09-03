@@ -5,42 +5,19 @@ pickup rules themselves are covered in verify_player_action_service. Here we
 assert the wiring: navigation, single take, take-all and close.
 """
 
-from unittest.mock import MagicMock
-
 import esper
 import pygame
 import pytest
+from conftest import make_test_context
 
 from core.input_manager import InputManager
 from game.components import Inventory, Name, Portable, Position, Stats
 from game.services.player_action_service import PlayerActionService
 from game.ui.windows.pickup import PickupWindow
-from game_context import GameContext, Systems
 
 
 def _make_ctx(player_entity):
-    systems = Systems(
-        turn_system=MagicMock(),
-        equipment_system=MagicMock(),
-        visibility_system=MagicMock(),
-        action_system=MagicMock(),
-        movement_system=MagicMock(),
-        combat_system=MagicMock(),
-        fct_system=MagicMock(),
-        death_system=MagicMock(),
-        ai_system=MagicMock(),
-        schedule_system=MagicMock(),
-    )
-    return GameContext(
-        map_service=MagicMock(),
-        render_service=MagicMock(),
-        world_clock=MagicMock(),
-        input_manager=MagicMock(),
-        ui_stack=MagicMock(),
-        camera=MagicMock(),
-        systems=systems,
-        player_entity=player_entity,
-    )
+    return make_test_context(player_entity=player_entity)
 
 
 def _key(key):

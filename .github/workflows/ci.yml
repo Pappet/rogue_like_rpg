@@ -21,13 +21,38 @@ jobs:
           python-version: "3.12"
 
       - name: Install ruff
-        run: pip install ruff
+        # Pinned: an unpinned ruff means a new release can turn CI red without
+        # a single code change. It did — a ruff release started formatting
+        # Python blocks inside Markdown, failing two untouched docs files.
+        # Bump this deliberately, with the reformat in the same commit.
+        run: pip install ruff==0.15.4
 
       - name: ruff check
         run: ruff check .
 
       - name: ruff format --check
         run: ruff format --check .
+
+  types:
+    name: Types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      # Scope and strictness live in [tool.mypy] (pyproject.toml).
+      - name: mypy
+        run: mypy
 
   test:
     name: Tests (Python ${{ matrix.python-version }})
@@ -55,4 +80,4 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Run test suite
-        run: python -m pytest tests/ -q --tb=short
+        run: python -m pytest tests/ -q --tb=short --cov --cov-report=term

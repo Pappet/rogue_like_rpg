@@ -1,4 +1,6 @@
 # Game configuration
+from typing import Any
+
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 SCREEN_TITLE = "Rogue Like RPG"
@@ -20,6 +22,20 @@ SAVE_FILE = "saves/save.json"
 SIM_RECONCILE_MIN_TICKS = 30
 # Chance per location per in-game hour that a chronicle event happens
 SIM_EVENT_CHANCE_PER_HOUR = 0.04
+
+# How long a chronicle event is kept before it is pruned. The log is written
+# every in-game hour, read by four consumers and serialized whole into every
+# save — unbounded, it grows for as long as a run lasts. The window must stay
+# at or above the widest consumer window (currently 4 days:
+# GOSSIP_EVENT_MAX_AGE_TICKS and rumor_service.RUMOR_EVENT_MAX_AGE_TICKS);
+# tests/verify_world_chronicle.py asserts that. The slack above it is for
+# MapTransitionService's "what you missed while you were away", the one
+# consumer that reads since-last-visit rather than a fixed window.
+CHRONICLE_RETENTION_TICKS = 7 * 24 * 60
+# Ceiling on the hours rolled in one catch-up. The clock can jump far in a
+# single tick (travel, sleep, a loaded save), and the catch-up loop is per
+# hour — without a cap one jump can roll thousands of hours of events.
+CHRONICLE_MAX_CATCHUP_HOURS = 7 * 24
 
 # Travel encounters (events on the road between settlements)
 TRAVEL_ENCOUNTER_CHANCE_PER_HOUR = 0.05  # chance per in-game hour of travel time
@@ -55,6 +71,43 @@ PROSPERITY_COMFORT_DRIFT = 0.05  # per hour when every consumed good is plentifu
 PROSPERITY_SHORTAGE_LEVEL = 0.5  # stock at/below this counts as a shortage
 PROSPERITY_QUEST_GAIN = 2.0  # turning in a quest helps the whole settlement
 PROSPERITY_PRICE_SPAN = 0.2  # price baseline 0.9x (destitute) .. 1.1x (rich)
+
+# --- Settlement treasury & market toll ---------------------------------------
+# The town's purse. It pays quest rewards and is filled by the market toll the
+# player pays on every trade, so the money the player earns from a settlement
+# is money that settlement actually collected.
+MARKET_TOLL_RATE = 0.06  # share of every trade the town takes, buying or selling
+TREASURY_START = 200.0  # fallback when a scenario declares no treasury
+GEN_REWARD_TREASURY_SHARE = 0.25  # one generated request may cost at most this much of the till
+GEN_REWARD_MIN = 5  # below this a settlement cannot afford to hire at all
+# --- Trade with the world beyond the map ------------------------------------
+# A settlement ships its surplus out and buys back what it cannot make itself.
+# This is the transport layer: without it, world-wide balance means nothing,
+# because Brackenfen's ore never reaches Eastmoor's anvil. It is also what
+# keeps the money supply bounded — export brings gold in, import takes it out,
+# and a full treasury spends rather than hoards.
+TRADE_EXPORT_RATE = 0.5  # share of the above-equilibrium surplus shipped per day
+TRADE_EXPORT_FACTOR = 0.85  # what a caravan pays for surplus, under the local price
+TRADE_IMPORT_MARKUP = 1.05  # foreign goods cost a little more than base value
+# Together these set the cost of trading: importing one gold of goods takes
+# MARKUP / EXPORT_FACTOR gold of exports. Keep that ratio near 1.2 — a
+# specialist settlement imports most of what it eats plus its own inputs, and
+# a wider spread makes specialisation mathematically impossible. Eastmoor, the
+# smithy, turns 24 gold of ore a day into 90 of swords; at a 4x spread it would
+# have to ship 288 gold a day to feed itself and simply starves.
+TRADE_IMPORT_SHARE = 0.6  # share of export income spent buying goods back
+# How fast relief arrives, as a multiple of what the settlement gets through in
+# a day. Money is not the only limit: without a pace a town with a full till
+# repairs any shortage overnight and the shortage quests never appear. Tying it
+# to the town's own appetite keeps a specialist supplied (Eastmoor smelts three
+# ore a day and may buy three) while a slow-burning good still takes days to
+# restock, which is the window a shortage quest lives in.
+TRADE_IMPORT_RATE = 2.0  # must exceed 1.0, or relief only ever matches the appetite
+TRADE_IMPORT_RATE_FLOOR = 0.25  # goods a town barely touches still trickle in
+TREASURY_CAP_FACTOR = 2.0  # above this multiple of its declared start, a town spends
+
+TREASURY_EMPTY = 25.0  # at or below: the town is visibly broke
+TREASURY_FULL = 150.0  # above: the council can pay its way
 
 # NPC ambient behavior (Living Village)
 # When a scheduled NPC has arrived at its WORK/SOCIALIZE anchor it does not
@@ -125,7 +178,9 @@ GATHER_XP_PER_HARVEST = 12  # gathering-skill XP each time a node is harvested
 RESTOCK_MIN_ECON_STOCK = 1.0
 
 # Day/Night Settings
-DN_SETTINGS = {
+# Per-phase presentation: screen tint (RGBA), light multiplier, perception
+# multiplier. Typed so a reader indexing into a phase is checkable.
+DN_SETTINGS: dict[str, dict[str, Any]] = {
     "day": {"tint": (0, 0, 0, 0), "light": 1.0, "perception": 1.0},
     "dawn": {"tint": (255, 200, 150, 60), "light": 0.8, "perception": 0.8},
     "dusk": {"tint": (150, 100, 200, 80), "light": 0.7, "perception": 0.7},

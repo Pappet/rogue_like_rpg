@@ -75,8 +75,11 @@ def test_buy_transfers_item_and_gold():
     assert esper.component_for_entity(item, Name).name == "Health Potion"
     assert esper.component_for_entity(item, TemplateId).id == "health_potion"
 
+    # The player pays the price plus the town's market toll; the merchant is
+    # paid the price alone (the toll goes to the settlement, see the toll tests).
     price = TradeService.buy_price("health_potion")
-    assert esper.component_for_entity(player, Purse).gold == 100 - price
+    toll = TradeService.market_toll(price)
+    assert esper.component_for_entity(player, Purse).gold == 100 - price - toll
     assert esper.component_for_entity(merchant_ent, Purse).gold == 200 + price
     assert esper.component_for_entity(merchant_ent, Merchant).stock == []
 
@@ -110,8 +113,9 @@ def test_sell_melts_item_into_stock():
     esper.component_for_entity(player, Inventory).items.append(item)
 
     price = TradeService.sell_price(item)
+    toll = TradeService.market_toll(price)
     assert TradeService.sell(esper, player, merchant_ent, item) is True
-    assert esper.component_for_entity(player, Purse).gold == price
+    assert esper.component_for_entity(player, Purse).gold == price - toll
     assert esper.component_for_entity(merchant_ent, Merchant).stock == ["iron_sword"]
     assert not esper.entity_exists(item)
 
@@ -215,3 +219,81 @@ def test_bump_merchant_opens_trade_window_and_trades():
     key(pygame.K_SPACE)
     frames()
     assert esper.entity_exists(shopkeeper)
+
+
+# ---------------------------------------------------------------------------
+# Market toll (the settlement's cut)
+# ---------------------------------------------------------------------------
+
+
+class _Treasury:
+    """Minimal stand-in for EconomyService's treasury side."""
+
+    def __init__(self):
+        self.paid = 0.0
+
+    def deposit(self, location_id, amount):
+        self.paid += amount
+
+    # The trade path calls these too; the toll tests do not care about stock.
+    def price_factor(self, location_id, item_id):
+        return 1.0
+
+    def prosperity_price_factor(self, location_id):
+        return 1.0
+
+    def record_purchase(self, location_id, item_id):
+        pass
+
+    def record_sale(self, location_id, item_id):
+        pass
+
+
+def test_buying_pays_the_toll_into_the_town_treasury():
+    _load_content()
+    player = _player(gold=500)
+    merchant_ent = _merchant(stock=["iron_sword"])
+    economy = _Treasury()
+
+    price = TradeService.buy_price("iron_sword", economy, "Village")
+    toll = TradeService.market_toll(price)
+    assert toll > 0, "an iron sword should be dear enough to be worth taxing"
+
+    assert TradeService.buy(esper, player, merchant_ent, 0, economy, "Village") is True
+
+    assert esper.component_for_entity(player, Purse).gold == 500 - price - toll
+    assert esper.component_for_entity(merchant_ent, Purse).gold == 200 + price
+    assert economy.paid == toll
+
+
+def test_selling_pays_the_toll_out_of_the_players_takings():
+    _load_content()
+    player = _player(gold=0)
+    merchant_ent = _merchant(stock=[], gold=500)
+    item = ItemFactory.create(esper, "iron_sword")
+    esper.component_for_entity(player, Inventory).items.append(item)
+    economy = _Treasury()
+
+    price = TradeService.sell_price(item, economy, "Village")
+    toll = TradeService.market_toll(price)
+
+    assert TradeService.sell(esper, player, merchant_ent, item, economy, "Village") is True
+
+    # The merchant pays the full price; the town takes its cut off the top.
+    assert esper.component_for_entity(player, Purse).gold == price - toll
+    assert esper.component_for_entity(merchant_ent, Purse).gold == 500 - price
+    assert economy.paid == toll
+
+
+def test_buy_is_refused_when_the_toll_is_what_breaks_the_budget():
+    """Affordability counts the toll — the price alone is not the bill."""
+    _load_content()
+    merchant_ent = _merchant(stock=["iron_sword"])
+    price = TradeService.buy_price("iron_sword")
+    toll = TradeService.market_toll(price)
+    assert toll > 0
+
+    player = _player(gold=price)  # exactly the price, nothing for the toll
+    assert TradeService.buy(esper, player, merchant_ent, 0) is False
+    assert esper.component_for_entity(player, Inventory).items == []
+    assert esper.component_for_entity(player, Purse).gold == price

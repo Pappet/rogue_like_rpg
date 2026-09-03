@@ -22,6 +22,7 @@ import json
 import logging
 import random
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import esper
 
@@ -35,9 +36,14 @@ from config import (
     TRAVEL_ENCOUNTER_MIN_PROGRESS,
     TRAVEL_MERCHANT_EVENT_MAX_AGE_TICKS,
     TRAVEL_MERCHANT_RUMOR_CHANCE,
+    GameEvent,
     LogCategory,
     SpriteLayer,
 )
+
+if TYPE_CHECKING:  # pragma: no cover - typing only, avoids a runtime import cycle
+    from game_context import GameContext
+
 from game.components import AI, MapBound, Name, Portal, Position, Renderable, Skirmisher, TemplateId
 from game.content.entity_factory import EntityFactory
 from game.map.map_container import MapContainer
@@ -81,11 +87,17 @@ class EncounterTemplate:
 class TravelEncounterService:
     """Rolls, builds and cleans up road encounters between settlements."""
 
-    def __init__(self, ctx):
+    # Declared, not defaulted: the bootstrap assigns it right after
+    # construction (it cannot build the context before its own fields), and
+    # reading it before that should fail loudly rather than pass a None on.
+    ctx: "GameContext"
+
+    def __init__(self, ctx: "GameContext | None" = None):
         """Args:
-        ctx: The shared GameContext.
+        ctx: The shared GameContext, when the caller already has one.
         """
-        self.ctx = ctx
+        if ctx is not None:
+            self.ctx = ctx
         self.templates: list[EncounterTemplate] = []
         self.rng = random.Random()
         # Scene staged by roll_encounter(), consumed by on_map_entered().
@@ -93,7 +105,7 @@ class TravelEncounterService:
         # Active chronicle-caused bandit ambush: clearing it makes the
         # road safe again (cancels the caravan_raided escalation, G4).
         self._bandit_hunt: dict | None = None
-        esper.set_handler("entity_died", self.on_entity_died)
+        esper.set_handler(GameEvent.ENTITY_DIED, self.on_entity_died)
 
     def load_templates(self, filepath: str) -> None:
         """Load the encounter pool from a JSON file."""
@@ -228,6 +240,9 @@ class TravelEncounterService:
         pending, self._pending = self._pending, None
 
         container = self.ctx.map_service.get_map(map_id)
+        if container is None:
+            logger.warning("Road map '%s' vanished before its scene was staged.", map_id)
+            return
         cy = container.height // 2
         self._create_portals(pending, container, cy)
         self._spawn_groups(pending["template"], container, cy)
@@ -264,7 +279,7 @@ class TravelEncounterService:
         if chronicle is not None:
             chronicle.cancel_escalations(hunt["destination_id"], BANDITS_SPOTTED_EVENT_ID)
         esper.dispatch_event(
-            "log_message",
+            GameEvent.LOG_MESSAGE,
             f"The road to {hunt['destination_id']} is safe again — its caravans will get through.",
             None,
             LogCategory.SYSTEM,
@@ -289,7 +304,7 @@ class TravelEncounterService:
     def _spawn_groups(self, template: EncounterTemplate, container: MapContainer, cy: int) -> None:
         """Spawn the encounter's NPC groups per their placement keyword."""
         layer = container.layers[0]
-        ax, _ = container.arrival_pos
+        ax, _ = container.arrival_pos or (container.width // 2, 0)
         mid_x = container.width // 2
         for spawn in template.spawns:
             side = spawn.get("skirmish_side")

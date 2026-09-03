@@ -33,13 +33,43 @@ python -m pytest tests/ -v
 
 # Run a single test
 python -m pytest tests/verify_ai_system.py -v
+
+# Run with the coverage gate (what CI does)
+python -m pytest tests/ -q --cov --cov-report=term
 ```
 
 State cleanup between tests is automatic: the autouse fixture in `tests/conftest.py` calls `reset_world()` and `default_content.clear_all()` before every test. Tests load the JSON content they need themselves.
 
 CI (`.github/workflows/ci.yml`) runs on every PR and push to `main`:
-`ruff check`, `ruff format --check` and the full test suite on Python 3.10
-and 3.12 (headless SDL). All three must be green before merging.
+`ruff check`, `ruff format --check`, `mypy` and the full test suite on Python
+3.10 and 3.12 (headless SDL). All of them must be green before merging. Ruff
+and mypy are pinned there — bump a version deliberately and carry the
+resulting reformat or fixes in the same commit, so a new tool release cannot
+turn CI red on its own.
+
+**Coverage gate:** the test job measures coverage over `core/`, `game/`,
+`config/`, `bootstrap.py`, `game_context.py` and `main.py`, and fails below
+`fail_under` in `[tool.coverage.report]` (`pyproject.toml`). The current
+figure is ~90%; the gate sits at 88 so an ordinary refactor has room while a
+real regression trips it. Raise the gate when coverage climbs — never lower
+it to make a red build green; add the missing test instead.
+
+**Local hooks:** `.pre-commit-config.yaml` runs the same checks before a
+commit — ruff (pinned to the same version as CI), `mypy`, and the smoke test.
+Install them once with `pre-commit install`. The two local hooks need the
+project's dependencies, so they run through `scripts/with-python.sh`, which
+picks an activated virtualenv, else `./.venv`, else the `python` on PATH —
+never a hardcoded path. Keep the ruff `rev` in step with the pinned version in
+`ci.yml`: a contributor checking with a different ruff gets findings the build
+does not have, or misses ones it does.
+
+**Type checking:** `mypy` covers `core/`, all of `game/`, `bootstrap.py`,
+`game_context.py` and `main.py` — scope and strictness live in `[tool.mypy]`
+(`pyproject.toml`), so a local bare `mypy` checks exactly what CI checks. It runs loose for now (`check_untyped_defs =
+false`: bodies of unannotated functions are skipped). Tighten it by annotating
+a module and adding a per-module override, never by widening an ignore. When
+widening `files` to a new package, fix that package's errors in the same
+commit.
 
 ## Planning
 
@@ -121,6 +151,14 @@ MapTransitionService). Use sparingly — never as a substitute for a direct call
 within the same layer.
 
 Whoever dispatches an event must not rely on a handler being registered.
+
+**Event names are `GameEvent` members** (`config/enums.py`), never bare
+string literals. A name is a wire between a `dispatch_event` and a
+`set_handler` that nothing else connects — spelled as two independent
+literals, a typo on either end is a silent no-op. `GameEvent` derives from
+`str`, so it stays drop-in compatible with esper's string-keyed registry.
+`tests/verify_events.py` fails the build if a literal creeps back in, and if
+a member is declared but never dispatched.
 
 ## Project Structure
 
@@ -213,7 +251,17 @@ is neutral constants, usable by both.
     │   ├── system_initializer.py    # build_systems() / register_processors()
     │   ├── player_action_service.py # Player game rules (move, pickup, portal, wait, targeting)
     │   ├── map_service.py           # Map registry + active map management
-    │   ├── map_generator.py         # Village scenario, terrain, prefab loading
+    │   ├── map_generator/           # Map generation package (facade + builders)
+    │   │   ├── __init__.py          # Public API re-exports (MapGenerator, tables)
+    │   │   ├── generator.py         # MapGenerator facade: delegates to the builders
+    │   │   ├── constants.py         # STATION_TILES, RESOURCE_DECOR, LIGHT_PROPS, ...
+    │   │   ├── scenario_builder.py  # Settlement scenarios (6 ordered build phases)
+    │   │   ├── house_builder.py     # House interiors + open-shelter workshops
+    │   │   ├── wilderness_builder.py# Biome wilderness + wilderness_map_id()
+    │   │   ├── dungeon_builder.py   # Procedural POI dungeons
+    │   │   ├── resource_decor.py    # Dressing resource nodes into map objects
+    │   │   ├── prop_entities.py     # place_light (torch/lantern/campfire)
+    │   │   └── map_tools.py         # Terrain variety, prefab stamping, sample map
     │   ├── map_transition_service.py# Map transition (freeze/thaw, set_map fan-out)
     │   ├── world_graph_service.py   # World graph: locations, routes, current location
     │   ├── world_simulation_service.py # Off-screen sim: schedule reconciliation on arrival
@@ -239,12 +287,14 @@ is neutral constants, usable by both.
     │   ├── faction_service.py       # Faction relations matrix + player faction standing
     │   ├── quest_service.py         # Authored + generated quests, progress, turn-in
     │   ├── rumor_service.py         # Smalltalk: directions (Wegauskunft) + rumors/leads about other places
-    │   ├── rest_service.py          # Wait/sleep duration presets + time math
+    │   ├── travel_service.py        # Overworld journeys + road-encounter rules
+    │   ├── rest_service.py          # Wait/sleep presets, time math, rest reporting
     │   ├── consumable_service.py    # Item consumption logic
     │   └── equipment_service.py     # Equipment slot logic
     ├── controllers/                 # Gameplay orchestration (driven by states)
     │   ├── input_controller.py      # InputCommand → PlayerActionService / UI (esper-free!)
     │   ├── turn_orchestrator.py     # esper.process + enemy-turn phase systems
+    │   ├── request_router.py        # *_requested events → windows (owns subscriptions)
     │   └── render_pipeline.py       # map → entities → debug → tint → HUD → windows
     ├── states/                      # Thin state machine states
     │   ├── base.py                  # GameState base class
@@ -252,6 +302,8 @@ is neutral constants, usable by both.
     │   ├── gameplay.py              # GameplayState (delegates to controllers)
     │   ├── world_map.py             # WorldMapState
     │   └── game_over.py             # GameOver
+    ├── ui/
+    │   └── world_map_renderer.py    # Draws the overworld screen for WorldMapState
     └── ui/windows/
         ├── inventory.py             # Inventory window
         ├── character.py             # Character sheet window
@@ -267,9 +319,24 @@ is neutral constants, usable by both.
 ### GameContext (`game_context.py`)
 
 All long-lived session state lives in the typed `GameContext` dataclass —
-there is no string-keyed `persist` dict anymore:
+there is no string-keyed `persist` dict anymore.
 
-- `ctx.systems` — `Systems` dataclass with named fields for every ECS system
+**Its service fields are required, not `| None`.** `build_game_context()`
+builds every one of them, so a `ctx.economy is None` check could never fire
+while costing every reader a branch — and an undeclared field (`ctx.typo = x`)
+used to be swallowed silently by the dataclass. Services that need the context
+are constructed *before* it and handed it right after (`service.ctx = ctx`),
+because the context cannot exist before its own fields do. Only two fields are
+genuinely optional, both absent until `GameplayState.startup()`:
+`player_entity` and `message_log`. In tests, build one with
+`make_test_context(**overrides)` (`tests/conftest.py`) rather than spelling out
+eighteen mocks.
+
+- `ctx.systems` — `Systems` dataclass with named fields for every ECS system.
+  Its three render-cycle slots (`render_system`, `debug_render_system`,
+  `ui_system`) are the only optional systems — they need camera/player context
+  and are (re)built by `GameplayState.startup()`. They are typed as their real
+  classes; typing them `object` threw away every call site's type.
 - `ctx.map_container` — property, always the active map from `MapService`
 - `ctx.content` — `ContentDatabase` (all template registries)
 - `ctx.debug_flags` — `DebugFlags` dataclass (F3-F7 toggles)
@@ -403,6 +470,16 @@ The chain is always: key → `InputCommand` → `InputController` →
 Follow the Event Policy (above). Default to a direct call. Dispatch an
 event only for facts (`*_died`, `log_message`) or sanctioned requests
 (`*_requested`). New event names must be past tense or `*_requested`.
+
+A `*_requested` event that opens a window is registered on the
+`RequestRouter` (`game/controllers/request_router.py`) in
+`GameplayState.startup()` — one `requests.modal(event, rect, factory)` line,
+not a new handler method. The router also owns the two esper subscription
+traps: `set_handler` keeps only a **weak** reference (so a handler nothing
+holds is collected and the event silently stops arriving), and
+`remove_handler` cannot remove a bound method at all. A state that
+re-registers must `clear()` first, or the previous generation of handlers
+keeps firing alongside the new one.
 
 ### Step 2: Verify and commit
 
@@ -545,6 +622,19 @@ class MapAwareSystem:
 - `freeze()` / `thaw()` serializes entities when switching maps — player party excluded via `get_entity_closure()`
 - Tile types come from `TileRegistry` — use `Tile(type_id="floor_stone")`, never hardcode tile properties
 - Prefabs are JSON files stamped onto existing layers via `MapService.load_prefab()`
+- **Map generation lives in the `map_generator/` package**, split by domain.
+  `MapGenerator` (`generator.py`) is a thin facade with the public API; the
+  real work sits in one builder module per domain. A new generation feature
+  goes into the matching builder — settlement content into
+  `scenario_builder.py` (add a phase or extend one of the six), buildings into
+  `house_builder.py`, and so on. Only add a facade method when it is a new
+  *public* entry point. **The build order inside `create_scenario` is
+  load-bearing**: entities must be created while their map is the one being
+  frozen, and terrain variety plus resource decoration draw from the
+  generator's single run-seeded `_rng` in sequence. Reordering them silently
+  regenerates every world for a given seed, which is why
+  `tests/verify_world_seed.py` pins golden terrain fingerprints — if those
+  fail, you changed world generation, not just structure.
 
 ### Data-Driven Content
 
@@ -558,8 +648,72 @@ class MapAwareSystem:
 - **Quests & chains**: `assets/data/quests.json` → authored quests loaded by `QuestService`. A quest may carry a `"prerequisites": [quest_id, ...]` list: it stays `offered` but is hidden from `offers_at`/rumors until every listed quest is `turned_in`, so turning in one stage unlocks the next (a chain). Turn-in announces any stage it unlocks. Generated quests (shortage deliver / wolf hunt / friendly-neighbour **guide**) have no prerequisites. A guide quest carries `offer_location` ≠ `giver_location` (offered by a friend, turned in at the destination) so accepting it discovers the destination — see "Location discovery (two-tier)". Verified by `tests/verify_quests.py`
 - **Map scenarios**: `assets/data/scenarios/*.json` → data-driven map layouts loaded by `MapGenerator`; a `"biome"` key gives the settlement a generated wilderness map (entered via portal, not a world-graph node)
 - **Economy blocks** in scenarios: `rates_per_day` entries may be a plain number or `{"per_day": N, "requires": {"input_item": amount}}` — production stalls without inputs (supply chains, Phase G3). Settlements run real item chains: Village mills `grain`→`flour`→`bread` and grinds `herbs`→`healing_salve`; Brackenfen tans `hide`→`leather`→`leather_armor` and digs `iron_ore`; Eastmoor forges `iron_ore`→`iron_sword`/`steel_sword`. The cross-settlement loop (Brackenfen ore → Eastmoor smithy) is asserted by `tests/verify_supply_chains.py`
+- **Settlement treasury & market toll**: an `economy` block also carries
+  `"treasury": N` — the town's purse, held per settlement in
+  `EconomyService.treasury` (service level, next to `stocks`/`prosperity`;
+  it must **not** live as a `Purse` on the mayor, because `freeze()` deletes
+  the entities of every map the player is not on). It is saved with the rest
+  of the economy, and a save from before it existed falls back to the
+  scenario defaults.
+
+  The two directions gold now moves through it:
+
+  - **In** — `MARKET_TOLL_RATE` (6%) of every trade, buying *and* selling,
+    paid by the player and deposited into the settlement's till by
+    `TradeService.buy`/`sell`. This is the game's main gold sink and it scales
+    with whatever the player pulls out of the local market. Cheap trades round
+    to zero toll. The trade window folds it into the price the player actually
+    pays or receives (`Buy: 32g (incl. 2 toll)`), because a toll the player
+    cannot see is just arithmetic.
+  - **Out** — quest rewards. `QuestService._pay_reward` withdraws from the
+    *giver's* treasury instead of the old `purse.gold += reward`, which minted
+    gold from nothing. A town that cannot cover the promise pays what it has
+    and says so. `_affordable_reward` caps a **generated** offer at
+    `GEN_REWARD_TREASURY_SHARE` of the till and suppresses it entirely below
+    `GEN_REWARD_MIN` — so quest density follows prosperity instead of running
+    beside it. Authored quests still promise their JSON reward; only the
+    payout is capped by the till.
+
+- **Trade with the world beyond the map** (`EconomyService._trade_abroad`,
+  run each tick): a settlement ships what is piling up out and buys back what
+  it cannot make. This is the **transport layer**, abstracted — without it a
+  world whose goods balance on paper still starves, because nothing carries
+  Brackenfen's ore to Eastmoor's anvil. Four rules carry the weight, and each
+  exists because leaving it out broke a 365-day simulation:
+
+  - **Reserve only on what the town consumes.** A smithy keeps bread on the
+    shelf and sells every sword. Reserving everything traps a specialist: with
+    no ore it stops producing, its swords settle at the reserve level, and with
+    nothing above the reserve it has no income left to buy ore with.
+  - **The spread must stay narrow.** Importing a gold of goods costs
+    `TRADE_IMPORT_MARKUP / TRADE_EXPORT_FACTOR` gold of exports. Keep that near
+    1.2. Eastmoor turns 24 gold of ore a day into 90 of swords; at a 4x spread
+    it would have to ship 288 gold a day to feed itself, and simply dies — so a
+    wide spread makes specialisation mathematically impossible.
+  - **Ship only what the proceeds can be used for.** Export income is capped at
+    what the town can actually spend (goods it needs, plus room under its
+    treasury cap). Without that ceiling a large net exporter with full stores
+    sells forever and piles up gold — the money supply stops being bounded.
+  - **Relief travels at the town's own pace.** A caravan brings at most
+    `TRADE_IMPORT_RATE` times the settlement's daily appetite for a good. Money
+    is not the only limit: with a full till and no pace, any shortage is
+    repaired in one tick and a shortage quest never gets offered. The rate must
+    exceed 1.0, or relief only ever matches consumption and a town can never
+    climb back out.
+
+  A settlement with no entry in `treasury_cap` is off the trade network and is
+  left alone — `load_from_world` gives every world-graph settlement one, so an
+  economy assembled by hand (a unit test) exercises the production rules
+  without caravans in the way. Verified over a simulated year by
+  `tests/verify_economy.py`: the money supply stays at its cap total and every
+  settlement stays out of `struggling`.
+
+  The mayor knows what is in the chest: `_dialogue_context` exposes
+  `treasury` (`empty`/`thin`/`full` via `EconomyService.treasury_tier`), and
+  `dialogues.json` has matching mayor lines. Verified by the treasury cases in
+  `tests/verify_economy.py`, `tests/verify_quests.py` and `tests/verify_trade.py`.
 - **Per-settlement merchant override**: a scenario NPC entry (in `village_npcs` or a structure's `npcs`) may carry a `"merchant": {"stock": [...], "gold": N}` block. `EntityFactory.create(..., merchant_override=...)` replaces the *template's* merchant data for that instance, so the same role (`shopkeeper`, `blacksmith`) sells a settlement-specific sortiment without new templates. This is how the market profiles differ (Village=food/grain, Brackenfen=raw materials/leather, Eastmoor=metal/luxury). `tests/verify_item_distribution.py` guards that **every** item in `items.json` is reachable (sold or looted) — add new items to a merchant stock or loot table, not just the item file
-- **World events**: `assets/data/world_events.json` entries may carry `effects` (`stock_delta`, `prosperity_delta`) and `escalation` (`{event_id, delay_hours}`); `weight: 0` templates are escalation-only (Phase G2)
+- **World events**: `assets/data/world_events.json` entries may carry `effects` (`stock_delta`, `prosperity_delta`) and `escalation` (`{event_id, delay_hours}`); `weight: 0` templates are escalation-only (Phase G2). The chronicle is **pruned, not append-only**: `on_clock_tick` drops events older than `CHRONICLE_RETENTION_TICKS` (7 days), which sits above the widest consumer window (4 days) — raise it whenever a consumer's `*_MAX_AGE_TICKS` grows, `tests/verify_world_chronicle.py` asserts the relation. The per-hour catch-up loop is capped at `CHRONICLE_MAX_CATCHUP_HOURS`; escalations due inside a skipped span still settle at the first simulated hour
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)
 - **Rest tiles**: a tile with `"provides_rest": true` (e.g. `furniture_bed`) lets the player bump it to sleep. An entity with `"innkeeper": true` offers the same. Both dispatch the `rest_requested` request event; `GameplayState` opens the `RestWindow`, which calls `TurnOrchestrator.advance_turns(ticks)` to fast-forward the world clock (stops early if a hostile starts hunting or the player takes damage). Duration presets come from `rest_service`.
 - **Crafting stations** (Phase H): a tile with `"crafting_station": "<type>"` (e.g. `station_forge`, `station_anvil`, `station_mill`) lets the player bump it to open the `CraftWindow`. `MovementSystem` dispatches the `craft_requested` request event (player only, mirror of `rest_requested`); `GameplayState` opens the window and on confirm runs `CraftingService.craft()` then `advance_turns(recipe.ticks)` — crafting costs in-game time. Stations are placed per settlement via a scenario top-level `"stations": [{"type", "pos"}]` list (mirrors `"lights"`); `MapGenerator` stamps the matching tile (`STATION_TILES`). Recipes group by `station` type. The chain key→station→window mirrors the rest-tile flow exactly. Metalworking is split across two stations to mirror the cross-settlement supply chain: the **forge** only smelts ore into ingots (`iron_ore`/`silver_ore` → ingot, plus the steel chain `iron_ore`+`coal` → `steel_ingot`; `coal` is the one permitted non-ore forge input, the carbon/fuel for steel) sited in Brackenfen the mining town, and the **anvil** only works ingots into arms/armor (`steel_ingot` → `steel_sword`, plus the mid-tier iron gear: spear/mace/buckler/greaves/iron-shod boots) sited in Eastmoor the smithy — `tests/verify_crafting.py::test_forge_smelts_anvil_smiths` guards the split. Distribution by settlement profile: Village (mill/oven/herbalist, a farming village), Brackenfen (forge/tannery), Eastmoor (anvil/jeweler), Foxhollow (`loom`, a wool/weaving town: `wool`→`cloth`→`padded_vest`/`wool_cloak`/`cloth_hood`), Saltmarsh (`kitchen`, a coastal fishing & trade port: `raw_fish`→`cooked_fish`, `venison`+`herbs`→`hearty_stew`, salt/spice trade), Timberfall (`sawmill`, a logging camp: `log`→`plank`→`wooden_shield`/`tower_shield`/`quarterstaff`). The `loom`/`sawmill`/`kitchen` stations train the `weaving`/`woodworking`/`cooking` skills. New gathering nodes feed these chains: `timber_stand`→`log` (woodworking, in forest biomes/Timberfall), `fishing_spot`→`raw_fish` (foraging, in swamp biomes/Saltmarsh), `pasture`→`wool` (Foxhollow/plains), `salt_pan`→`salt` (Saltmarsh/swamp), and `coal_seam`/`gem_vein` (Brackenfen/swamp). POI dungeons are themed via their `world.json` entry: a `monsters` pool, a hidden `cache` item list, and (for the Abandoned Mine) `resources` node kinds — so the Bandit Camp holds bandits, the Sunken Crypt skeletons, and the mine actual ore/coal/gem veins (Old Ruins, Sunken Crypt, Bandit Camp, Abandoned Mine).
