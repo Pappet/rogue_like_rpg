@@ -1,9 +1,25 @@
 class _ShadowCaster:
     def __init__(self, origin, radius, octant, transparency_func, visible):
-        self.origin = origin
+        if octant == 0:
+            self.xx, self.xy, self.yx, self.yy = 1, 0, 0, -1
+        elif octant == 1:
+            self.xx, self.xy, self.yx, self.yy = 0, 1, -1, 0
+        elif octant == 2:
+            self.xx, self.xy, self.yx, self.yy = 0, 1, 1, 0
+        elif octant == 3:
+            self.xx, self.xy, self.yx, self.yy = 1, 0, 0, 1
+        elif octant == 4:
+            self.xx, self.xy, self.yx, self.yy = -1, 0, 0, 1
+        elif octant == 5:
+            self.xx, self.xy, self.yx, self.yy = 0, -1, 1, 0
+        elif octant == 6:
+            self.xx, self.xy, self.yx, self.yy = 0, -1, -1, 0
+        elif octant == 7:
+            self.xx, self.xy, self.yx, self.yy = -1, 0, 0, -1
+
+        self.ox, self.oy = origin
         self.radius = radius
         self.radius_sq = radius * radius
-        self.octant = octant
         self.transparency_func = transparency_func
         self.visible = visible
 
@@ -11,7 +27,16 @@ class _ShadowCaster:
         if start < end:
             return
 
-        for j in range(row, self.radius + 1):
+        # Cache local variables for fast lookup in inner loop
+        xx, xy, yx, yy = self.xx, self.xy, self.yx, self.yy
+        ox, oy = self.ox, self.oy
+        transparency_func = self.transparency_func
+        visible_add = self.visible.add
+        radius = self.radius
+        radius_sq = self.radius_sq
+        cast_light = self.cast_light
+
+        for j in range(row, radius + 1):
             dx, dy = -j, -j
             blocked = False
             while dx <= 0:
@@ -22,14 +47,14 @@ class _ShadowCaster:
                 elif end > l_slope:
                     break
                 else:
-                    mx, my = self._transform_octant(dx, dy)
+                    mx, my = ox + dx * xx + dy * xy, oy + dx * yx + dy * yy
                     # Our light beam is touching this square; light it:
-                    if dx * dx + dy * dy <= self.radius_sq:
-                        self.visible.add((mx, my))
+                    if dx * dx + dy * dy <= radius_sq:
+                        visible_add((mx, my))
 
                     if blocked:
                         # we're scanning a row of blocked squares:
-                        if not self.transparency_func(mx, my):
+                        if not transparency_func(mx, my):
                             new_start = r_slope
                             dx += 1
                             continue
@@ -37,34 +62,14 @@ class _ShadowCaster:
                             blocked = False
                             start = new_start
                     else:
-                        if not self.transparency_func(mx, my) and j < self.radius:
+                        if not transparency_func(mx, my) and j < radius:
                             # This is a blocking square, start a child scan:
                             blocked = True
-                            self.cast_light(j + 1, start, l_slope)
+                            cast_light(j + 1, start, l_slope)
                             new_start = r_slope
                 dx += 1
             if blocked:
                 break
-
-    def _transform_octant(self, dx, dy):
-        x, y = self.origin
-        if self.octant == 0:
-            return x + dx, y - dy
-        if self.octant == 1:
-            return x + dy, y - dx
-        if self.octant == 2:
-            return x + dy, y + dx
-        if self.octant == 3:
-            return x + dx, y + dy
-        if self.octant == 4:
-            return x - dx, y + dy
-        if self.octant == 5:
-            return x - dy, y + dx
-        if self.octant == 6:
-            return x - dy, y - dx
-        if self.octant == 7:
-            return x - dx, y - dy
-        return x, y
 
 
 class VisibilityService:
