@@ -1,17 +1,29 @@
+# Local checks mirror CI. Keep the ruff rev in step with the pinned version in
+# .github/workflows/ci.yml — a contributor whose ruff differs from CI's gets
+# findings the build does not have, or misses ones it does.
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.7
+    rev: v0.15.4
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
         args: [--check]
 
+  # These run in the project's own environment (they need pygame/esper), which
+  # scripts/with-python.sh locates instead of assuming a path.
   - repo: local
     hooks:
+      - id: mypy
+        name: mypy
+        entry: scripts/with-python.sh -m mypy
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: smoke-tests
         name: Smoke Tests
-        entry: .venv/bin/python -m pytest tests/test_smoke.py -x -q
+        entry: scripts/with-python.sh -m pytest tests/test_smoke.py -x -q
         language: system
         pass_filenames: false
         always_run: true

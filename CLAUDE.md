@@ -54,6 +54,15 @@ figure is ~90%; the gate sits at 88 so an ordinary refactor has room while a
 real regression trips it. Raise the gate when coverage climbs — never lower
 it to make a red build green; add the missing test instead.
 
+**Local hooks:** `.pre-commit-config.yaml` runs the same checks before a
+commit — ruff (pinned to the same version as CI), `mypy`, and the smoke test.
+Install them once with `pre-commit install`. The two local hooks need the
+project's dependencies, so they run through `scripts/with-python.sh`, which
+picks an activated virtualenv, else `./.venv`, else the `python` on PATH —
+never a hardcoded path. Keep the ruff `rev` in step with the pinned version in
+`ci.yml`: a contributor checking with a different ruff gets findings the build
+does not have, or misses ones it does.
+
 **Type checking:** `mypy` covers `core/` and `game/services/` — scope and
 strictness live in `[tool.mypy]` (`pyproject.toml`), so a local bare `mypy`
 checks exactly what CI checks. It runs loose for now (`check_untyped_defs =
