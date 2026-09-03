@@ -237,8 +237,8 @@
     }
    },
    "salt": 2,
-   "spices": -0.5,
-   "bread": -1.5,
+   "spices": 1.5,
+   "bread": -1,
    "grain": -1,
    "health_potion": -0.5
   }

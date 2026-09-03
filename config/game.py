@@ -64,6 +64,32 @@ MARKET_TOLL_RATE = 0.06  # share of every trade the town takes, buying or sellin
 TREASURY_START = 200.0  # fallback when a scenario declares no treasury
 GEN_REWARD_TREASURY_SHARE = 0.25  # one generated request may cost at most this much of the till
 GEN_REWARD_MIN = 5  # below this a settlement cannot afford to hire at all
+# --- Trade with the world beyond the map ------------------------------------
+# A settlement ships its surplus out and buys back what it cannot make itself.
+# This is the transport layer: without it, world-wide balance means nothing,
+# because Brackenfen's ore never reaches Eastmoor's anvil. It is also what
+# keeps the money supply bounded — export brings gold in, import takes it out,
+# and a full treasury spends rather than hoards.
+TRADE_EXPORT_RATE = 0.5  # share of the above-equilibrium surplus shipped per day
+TRADE_EXPORT_FACTOR = 0.85  # what a caravan pays for surplus, under the local price
+TRADE_IMPORT_MARKUP = 1.05  # foreign goods cost a little more than base value
+# Together these set the cost of trading: importing one gold of goods takes
+# MARKUP / EXPORT_FACTOR gold of exports. Keep that ratio near 1.2 — a
+# specialist settlement imports most of what it eats plus its own inputs, and
+# a wider spread makes specialisation mathematically impossible. Eastmoor, the
+# smithy, turns 24 gold of ore a day into 90 of swords; at a 4x spread it would
+# have to ship 288 gold a day to feed itself and simply starves.
+TRADE_IMPORT_SHARE = 0.6  # share of export income spent buying goods back
+# How fast relief arrives, as a multiple of what the settlement gets through in
+# a day. Money is not the only limit: without a pace a town with a full till
+# repairs any shortage overnight and the shortage quests never appear. Tying it
+# to the town's own appetite keeps a specialist supplied (Eastmoor smelts three
+# ore a day and may buy three) while a slow-burning good still takes days to
+# restock, which is the window a shortage quest lives in.
+TRADE_IMPORT_RATE = 2.0  # must exceed 1.0, or relief only ever matches the appetite
+TRADE_IMPORT_RATE_FLOOR = 0.25  # goods a town barely touches still trickle in
+TREASURY_CAP_FACTOR = 2.0  # above this multiple of its declared start, a town spends
+
 TREASURY_EMPTY = 25.0  # at or below: the town is visibly broke
 TREASURY_FULL = 150.0  # above: the council can pay its way
 

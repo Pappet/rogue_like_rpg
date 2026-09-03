@@ -241,6 +241,7 @@
  "economy": {
   "treasury": 320,
   "stock": {
+   "spices": 3,
    "iron_sword": 12,
    "steel_sword": 6,
    "iron_ingot": 4,
@@ -262,9 +263,10 @@
      "iron_ore": 2
     }
    },
-   "health_potion": -3,
+   "health_potion": -1,
    "venison": -1.5,
-   "bread": -1.5
+   "bread": -1,
+   "spices": -0.5
   }
  },
  "biome": "plains",
