@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 
 import esper
 
-from config import GEN_REWARD_MIN, GEN_REWARD_TREASURY_SHARE, PROSPERITY_QUEST_GAIN, LogCategory
+from config import GEN_REWARD_MIN, GEN_REWARD_TREASURY_SHARE, PROSPERITY_QUEST_GAIN, GameEvent, LogCategory
 from game.components import Equipment, Inventory, PlayerTag, Position, Purse, TemplateId
 from game.content.item_registry import item_registry
 
@@ -86,7 +86,7 @@ class QuestService:
     rng: random.Random = field(default_factory=random.Random)
 
     def __post_init__(self):
-        esper.set_handler("entity_died", self.on_entity_died)
+        esper.set_handler(GameEvent.ENTITY_DIED, self.on_entity_died)
 
     # --- Loading ------------------------------------------------------------
 
@@ -162,7 +162,7 @@ class QuestService:
         if quest.state != "offered":
             return
         quest.state = "active"
-        esper.dispatch_event("log_message", f"Quest accepted: [color=yellow]{quest.title}[/color]")
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, f"Quest accepted: [color=yellow]{quest.title}[/color]")
         # A quest that sends you to another settlement reveals the way there
         # ("here's the road, hero"). No-op when it's turned in where it's given.
         graph = self.ctx.world_graph if self.ctx else None
@@ -171,7 +171,7 @@ class QuestService:
             if destination is not None and not destination.discovered:
                 graph.discover(quest.giver_location)
                 esper.dispatch_event(
-                    "log_message",
+                    GameEvent.LOG_MESSAGE,
                     f"[color=yellow]The road to {destination.name} is now known.[/color]",
                 )
 
@@ -182,7 +182,7 @@ class QuestService:
                 continue
             if self._prerequisites_met(quest):
                 esper.dispatch_event(
-                    "log_message",
+                    GameEvent.LOG_MESSAGE,
                     f"A new task awaits in {quest.giver_location}: [color=yellow]{quest.title}[/color]",
                 )
 
@@ -239,10 +239,10 @@ class QuestService:
             quest.progress += 1
             if quest.progress >= quest.target["count"]:
                 quest.state = "completed"
-                esper.dispatch_event("log_message", f"[color=green]{quest.title}[/color]: done! Report back.")
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=green]{quest.title}[/color]: done! Report back.")
             else:
                 esper.dispatch_event(
-                    "log_message",
+                    GameEvent.LOG_MESSAGE,
                     f"{quest.title}: {quest.progress}/{quest.target['count']}",
                 )
 
@@ -467,7 +467,7 @@ class QuestService:
 
     def _announce_payment(self, quest: "Quest", paid: int) -> None:
         esper.dispatch_event(
-            "log_message",
+            GameEvent.LOG_MESSAGE,
             f"Quest completed: [color=green]{quest.title}[/color] (+{paid} gold)",
             None,
             LogCategory.LOOT,
@@ -475,7 +475,7 @@ class QuestService:
         if paid < quest.reward_gold:
             short = quest.reward_gold - paid
             esper.dispatch_event(
-                "log_message",
+                GameEvent.LOG_MESSAGE,
                 f"[color=orange]{quest.giver_location}'s coffers were {short} gold short of the promised reward.[/color]",
                 None,
                 LogCategory.ALERT,

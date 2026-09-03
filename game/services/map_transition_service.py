@@ -2,6 +2,7 @@ import logging
 
 import esper
 
+from config.enums import GameEvent
 from game.components import Position, Stats
 from game.services.map_generator import MapGenerator
 from game.services.party_service import get_entity_closure
@@ -120,23 +121,23 @@ class MapTransitionService:
             if ctx.world_chronicle is not None:
                 missed = ctx.world_chronicle.events_for(target_map_id, since_tick=new_map.last_visited_turn)
                 for event in missed[-3:]:
-                    esper.dispatch_event("log_message", f"[color=cyan]Word around town:[/color] {event.text}")
+                    esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=cyan]Word around town:[/color] {event.text}")
 
             # The settlement's long-term state is visible on arrival (G3)
             if ctx.economy is not None:
                 tier = ctx.economy.prosperity_tier(target_map_id)
                 if tier == "struggling":
                     esper.dispatch_event(
-                        "log_message",
+                        GameEvent.LOG_MESSAGE,
                         "[color=cyan]Times are hard here — shutters hang loose, stalls stand empty.[/color]",
                     )
                 elif tier == "thriving":
                     esper.dispatch_event(
-                        "log_message",
+                        GameEvent.LOG_MESSAGE,
                         "[color=cyan]The place is thriving — fresh paint, full stalls, busy streets.[/color]",
                     )
 
         # Update Camera
         ctx.camera.update(target_x, target_y)
 
-        esper.dispatch_event("log_message", f"Transitioned to {target_map_id}.")
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, f"Transitioned to {target_map_id}.")

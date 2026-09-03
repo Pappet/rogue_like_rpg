@@ -1,6 +1,6 @@
 import esper
 
-from config import LogCategory
+from config import GameEvent, LogCategory
 from game.components import Consumable, EffectiveStats, Inventory, Name, PlayerTag, Stats
 
 
@@ -31,7 +31,7 @@ class ConsumableService:
 
         if consumable.effect_type == "heal_hp":
             if current_hp >= max_hp:
-                esper.dispatch_event("log_message", "You are already at full health.")
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, "You are already at full health.")
                 return False
 
             heal_amt = min(consumable.amount, max_hp - current_hp)
@@ -43,13 +43,13 @@ class ConsumableService:
                 eff.hp = stats.hp
 
             category = LogCategory.HEALING if esper.has_component(user_ent, PlayerTag) else LogCategory.SYSTEM
-            esper.dispatch_event("log_message", f"You drink the {item_name}. (+{heal_amt} HP)", None, category)
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, f"You drink the {item_name}. (+{heal_amt} HP)", None, category)
 
         elif consumable.effect_type == "heal_mana":
             current_mana = eff.mana if eff else stats.mana
             max_mana = eff.max_mana if eff else stats.max_mana
             if current_mana >= max_mana:
-                esper.dispatch_event("log_message", "Your mana is already full.")
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, "Your mana is already full.")
                 return False
 
             restore_amt = min(consumable.amount, max_mana - current_mana)
@@ -58,7 +58,9 @@ class ConsumableService:
                 eff.mana = stats.mana
 
             category = LogCategory.HEALING if esper.has_component(user_ent, PlayerTag) else LogCategory.SYSTEM
-            esper.dispatch_event("log_message", f"You drink the {item_name}. (+{restore_amt} MP)", None, category)
+            esper.dispatch_event(
+                GameEvent.LOG_MESSAGE, f"You drink the {item_name}. (+{restore_amt} MP)", None, category
+            )
 
         # Add more effect types here as needed
 

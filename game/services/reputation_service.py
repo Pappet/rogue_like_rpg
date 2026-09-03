@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 import esper
 
+from config.enums import GameEvent
 from game.components import AIBehaviorState, Alignment, Animal, PlayerTag
 
 if TYPE_CHECKING:  # pragma: no cover - typing only, avoids a runtime import cycle
@@ -43,7 +44,7 @@ class ReputationService:
     values: dict[str, int] = field(default_factory=dict)
 
     def __post_init__(self):
-        esper.set_handler("entity_died", self.on_entity_died)
+        esper.set_handler(GameEvent.ENTITY_DIED, self.on_entity_died)
 
     # --- Queries ---------------------------------------------------------
 
@@ -80,10 +81,10 @@ class ReputationService:
         self.values[location_id] = new
         logger.info("Reputation in %s: %d -> %d (%s)", location_id, old, new, reason)
         if delta < -5:
-            esper.dispatch_event("log_message", f"[color=red]Your reputation in {location_id} suffers.[/color]")
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=red]Your reputation in {location_id} suffers.[/color]")
         elif self.tier(location_id) == "beloved" and old < REP_BELOVED:
             esper.dispatch_event(
-                "log_message", f"[color=green]The people of {location_id} have taken a liking to you.[/color]"
+                GameEvent.LOG_MESSAGE, f"[color=green]The people of {location_id} have taken a liking to you.[/color]"
             )
 
     def record_trade(self, location_id: str | None) -> None:

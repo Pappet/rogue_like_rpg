@@ -21,6 +21,20 @@ SIM_RECONCILE_MIN_TICKS = 30
 # Chance per location per in-game hour that a chronicle event happens
 SIM_EVENT_CHANCE_PER_HOUR = 0.04
 
+# How long a chronicle event is kept before it is pruned. The log is written
+# every in-game hour, read by four consumers and serialized whole into every
+# save — unbounded, it grows for as long as a run lasts. The window must stay
+# at or above the widest consumer window (currently 4 days:
+# GOSSIP_EVENT_MAX_AGE_TICKS and rumor_service.RUMOR_EVENT_MAX_AGE_TICKS);
+# tests/verify_world_chronicle.py asserts that. The slack above it is for
+# MapTransitionService's "what you missed while you were away", the one
+# consumer that reads since-last-visit rather than a fixed window.
+CHRONICLE_RETENTION_TICKS = 7 * 24 * 60
+# Ceiling on the hours rolled in one catch-up. The clock can jump far in a
+# single tick (travel, sleep, a loaded save), and the catch-up loop is per
+# hour — without a cap one jump can roll thousands of hours of events.
+CHRONICLE_MAX_CATCHUP_HOURS = 7 * 24
+
 # Travel encounters (events on the road between settlements)
 TRAVEL_ENCOUNTER_CHANCE_PER_HOUR = 0.05  # chance per in-game hour of travel time
 TRAVEL_ENCOUNTER_MAX_CHANCE = 0.6  # even the longest road is not a guaranteed event

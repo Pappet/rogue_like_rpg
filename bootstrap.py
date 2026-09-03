@@ -8,7 +8,7 @@ import random
 
 import esper
 
-from config import HEADER_HEIGHT, LOG_HEIGHT, SCREEN_HEIGHT, SCREEN_WIDTH, SIDEBAR_WIDTH
+from config import HEADER_HEIGHT, LOG_HEIGHT, SCREEN_HEIGHT, SCREEN_WIDTH, SIDEBAR_WIDTH, GameEvent
 from core.camera import Camera
 from core.ecs import apply_esper_compat_patches
 from core.input_manager import InputManager
@@ -84,19 +84,19 @@ def build_game_context(seed: int | None = None) -> GameContext:
     chronicle.rng.seed(derive_seed(world_seed, "chronicle"))
     chronicle.load_templates(f"{DATA_DIR}/world_events.json")
     ctx.world_chronicle = chronicle
-    esper.set_handler("clock_tick", chronicle.on_clock_tick)
+    esper.set_handler(GameEvent.CLOCK_TICK, chronicle.on_clock_tick)
 
     # Settlement economy: stock levels drift hourly and drive local prices
     economy = EconomyService()
     economy.load_from_world(world_graph, f"{DATA_DIR}/scenarios")
     economy.apply_variation(random.Random(derive_seed(world_seed, "economy")))
     ctx.economy = economy
-    esper.set_handler("clock_tick", economy.on_clock_tick)
+    esper.set_handler(GameEvent.CLOCK_TICK, economy.on_clock_tick)
 
     # Shops refill their stock toward the starting menu over time (Phase K)
     restock = MerchantRestockService(economy=economy, world_graph=world_graph)
     ctx.merchant_restock = restock
-    esper.set_handler("clock_tick", restock.on_clock_tick)
+    esper.set_handler(GameEvent.CLOCK_TICK, restock.on_clock_tick)
 
     # Player reputation per settlement (registers its entity_died handler)
     ctx.reputation = ReputationService(ctx=ctx)

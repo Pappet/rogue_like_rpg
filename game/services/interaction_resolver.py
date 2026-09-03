@@ -1,5 +1,6 @@
 from enum import Enum, auto
 
+from config.enums import GameEvent
 from game.components import (
     Activity,
     AIBehaviorState,
@@ -92,34 +93,34 @@ class InteractionResolver:
                     if world.has_component(target_ent, Name)
                     else "Someone"
                 )
-                world.dispatch_event("log_message", f"You wake up {name}.")
+                world.dispatch_event(GameEvent.LOG_MESSAGE, f"You wake up {name}.")
 
         elif interaction == InteractionType.TALK:
             # Sanctioned request: the movement layer must not know about UI —
             # the gameplay state opens the conversation window. Talking is the
             # channel for directions/rumors, so it gets a proper dialogue.
-            world.dispatch_event("dialogue_requested", target_ent)
+            world.dispatch_event(GameEvent.DIALOGUE_REQUESTED, target_ent)
 
         elif interaction == InteractionType.TRADE:
             InteractionResolver._say_line(world, target_ent)
             # Sanctioned request: the movement layer must not know about UI —
             # the gameplay state opens the trade window.
-            world.dispatch_event("trade_requested", target_ent)
+            world.dispatch_event(GameEvent.TRADE_REQUESTED, target_ent)
 
         elif interaction == InteractionType.QUESTS:
             InteractionResolver._say_line(world, target_ent)
-            world.dispatch_event("quests_requested", target_ent)
+            world.dispatch_event(GameEvent.QUESTS_REQUESTED, target_ent)
 
         elif interaction == InteractionType.REST:
             InteractionResolver._say_line(world, target_ent)
             # Sanctioned request: the movement layer must not know about UI —
             # the gameplay state opens the rest window.
-            world.dispatch_event("rest_requested", {"source": "innkeeper"})
+            world.dispatch_event(GameEvent.REST_REQUESTED, {"source": "innkeeper"})
 
         elif interaction == InteractionType.HARVEST:
             # Sanctioned request: the movement layer raises it, the gameplay
             # state (with ctx access) runs the harvest rules.
-            world.dispatch_event("harvest_requested", target_ent)
+            world.dispatch_event(GameEvent.HARVEST_REQUESTED, target_ent)
 
     @staticmethod
     def _say_line(world, target_ent: int) -> None:
@@ -142,4 +143,4 @@ class InteractionResolver:
             context["activity"] = activity.current_activity
         tid = world.try_component(target_ent, TemplateId)
         line = dialogue_service.get_line(tid.id if tid else "", context)
-        world.dispatch_event("log_message", f"[color=yellow]{name}:[/color] {line}")
+        world.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=yellow]{name}:[/color] {line}")

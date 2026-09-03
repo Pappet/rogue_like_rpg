@@ -32,6 +32,7 @@ from config import (
     FACTION_MAX,
     FACTION_MIN,
     FACTION_TRUSTED,
+    GameEvent,
 )
 from game.components import AIBehaviorState, Alignment, Animal, Corpse, Faction, PlayerTag, TemplateId
 
@@ -51,7 +52,7 @@ class FactionService:
     standing: dict[str, int] = field(default_factory=dict)
 
     def __post_init__(self):
-        esper.set_handler("entity_died", self.on_entity_died)
+        esper.set_handler(GameEvent.ENTITY_DIED, self.on_entity_died)
 
     # --- Loading ------------------------------------------------------------
 

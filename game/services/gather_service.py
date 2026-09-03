@@ -16,7 +16,7 @@ import logging
 
 import esper
 
-from config import GATHER_XP_PER_HARVEST, LogCategory, SpriteLayer
+from config import GATHER_XP_PER_HARVEST, GameEvent, LogCategory, SpriteLayer
 from game.components import (
     Blocker,
     Description,
@@ -105,7 +105,10 @@ class GatherService:
         now = ctx.world_clock.total_ticks
         if now < node.ready_at:
             esper.dispatch_event(
-                "log_message", f"The {name} has been picked clean; give it time to recover.", None, LogCategory.ALERT
+                GameEvent.LOG_MESSAGE,
+                f"The {name} has been picked clean; give it time to recover.",
+                None,
+                LogCategory.ALERT,
             )
             return False
 
@@ -122,12 +125,12 @@ class GatherService:
             gathered += 1
 
         if gathered == 0:
-            esper.dispatch_event("log_message", "You can't carry any more.", None, LogCategory.ALERT)
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, "You can't carry any more.", None, LogCategory.ALERT)
             return False
 
         node.ready_at = now + node.respawn_ticks
         SkillService.grant(esper, player, node.skill, GATHER_XP_PER_HARVEST)
         item_name = _item_name(node.item)
         suffix = f" ×{gathered}" if gathered > 1 else ""
-        esper.dispatch_event("log_message", f"You gather {item_name}{suffix}.", None, LogCategory.LOOT)
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, f"You gather {item_name}{suffix}.", None, LogCategory.LOOT)
         return True

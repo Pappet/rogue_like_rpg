@@ -1,6 +1,6 @@
 import esper
 
-from config import DAWN_START, DAY_START, DN_SETTINGS, DUSK_START, NIGHT_START, TICKS_PER_HOUR
+from config import DAWN_START, DAY_START, DN_SETTINGS, DUSK_START, NIGHT_START, TICKS_PER_HOUR, GameEvent
 
 
 class WorldClockService:
@@ -77,7 +77,7 @@ class WorldClockService:
     def advance(self, amount=1):
         """Increments total_ticks and dispatches event."""
         self.total_ticks += amount
-        esper.dispatch_event("clock_tick", self.get_state())
+        esper.dispatch_event(GameEvent.CLOCK_TICK, self.get_state())
 
     def get_state(self):
         """Returns a dictionary representation of the clock state."""

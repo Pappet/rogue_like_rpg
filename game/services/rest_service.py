@@ -8,7 +8,7 @@ itself belongs to ``TurnOrchestrator.advance_turns`` — this module decides
 
 import esper
 
-from config import DAY_START, TICKS_PER_HOUR, LogCategory
+from config import DAY_START, TICKS_PER_HOUR, GameEvent, LogCategory
 
 # Full daylight — the hour "Sleep until morning" targets.
 MORNING_HOUR = DAY_START
@@ -59,10 +59,12 @@ def report(clock, result: dict) -> None:
     ticks really elapsed, and whether something cut the rest short.
     """
     if result["elapsed"] <= 0:
-        esper.dispatch_event("log_message", "[color=red]You can't rest right now.[/color]", None, LogCategory.ALERT)
+        esper.dispatch_event(
+            GameEvent.LOG_MESSAGE, "[color=red]You can't rest right now.[/color]", None, LogCategory.ALERT
+        )
         return
-    esper.dispatch_event("log_message", f"Time passes... it is now {clock.hour:02d}:{clock.minute:02d}.")
+    esper.dispatch_event(GameEvent.LOG_MESSAGE, f"Time passes... it is now {clock.hour:02d}:{clock.minute:02d}.")
     if result["interrupted"]:
         esper.dispatch_event(
-            "log_message", "[color=red]Something interrupts your rest![/color]", None, LogCategory.ALERT
+            GameEvent.LOG_MESSAGE, "[color=red]Something interrupts your rest![/color]", None, LogCategory.ALERT
         )

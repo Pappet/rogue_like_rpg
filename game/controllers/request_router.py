@@ -37,6 +37,7 @@ from typing import Any
 import esper
 import pygame
 
+from config.enums import GameEvent
 from core.ui.stack_manager import UIStack
 from core.ui.window_base import UIWindow
 
@@ -49,9 +50,9 @@ class RequestRouter:
     def __init__(self, ui_stack: UIStack) -> None:
         self._ui_stack = ui_stack
         # Strong references: esper's registry holds weak ones only.
-        self._subscriptions: list[tuple[str, Callable[..., Any]]] = []
+        self._subscriptions: list[tuple[GameEvent, Callable[..., Any]]] = []
 
-    def on(self, event: str, handler: Callable[..., Any]) -> None:
+    def on(self, event: GameEvent, handler: Callable[..., Any]) -> None:
         """Answer ``event`` by calling ``handler`` with the dispatched payload."""
 
         def invoke(*args: Any) -> None:
@@ -70,7 +71,7 @@ class RequestRouter:
             esper.remove_handler(event, handler)
         self._subscriptions.clear()
 
-    def modal(self, event: str, rect: Sequence[int], factory: WindowFactory) -> None:
+    def modal(self, event: GameEvent, rect: Sequence[int], factory: WindowFactory) -> None:
         """Answer ``event`` by opening the window ``factory`` builds.
 
         Does nothing while another modal is open, so a bump cannot stack a

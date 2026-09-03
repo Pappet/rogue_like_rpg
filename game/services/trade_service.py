@@ -12,7 +12,7 @@ import logging
 
 import esper
 
-from config import MARKET_TOLL_RATE, LogCategory
+from config import MARKET_TOLL_RATE, GameEvent, LogCategory
 from game.components import (
     Equipment,
     Inventory,
@@ -101,7 +101,7 @@ class TradeService:
         price = TradeService.buy_price(template_id, economy, location_id, reputation)
         toll = TradeService.market_toll(price)
         if purse.gold < price + toll:
-            esper.dispatch_event("log_message", "You cannot afford that.", None, LogCategory.ALERT)
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, "You cannot afford that.", None, LogCategory.ALERT)
             return False
 
         # Carry weight check (same rule as pickup)
@@ -113,7 +113,7 @@ class TradeService:
                 with contextlib.suppress(KeyError):
                     current_weight += world.component_for_entity(item_id, Portable).weight
             if current_weight + template.weight > stats.max_carry_weight:
-                esper.dispatch_event("log_message", "Too heavy to carry.", None, LogCategory.ALERT)
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, "Too heavy to carry.", None, LogCategory.ALERT)
                 return False
 
         merchant.stock.pop(stock_index)
@@ -133,7 +133,7 @@ class TradeService:
 
         name = world.component_for_entity(item_ent, Name).name
         spent = f"{price} gold" if not toll else f"{price} gold + {toll} toll"
-        esper.dispatch_event("log_message", f"Bought {name} for {spent}.", None, LogCategory.LOOT)
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, f"Bought {name} for {spent}.", None, LogCategory.LOOT)
         return True
 
     @staticmethod
@@ -155,14 +155,16 @@ class TradeService:
 
         template_id_comp = world.try_component(item_ent, TemplateId)
         if template_id_comp is None or not template_id_comp.id:
-            esper.dispatch_event("log_message", "The merchant has no interest in that.", None, LogCategory.ALERT)
+            esper.dispatch_event(
+                GameEvent.LOG_MESSAGE, "The merchant has no interest in that.", None, LogCategory.ALERT
+            )
             return False
 
         price = TradeService.sell_price(item_ent, economy, location_id, reputation)
         toll = TradeService.market_toll(price)
         merchant_purse = world.try_component(merchant_ent, Purse)
         if merchant_purse is not None and merchant_purse.gold < price:
-            esper.dispatch_event("log_message", "The merchant cannot afford that.", None, LogCategory.ALERT)
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, "The merchant cannot afford that.", None, LogCategory.ALERT)
             return False
 
         # Unequip first if the item is currently worn
@@ -187,5 +189,5 @@ class TradeService:
             merchant_purse.gold -= price
 
         earned = f"{price} gold" if not toll else f"{price} gold - {toll} toll"
-        esper.dispatch_event("log_message", f"Sold {name} for {earned}.", None, LogCategory.LOOT)
+        esper.dispatch_event(GameEvent.LOG_MESSAGE, f"Sold {name} for {earned}.", None, LogCategory.LOOT)
         return True

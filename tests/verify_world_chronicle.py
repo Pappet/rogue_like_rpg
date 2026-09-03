@@ -131,3 +131,100 @@ def test_travel_produces_chronicle_entries():
     # location at the time — at minimum they must reference graph nodes.
     for event in ctx.world_chronicle.events:
         assert ctx.world_graph.get_location(event.location_id) is not None
+
+
+# --- Retention -------------------------------------------------------------
+
+
+def test_retention_covers_every_consumer_window():
+    """The prune window must outlast the widest read window, or a consumer
+    loses events it still filters for."""
+    from config import (
+        CHRONICLE_RETENTION_TICKS,
+        GOSSIP_EVENT_MAX_AGE_TICKS,
+        TRAVEL_BANDIT_EVENT_MAX_AGE_TICKS,
+        TRAVEL_MERCHANT_EVENT_MAX_AGE_TICKS,
+    )
+    from game.services.quest_service import GEN_EVENT_MAX_AGE_TICKS
+    from game.services.rumor_service import RUMOR_EVENT_MAX_AGE_TICKS
+
+    windows = [
+        GOSSIP_EVENT_MAX_AGE_TICKS,
+        TRAVEL_BANDIT_EVENT_MAX_AGE_TICKS,
+        TRAVEL_MERCHANT_EVENT_MAX_AGE_TICKS,
+        GEN_EVENT_MAX_AGE_TICKS,
+        RUMOR_EVENT_MAX_AGE_TICKS,
+    ]
+    assert max(windows) <= CHRONICLE_RETENTION_TICKS
+
+
+def test_prune_drops_only_unreadable_events():
+    from config import CHRONICLE_RETENTION_TICKS
+
+    chronicle = _chronicle(_ctx_with_two_settlements())
+    now = 10 * CHRONICLE_RETENTION_TICKS
+    chronicle.record("B", tick=now - CHRONICLE_RETENTION_TICKS - 1, text="Ancient.", event_id="old")
+    chronicle.record("B", tick=now - 10, text="Fresh.", event_id="fresh")
+
+    assert chronicle.prune(now) == 1
+    assert [e.event_id for e in chronicle.events] == ["fresh"]
+
+
+def test_clock_tick_prunes_the_log():
+    from config import CHRONICLE_RETENTION_TICKS
+
+    chronicle = _chronicle(_ctx_with_two_settlements())
+    chronicle.record("B", tick=0, text="Day one.", event_id="old")
+    chronicle.on_clock_tick({"total_ticks": 2 * CHRONICLE_RETENTION_TICKS})
+
+    assert all(e.event_id != "old" for e in chronicle.events)
+
+
+def test_catch_up_is_bounded_on_a_huge_clock_jump():
+    """A far clock jump must not roll one hour at a time forever."""
+    from config import CHRONICLE_MAX_CATCHUP_HOURS
+
+    chronicle = _chronicle(_ctx_with_two_settlements())
+    rolled = []
+    chronicle._roll_hour = rolled.append
+
+    chronicle.on_clock_tick({"total_ticks": 100_000 * TICKS_PER_HOUR})
+
+    assert len(rolled) == CHRONICLE_MAX_CATCHUP_HOURS
+    assert chronicle.last_processed_hour == 100_000
+
+
+def test_skipped_catch_up_still_fires_due_escalations():
+    """An escalation scheduled inside the skipped span is not lost."""
+    from game.services.world_chronicle_service import PendingEscalation
+
+    chronicle = _chronicle(_ctx_with_two_settlements())
+    template = next(t for t in chronicle.templates if t.weight == 0)
+    chronicle.pending_escalations.append(
+        PendingEscalation(location_id="B", due_hour=5, event_id=template.id, source_event_id="cause")
+    )
+    chronicle._roll_hour = lambda hour: None
+
+    chronicle.on_clock_tick({"total_ticks": 10_000 * TICKS_PER_HOUR})
+
+    assert not chronicle.pending_escalations
+    assert any(e.event_id == template.id for e in chronicle.events)
+
+
+def test_load_prunes_a_legacy_unbounded_log():
+    from config import CHRONICLE_RETENTION_TICKS
+
+    chronicle = _chronicle(_ctx_with_two_settlements())
+    now_hour = 10 * CHRONICLE_RETENTION_TICKS // TICKS_PER_HOUR
+    chronicle.from_dict(
+        {
+            "last_processed_hour": now_hour,
+            "events": [
+                {"tick": 0, "location_id": "B", "text": "Ancient.", "event_id": "old"},
+                {"tick": now_hour * TICKS_PER_HOUR - 5, "location_id": "B", "text": "Fresh.", "event_id": "fresh"},
+            ],
+            "pending_escalations": [],
+        }
+    )
+
+    assert [e.event_id for e in chronicle.events] == ["fresh"]

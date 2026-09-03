@@ -22,6 +22,7 @@ from config import (
     UI_THEME_PANEL_BOTTOM,
     UI_THEME_PANEL_TOP,
     UI_THEME_PHASE,
+    GameEvent,
     GameStates,
 )
 from core.ui import theme
@@ -64,7 +65,7 @@ class UISystem(esper.Processor):
             self.message_log = MessageLog(self.log_rect, self.small_font)
 
         # Register event handler
-        esper.set_handler("log_message", self.message_log.add_message)
+        esper.set_handler(GameEvent.LOG_MESSAGE, self.message_log.add_message)
 
     def process(self, surface):
         self.draw_header(surface)

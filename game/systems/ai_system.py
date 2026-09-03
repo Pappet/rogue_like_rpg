@@ -2,7 +2,7 @@ import random
 
 import esper
 
-from config import AI_LOITER_MOVE_CHANCE, AI_LOITER_RADIUS, GameStates, LogCategory
+from config import AI_LOITER_MOVE_CHANCE, AI_LOITER_RADIUS, GameEvent, GameStates, LogCategory
 from core.visibility_service import VisibilityService
 from game.components import (
     AI,
@@ -110,9 +110,11 @@ class AISystem(esper.Processor):
                 )
                 name_comp = esper.try_component(ent, Name)
                 if name_comp:
-                    esper.dispatch_event("log_message", f"The {name_comp.name} notices you!", None, LogCategory.ALERT)
+                    esper.dispatch_event(
+                        GameEvent.LOG_MESSAGE, f"The {name_comp.name} notices you!", None, LogCategory.ALERT
+                    )
                 else:
-                    esper.dispatch_event("log_message", "Something notices you!", None, LogCategory.ALERT)
+                    esper.dispatch_event(GameEvent.LOG_MESSAGE, "Something notices you!", None, LogCategory.ALERT)
 
         # PathData Priority (Task 1)
         # Note: CHASE state manages its own PathData to handle moving targets.

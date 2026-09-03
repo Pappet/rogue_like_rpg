@@ -3,7 +3,7 @@ import random
 
 import esper
 
-from config import COMBAT_XP_PER_KILL_BASE, LogCategory, SpriteLayer
+from config import COMBAT_XP_PER_KILL_BASE, GameEvent, LogCategory, SpriteLayer
 from game.components import (
     AI,
     AIBehaviorState,
@@ -35,14 +35,14 @@ class DeathSystem(MapAwareSystem):
     def __init__(self):
         super().__init__()
         # Register the event handler for entity death
-        esper.set_handler("entity_died", self.on_entity_died)
+        esper.set_handler(GameEvent.ENTITY_DIED, self.on_entity_died)
 
     def on_entity_died(self, entity, attacker=None):
         # --- Player death: dispatch event and return early ---
         if esper.has_component(entity, PlayerTag):
             logger.info("Player has died!")
-            esper.dispatch_event("log_message", "[color=red]You have been slain![/color]")
-            esper.dispatch_event("player_died")
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, "[color=red]You have been slain![/color]")
+            esper.dispatch_event(GameEvent.PLAYER_DIED)
             return
 
         # Learn-by-doing: a foe slain by the player trains Combat (Phase I).
@@ -57,12 +57,12 @@ class DeathSystem(MapAwareSystem):
             entity_name = name_comp.name
 
             # Log message
-            esper.dispatch_event("log_message", f"[color=orange]{entity_name}[/color] dies!")
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=orange]{entity_name}[/color] dies!")
 
             # Update Name
             name_comp.name = f"Remains of {entity_name}"
         else:
-            esper.dispatch_event("log_message", "[color=orange]Something[/color] dies!")
+            esper.dispatch_event(GameEvent.LOG_MESSAGE, "[color=orange]Something[/color] dies!")
 
         # --- Handle Loot Drops ---
         if esper.has_component(entity, LootTable):
@@ -112,7 +112,9 @@ class DeathSystem(MapAwareSystem):
                 # Find a valid position for the loot
                 drop_x, drop_y = self._find_drop_position(pos.x, pos.y)
                 ItemFactory.create_on_ground(world, template_id, drop_x, drop_y, pos.layer)
-                esper.dispatch_event("log_message", f"The {template_id} drops to the ground.", None, LogCategory.LOOT)
+                esper.dispatch_event(
+                    GameEvent.LOG_MESSAGE, f"The {template_id} drops to the ground.", None, LogCategory.LOOT
+                )
 
     def _find_drop_position(self, x, y):
         """Return (x, y) if walkable, else search 8 neighbors."""
