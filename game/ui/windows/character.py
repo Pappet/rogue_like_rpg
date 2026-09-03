@@ -20,7 +20,8 @@ from config import (
 from core.input_manager import InputCommand
 from core.ui import theme
 from core.ui.window_base import UIWindow
-from game.components import EffectiveStats, Inventory, Portable, Skills, Stats
+from game.components import EffectiveStats, Skills, Stats
+from game.services.crafting_service import CraftingService
 from game.services.skill_service import SKILLS, level_for_xp, progress_into_level
 
 # Reference ceiling for the attribute bars (purely visual scaling).
@@ -163,14 +164,7 @@ class CharacterWindow(UIWindow):
 
         theme.draw_divider(surface, rect.x + 14, rect.right - 14, y, ornament=False)
 
-        cur_w = 0.0
-        inv_header = self.world.try_component(self.player_entity, Inventory)
-        if inv_header:
-            for item_id in inv_header.items:
-                port = self.world.try_component(item_id, Portable)
-                if port:
-                    cur_w += port.weight
-        max_w = stats.max_carry_weight
+        cur_w, max_w = CraftingService.carry_weight(self.world, self.player_entity)
         load = (cur_w / max_w) if max_w > 0 else 0.0
 
         if load >= 1.0:
