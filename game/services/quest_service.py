@@ -198,21 +198,18 @@ class QuestService:
             if not self._remove_player_items(quest.target["item"], quest.target["count"]):
                 return False
             # The delivered goods enter the local market: shortage resolved.
-            if self.ctx.economy is not None:
-                for _ in range(quest.target["count"]):
-                    self.ctx.economy.record_sale(location_id, quest.target["item"])
+            for _ in range(quest.target["count"]):
+                self.ctx.economy.record_sale(location_id, quest.target["item"])
         elif quest.state != "completed":
             return False
 
         paid = self._pay_reward(quest)
-        if self.ctx.reputation is not None:
-            self.ctx.reputation.adjust(location_id, 5, f"quest '{quest.id}'")
+        self.ctx.reputation.adjust(location_id, 5, f"quest '{quest.id}'")
         # A resolved problem lifts the whole settlement a little (G3)
-        if self.ctx.economy is not None:
-            self.ctx.economy.adjust_prosperity(location_id, PROSPERITY_QUEST_GAIN)
+        self.ctx.economy.adjust_prosperity(location_id, PROSPERITY_QUEST_GAIN)
         # Resolving the cause stops what it would have escalated into (G2):
         # hunted wolves never reach the herds.
-        if quest.cause_event_id and self.ctx.world_chronicle is not None:
+        if quest.cause_event_id:
             self.ctx.world_chronicle.cancel_escalations(quest.giver_location, quest.cause_event_id)
         quest.state = "turned_in"
         self._announce_payment(quest, paid)
@@ -258,7 +255,7 @@ class QuestService:
         # Generate offers for EVERY settlement (economy and chronicle are
         # global state) so rumors can point at requests before the player
         # has ever been there.
-        if self.ctx is not None and self.ctx.world_graph is not None:
+        if self.ctx is not None:
             for loc in self.ctx.world_graph.locations.values():
                 if loc.type == "settlement":
                     self._generate_offers(loc.id)
@@ -275,71 +272,67 @@ class QuestService:
 
         # Shortage -> deliver request (one open request per good per place)
         economy = self.ctx.economy
-        if economy is not None:
-            for item_id, level in economy.stocks.get(location_id, {}).items():
-                # A request needs a real local sink: direct consumption or
-                # a production input (the smith out of ore posts for ore).
-                if level >= GEN_STOCK_THRESHOLD or not economy.consumes(location_id, item_id):
-                    continue
-                quest_id = f"gen_deliver_{location_id}_{item_id}"
-                if any(q.id == quest_id and q.state != "turned_in" for q in self.quests):
-                    continue
-                template = item_registry.get(item_id)
-                item_name = template.name if template else item_id
-                value = template.value if template else 10
-                reward = self._affordable_reward(
-                    location_id, int(value * GEN_DELIVER_COUNT * GEN_DELIVER_REWARD_FACTOR)
+        for item_id, level in economy.stocks.get(location_id, {}).items():
+            # A request needs a real local sink: direct consumption or
+            # a production input (the smith out of ore posts for ore).
+            if level >= GEN_STOCK_THRESHOLD or not economy.consumes(location_id, item_id):
+                continue
+            quest_id = f"gen_deliver_{location_id}_{item_id}"
+            if any(q.id == quest_id and q.state != "turned_in" for q in self.quests):
+                continue
+            template = item_registry.get(item_id)
+            item_name = template.name if template else item_id
+            value = template.value if template else 10
+            reward = self._affordable_reward(location_id, int(value * GEN_DELIVER_COUNT * GEN_DELIVER_REWARD_FACTOR))
+            if reward < GEN_REWARD_MIN:
+                continue  # the town cannot pay for help right now
+            self.quests = [q for q in self.quests if q.id != quest_id]  # drop old turned_in copy
+            self.quests.append(
+                Quest(
+                    id=quest_id,
+                    title=f"Shortage of {item_name}s",
+                    description=f"{location_id} has run out of {item_name}s. "
+                    f"Bring {GEN_DELIVER_COUNT} and you will be paid well.",
+                    quest_type="deliver",
+                    giver_location=location_id,
+                    target={"item": item_id, "count": GEN_DELIVER_COUNT},
+                    reward_gold=reward,
+                    source="generated",
                 )
-                if reward < GEN_REWARD_MIN:
-                    continue  # the town cannot pay for help right now
-                self.quests = [q for q in self.quests if q.id != quest_id]  # drop old turned_in copy
-                self.quests.append(
-                    Quest(
-                        id=quest_id,
-                        title=f"Shortage of {item_name}s",
-                        description=f"{location_id} has run out of {item_name}s. "
-                        f"Bring {GEN_DELIVER_COUNT} and you will be paid well.",
-                        quest_type="deliver",
-                        giver_location=location_id,
-                        target={"item": item_id, "count": GEN_DELIVER_COUNT},
-                        reward_gold=reward,
-                        source="generated",
-                    )
-                )
-                logger.info("Generated deliver quest at %s for %s (%d gold).", location_id, item_id, reward)
+            )
+            logger.info("Generated deliver quest at %s for %s (%d gold).", location_id, item_id, reward)
 
         # Recent wolf sighting -> kill request
         chronicle = self.ctx.world_chronicle
         clock = self.ctx.world_clock
-        if chronicle is not None and clock is not None:
-            recent = [
-                e
-                for e in chronicle.events_for(location_id, since_tick=clock.total_ticks - GEN_EVENT_MAX_AGE_TICKS)
-                if e.event_id == GEN_WOLF_EVENT_ID
-            ]
-            quest_id = f"gen_wolves_{location_id}"
-            hunt_reward = self._affordable_reward(location_id, GEN_KILL_REWARD)
-            if (
-                recent
-                and hunt_reward >= GEN_REWARD_MIN
-                and not any(q.id == quest_id and q.state != "turned_in" for q in self.quests)
-            ):
-                self.quests = [q for q in self.quests if q.id != quest_id]
-                self.quests.append(
-                    Quest(
-                        id=quest_id,
-                        title=f"Wolves near {location_id}",
-                        description=f"Wolves have been spotted around {location_id}. "
-                        f"Hunt down {GEN_KILL_COUNT} of them in the wilds.",
-                        quest_type="kill",
-                        giver_location=location_id,
-                        target={"template": "wolf", "count": GEN_KILL_COUNT},
-                        reward_gold=hunt_reward,
-                        source="generated",
-                        cause_event_id=GEN_WOLF_EVENT_ID,
-                    )
+        recent = [
+            e
+            for e in chronicle.events_for(location_id, since_tick=clock.total_ticks - GEN_EVENT_MAX_AGE_TICKS)
+            if e.event_id == GEN_WOLF_EVENT_ID
+        ]
+        quest_id = f"gen_wolves_{location_id}"
+        hunt_reward = self._affordable_reward(location_id, GEN_KILL_REWARD)
+        if (
+            recent
+            and hunt_reward >= GEN_REWARD_MIN
+            and not any(q.id == quest_id and q.state != "turned_in" for q in self.quests)
+        ):
+            self.quests = [q for q in self.quests if q.id != quest_id]
+            self.quests.append(
+                Quest(
+                    id=quest_id,
+                    title=f"Wolves near {location_id}",
+                    description=f"Wolves have been spotted around {location_id}. "
+                    f"Hunt down {GEN_KILL_COUNT} of them in the wilds.",
+                    quest_type="kill",
+                    giver_location=location_id,
+                    target={"template": "wolf", "count": GEN_KILL_COUNT},
+                    reward_gold=hunt_reward,
+                    source="generated",
+                    cause_event_id=GEN_WOLF_EVENT_ID,
                 )
-                logger.info("Generated wolf-hunt quest at %s.", location_id)
+            )
+            logger.info("Generated wolf-hunt quest at %s.", location_id)
 
     def _worst_shortage(self, location_id: str) -> str | None:
         """The consumed good a settlement is shortest on (below threshold), or None."""
@@ -362,7 +355,7 @@ class QuestService:
         accepting reveals the road to the friend (see ``accept``). This is the
         quest-driven half of location discovery.
         """
-        if self.ctx is None or self.ctx.world_graph is None or self.ctx.economy is None:
+        if self.ctx is None:
             return
         graph = self.ctx.world_graph
         for friend in graph.friends_of(offer_location):

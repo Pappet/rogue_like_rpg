@@ -17,6 +17,7 @@ from game.map.map_container import MapContainer
 from game.services.economy_service import EconomyService
 from game.services.faction_service import FactionService
 from game.services.map_service import MapService
+from game.services.merchant_restock_service import MerchantRestockService
 from game.services.quest_service import QuestService
 from game.services.render_service import RenderService
 from game.services.reputation_service import ReputationService
@@ -28,14 +29,18 @@ from game.systems.action_system import ActionSystem
 from game.systems.ai_system import AISystem
 from game.systems.combat_system import CombatSystem
 from game.systems.death_system import DeathSystem
+from game.systems.debug_render_system import DebugRenderSystem
 from game.systems.equipment_system import EquipmentSystem
 from game.systems.fct_system import FCTSystem
 from game.systems.gossip_system import GossipSystem
+from game.systems.map_aware_system import MapAwareSystem
 from game.systems.movement_system import MovementSystem
 from game.systems.needs_system import NeedsSystem
+from game.systems.render_system import RenderSystem
 from game.systems.schedule_system import ScheduleSystem
 from game.systems.status_effect_system import StatusEffectSystem
 from game.systems.turn_system import TurnSystem
+from game.systems.ui_system import UISystem
 from game.systems.visibility_system import VisibilitySystem
 
 
@@ -71,13 +76,17 @@ class Systems:
     needs_system: NeedsSystem = field(default_factory=NeedsSystem)
     status_effect_system: StatusEffectSystem = field(default_factory=StatusEffectSystem)
     gossip_system: GossipSystem = field(default_factory=GossipSystem)
-    render_system: object | None = None
-    debug_render_system: object | None = None
-    ui_system: object | None = None
+    # The render-cycle slots are the only genuinely absent systems: they need
+    # camera/player context and are (re)built by GameplayState.startup().
+    # Typed as their real classes — ``object`` threw the type away and made
+    # every call through them uncheckable.
+    render_system: RenderSystem | None = None
+    debug_render_system: DebugRenderSystem | None = None
+    ui_system: UISystem | None = None
 
-    def map_aware(self) -> list:
+    def map_aware(self) -> list[MapAwareSystem]:
         """All systems that need set_map() on map transitions."""
-        candidates = [
+        candidates: list[MapAwareSystem | None] = [
             self.movement_system,
             self.visibility_system,
             self.action_system,
@@ -85,13 +94,17 @@ class Systems:
             self.render_system,
             self.debug_render_system,
         ]
-        return [s for s in candidates if s is not None and hasattr(s, "set_map")]
+        return [s for s in candidates if s is not None]
 
 
 @dataclass
 class GameContext:
     """Everything long-lived in a game session."""
 
+    # Everything below is built by bootstrap.build_game_context() before the
+    # context exists, so none of it is optional. It used to default to None,
+    # which cost every reader a guard that could never fire and let a typo'd
+    # attribute assignment pass silently.
     map_service: MapService
     render_service: RenderService
     world_clock: WorldClockService
@@ -99,17 +112,20 @@ class GameContext:
     ui_stack: UIStack
     camera: Camera
     systems: Systems
-    world_graph: WorldGraphService | None = None
-    world_chronicle: WorldChronicleService | None = None
-    economy: EconomyService | None = None
-    reputation: ReputationService | None = None
-    factions: FactionService | None = None
-    quests: QuestService | None = None
-    rumors: RumorService | None = None
-    travel_encounters: TravelEncounterService | None = None
+    content: ContentDatabase
+    world_graph: WorldGraphService
+    world_chronicle: WorldChronicleService
+    economy: EconomyService
+    merchant_restock: MerchantRestockService
+    reputation: ReputationService
+    factions: FactionService
+    quests: QuestService
+    rumors: RumorService
+    travel_encounters: TravelEncounterService
     debug_flags: DebugFlags = field(default_factory=DebugFlags)
+    # Genuinely absent until GameplayState.startup(): the player is created
+    # there (or restored by a load), and the log needs a laid-out UI.
     player_entity: int | None = None
-    content: ContentDatabase | None = None
     world_seed: int = 0
     # The chronicle/message log persists across gameplay re-entry (e.g.
     # returning from the world map) so its history is never reset. UISystem

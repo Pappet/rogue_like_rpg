@@ -8,6 +8,7 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 import esper
 import pygame
 
+from core.world_clock_service import WorldClockService
 from game.components import Inventory, PlayerTag, Purse, QuestGiver, TemplateId
 from game.content.entity_factory import EntityFactory
 from game.content.item_factory import ItemFactory
@@ -25,20 +26,69 @@ def _load_content():
     ResourceLoader.load_items("assets/data/items.json")
 
 
+class _FakeEconomy:
+    def __init__(self, stocks, treasury=1000):
+        self.stocks = stocks
+        # Generated rewards are capped at a share of the till, so a fake with an
+        # empty treasury would generate nothing at all. Places outside `stocks`
+        # fall back to the same amount, so a test that only cares about the
+        # quest can turn one in without staging a till first.
+        self.default_treasury = float(treasury)
+        self.treasury = dict.fromkeys(stocks, float(treasury))
+
+    def consumes(self, location_id, item_id):
+        return True
+
+    def treasury_balance(self, location_id):
+        return int(self.treasury.get(location_id, self.default_treasury))
+
+    def withdraw(self, location_id, amount):
+        balance = self.treasury.get(location_id, self.default_treasury)
+        paid = min(amount, int(balance))
+        self.treasury[location_id] = balance - paid
+        return paid
+
+    def record_sale(self, location_id, item_id):
+        pass
+
+    def adjust_prosperity(self, location_id, delta):
+        pass
+
+
 class _FakeGraph:
     def __init__(self, current="Village"):
         self.current_location_id = current
         self.locations = {}
 
 
+class _FakeReputation:
+    def adjust(self, location_id, delta, reason=""):
+        pass
+
+
+class _FakeChronicle:
+    def __init__(self):
+        self.events = []
+
+    def cancel_escalations(self, location_id, source_event_id):
+        return 0
+
+    def events_for(self, location_id, since_tick=0):
+        return []
+
+
 class _FakeCtx:
+    """Stands in for GameContext. Its service fields are never None — the
+    real context requires all of them — so a test that does not care about
+    the economy still gets one that behaves."""
+
     def __init__(self, current="Village"):
         self.world_graph = _FakeGraph(current)
         self.player_entity = None
-        self.economy = None
-        self.world_chronicle = None
-        self.world_clock = None
-        self.reputation = None
+        self.economy = _FakeEconomy({})
+        self.world_chronicle = _FakeChronicle()
+        self.world_clock = WorldClockService()
+        self.reputation = _FakeReputation()
         self.map_service = None
         self.quests = None
 
@@ -541,25 +591,6 @@ def test_bump_mayor_opens_quest_window_and_accepts():
 # Guide quests: a friendly settlement advertises a neighbour's need and the
 # acceptance reveals the road there (quest-driven location discovery).
 # ---------------------------------------------------------------------------
-
-
-class _FakeEconomy:
-    def __init__(self, stocks, treasury=1000):
-        self.stocks = stocks
-        # Generated rewards are capped at a share of the till, so a fake with an
-        # empty treasury would generate nothing at all.
-        self.treasury = dict.fromkeys(stocks, float(treasury))
-
-    def consumes(self, location_id, item_id):
-        return True
-
-    def treasury_balance(self, location_id):
-        return int(self.treasury.get(location_id, 0.0))
-
-    def withdraw(self, location_id, amount):
-        paid = min(amount, int(self.treasury.get(location_id, 0.0)))
-        self.treasury[location_id] = self.treasury.get(location_id, 0.0) - paid
-        return paid
 
 
 def _friends_graph():

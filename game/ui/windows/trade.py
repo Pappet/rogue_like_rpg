@@ -77,7 +77,8 @@ class TradeWindow(UIWindow):
         if not inventory:
             return []
         equipment = self.world.try_component(self.player_entity, Equipment)
-        equipped_ids: set[int] = set(equipment.slots.values()) if equipment else set()
+        # An empty slot maps to None — those are not equipped item ids.
+        equipped_ids: set[int] = {e for e in equipment.slots.values() if e is not None} if equipment else set()
         return [e for e in inventory.items if e not in equipped_ids]
 
     def _active_list_len(self) -> int:

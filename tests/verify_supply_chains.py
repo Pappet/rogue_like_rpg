@@ -11,8 +11,10 @@ import os
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 from config import PROSPERITY_START, TICKS_PER_HOUR
+from core.world_clock_service import WorldClockService
 from game.services.economy_service import EconomyService
 from game.services.quest_service import QuestService
+from game.services.world_chronicle_service import WorldChronicleService
 from game.services.world_graph_service import WorldGraphService
 
 
@@ -72,8 +74,8 @@ def test_input_shortage_generates_a_delivery_request():
 
     class _Ctx:
         world_graph = _Graph()
-        world_chronicle = None
-        world_clock = None
+        world_chronicle = WorldChronicleService()
+        world_clock = WorldClockService()
         reputation = None
         player_entity = None
 
