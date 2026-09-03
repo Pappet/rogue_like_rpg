@@ -180,6 +180,7 @@
   }
  ],
  "economy": {
+  "treasury": 180,
   "stock": {
    "log": 14,
    "plank": 8,

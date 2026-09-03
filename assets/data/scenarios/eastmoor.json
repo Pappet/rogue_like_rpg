@@ -239,6 +239,7 @@
   }
  ],
  "economy": {
+  "treasury": 320,
   "stock": {
    "iron_sword": 12,
    "steel_sword": 6,

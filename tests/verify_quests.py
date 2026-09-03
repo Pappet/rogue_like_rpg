@@ -12,7 +12,7 @@ from game.components import Inventory, PlayerTag, Purse, QuestGiver, TemplateId
 from game.content.entity_factory import EntityFactory
 from game.content.item_factory import ItemFactory
 from game.content.resource_loader import ResourceLoader
-from game.services.quest_service import QuestService
+from game.services.quest_service import Quest, QuestService
 from game.services.rumor_service import RumorService
 
 QUESTS_FILE = "assets/data/quests.json"
@@ -198,8 +198,14 @@ def test_mayor_dialogue_reacts_to_quest_state():
 
     svc = DialogueService()
     svc.load("assets/data/dialogues.json")
-    ready_pool = svc._dialogues["mayor"]["conditional"][0]["lines"]
-    active_pool = svc._dialogues["mayor"]["conditional"][1]["lines"]
+
+    def pool(**condition):
+        # Look the block up by its condition: indexing breaks whenever a new
+        # conditional (treasury, faction, ...) is added to the mayor.
+        return next(c for c in svc._dialogues["mayor"]["conditional"] if c["when"] == condition)["lines"]
+
+    ready_pool = pool(quest="ready")
+    active_pool = pool(quest="active")
     default_pool = svc._dialogues["mayor"]["default"]
 
     for _ in range(20):
@@ -223,6 +229,7 @@ def test_shortage_generates_deliver_quest():
     economy = EconomyService()
     economy.stocks = {"Eastmoor": {"health_potion": 0.5}}
     economy.rates_per_day = {"Eastmoor": {"health_potion": -3.0}}
+    economy.treasury = {"Eastmoor": 500.0}  # a town has to be able to pay to hire
     ctx.economy = economy
 
     service._generate_offers("Eastmoor")
@@ -246,6 +253,7 @@ def test_no_quest_for_produced_or_stocked_goods():
     economy = EconomyService()
     economy.stocks = {"Brackenfen": {"health_potion": 14.0, "iron_sword": 1.0}}
     economy.rates_per_day = {"Brackenfen": {"health_potion": 3.0, "iron_sword": -0.5}}
+    economy.treasury = {"Brackenfen": 500.0}
     ctx.economy = economy
 
     service._generate_offers("Brackenfen")
@@ -536,11 +544,22 @@ def test_bump_mayor_opens_quest_window_and_accepts():
 
 
 class _FakeEconomy:
-    def __init__(self, stocks):
+    def __init__(self, stocks, treasury=1000):
         self.stocks = stocks
+        # Generated rewards are capped at a share of the till, so a fake with an
+        # empty treasury would generate nothing at all.
+        self.treasury = dict.fromkeys(stocks, float(treasury))
 
     def consumes(self, location_id, item_id):
         return True
+
+    def treasury_balance(self, location_id):
+        return int(self.treasury.get(location_id, 0.0))
+
+    def withdraw(self, location_id, amount):
+        paid = min(amount, int(self.treasury.get(location_id, 0.0)))
+        self.treasury[location_id] = self.treasury.get(location_id, 0.0) - paid
+        return paid
 
 
 def _friends_graph():
@@ -605,3 +624,92 @@ def test_no_guide_quest_to_unconnected_friend():
 
     service._generate_guide_offers("Village")
     assert not [q for q in service.quests if q.id.startswith("gen_guide_")]
+
+
+# ---------------------------------------------------------------------------
+# Rewards come out of the settlement's treasury
+# ---------------------------------------------------------------------------
+
+
+def _economy_with_shortage(location, treasury):
+    from game.services.economy_service import EconomyService
+
+    economy = EconomyService()
+    economy.stocks = {location: {"health_potion": 0.5}}
+    economy.rates_per_day = {location: {"health_potion": -3.0}}
+    economy.treasury = {location: float(treasury)}
+    return economy
+
+
+def test_a_broke_settlement_posts_no_request():
+    """Quest density follows prosperity: an empty till cannot hire anyone."""
+    _load_content()
+    service, ctx = _service(current="Eastmoor")
+    ctx.player_entity = esper.create_entity(PlayerTag())
+    ctx.economy = _economy_with_shortage("Eastmoor", treasury=0)
+
+    service._generate_offers("Eastmoor")
+
+    assert [q for q in service.quests if q.source == "generated"] == []
+
+
+def test_a_thin_till_caps_the_reward_it_offers():
+    _load_content()
+    service, ctx = _service(current="Eastmoor")
+    ctx.player_entity = esper.create_entity(PlayerTag())
+    # 25% of 100 is 25 — less than the potion-value reward this would otherwise be.
+    ctx.economy = _economy_with_shortage("Eastmoor", treasury=100)
+
+    service._generate_offers("Eastmoor")
+
+    generated = [q for q in service.quests if q.source == "generated"]
+    assert len(generated) == 1
+    assert generated[0].reward_gold == 25
+
+
+def test_turn_in_moves_gold_out_of_the_treasury_not_out_of_thin_air():
+    _load_content()
+    service, ctx = _service(current="Eastmoor")
+    player = esper.create_entity(PlayerTag(), Purse(gold=0))
+    ctx.player_entity = player
+    ctx.economy = _economy_with_shortage("Eastmoor", treasury=500)
+
+    quest = Quest(
+        id="q_pay",
+        title="Errand",
+        description="",
+        quest_type="visit",
+        giver_location="Eastmoor",
+        target={"location": "Eastmoor"},
+        reward_gold=40,
+        state="completed",
+    )
+    service.quests.append(quest)
+
+    assert service.turn_in(quest) is True
+    assert esper.component_for_entity(player, Purse).gold == 40
+    assert ctx.economy.treasury_balance("Eastmoor") == 460
+
+
+def test_a_town_that_cannot_cover_the_promise_pays_what_it_has():
+    _load_content()
+    service, ctx = _service(current="Eastmoor")
+    player = esper.create_entity(PlayerTag(), Purse(gold=0))
+    ctx.player_entity = player
+    ctx.economy = _economy_with_shortage("Eastmoor", treasury=15)
+
+    quest = Quest(
+        id="q_short",
+        title="Errand",
+        description="",
+        quest_type="visit",
+        giver_location="Eastmoor",
+        target={"location": "Eastmoor"},
+        reward_gold=40,
+        state="completed",
+    )
+    service.quests.append(quest)
+
+    assert service.turn_in(quest) is True
+    assert esper.component_for_entity(player, Purse).gold == 15
+    assert ctx.economy.treasury_balance("Eastmoor") == 0

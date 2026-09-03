@@ -198,6 +198,7 @@
   }
  ],
  "economy": {
+  "treasury": 200,
   "stock": {
    "health_potion": 5,
    "iron_sword": 4,

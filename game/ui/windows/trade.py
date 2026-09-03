@@ -110,8 +110,13 @@ class TradeWindow(UIWindow):
             if not tpl:
                 return tid, "", ""
             price = TradeService.buy_price(tid, self._economy(), self._location_id(), self._reputation())
+            toll = TradeService.market_toll(price)
             base_value = tpl.value if tpl else 0
-            return tpl.name, tpl.description, self._stats_line(tpl.material, tpl.weight, base_value, "Buy", price)
+            return (
+                tpl.name,
+                tpl.description,
+                self._stats_line(tpl.material, tpl.weight, base_value, "Buy", price + toll, toll),
+            )
 
         items = self._player_items()
         if not items or self.selected_idx >= len(items):
@@ -122,6 +127,7 @@ class TradeWindow(UIWindow):
         material_c = self.world.try_component(ent, ItemMaterial)
         port_c = self.world.try_component(ent, Portable)
         price = TradeService.sell_price(ent, self._economy(), self._location_id(), self._reputation())
+        toll = TradeService.market_toll(price)
         material = material_c.material if material_c else ""
         weight = port_c.weight if port_c else 0.0
         value_c = self.world.try_component(ent, Value)
@@ -129,11 +135,24 @@ class TradeWindow(UIWindow):
         return (
             name_c.name if name_c else f"Item {ent}",
             desc_c.get(None) if desc_c else "",
-            self._stats_line(material, weight, base_value, "Sell", price),
+            self._stats_line(material, weight, base_value, "Sell", price - toll, toll),
         )
 
+    def _buy_total(self, template_id: str) -> int:
+        """What buying costs the player: the merchant's price plus the town's toll."""
+        price = TradeService.buy_price(template_id, self._economy(), self._location_id(), self._reputation())
+        return price + TradeService.market_toll(price)
+
+    def _sell_net(self, item_entity: int) -> int:
+        """What selling puts in the player's purse, after the town's toll."""
+        price = TradeService.sell_price(item_entity, self._economy(), self._location_id(), self._reputation())
+        return price - TradeService.market_toll(price)
+
     @staticmethod
-    def _stats_line(material: str, weight: float, base_value: int, price_label: str, price: int) -> str:
+    def _stats_line(material: str, weight: float, base_value: int, price_label: str, price: int, toll: int = 0) -> str:
+        """One compact facts line. The toll is folded into the price the player
+        actually pays or receives, so the pane stays within its box (see
+        tests/verify_ui_layout.py) while the town's cut is still stated."""
         parts = []
         if material:
             parts.append(f"Material: {material}")
@@ -141,7 +160,11 @@ class TradeWindow(UIWindow):
             parts.append(f"Weight: {weight:g} kg")
         if base_value > 0:
             parts.append(f"Value: {base_value}g")
-        parts.append(f"{price_label}: {price}g")
+        if toll > 0:
+            suffix = "incl." if price_label == "Buy" else "after"
+            parts.append(f"{price_label}: {price}g ({suffix} {toll} toll)")
+        else:
+            parts.append(f"{price_label}: {price}g")
         return "   ·   ".join(parts)
 
     def _clamp_selection(self):
@@ -276,7 +299,7 @@ class TradeWindow(UIWindow):
             entries=[
                 (
                     item_registry.get(tid).name if item_registry.get(tid) else tid,
-                    TradeService.buy_price(tid, self._economy(), self._location_id(), self._reputation()),
+                    self._buy_total(tid),
                 )
                 for tid in self._merchant_stock()
             ],
@@ -291,7 +314,7 @@ class TradeWindow(UIWindow):
                     self.world.component_for_entity(ent, Name).name
                     if self.world.has_component(ent, Name)
                     else f"Item {ent}",
-                    TradeService.sell_price(ent, self._economy(), self._location_id(), self._reputation()),
+                    self._sell_net(ent),
                 )
                 for ent in self._player_items()
             ],
@@ -314,8 +337,7 @@ class TradeWindow(UIWindow):
                 stock = self._merchant_stock()
                 if stock and self.selected_idx < len(stock):
                     tid = stock[self.selected_idx]
-                    price = TradeService.buy_price(tid, self._economy(), self._location_id(), self._reputation())
-                    if self._gold_of(self.player_entity) < price:
+                    if self._gold_of(self.player_entity) < self._buy_total(tid):
                         hint = "[←/→] Switch   [↑/↓] Select   [Esc] Leave"
 
         theme.draw_text(

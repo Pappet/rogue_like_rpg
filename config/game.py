@@ -56,6 +56,17 @@ PROSPERITY_SHORTAGE_LEVEL = 0.5  # stock at/below this counts as a shortage
 PROSPERITY_QUEST_GAIN = 2.0  # turning in a quest helps the whole settlement
 PROSPERITY_PRICE_SPAN = 0.2  # price baseline 0.9x (destitute) .. 1.1x (rich)
 
+# --- Settlement treasury & market toll ---------------------------------------
+# The town's purse. It pays quest rewards and is filled by the market toll the
+# player pays on every trade, so the money the player earns from a settlement
+# is money that settlement actually collected.
+MARKET_TOLL_RATE = 0.06  # share of every trade the town takes, buying or selling
+TREASURY_START = 200.0  # fallback when a scenario declares no treasury
+GEN_REWARD_TREASURY_SHARE = 0.25  # one generated request may cost at most this much of the till
+GEN_REWARD_MIN = 5  # below this a settlement cannot afford to hire at all
+TREASURY_EMPTY = 25.0  # at or below: the town is visibly broke
+TREASURY_FULL = 150.0  # above: the council can pay its way
+
 # NPC ambient behavior (Living Village)
 # When a scheduled NPC has arrived at its WORK/SOCIALIZE anchor it does not
 # freeze: it mills about within AI_LOITER_RADIUS tiles of the anchor, taking

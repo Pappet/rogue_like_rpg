@@ -50,6 +50,9 @@ from config import (
     PROSPERITY_SHORTAGE_LEVEL,
     PROSPERITY_START,
     TICKS_PER_HOUR,
+    TREASURY_EMPTY,
+    TREASURY_FULL,
+    TREASURY_START,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,6 +68,8 @@ class EconomyService:
     # location -> produced item -> {input item: amount per produced unit}
     production_inputs: dict[str, dict[str, dict[str, float]]] = field(default_factory=dict)
     prosperity: dict[str, float] = field(default_factory=dict)
+    # The town's purse: pays quest rewards, filled by the market toll.
+    treasury: dict[str, float] = field(default_factory=dict)
     last_processed_hour: int = 0
 
     def load_from_world(self, world_graph, scenarios_dir: str) -> None:
@@ -96,6 +101,7 @@ class EconomyService:
             if inputs:
                 self.production_inputs[location.id] = inputs
             self.prosperity.setdefault(location.id, PROSPERITY_START)
+            self.treasury.setdefault(location.id, float(economy.get("treasury", TREASURY_START)))
         logger.info("Economy loaded for %d settlements.", len(self.stocks))
 
     def apply_variation(self, rng: random.Random) -> None:
@@ -246,6 +252,7 @@ class EconomyService:
         return {
             "stocks": self.stocks,
             "prosperity": self.prosperity,
+            "treasury": self.treasury,
             "last_processed_hour": self.last_processed_hour,
         }
 
@@ -253,4 +260,44 @@ class EconomyService:
         self.stocks = {loc: {k: float(v) for k, v in goods.items()} for loc, goods in data.get("stocks", {}).items()}
         saved_prosperity = {loc: float(v) for loc, v in data.get("prosperity", {}).items()}
         self.prosperity = {**self.prosperity, **saved_prosperity}
+        # Older saves predate the treasury; keep the scenario defaults for them.
+        saved_treasury = {loc: float(v) for loc, v in data.get("treasury", {}).items()}
+        self.treasury = {**self.treasury, **saved_treasury}
         self.last_processed_hour = data.get("last_processed_hour", 0)
+
+    # --- Treasury ----------------------------------------------------------------
+
+    def treasury_balance(self, location_id: str | None) -> int:
+        """Gold the settlement has on hand."""
+        if location_id is None:
+            return 0
+        return int(self.treasury.get(location_id, 0.0))
+
+    def treasury_tier(self, location_id: str | None) -> str:
+        """'empty' | 'thin' | 'full' — what the mayor will admit to."""
+        balance = self.treasury_balance(location_id)
+        if balance <= TREASURY_EMPTY:
+            return "empty"
+        if balance >= TREASURY_FULL:
+            return "full"
+        return "thin"
+
+    def deposit(self, location_id: str | None, amount: float) -> None:
+        """Pay into the town's purse (market toll today, taxes later)."""
+        if location_id is None or amount <= 0:
+            return
+        self.treasury[location_id] = self.treasury.get(location_id, 0.0) + amount
+
+    def withdraw(self, location_id: str | None, amount: int) -> int:
+        """Take up to ``amount`` out of the till; returns what was actually paid.
+
+        A settlement cannot spend money it does not have, so the caller has to
+        cope with a short payment rather than assuming the full sum.
+        """
+        if location_id is None or amount <= 0:
+            return 0
+        available = int(self.treasury.get(location_id, 0.0))
+        paid = min(amount, available)
+        if paid > 0:
+            self.treasury[location_id] = self.treasury.get(location_id, 0.0) - paid
+        return paid

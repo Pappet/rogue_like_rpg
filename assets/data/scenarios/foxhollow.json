@@ -188,6 +188,7 @@
   }
  ],
  "economy": {
+  "treasury": 180,
   "stock": {
    "wool": 14,
    "cloth": 6,

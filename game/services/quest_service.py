@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 
 import esper
 
-from config import PROSPERITY_QUEST_GAIN, LogCategory
+from config import GEN_REWARD_MIN, GEN_REWARD_TREASURY_SHARE, PROSPERITY_QUEST_GAIN, LogCategory
 from game.components import Equipment, Inventory, PlayerTag, Position, Purse, TemplateId
 from game.content.item_registry import item_registry
 
@@ -204,9 +204,7 @@ class QuestService:
         elif quest.state != "completed":
             return False
 
-        purse = esper.try_component(self.ctx.player_entity, Purse)
-        if purse is not None:
-            purse.gold += quest.reward_gold
+        paid = self._pay_reward(quest)
         if self.ctx.reputation is not None:
             self.ctx.reputation.adjust(location_id, 5, f"quest '{quest.id}'")
         # A resolved problem lifts the whole settlement a little (G3)
@@ -217,12 +215,7 @@ class QuestService:
         if quest.cause_event_id and self.ctx.world_chronicle is not None:
             self.ctx.world_chronicle.cancel_escalations(quest.giver_location, quest.cause_event_id)
         quest.state = "turned_in"
-        esper.dispatch_event(
-            "log_message",
-            f"Quest completed: [color=green]{quest.title}[/color] (+{quest.reward_gold} gold)",
-            None,
-            LogCategory.LOOT,
-        )
+        self._announce_payment(quest, paid)
         self._announce_unlocked(quest.id)
         return True
 
@@ -259,16 +252,7 @@ class QuestService:
         for quest in self.quests:
             if quest.state == "active" and quest.quest_type == "visit" and quest.target.get("location") == location_id:
                 quest.state = "turned_in"
-                player = self._player()
-                purse = esper.try_component(player, Purse) if player is not None else None
-                if purse is not None:
-                    purse.gold += quest.reward_gold
-                esper.dispatch_event(
-                    "log_message",
-                    f"Quest completed: [color=green]{quest.title}[/color] (+{quest.reward_gold} gold)",
-                    None,
-                    LogCategory.LOOT,
-                )
+                self._announce_payment(quest, self._pay_reward(quest))
                 self._announce_unlocked(quest.id)
 
         # Generate offers for EVERY settlement (economy and chronicle are
@@ -303,6 +287,11 @@ class QuestService:
                 template = item_registry.get(item_id)
                 item_name = template.name if template else item_id
                 value = template.value if template else 10
+                reward = self._affordable_reward(
+                    location_id, int(value * GEN_DELIVER_COUNT * GEN_DELIVER_REWARD_FACTOR)
+                )
+                if reward < GEN_REWARD_MIN:
+                    continue  # the town cannot pay for help right now
                 self.quests = [q for q in self.quests if q.id != quest_id]  # drop old turned_in copy
                 self.quests.append(
                     Quest(
@@ -313,11 +302,11 @@ class QuestService:
                         quest_type="deliver",
                         giver_location=location_id,
                         target={"item": item_id, "count": GEN_DELIVER_COUNT},
-                        reward_gold=int(value * GEN_DELIVER_COUNT * GEN_DELIVER_REWARD_FACTOR),
+                        reward_gold=reward,
                         source="generated",
                     )
                 )
-                logger.info("Generated deliver quest at %s for %s.", location_id, item_id)
+                logger.info("Generated deliver quest at %s for %s (%d gold).", location_id, item_id, reward)
 
         # Recent wolf sighting -> kill request
         chronicle = self.ctx.world_chronicle
@@ -329,7 +318,12 @@ class QuestService:
                 if e.event_id == GEN_WOLF_EVENT_ID
             ]
             quest_id = f"gen_wolves_{location_id}"
-            if recent and not any(q.id == quest_id and q.state != "turned_in" for q in self.quests):
+            hunt_reward = self._affordable_reward(location_id, GEN_KILL_REWARD)
+            if (
+                recent
+                and hunt_reward >= GEN_REWARD_MIN
+                and not any(q.id == quest_id and q.state != "turned_in" for q in self.quests)
+            ):
                 self.quests = [q for q in self.quests if q.id != quest_id]
                 self.quests.append(
                     Quest(
@@ -340,7 +334,7 @@ class QuestService:
                         quest_type="kill",
                         giver_location=location_id,
                         target={"template": "wolf", "count": GEN_KILL_COUNT},
-                        reward_gold=GEN_KILL_REWARD,
+                        reward_gold=hunt_reward,
                         source="generated",
                         cause_event_id=GEN_WOLF_EVENT_ID,
                     )
@@ -384,6 +378,10 @@ class QuestService:
             template = item_registry.get(item_id)
             item_name = template.name if template else item_id
             value = template.value if template else 10
+            # Turned in at the friend, so it is the friend's till that pays.
+            reward = self._affordable_reward(friend.id, int(value * GEN_DELIVER_COUNT * GEN_DELIVER_REWARD_FACTOR))
+            if reward < GEN_REWARD_MIN:
+                continue
             self.quests = [q for q in self.quests if q.id != quest_id]  # drop old turned_in copy
             self.quests.append(
                 Quest(
@@ -396,7 +394,7 @@ class QuestService:
                     giver_location=friend.id,  # delivered & turned in at the friend
                     offer_location=offer_location,  # advertised here
                     target={"item": item_id, "count": GEN_DELIVER_COUNT},
-                    reward_gold=int(value * GEN_DELIVER_COUNT * GEN_DELIVER_REWARD_FACTOR),
+                    reward_gold=reward,
                     source="generated",
                 )
             )
@@ -448,6 +446,51 @@ class QuestService:
     def _player(self) -> int | None:
         """The player entity, or None when the service runs without a context."""
         return self.ctx.player_entity if self.ctx else None
+
+    # --- Paying for work ------------------------------------------------------------
+
+    def _pay_reward(self, quest: "Quest") -> int:
+        """Pay a quest reward out of the giving settlement's treasury.
+
+        Rewards used to be minted: `purse.gold += reward` created gold from
+        nothing. The money now comes from the till the player themselves fills
+        with the market toll, so a town can only hire what it has collected —
+        and pays short when it cannot cover the promise.
+        """
+        economy = self.ctx.economy if self.ctx else None
+        paid = economy.withdraw(quest.giver_location, quest.reward_gold) if economy else quest.reward_gold
+        player = self._player()
+        purse = esper.try_component(player, Purse) if player is not None else None
+        if purse is not None:
+            purse.gold += paid
+        return paid
+
+    def _announce_payment(self, quest: "Quest", paid: int) -> None:
+        esper.dispatch_event(
+            "log_message",
+            f"Quest completed: [color=green]{quest.title}[/color] (+{paid} gold)",
+            None,
+            LogCategory.LOOT,
+        )
+        if paid < quest.reward_gold:
+            short = quest.reward_gold - paid
+            esper.dispatch_event(
+                "log_message",
+                f"[color=orange]{quest.giver_location}'s coffers were {short} gold short of the promised reward.[/color]",
+                None,
+                LogCategory.ALERT,
+            )
+
+    def _affordable_reward(self, location_id: str, wanted: int) -> int:
+        """Cap a generated reward at what the settlement could actually pay.
+
+        A struggling town cannot put a mercenary on retainer; this is what ties
+        quest density to prosperity instead of letting the two drift apart.
+        """
+        economy = self.ctx.economy if self.ctx else None
+        if economy is None:
+            return wanted
+        return min(wanted, int(economy.treasury_balance(location_id) * GEN_REWARD_TREASURY_SHARE))
 
     def _player_items_of(self, template_id: str) -> list[int]:
         player = self._player()
