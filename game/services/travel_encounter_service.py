@@ -22,6 +22,7 @@ import json
 import logging
 import random
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import esper
 
@@ -39,6 +40,10 @@ from config import (
     LogCategory,
     SpriteLayer,
 )
+
+if TYPE_CHECKING:  # pragma: no cover - typing only, avoids a runtime import cycle
+    from game_context import GameContext
+
 from game.components import AI, MapBound, Name, Portal, Position, Renderable, Skirmisher, TemplateId
 from game.content.entity_factory import EntityFactory
 from game.map.map_container import MapContainer
@@ -82,11 +87,17 @@ class EncounterTemplate:
 class TravelEncounterService:
     """Rolls, builds and cleans up road encounters between settlements."""
 
-    def __init__(self, ctx):
+    # Declared, not defaulted: the bootstrap assigns it right after
+    # construction (it cannot build the context before its own fields), and
+    # reading it before that should fail loudly rather than pass a None on.
+    ctx: "GameContext"
+
+    def __init__(self, ctx: "GameContext | None" = None):
         """Args:
-        ctx: The shared GameContext.
+        ctx: The shared GameContext, when the caller already has one.
         """
-        self.ctx = ctx
+        if ctx is not None:
+            self.ctx = ctx
         self.templates: list[EncounterTemplate] = []
         self.rng = random.Random()
         # Scene staged by roll_encounter(), consumed by on_map_entered().
@@ -229,6 +240,9 @@ class TravelEncounterService:
         pending, self._pending = self._pending, None
 
         container = self.ctx.map_service.get_map(map_id)
+        if container is None:
+            logger.warning("Road map '%s' vanished before its scene was staged.", map_id)
+            return
         cy = container.height // 2
         self._create_portals(pending, container, cy)
         self._spawn_groups(pending["template"], container, cy)

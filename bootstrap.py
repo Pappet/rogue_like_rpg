@@ -61,10 +61,47 @@ def build_game_context(seed: int | None = None) -> GameContext:
 
     MapGenerator(map_service, seed=derive_seed(world_seed, "maps")).create_world(esper, world_graph)
 
-    systems = build_systems(world_clock, map_service.get_active_map())
+    start_map = map_service.get_active_map()
+    if start_map is None:
+        raise RuntimeError("World generation produced no active map.")
+
+    systems = build_systems(world_clock, start_map)
     register_processors(systems)
     # Reproducible ambient gossip per world seed (Phase L slice 2)
     systems.gossip_system.rng.seed(derive_seed(world_seed, "gossip"))
+
+    # Services that need the context are constructed first and handed it
+    # afterwards: the context cannot exist before its own fields do, and
+    # every one of them is a required field (no None to paper over the gap).
+    chronicle = WorldChronicleService()
+    chronicle.rng.seed(derive_seed(world_seed, "chronicle"))
+    chronicle.load_templates(f"{DATA_DIR}/world_events.json")
+
+    economy = EconomyService()
+    economy.load_from_world(world_graph, f"{DATA_DIR}/scenarios")
+    economy.apply_variation(random.Random(derive_seed(world_seed, "economy")))
+
+    # Shops refill their stock toward the starting menu over time (Phase K)
+    restock = MerchantRestockService(economy=economy, world_graph=world_graph)
+
+    # Reputation and factions register their own entity_died handlers
+    reputation = ReputationService()
+    factions = FactionService()
+    factions.load(f"{DATA_DIR}/factions.json")
+
+    # Quests: authored from JSON, generated ones appear on arrival
+    quests = QuestService()
+    quests.rng.seed(derive_seed(world_seed, "quests"))
+    quests.load_authored(f"{DATA_DIR}/quests.json")
+
+    # Travel encounters: road events between settlements, fed by the chronicle
+    travel_encounters = TravelEncounterService()
+    travel_encounters.rng.seed(derive_seed(world_seed, "travel"))
+    travel_encounters.load_templates(f"{DATA_DIR}/travel_encounters.json")
+
+    # Rumors: smalltalk occasionally points at other settlements; locals give
+    # directions out of town the first time you ask (how places become known).
+    rumors = RumorService()
 
     ctx = GameContext(
         map_service=map_service,
@@ -74,83 +111,55 @@ def build_game_context(seed: int | None = None) -> GameContext:
         ui_stack=UIStack(),
         camera=camera,
         systems=systems,
-        world_graph=world_graph,
         content=content,
+        world_graph=world_graph,
+        world_chronicle=chronicle,
+        economy=economy,
+        merchant_restock=restock,
+        reputation=reputation,
+        factions=factions,
+        quests=quests,
+        rumors=rumors,
+        travel_encounters=travel_encounters,
         world_seed=world_seed,
     )
 
-    # World chronicle: generates off-screen events as game hours pass
-    chronicle = WorldChronicleService(ctx=ctx)
-    chronicle.rng.seed(derive_seed(world_seed, "chronicle"))
-    chronicle.load_templates(f"{DATA_DIR}/world_events.json")
-    ctx.world_chronicle = chronicle
+    for service in (chronicle, reputation, factions, quests, travel_encounters, rumors):
+        service.ctx = ctx
+
+    # Hourly world simulation: chronicle events, economy drift, shop restock
     esper.set_handler(GameEvent.CLOCK_TICK, chronicle.on_clock_tick)
-
-    # Settlement economy: stock levels drift hourly and drive local prices
-    economy = EconomyService()
-    economy.load_from_world(world_graph, f"{DATA_DIR}/scenarios")
-    economy.apply_variation(random.Random(derive_seed(world_seed, "economy")))
-    ctx.economy = economy
     esper.set_handler(GameEvent.CLOCK_TICK, economy.on_clock_tick)
-
-    # Shops refill their stock toward the starting menu over time (Phase K)
-    restock = MerchantRestockService(economy=economy, world_graph=world_graph)
-    ctx.merchant_restock = restock
     esper.set_handler(GameEvent.CLOCK_TICK, restock.on_clock_tick)
 
-    # Player reputation per settlement (registers its entity_died handler)
-    ctx.reputation = ReputationService(ctx=ctx)
-
-    # Factions: group disposition + per-faction player standing (registers its
-    # entity_died handler). Sync alignments once so the starting map reflects
-    # any faction that already counts the player an enemy.
-    factions = FactionService(ctx=ctx)
-    factions.load(f"{DATA_DIR}/factions.json")
+    # The starting map must reflect any faction that already counts the player
+    # an enemy — needs the context, so it runs after the wiring above.
     factions.sync_alignments()
-    ctx.factions = factions
 
-    # Quests: authored from JSON, generated ones appear on arrival
-    quests = QuestService(ctx=ctx)
-    quests.rng.seed(derive_seed(world_seed, "quests"))
-    quests.load_authored(f"{DATA_DIR}/quests.json")
-    ctx.quests = quests
-
-    # Travel encounters: road events between settlements, fed by the chronicle
-    travel_encounters = TravelEncounterService(ctx=ctx)
-    travel_encounters.rng.seed(derive_seed(world_seed, "travel"))
-    travel_encounters.load_templates(f"{DATA_DIR}/travel_encounters.json")
-    ctx.travel_encounters = travel_encounters
-
-    # Rumors: smalltalk occasionally points at other settlements; locals give
-    # directions out of town the first time you ask (how places become known).
-    ctx.rumors = RumorService(ctx=ctx)
     default_content.dialogues.rumor_provider = ctx.rumors.maybe_rumor
     default_content.dialogues.directions_provider = ctx.rumors.directions
 
     # Dialogue selection context: rep tier at the current location, day
     # phase and the settlement's prosperity tier (G3)
     def _dialogue_context() -> dict:
-        location_id = ctx.world_graph.current_location_id if ctx.world_graph else None
+        location_id = ctx.world_graph.current_location_id
         context = {
-            "rep": ctx.reputation.tier(location_id) if ctx.reputation else "neutral",
-            "phase": ctx.world_clock.phase if ctx.world_clock else "day",
-            "prosperity": ctx.economy.prosperity_tier(location_id) if ctx.economy else "stable",
+            "rep": ctx.reputation.tier(location_id),
+            "phase": ctx.world_clock.phase,
+            "prosperity": ctx.economy.prosperity_tier(location_id),
+            # The town's purse: the mayor is the one who knows what is in it,
+            # and it is where the market toll goes and rewards come from.
+            "treasury": ctx.economy.treasury_tier(location_id),
+            # The guard reacts to the player's standing with the town guard
+            # (wary or hostile if you have spilled the wrong blood).
+            "guards": ctx.factions.tier("town_guard"),
         }
-        # The town's purse: the mayor is the one who knows what is in it, and
-        # it is where the player's market toll goes and quest rewards come from.
-        if ctx.economy is not None:
-            context["treasury"] = ctx.economy.treasury_tier(location_id)
         # Quest-aware smalltalk: givers comment on work in progress here so a
-        # conversation reflects what the player owes the settlement (Phase: chains).
-        if ctx.quests is not None:
-            if ctx.quests.turn_in_candidates(location_id):
-                context["quest"] = "ready"
-            elif any(q.giver_location == location_id for q in ctx.quests.active_quests()):
-                context["quest"] = "active"
-        # Faction-aware smalltalk: the guard reacts to the player's standing
-        # with the town guard (wary/hostile if you've spilled the wrong blood).
-        if ctx.factions is not None:
-            context["guards"] = ctx.factions.tier("town_guard")
+        # conversation reflects what the player owes the settlement (chains).
+        if ctx.quests.turn_in_candidates(location_id):
+            context["quest"] = "ready"
+        elif any(q.giver_location == location_id for q in ctx.quests.active_quests()):
+            context["quest"] = "active"
         return context
 
     default_content.dialogues.context_provider = _dialogue_context

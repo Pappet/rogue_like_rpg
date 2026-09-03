@@ -150,7 +150,7 @@ class WorldChronicleService:
 
     def _roll_hour(self, hour_index: int) -> None:
         rollable = [t for t in self.templates if t.weight > 0]
-        if not rollable or self.ctx is None or self.ctx.world_graph is None:
+        if not rollable or self.ctx is None:
             return
         graph = self.ctx.world_graph
         for location in graph.locations.values():

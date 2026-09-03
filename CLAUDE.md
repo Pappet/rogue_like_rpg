@@ -63,9 +63,9 @@ never a hardcoded path. Keep the ruff `rev` in step with the pinned version in
 `ci.yml`: a contributor checking with a different ruff gets findings the build
 does not have, or misses ones it does.
 
-**Type checking:** `mypy` covers `core/` and `game/services/` — scope and
-strictness live in `[tool.mypy]` (`pyproject.toml`), so a local bare `mypy`
-checks exactly what CI checks. It runs loose for now (`check_untyped_defs =
+**Type checking:** `mypy` covers `core/`, all of `game/`, `bootstrap.py`,
+`game_context.py` and `main.py` — scope and strictness live in `[tool.mypy]`
+(`pyproject.toml`), so a local bare `mypy` checks exactly what CI checks. It runs loose for now (`check_untyped_defs =
 false`: bodies of unannotated functions are skipped). Tighten it by annotating
 a module and adding a per-module override, never by widening an ignore. When
 widening `files` to a new package, fix that package's errors in the same
@@ -319,9 +319,24 @@ is neutral constants, usable by both.
 ### GameContext (`game_context.py`)
 
 All long-lived session state lives in the typed `GameContext` dataclass —
-there is no string-keyed `persist` dict anymore:
+there is no string-keyed `persist` dict anymore.
 
-- `ctx.systems` — `Systems` dataclass with named fields for every ECS system
+**Its service fields are required, not `| None`.** `build_game_context()`
+builds every one of them, so a `ctx.economy is None` check could never fire
+while costing every reader a branch — and an undeclared field (`ctx.typo = x`)
+used to be swallowed silently by the dataclass. Services that need the context
+are constructed *before* it and handed it right after (`service.ctx = ctx`),
+because the context cannot exist before its own fields do. Only two fields are
+genuinely optional, both absent until `GameplayState.startup()`:
+`player_entity` and `message_log`. In tests, build one with
+`make_test_context(**overrides)` (`tests/conftest.py`) rather than spelling out
+eighteen mocks.
+
+- `ctx.systems` — `Systems` dataclass with named fields for every ECS system.
+  Its three render-cycle slots (`render_system`, `debug_render_system`,
+  `ui_system`) are the only optional systems — they need camera/player context
+  and are (re)built by `GameplayState.startup()`. They are typed as their real
+  classes; typing them `object` threw away every call site's type.
 - `ctx.map_container` — property, always the active map from `MapService`
 - `ctx.content` — `ContentDatabase` (all template registries)
 - `ctx.debug_flags` — `DebugFlags` dataclass (F3-F7 toggles)

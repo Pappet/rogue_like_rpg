@@ -106,16 +106,15 @@ class SaveService:
         ctx.map_service.active_map_id = None  # set after thaw below
 
         # World graph state
-        if ctx.world_graph is not None:
-            wg = data.get("world_graph", {})
-            discovered = set(wg.get("discovered", []))
-            # Older saves predate the "heard" tier — treat discovered as heard.
-            heard = set(wg.get("heard", discovered))
-            for location in ctx.world_graph.locations.values():
-                location.discovered = location.id in discovered
-                location.heard = location.id in heard or location.discovered
-            if wg.get("current_location_id"):
-                ctx.world_graph.set_current_location(wg["current_location_id"])
+        wg = data.get("world_graph", {})
+        discovered = set(wg.get("discovered", []))
+        # Older saves predate the "heard" tier — treat discovered as heard.
+        heard = set(wg.get("heard", discovered))
+        for location in ctx.world_graph.locations.values():
+            location.discovered = location.id in discovered
+            location.heard = location.id in heard or location.discovered
+        if wg.get("current_location_id"):
+            ctx.world_graph.set_current_location(wg["current_location_id"])
 
         # World seed (older saves predate it — keep the session's seed)
         ctx.world_seed = data.get("world_seed", ctx.world_seed)
@@ -125,24 +124,24 @@ class SaveService:
         ctx.systems.turn_system.round_counter = data.get("round_counter", data["clock_ticks"] + 1)
 
         # World chronicle
-        if ctx.world_chronicle is not None and data.get("chronicle"):
+        if data.get("chronicle"):
             ctx.world_chronicle.from_dict(data["chronicle"])
 
         # Settlement economy
-        if ctx.economy is not None and data.get("economy"):
+        if data.get("economy"):
             ctx.economy.from_dict(data["economy"])
 
         # Reputation
-        if ctx.reputation is not None and data.get("reputation"):
+        if data.get("reputation"):
             ctx.reputation.from_dict(data["reputation"])
 
         # Factions: restore standing, then re-apply hostility to the live map.
-        if ctx.factions is not None and data.get("factions"):
+        if data.get("factions"):
             ctx.factions.from_dict(data["factions"])
             ctx.factions.sync_alignments()
 
         # Quests
-        if ctx.quests is not None and data.get("quests"):
+        if data.get("quests"):
             ctx.quests.from_dict(data["quests"])
 
         # Party (with entity-id remapping)

@@ -27,3 +27,38 @@ def _clean_global_state():
     theme.reset_caches()
     yield
     reset_world()
+
+
+def make_test_context(**overrides):
+    """A GameContext whose collaborators are mocks, for unit tests.
+
+    Every service field of GameContext is required — the bootstrap builds them
+    all before the context exists — so a test that cares about two of them
+    would otherwise have to spell out the rest. Pass what is under test as
+    keyword overrides; everything else comes back as a MagicMock.
+    """
+    from unittest.mock import MagicMock
+
+    from core.world_clock_service import WorldClockService
+    from game_context import DebugFlags, GameContext, Systems
+
+    systems = overrides.pop("systems", None)
+    if systems is None:
+        systems = Systems(**{name: MagicMock() for name in Systems.__dataclass_fields__})
+
+    fields = {
+        name: MagicMock()
+        for name, spec in GameContext.__dataclass_fields__.items()
+        if spec.init and name not in ("systems", "debug_flags", "player_entity", "world_seed")
+    }
+    # A real clock, not a mock: its tick count is arithmetic (map decay, rest,
+    # chronicle windows), and a MagicMock silently poisons every comparison.
+    fields.update(
+        systems=systems,
+        debug_flags=DebugFlags(),
+        world_clock=WorldClockService(),
+        player_entity=None,
+        world_seed=0,
+    )
+    fields.update(overrides)
+    return GameContext(**fields)

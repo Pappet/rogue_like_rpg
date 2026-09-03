@@ -1,4 +1,6 @@
 # Game configuration
+from typing import Any
+
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 SCREEN_TITLE = "Rogue Like RPG"
@@ -176,7 +178,9 @@ GATHER_XP_PER_HARVEST = 12  # gathering-skill XP each time a node is harvested
 RESTOCK_MIN_ECON_STOCK = 1.0
 
 # Day/Night Settings
-DN_SETTINGS = {
+# Per-phase presentation: screen tint (RGBA), light multiplier, perception
+# multiplier. Typed so a reader indexing into a phase is checkable.
+DN_SETTINGS: dict[str, dict[str, Any]] = {
     "day": {"tint": (0, 0, 0, 0), "light": 1.0, "perception": 1.0},
     "dawn": {"tint": (255, 200, 150, 60), "light": 0.8, "perception": 0.8},
     "dusk": {"tint": (150, 100, 200, 80), "light": 0.7, "perception": 0.7},

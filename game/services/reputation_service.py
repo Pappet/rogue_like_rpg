@@ -95,7 +95,7 @@ class ReputationService:
 
     def on_entity_died(self, entity, attacker=None) -> None:
         """Killing a non-hostile NPC tarnishes the player's local standing."""
-        if attacker is None or self.ctx is None or self.ctx.world_graph is None:
+        if attacker is None or self.ctx is None:
             return
         if not esper.has_component(attacker, PlayerTag):
             return

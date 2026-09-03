@@ -59,7 +59,7 @@ exclude_also = [
 python_version = "3.10"
 # Scoped on purpose: core/ and the service layer carry the game's rules and are
 # the layers worth type-checking first. Widen this list a package at a time.
-files = ["core", "game/services"]
+files = ["core", "game", "bootstrap.py", "game_context.py", "main.py"]
 # pygame, esper and pathfinding ship no stubs.
 ignore_missing_imports = true
 # Loose to start: bodies of unannotated functions are not checked. The way to

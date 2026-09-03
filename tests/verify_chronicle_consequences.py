@@ -34,12 +34,20 @@ class _NoRollRng:
         return [population[0]]
 
 
+class _FakeReputation:
+    """Turn-in adjusts local standing; GameContext always has a reputation
+    service, so the fake needs one too."""
+
+    def adjust(self, location_id, delta, reason=""):
+        pass
+
+
 @dataclass
 class _FakeCtx:
     world_graph: WorldGraphService
     economy: EconomyService | None = None
     world_chronicle: object = None
-    reputation: object = None
+    reputation: object = field(default_factory=_FakeReputation)
     player_entity: int | None = None
     world_clock: object = None
     map_service: object = None

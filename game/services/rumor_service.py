@@ -99,7 +99,7 @@ class RumorService:
         return None
 
     def _candidates(self) -> list[str]:
-        if self.ctx is None or self.ctx.world_graph is None:
+        if self.ctx is None:
             return []
         here = self.ctx.world_graph.current_location_id
         rumors: list[str] = []

@@ -74,9 +74,8 @@ class MapTransitionService:
         # Off-screen simulation: the world moved on while this map was
         # frozen — snap schedule-bound NPCs to where their day plan puts
         # them now (no-op for short absences).
-        if ctx.world_clock is not None:
-            elapsed = turn_system.round_counter - new_map.last_visited_turn
-            WorldSimulationService.reconcile_arrivals(esper, new_map, ctx.world_clock.hour, elapsed)
+        elapsed = turn_system.round_counter - new_map.last_visited_turn
+        WorldSimulationService.reconcile_arrivals(esper, new_map, ctx.world_clock.hour, elapsed)
 
         # Update Player Position
         if ctx.player_entity is not None:
@@ -94,48 +93,42 @@ class MapTransitionService:
 
         # Travel encounters: spawn the staged scene when entering a road
         # map; one-shot road maps are dropped once the player moved on.
-        if ctx.travel_encounters is not None:
-            ctx.travel_encounters.on_map_entered(target_map_id)
-            if previous_map_id is not None:
-                ctx.travel_encounters.on_map_left(previous_map_id)
+        ctx.travel_encounters.on_map_entered(target_map_id)
+        if previous_map_id is not None:
+            ctx.travel_encounters.on_map_left(previous_map_id)
 
         # Kill-quest causes live in wilderness maps — ensure them on entry
-        if ctx.quests is not None:
-            ctx.quests.on_map_entered(target_map_id)
+        ctx.quests.on_map_entered(target_map_id)
 
         # Re-apply faction hostility to the freshly thawed map: NPCs whose
         # faction now counts the player an enemy greet them with steel.
-        if ctx.factions is not None:
-            ctx.factions.sync_alignments()
+        ctx.factions.sync_alignments()
 
         # Keep the world graph's current location in sync (only location maps
         # are graph nodes; interior maps like "Tavern" are not).
-        if ctx.world_graph is not None and ctx.world_graph.get_location(target_map_id) is not None:
+        if ctx.world_graph.get_location(target_map_id) is not None:
             ctx.world_graph.set_current_location(target_map_id)
 
             # Quests: visit completion, cause-spawning, generated offers
-            if ctx.quests is not None:
-                ctx.quests.on_arrival(target_map_id)
+            ctx.quests.on_arrival(target_map_id)
 
             # Tell the player what happened here while they were away
-            if ctx.world_chronicle is not None:
-                missed = ctx.world_chronicle.events_for(target_map_id, since_tick=new_map.last_visited_turn)
-                for event in missed[-3:]:
-                    esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=cyan]Word around town:[/color] {event.text}")
+            missed = ctx.world_chronicle.events_for(target_map_id, since_tick=new_map.last_visited_turn)
+            for event in missed[-3:]:
+                esper.dispatch_event(GameEvent.LOG_MESSAGE, f"[color=cyan]Word around town:[/color] {event.text}")
 
             # The settlement's long-term state is visible on arrival (G3)
-            if ctx.economy is not None:
-                tier = ctx.economy.prosperity_tier(target_map_id)
-                if tier == "struggling":
-                    esper.dispatch_event(
-                        GameEvent.LOG_MESSAGE,
-                        "[color=cyan]Times are hard here — shutters hang loose, stalls stand empty.[/color]",
-                    )
-                elif tier == "thriving":
-                    esper.dispatch_event(
-                        GameEvent.LOG_MESSAGE,
-                        "[color=cyan]The place is thriving — fresh paint, full stalls, busy streets.[/color]",
-                    )
+            tier = ctx.economy.prosperity_tier(target_map_id)
+            if tier == "struggling":
+                esper.dispatch_event(
+                    GameEvent.LOG_MESSAGE,
+                    "[color=cyan]Times are hard here — shutters hang loose, stalls stand empty.[/color]",
+                )
+            elif tier == "thriving":
+                esper.dispatch_event(
+                    GameEvent.LOG_MESSAGE,
+                    "[color=cyan]The place is thriving — fresh paint, full stalls, busy streets.[/color]",
+                )
 
         # Update Camera
         ctx.camera.update(target_x, target_y)
