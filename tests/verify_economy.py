@@ -127,3 +127,69 @@ def test_real_game_prices_differ_between_settlements():
     purse = esper.component_for_entity(ctx.player_entity, Purse)
     assert purse.gold > 0
     assert esper.has_component(ctx.player_entity, Inventory)
+
+
+# ---------------------------------------------------------------------------
+# The settlement treasury
+# ---------------------------------------------------------------------------
+
+
+def _till(balance: float) -> EconomyService:
+    economy = EconomyService()
+    economy.treasury = {"Village": balance}
+    return economy
+
+
+def test_withdraw_pays_only_what_the_till_holds():
+    economy = _till(30.0)
+
+    assert economy.withdraw("Village", 20) == 20
+    assert economy.treasury_balance("Village") == 10
+    # The promise exceeds the balance: the town pays the rest of what it has.
+    assert economy.withdraw("Village", 40) == 10
+    assert economy.treasury_balance("Village") == 0
+    assert economy.withdraw("Village", 5) == 0
+
+
+def test_deposit_and_tiers():
+    economy = _till(0.0)
+    assert economy.treasury_tier("Village") == "empty"
+
+    economy.deposit("Village", 100.0)
+    assert economy.treasury_balance("Village") == 100
+    assert economy.treasury_tier("Village") == "thin"
+
+    economy.deposit("Village", 100.0)
+    assert economy.treasury_tier("Village") == "full"
+
+
+def test_unknown_location_has_no_till():
+    economy = _till(50.0)
+    assert economy.treasury_balance(None) == 0
+    assert economy.treasury_balance("Nowhere") == 0
+    assert economy.withdraw("Nowhere", 10) == 0
+    economy.deposit(None, 10.0)  # must not raise or invent an entry
+    assert economy.treasury == {"Village": 50.0}
+
+
+def test_treasury_survives_a_save_round_trip():
+    economy = _till(123.0)
+    restored = EconomyService()
+    restored.from_dict(economy.to_dict())
+    assert restored.treasury_balance("Village") == 123
+
+
+def test_a_save_from_before_the_treasury_keeps_the_scenario_defaults():
+    """Old saves carry no treasury key; the loaded world must not go broke."""
+    economy = _till(200.0)
+    economy.from_dict({"stocks": {}, "prosperity": {}, "last_processed_hour": 3})
+    assert economy.treasury_balance("Village") == 200
+
+
+def test_every_settlement_starts_with_a_declared_till():
+    economy = EconomyService()
+    economy.load_from_world(WorldGraphService.from_file(WORLD_FILE), "assets/data/scenarios")
+    settlements = list(economy.prosperity)
+    assert settlements, "no settlements loaded"
+    for location_id in settlements:
+        assert economy.treasury_balance(location_id) > 0, f"{location_id} has no treasury"

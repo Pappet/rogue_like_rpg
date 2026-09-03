@@ -218,6 +218,7 @@
   }
  ],
  "economy": {
+  "treasury": 260,
   "stock": {
    "raw_fish": 12,
    "cooked_fish": 5,

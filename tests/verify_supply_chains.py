@@ -22,6 +22,7 @@ def _smithy_economy() -> EconomyService:
     economy.rates_per_day = {"Eastmoor": {"iron_sword": 4.0}}
     economy.production_inputs = {"Eastmoor": {"iron_sword": {"iron_ore": 1.0}}}
     economy.prosperity = {"Eastmoor": PROSPERITY_START}
+    economy.treasury = {"Eastmoor": 500.0}  # generated requests are paid from the till
     return economy
 
 

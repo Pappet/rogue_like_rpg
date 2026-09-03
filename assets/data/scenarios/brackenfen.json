@@ -154,6 +154,7 @@
   }
  ],
  "economy": {
+  "treasury": 220,
   "stock": {
    "health_potion": 14,
    "leather_armor": 8,

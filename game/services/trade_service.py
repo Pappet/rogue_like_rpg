@@ -12,7 +12,7 @@ import logging
 
 import esper
 
-from config import LogCategory
+from config import MARKET_TOLL_RATE, LogCategory
 from game.components import (
     Equipment,
     Inventory,
@@ -68,6 +68,17 @@ class TradeService:
         return max(1, round(value.amount * SELL_FACTOR * factor))
 
     @staticmethod
+    def market_toll(price: int) -> int:
+        """The town's cut of a trade, paid by the player on both sides.
+
+        This is the settlement's main income and the game's main gold sink:
+        it scales with whatever the player pulls out of the local market, and
+        it is what funds the quest rewards paid back out of the treasury.
+        Small trades round down to nothing, so haggling over a loaf is free.
+        """
+        return max(0, round(price * MARKET_TOLL_RATE))
+
+    @staticmethod
     def buy(
         world,
         player: int,
@@ -88,7 +99,8 @@ class TradeService:
 
         template_id = merchant.stock[stock_index]
         price = TradeService.buy_price(template_id, economy, location_id, reputation)
-        if purse.gold < price:
+        toll = TradeService.market_toll(price)
+        if purse.gold < price + toll:
             esper.dispatch_event("log_message", "You cannot afford that.", None, LogCategory.ALERT)
             return False
 
@@ -105,10 +117,12 @@ class TradeService:
                 return False
 
         merchant.stock.pop(stock_index)
-        purse.gold -= price
+        purse.gold -= price + toll
         merchant_purse = world.try_component(merchant_ent, Purse)
         if merchant_purse is not None:
             merchant_purse.gold += price
+        if economy is not None:
+            economy.deposit(location_id, toll)
 
         item_ent = ItemFactory.create(world, template_id)
         inventory.items.append(item_ent)
@@ -118,7 +132,8 @@ class TradeService:
             reputation.record_trade(location_id)
 
         name = world.component_for_entity(item_ent, Name).name
-        esper.dispatch_event("log_message", f"Bought {name} for {price} gold.", None, LogCategory.LOOT)
+        spent = f"{price} gold" if not toll else f"{price} gold + {toll} toll"
+        esper.dispatch_event("log_message", f"Bought {name} for {spent}.", None, LogCategory.LOOT)
         return True
 
     @staticmethod
@@ -144,6 +159,7 @@ class TradeService:
             return False
 
         price = TradeService.sell_price(item_ent, economy, location_id, reputation)
+        toll = TradeService.market_toll(price)
         merchant_purse = world.try_component(merchant_ent, Purse)
         if merchant_purse is not None and merchant_purse.gold < price:
             esper.dispatch_event("log_message", "The merchant cannot afford that.", None, LogCategory.ALERT)
@@ -161,13 +177,15 @@ class TradeService:
         inventory.items.remove(item_ent)
         world.delete_entity(item_ent)
         merchant.stock.append(template_id_comp.id)
-        purse.gold += price
+        purse.gold += price - toll
         if economy is not None:
             economy.record_sale(location_id, template_id_comp.id)
+            economy.deposit(location_id, toll)
         if reputation is not None:
             reputation.record_trade(location_id)
         if merchant_purse is not None:
             merchant_purse.gold -= price
 
-        esper.dispatch_event("log_message", f"Sold {name} for {price} gold.", None, LogCategory.LOOT)
+        earned = f"{price} gold" if not toll else f"{price} gold - {toll} toll"
+        esper.dispatch_event("log_message", f"Sold {name} for {earned}.", None, LogCategory.LOOT)
         return True

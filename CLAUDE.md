@@ -625,6 +625,36 @@ class MapAwareSystem:
 - **Quests & chains**: `assets/data/quests.json` → authored quests loaded by `QuestService`. A quest may carry a `"prerequisites": [quest_id, ...]` list: it stays `offered` but is hidden from `offers_at`/rumors until every listed quest is `turned_in`, so turning in one stage unlocks the next (a chain). Turn-in announces any stage it unlocks. Generated quests (shortage deliver / wolf hunt / friendly-neighbour **guide**) have no prerequisites. A guide quest carries `offer_location` ≠ `giver_location` (offered by a friend, turned in at the destination) so accepting it discovers the destination — see "Location discovery (two-tier)". Verified by `tests/verify_quests.py`
 - **Map scenarios**: `assets/data/scenarios/*.json` → data-driven map layouts loaded by `MapGenerator`; a `"biome"` key gives the settlement a generated wilderness map (entered via portal, not a world-graph node)
 - **Economy blocks** in scenarios: `rates_per_day` entries may be a plain number or `{"per_day": N, "requires": {"input_item": amount}}` — production stalls without inputs (supply chains, Phase G3). Settlements run real item chains: Village mills `grain`→`flour`→`bread` and grinds `herbs`→`healing_salve`; Brackenfen tans `hide`→`leather`→`leather_armor` and digs `iron_ore`; Eastmoor forges `iron_ore`→`iron_sword`/`steel_sword`. The cross-settlement loop (Brackenfen ore → Eastmoor smithy) is asserted by `tests/verify_supply_chains.py`
+- **Settlement treasury & market toll**: an `economy` block also carries
+  `"treasury": N` — the town's purse, held per settlement in
+  `EconomyService.treasury` (service level, next to `stocks`/`prosperity`;
+  it must **not** live as a `Purse` on the mayor, because `freeze()` deletes
+  the entities of every map the player is not on). It is saved with the rest
+  of the economy, and a save from before it existed falls back to the
+  scenario defaults.
+
+  The two directions gold now moves through it:
+
+  - **In** — `MARKET_TOLL_RATE` (6%) of every trade, buying *and* selling,
+    paid by the player and deposited into the settlement's till by
+    `TradeService.buy`/`sell`. This is the game's main gold sink and it scales
+    with whatever the player pulls out of the local market. Cheap trades round
+    to zero toll. The trade window folds it into the price the player actually
+    pays or receives (`Buy: 32g (incl. 2 toll)`), because a toll the player
+    cannot see is just arithmetic.
+  - **Out** — quest rewards. `QuestService._pay_reward` withdraws from the
+    *giver's* treasury instead of the old `purse.gold += reward`, which minted
+    gold from nothing. A town that cannot cover the promise pays what it has
+    and says so. `_affordable_reward` caps a **generated** offer at
+    `GEN_REWARD_TREASURY_SHARE` of the till and suppresses it entirely below
+    `GEN_REWARD_MIN` — so quest density follows prosperity instead of running
+    beside it. Authored quests still promise their JSON reward; only the
+    payout is capped by the till.
+
+  The mayor knows what is in the chest: `_dialogue_context` exposes
+  `treasury` (`empty`/`thin`/`full` via `EconomyService.treasury_tier`), and
+  `dialogues.json` has matching mayor lines. Verified by the treasury cases in
+  `tests/verify_economy.py`, `tests/verify_quests.py` and `tests/verify_trade.py`.
 - **Per-settlement merchant override**: a scenario NPC entry (in `village_npcs` or a structure's `npcs`) may carry a `"merchant": {"stock": [...], "gold": N}` block. `EntityFactory.create(..., merchant_override=...)` replaces the *template's* merchant data for that instance, so the same role (`shopkeeper`, `blacksmith`) sells a settlement-specific sortiment without new templates. This is how the market profiles differ (Village=food/grain, Brackenfen=raw materials/leather, Eastmoor=metal/luxury). `tests/verify_item_distribution.py` guards that **every** item in `items.json` is reachable (sold or looted) — add new items to a merchant stock or loot table, not just the item file
 - **World events**: `assets/data/world_events.json` entries may carry `effects` (`stock_delta`, `prosperity_delta`) and `escalation` (`{event_id, delay_hours}`); `weight: 0` templates are escalation-only (Phase G2)
 - **Sprite layers in JSON** use string keys matching `SpriteLayer` enum names (e.g., `"GROUND"`, `"ITEMS"`)

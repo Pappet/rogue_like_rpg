@@ -136,6 +136,10 @@ def build_game_context(seed: int | None = None) -> GameContext:
             "phase": ctx.world_clock.phase if ctx.world_clock else "day",
             "prosperity": ctx.economy.prosperity_tier(location_id) if ctx.economy else "stable",
         }
+        # The town's purse: the mayor is the one who knows what is in it, and
+        # it is where the player's market toll goes and quest rewards come from.
+        if ctx.economy is not None:
+            context["treasury"] = ctx.economy.treasury_tier(location_id)
         # Quest-aware smalltalk: givers comment on work in progress here so a
         # conversation reflects what the player owes the settlement (Phase: chains).
         if ctx.quests is not None:
