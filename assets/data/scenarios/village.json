@@ -211,24 +211,24 @@
    "healing_salve": 4
   },
   "rates_per_day": {
-   "health_potion": 0.5,
+   "health_potion": 2.5,
    "iron_sword": 0.25,
    "leather_armor": 0.25,
-   "venison": -1.5,
-   "grain": 3,
+   "venison": 1.5,
+   "grain": 10,
    "flour": {
-    "per_day": 2,
+    "per_day": 7.5,
     "requires": {
      "grain": 1
     }
    },
    "bread": {
-    "per_day": 2,
+    "per_day": 7,
     "requires": {
      "flour": 1
     }
    },
-   "herbs": 2,
+   "herbs": 4,
    "healing_salve": {
     "per_day": 1,
     "requires": {
