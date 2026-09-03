@@ -211,7 +211,7 @@
    "healing_salve": 4
   },
   "rates_per_day": {
-   "health_potion": 2.5,
+   "health_potion": 1.5,
    "iron_sword": 0.25,
    "leather_armor": 0.25,
    "venison": 1.5,

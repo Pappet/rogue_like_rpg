@@ -651,6 +651,40 @@ class MapAwareSystem:
     beside it. Authored quests still promise their JSON reward; only the
     payout is capped by the till.
 
+- **Trade with the world beyond the map** (`EconomyService._trade_abroad`,
+  run each tick): a settlement ships what is piling up out and buys back what
+  it cannot make. This is the **transport layer**, abstracted — without it a
+  world whose goods balance on paper still starves, because nothing carries
+  Brackenfen's ore to Eastmoor's anvil. Four rules carry the weight, and each
+  exists because leaving it out broke a 365-day simulation:
+
+  - **Reserve only on what the town consumes.** A smithy keeps bread on the
+    shelf and sells every sword. Reserving everything traps a specialist: with
+    no ore it stops producing, its swords settle at the reserve level, and with
+    nothing above the reserve it has no income left to buy ore with.
+  - **The spread must stay narrow.** Importing a gold of goods costs
+    `TRADE_IMPORT_MARKUP / TRADE_EXPORT_FACTOR` gold of exports. Keep that near
+    1.2. Eastmoor turns 24 gold of ore a day into 90 of swords; at a 4x spread
+    it would have to ship 288 gold a day to feed itself, and simply dies — so a
+    wide spread makes specialisation mathematically impossible.
+  - **Ship only what the proceeds can be used for.** Export income is capped at
+    what the town can actually spend (goods it needs, plus room under its
+    treasury cap). Without that ceiling a large net exporter with full stores
+    sells forever and piles up gold — the money supply stops being bounded.
+  - **Relief travels at the town's own pace.** A caravan brings at most
+    `TRADE_IMPORT_RATE` times the settlement's daily appetite for a good. Money
+    is not the only limit: with a full till and no pace, any shortage is
+    repaired in one tick and a shortage quest never gets offered. The rate must
+    exceed 1.0, or relief only ever matches consumption and a town can never
+    climb back out.
+
+  A settlement with no entry in `treasury_cap` is off the trade network and is
+  left alone — `load_from_world` gives every world-graph settlement one, so an
+  economy assembled by hand (a unit test) exercises the production rules
+  without caravans in the way. Verified over a simulated year by
+  `tests/verify_economy.py`: the money supply stays at its cap total and every
+  settlement stays out of `struggling`.
+
   The mayor knows what is in the chest: `_dialogue_context` exposes
   `treasury` (`empty`/`thin`/`full` via `EconomyService.treasury_tier`), and
   `dialogues.json` has matching mayor lines. Verified by the treasury cases in
