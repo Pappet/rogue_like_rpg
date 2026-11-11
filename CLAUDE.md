@@ -79,6 +79,11 @@ in `docs/DEV_JOURNAL.md`, and the completed refactoring rationale in
 `docs/ARCHITECTURE_CONCEPT.md`. The former `.planning/` directory has been
 retired. A high-level player-facing summary lives in `README.md`.
 
+`docs/EFFECT_PIPELINE_CONCEPT.md` is a **proposal, not yet implemented**: one
+data-driven effect model behind attacks, abilities, consumables and status
+effects. Nothing in the code follows it yet — do not treat its types or files
+as existing until a phase of it has landed.
+
 `docs/CONTENT_GUIDE.md` is the data-driven content reference (ECS guide):
 the full component/system registry, every `assets/data/*.json` schema with
 constraints, and step-by-step workflows for adding settlements, items,
