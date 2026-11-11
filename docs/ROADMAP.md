@@ -369,6 +369,11 @@ Candidates for the next planning round (still building toward the
 specific giver NPC, combat scaling from the `combat` skill, multiple save
 slots, deeper dungeon levels with stairs, and a walkable overworld.
 
+A design proposal for the mechanic most of these lean on — one data-driven
+effect pipeline behind attacks, abilities, consumables and status effects —
+is written up in `docs/EFFECT_PIPELINE_CONCEPT.md`. It is a proposal, not a
+scheduled phase.
+
 ## 4. Recommended order & why
 
 **A → B → C → D → E → F**, one phase at a time.
